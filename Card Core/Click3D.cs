@@ -16,35 +16,43 @@ namespace _project.Scripts.Card_Core
 
         [Tooltip("If True: Hovering over a card will pop it up a bit. If False: item will highlight on hover")]
         public bool handItem;
+
         [Tooltip("Default: 0.2 -- How fast the card pops up")]
         public float animTime = 0.2f;
+
         [Tooltip("Default: 1.05 -- How large the card becomes")]
         public float scaleUp = 1.05f;
+
         [Tooltip("Default: 0.2 -- How high the card goes")]
         public float popHeight = 0.2f;
 
         [DontSerialize] public bool selected;
         [DontSerialize] public CardView cardView;
-        [DontSerialize] public ICard Card;
-    
-        private MaterialPropertyBlock _sharedPropertyBlock;
+        [DontSerialize] public bool isEnabled;
+        
+        private Color _baseColor;
         private Camera _mainCamera;
         private Mouse _mouse;
         private InputAction _mouseClickAction;
         private Renderer _objectRenderer;
         private Vector3 _originalPos;
         private Vector3 _originalScale;
-        private Color _baseColor;
+
+        private MaterialPropertyBlock _sharedPropertyBlock;
+        [DontSerialize] public ICard Card;
 
 
         private void Start()
         {
+            // Initialize Click3D with a True isEnabled state
+            isEnabled = true;
+
             // Let's remove this from non-CardGame scenes
             if (SceneManager.GetActiveScene().name != "CardGame") Destroy(this);
 
             // If the ClickObject has a CardView, lets store it
             if (GetComponent<CardView>() && !cardView) cardView = GetComponent<CardView>();
-            
+
             _objectRenderer = GetComponentInChildren<Renderer>();
             _baseColor = _objectRenderer.material.color;
             _mainCamera = Camera.main;
@@ -60,6 +68,7 @@ namespace _project.Scripts.Card_Core
             _mouseClickAction.performed += OnMouseClick;
             _mouseClickAction.Enable();
         }
+        //public void EnableClick3D() => isEnabled = true;
 
         private void OnDestroy()
         {
@@ -71,6 +80,7 @@ namespace _project.Scripts.Card_Core
 
         private void OnMouseEnter()
         {
+            if (!isEnabled) return;
             if (!handItem)
             {
                 _objectRenderer.material.color = Color.red; // this works for 90% of the time
@@ -86,6 +96,7 @@ namespace _project.Scripts.Card_Core
 
         private void OnMouseExit()
         {
+            if (!isEnabled) return;
             var targetColor = _baseColor;
 
             // Check if this object is a plant by looking for a PlantController
@@ -106,14 +117,20 @@ namespace _project.Scripts.Card_Core
             StartCoroutine(AnimateCardBack());
         }
 
+        public void DisableClick3D()
+        {
+            isEnabled = false;
+        }
+
         private void OnMouseClick(InputAction.CallbackContext context)
         {
+            if (!isEnabled) return;
             if (_mouse == null || !_mainCamera) return;
 
             if (handItem)
             {
-                
             }
+
             var mousePosition = _mouse.position.ReadValue();
             var ray = _mainCamera.ScreenPointToRay(mousePosition);
 
@@ -123,6 +140,16 @@ namespace _project.Scripts.Card_Core
             onClick3D?.Invoke();
         }
 
+        /// Animates a card's position and scale to create a visual "pop-up" effect.
+        /// The animation smoothly transitions the card's scale and position from its
+        /// original state to a defined target state, dictated by properties such as
+        /// `scaleUp` and `popHeight`. It performs this interpolation over the
+        /// duration specified by `animTime`.
+        /// The animation will interpolate scale and position components separately
+        /// to prevent exceeding target values, ensuring a natural movement.
+        /// <returns>
+        /// IEnumerator used to control and yield execution for Unity's coroutine system.
+        /// </returns>
         private IEnumerator AnimateCard()
         {
             // Define fixed target values relative to the original state.
@@ -164,6 +191,14 @@ namespace _project.Scripts.Card_Core
             transform.localPosition = targetPos;
         }
 
+        /// Animates a card's scale and position back to its original state after being modified.
+        /// The animation smoothly reverses from the current state of the card's scale and position
+        /// to its initial state, determined by `_originalScale` and `_originalPos`. It ensures
+        /// that the scale and position values are clamped to avoid transitioning below the original state.
+        /// The interpolation is managed over the duration specified by `animTime`.
+        /// <returns>
+        /// IEnumerator used to manage and yield execution for Unity's coroutine system.
+        /// </returns>
         public IEnumerator AnimateCardBack()
         {
             if (selected) yield break;

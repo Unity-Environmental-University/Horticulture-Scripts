@@ -1,6 +1,4 @@
-﻿using System.Collections.Generic;
-using System.Linq;
-using _project.Scripts.Classes;
+﻿using _project.Scripts.Classes;
 using UnityEngine;
 
 namespace _project.Scripts.Card_Core
@@ -8,53 +6,39 @@ namespace _project.Scripts.Card_Core
     public class PlacedCardHolder : MonoBehaviour
     {
         private DeckManager _deckManager;
-        private readonly List<Transform> _cardSlotsList = new();
-        // ReSharper disable once CollectionNeverQueried.Local
-        private readonly List<ICard> _placedCardsList = new();
+        private ICard _placedCard;
+        private CardView _placedCardView;
 
-        private void Start()
-        {
-            _deckManager = CardGameMaster.Instance.deckManager;
-
-            foreach (Transform child in transform)
-            {
-                if (child.GetComponent<Click3D>() != null)
-                {
-                    _cardSlotsList.Add(child);
-                }
-            }
-        }
+        private void Start() => _deckManager = CardGameMaster.Instance.deckManager;
 
         /// <summary>
-        /// Places a specified card object onto the first available child slot in a defined list of card slots.
+        ///     Moves the currently selected card from the DeckManager to the PlacedCardHolder,
+        ///     snapping its position, rotation, and scale to match the PlacedCardHolder transform.
+        ///     Disables click interactions for the selected card and clears the selection in the DeckManager.
+        ///     Additionally hides the renderer of the PlacedCardHolder without affecting its child objects.
         /// </summary>
-        /// <param name="card">The card object to be placed in a card slot. Must implement the ICard interface.</param>
-        public void PlaceCardOnChild(ICard card)
+        public void TakeSelectedCard()
         {
-            if (!_cardSlotsList.Any() || card == null || _deckManager.selectedACardClick3D == null) return;
+            if (_deckManager.selectedACardClick3D is null || _deckManager.SelectedACard is null) return;
 
-            foreach (var slot in _cardSlotsList.Take(_cardSlotsList.Count))
-            {
-                var newCardObj = CreateCardObject(_deckManager.selectedACardClick3D.gameObject, slot, card);
-                _placedCardsList.Add(card);
-            }
-        }
+            var selectedCard = _deckManager.selectedACardClick3D;
 
-        /// <summary>
-        /// Creates a new card GameObject based on a specified template, assigns it specified properties,
-        /// and places it under the specified parent transform.
-        /// </summary>
-        /// <param name="template">The GameObject template to instantiate the new card from.</param>
-        /// <param name="parent">The parent transform under which the new card GameObject will be placed.</param>
-        /// <param name="card">The card data implementing the ICard interface to associate with the new GameObject.</param>
-        /// <returns>Returns the newly instantiated card GameObject.</returns>
-        private static GameObject CreateCardObject(GameObject template, Transform parent, ICard card)
-        {
-            var cardObj = Instantiate(template, parent, true);
-            cardObj.transform.localPosition = Vector3.zero;
-            cardObj.transform.localRotation = Quaternion.identity;
-            cardObj.GetComponent<Click3D>().Card = card;
-            return cardObj;
+            selectedCard.DisableClick3D();
+
+            // Set parent without preserving world values
+            selectedCard.transform.SetParent(transform, false);
+
+            // Snap to the transform exactly (position, rotation, scale)
+            selectedCard.transform.localPosition = Vector3.zero;
+            selectedCard.transform.localRotation = Quaternion.Euler(-90f, 0f, 0f); // Lying flat
+            selectedCard.transform.localScale = Vector3.one; // or the original prefab scale, if different
+
+            _deckManager.selectedACardClick3D = null;
+            _deckManager.SelectedACard = null;
+
+            // hide the parent object without hiding the children
+            var parentRenderer = transform.GetComponent<Renderer>();
+            if (parentRenderer) parentRenderer.enabled = false;
         }
     }
 }
