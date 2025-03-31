@@ -66,7 +66,7 @@ namespace _project.Scripts.Card_Core
             Debug.Log(
                 $"{actionCard.Name} treatment {actionCard.Treatment?.ToString() ?? "Unknown"} applied to {plantController.name}");
 
-            deckManager.DiscardActionCard(actionCard);
+            deckManager.DiscardActionCard(actionCard, true);
             Destroy(selectedCard.gameObject);
             deckManager.selectedACardClick3D = null;
         }

@@ -315,7 +315,7 @@ namespace _project.Scripts.Card_Core
         /// contain enough cards to complete the draw, and debug messages are logged if enabled.
         public void DrawActionHand()
         {
-            foreach (var card in _actionHand) DiscardActionCard(card);
+            foreach (var card in _actionHand) DiscardActionCard(card, true);
             _actionHand.Clear();
 
             foreach (Transform child in actionCardParent) Destroy(child.gameObject);
@@ -341,15 +341,19 @@ namespace _project.Scripts.Card_Core
             if (debug) Debug.Log("Action Hand: " + string.Join(", ", _actionHand.ConvertAll(card => card.Name)));
         }
 
-        /// Discards the specified action card by moving it from the current hand
-        /// to the action discard pile.
-        /// This helps in managing the lifecycle of action cards within the game
-        /// system and ensures they are available for future reshuffling if needed.
-        /// <param name="card">
-        /// The action card to be discarded. This card is removed from its current
-        /// context and added to the discard pile.
-        /// </param>
-        public void DiscardActionCard(ICard card) => _actionDiscardPile.Add(card);
+        /// Discards the specified action card by removing it from the action hand.
+        /// Optionally adds the card to the discard pile if the parameter is set to true.
+        /// Resets the currently selected action card if the discarded card matches the selected one.
+        /// <param name="card">The action card to be discarded.</param>
+        /// <param name="addToDiscard">Whether to add the discarded card to the discard pile.</param>
+        public void DiscardActionCard(ICard card, bool addToDiscard)
+        {
+            _actionHand.Remove(card);
+            if(addToDiscard) _actionDiscardPile.Add(card);
+            if (card != SelectedACard) return;
+            SelectedACard = null;
+            selectedACardClick3D = null;
+        }
 
         /// Discards the currently selected action card from the action hand.
         /// This method removes the selected card from the action hand, adds it to the discard pile,

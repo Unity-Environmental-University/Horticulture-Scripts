@@ -7,9 +7,13 @@ namespace _project.Scripts.Card_Core
     {
         private DeckManager _deckManager;
         private ICard _placedCard;
+        private Click3D _placedCardClick3D;
         private CardView _placedCardView;
 
-        private void Start() => _deckManager = CardGameMaster.Instance.deckManager;
+        private void Start()
+        {
+            _deckManager = CardGameMaster.Instance.deckManager;
+        }
 
         /// <summary>
         ///     Moves the currently selected card from the DeckManager to the PlacedCardHolder,
@@ -33,8 +37,18 @@ namespace _project.Scripts.Card_Core
             selectedCard.transform.localRotation = Quaternion.Euler(-90f, 0f, 0f); // Lying flat
             selectedCard.transform.localScale = Vector3.one; // or the original prefab scale, if different
 
+            // Hold the Card Data
+            _placedCard = _deckManager.SelectedACard;
+            _placedCardClick3D = selectedCard;
+            _placedCardView = selectedCard.GetComponent<CardView>();
+            
+            // Remove Card from hand
+            _deckManager.DiscardActionCard(_placedCard, false);
+            
+            
             _deckManager.selectedACardClick3D = null;
             _deckManager.SelectedACard = null;
+
 
             // hide the parent object without hiding the children
             var parentRenderer = transform.GetComponent<Renderer>();
