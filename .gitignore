@@ -1,1 +1,6 @@
-data/HardwareDataCollector.cs
+# Meta Files aren't Needed Here
+*.meta
+
+# Don't Upload files with Keys
+Data/HardwareDataCollector.cs
+Data/UnityServicesInitializer.cs
