@@ -1,5 +1,4 @@
 using System.Collections;
-using _project.Scripts.Classes;
 using _project.Scripts.Core;
 using Unity.Serialization;
 using UnityEngine;
@@ -39,7 +38,6 @@ namespace _project.Scripts.Card_Core
         private Vector3 _originalScale;
 
         private MaterialPropertyBlock _sharedPropertyBlock;
-        [DontSerialize] public ICard Card;
 
 
         private void Start()

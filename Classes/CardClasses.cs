@@ -243,23 +243,6 @@ namespace _project.Scripts.Classes
             return new SoapyWaterBasic();
         }
     }
-    public class GodCard : ICard
-    {
-        public PlantAfflictions.ITreatment Treatment => new PlantAfflictions.Panacea();
-        public string Name => "God Card";
-        public GameObject Prefab { get; set; }
-        public Sprite Sprite { get; set; }
-
-        public void Selected()
-        {
-            Debug.Log("Selected " + Name);
-        }
-
-        public ICard Clone()
-        {
-            return new SoapyWaterBasic();
-        }
-    }
     
     public class Panacea : ICard
     {

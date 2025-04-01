@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using JetBrains.Annotations;
 using TMPro;
 using UnityEngine;
@@ -22,19 +23,21 @@ namespace _project.Scripts.Card_Core
         public DeckManager deckManager;
         public ScoreManager scoreManager;
         public TurnController turnController;
+        public List<PlacedCardHolder> cardHolders;
 
         [CanBeNull] public TextMeshPro scoreText;
         public static CardGameMaster Instance { get; private set; }
 
         /// <summary>
-        ///     Initializes the CardGameMaster instance and ensures the singleton pattern is followed.
-        ///     Checks and validates that required components (DeckManager, ScoreManager, TurnController)
-        ///     are properly assigned. Prevents multiple instances by destroying duplicates.
-        ///     Ensures the GameObject persists across scenes.
+        /// Initializes the CardGameMaster instance and ensures the singleton pattern is correctly implemented.
+        /// Verifies that essential components (DeckManager, ScoreManager, TurnController) are properly assigned.
+        /// Prevents the existence of multiple duplicate instances by destroying any duplicates found.
+        /// Scans and stores all instances of PlacedCardHolder in the current scene.
+        /// Ensures the GameObject persists across scenes during transitions.
         /// </summary>
         /// <exception cref="Exception">
-        ///     Thrown when any of the required components (DeckManager, ScoreManager, or TurnController)
-        ///     are not assigned.
+        /// Thrown when one or more required components (DeckManager, ScoreManager, TurnController)
+        /// are not assigned.
         /// </exception>
         private void Awake()
         {
@@ -47,6 +50,11 @@ namespace _project.Scripts.Card_Core
             // Double Check Controllers
             if (!scoreManager || !deckManager || !turnController)
                 throw new Exception("Must assign score/deck/turn manager");
+
+            // Find all CardHolders
+            cardHolders =
+                new List<PlacedCardHolder>(
+                    FindObjectsByType<PlacedCardHolder>(FindObjectsInactive.Exclude, FindObjectsSortMode.None));
 
             Instance = this;
             DontDestroyOnLoad(gameObject);
