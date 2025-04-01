@@ -48,6 +48,8 @@ namespace _project.Scripts.Card_Core
         private static readonly List<ICard> AfflictionsDeck = new();
 
         #endregion
+
+        #region Class Variables
         
         private readonly CardHand _afflictionHand = new("Afflictions Hand", AfflictionsDeck, PrototypeAfflictionsDeck);
         private readonly CardHand _plantHand = new("Plants Hand", PlantDeck, PrototypePlantsDeck);
@@ -66,9 +68,11 @@ namespace _project.Scripts.Card_Core
         public float cardSpacing = 1f;
         public int cardsDrawnPerTurn = 3;
         public bool debug = true;
+        
+        #endregion
 
         #region Initialization
-        
+
         private void Awake()
         {
             if (Instance && Instance != this)
@@ -80,7 +84,7 @@ namespace _project.Scripts.Card_Core
             Instance = this;
             DontDestroyOnLoad(gameObject);
         }
-        
+
         private void Start()
         {
             InitializeActionDeck();
@@ -110,7 +114,7 @@ namespace _project.Scripts.Card_Core
         }
 
         #endregion
-        
+
         #region Deck Utilities
 
         /// Shuffles the specified deck of cards into a random order.
@@ -118,7 +122,7 @@ namespace _project.Scripts.Card_Core
         /// in the provided list randomly. The shuffle is done in place, modifying the
         /// original list.
         /// <param name="deck">
-        /// A list of cards implementing the ICard interface to be shuffled.
+        ///     A list of cards implementing the ICard interface to be shuffled.
         /// </param>
         private void ShuffleDeck(List<ICard> deck)
         {
@@ -132,7 +136,7 @@ namespace _project.Scripts.Card_Core
             if (debug)
                 Debug.Log("Shuffled deck order: " + string.Join(", ", deck.ConvertAll(card => card.Name)));
         }
-        
+
         /// Generates a weighted random integer between the specified minimum and maximum values,
         /// with a bias towards the minimum value. The bias is achieved by squaring a randomly
         /// generated floating-point value, which increases the likelihood of selecting values
@@ -140,8 +144,8 @@ namespace _project.Scripts.Card_Core
         /// <param name="min">The lower bound (inclusive) of the random number range.</param>
         /// <param name="max">The upper bound (exclusive) of the random number range.</param>
         /// <returns>
-        /// A random integer between the specified minimum and maximum bounds,
-        /// with a higher probability of being closer to the minimum.
+        ///     A random integer between the specified minimum and maximum bounds,
+        ///     with a higher probability of being closer to the minimum.
         /// </returns>
         private static int WeightedRandom(int min, int max)
         {
@@ -149,7 +153,7 @@ namespace _project.Scripts.Card_Core
             t *= t; // Squares the float => closer to 0 (or the minimum)
             return min + Mathf.FloorToInt(t * (max - min)); // * this value can be 0 *
         }
-        
+
         #endregion
 
         #region Plant Management
@@ -190,17 +194,15 @@ namespace _project.Scripts.Card_Core
             }
         }
 
-        /// Removes all plant GameObjects currently present at their designated
-        /// locations and clears the plant hand associated with these locations.
-        /// This method iterates through each plant location, destroying every
-        /// child GameObject within, effectively resetting the plant hierarchy.
-        /// Additionally, it ensures the randomness of the next plant arrangement
-        /// by invoking a deck random draw. Outputs debug logging when enabled.
+        /// Clears all plant objects from their designated locations by destroying all
+        /// associated GameObjects with `PlantController` components at each location.
+        /// Ensures the randomness of subsequent plant arrangements by invoking a
+        /// random draw on the plant deck. Outputs debug messages if enabled.
         private void ClearAllPlants()
         {
-            foreach (var location in plantLocations)
-                for (var i = location.childCount - 1; i >= 0; i--)
-                    Destroy(location.GetChild(i).gameObject);
+            foreach (var child in plantLocations
+                         .Select(slot => slot.GetComponentsInChildren<PlantController>(true))
+                         .SelectMany(children => children)) Destroy(child.gameObject);
 
             _plantHand.DeckRandomDraw();
 
@@ -246,7 +248,8 @@ namespace _project.Scripts.Card_Core
 
             _afflictionHand.DrawCards(cardsToDraw);
 
-            if (debug) Debug.Log("Afflictions Drawn: " + string.Join(", ", _afflictionHand.ConvertAll(card => card.Name)));
+            if (debug)
+                Debug.Log("Afflictions Drawn: " + string.Join(", ", _afflictionHand.ConvertAll(card => card.Name)));
             ApplyAfflictionDeck();
         }
 
@@ -280,10 +283,7 @@ namespace _project.Scripts.Card_Core
                 if (affliction != null)
                 {
                     // Check if the plant already has the affliction, Skip if it does.
-                    if (plantController.HasAffliction(affliction))
-                    {
-                        continue;
-                    }
+                    if (plantController.HasAffliction(affliction)) continue;
 
                     plantController.AddAffliction(affliction);
 
@@ -319,7 +319,7 @@ namespace _project.Scripts.Card_Core
             _actionHand.Clear();
 
             foreach (Transform child in actionCardParent) Destroy(child.gameObject);
-                
+
             for (var i = 0; i < cardsDrawnPerTurn; i++)
             {
                 if (_actionDeck.Count == 0 || _actionDeck.Count < cardsDrawnPerTurn)
@@ -349,7 +349,7 @@ namespace _project.Scripts.Card_Core
         public void DiscardActionCard(ICard card, bool addToDiscard)
         {
             _actionHand.Remove(card);
-            if(addToDiscard) _actionDiscardPile.Add(card);
+            if (addToDiscard) _actionDiscardPile.Add(card);
             if (card != SelectedACard) return;
             SelectedACard = null;
             selectedACardClick3D = null;
@@ -365,7 +365,7 @@ namespace _project.Scripts.Card_Core
             _actionHand.Remove(SelectedACard);
             _actionDiscardPile.Add(SelectedACard);
             SelectedACard = null;
-            
+
             Destroy(selectedACardClick3D.gameObject);
             selectedACardClick3D = null;
         }
@@ -380,11 +380,11 @@ namespace _project.Scripts.Card_Core
             _actionHand.Clear();
             _actionDeck.Clear();
             _actionDiscardPile.Clear();
-            
+
             foreach (Transform child in actionCardParent) Destroy(child.gameObject);
-            
+
             InitializeActionDeck();
-            
+
             if (debug) Debug.Log("Action Hand: " + string.Join(", ", _actionHand.ConvertAll(card => card.Name)));
             if (debug) Debug.Log("Action Hand: " + string.Join(", ", _actionDeck.ConvertAll(card => card.Name)));
             if (debug) Debug.Log("Action Hand: " + string.Join(", ", _actionDiscardPile.ConvertAll(card => card.Name)));
@@ -393,7 +393,7 @@ namespace _project.Scripts.Card_Core
         public void AddActionCard(ICard card)
         {
             _actionHand.Add(card);
-            if (debug) Debug.Log("Action Hand: " + string.Join(", ", _actionHand.ConvertAll(card => card.Name)));
+            if (debug) Debug.Log("Action Hand: " + string.Join(", ", _actionHand.ConvertAll(input => input.Name)));
         }
 
         /// Displays action cards in a fanned-out sequence within the scene.
@@ -402,8 +402,8 @@ namespace _project.Scripts.Card_Core
         /// Each card GameObject is initialized with its corresponding data through the CardView component.
         /// The sequence incorporates a delay between visual updates to allow for smooth animations.
         /// <returns>
-        /// An IEnumerator to enable the sequence to be executed as a coroutine, supporting time delays
-        /// for smooth visualization in Unity's coroutine system.
+        ///     An IEnumerator to enable the sequence to be executed as a coroutine, supporting time delays
+        ///     for smooth visualization in Unity's coroutine system.
         /// </returns>
         private IEnumerator DisplayActionCardsSequence()
         {
@@ -424,7 +424,7 @@ namespace _project.Scripts.Card_Core
                 var angleOffset = totalCards > 1
                     ? Mathf.Lerp(-totalFanAngle / 2, totalFanAngle / 2, (float)i / (totalCards - 1))
                     : 0f;
-        
+
                 // Use cardSpacing to determine how far apart they are.
                 var xOffset = totalCards > 1
                     ? Mathf.Lerp(-cardSpacing, cardSpacing, (float)i / (totalCards - 1))
