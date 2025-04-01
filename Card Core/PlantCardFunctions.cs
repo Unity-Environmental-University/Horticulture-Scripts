@@ -70,5 +70,10 @@ namespace _project.Scripts.Card_Core
             Destroy(selectedCard.gameObject);
             deckManager.selectedACardClick3D = null;
         }
+
+        private void ApplyQueuedTreatments()
+        {
+            
+        }
     }
 }
