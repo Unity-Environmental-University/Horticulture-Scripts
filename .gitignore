@@ -1,6 +1,9 @@
 # Meta Files aren't Needed Here
 *.meta
 
+# Ignore Git Setup Files
+Git-Setup.bat
+
 # Don't Upload files with Keys
 Data/HardwareDataCollector.cs
 Data/UnityServicesInitializer.cs
