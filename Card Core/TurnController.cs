@@ -64,9 +64,10 @@ namespace _project.Scripts.Card_Core
                 .ToArray();
             if (debugging) Debug.Log($"Found {plantControllers.Length} PlantControllers in PlantLocation.");
 
-            // TODO Make this look for placed cards and do a thing
-            //
-            //
+            foreach (var controller in plantControllers)
+            {
+                controller.plantCardFunctions.ApplyQueuedTreatments();
+            }
         }
     }
 }

@@ -12,10 +12,10 @@ namespace _project.Scripts.Card_Core
         private void Start()
         {
             deckManager = CardGameMaster.Instance.deckManager;
-            
+
             if (!deckManager && SceneManager.GetActiveScene().name == "CardGame")
                 Debug.LogError("deckManager not found for plant!");
-            
+
             plantController = GetComponent<PlantController>();
 
             var click3D = GetComponentInChildren<Click3D>();
@@ -23,18 +23,18 @@ namespace _project.Scripts.Card_Core
         }
 
         /// <summary>
-        /// Applies a treatment to the plant controlled by this instance.
-        /// This method is triggered by a 3D click event on the card in the game.
-        /// It checks if there is a selected card from the deck, validates the card,
-        /// and applies its treatment to the PlantController associated with this instance.
-        /// The method also adds the treatment to the list of used treatments for the plant,
-        /// discards the used card from the deck's action pile, and destroys the
-        /// associated card GameObject.
+        ///     Applies a treatment to the plant controlled by this instance.
+        ///     This method is triggered by a 3D click event on the card in the game.
+        ///     It checks if there is a selected card from the deck, validates the card,
+        ///     and applies its treatment to the PlantController associated with this instance.
+        ///     The method also adds the treatment to the list of used treatments for the plant,
+        ///     discards the used card from the deck's action pile, and destroys the
+        ///     associated card GameObject.
         /// </summary>
         /// <remarks>
-        /// If no card is selected or the selected card is invalid, the method logs warnings
-        /// and exits early without applying any treatment. Expected exceptions are handled
-        /// using null checks and warnings.
+        ///     If no card is selected or the selected card is invalid, the method logs warnings
+        ///     and exits early without applying any treatment. Expected exceptions are handled
+        ///     using null checks and warnings.
         /// </remarks>
         private void ApplyTreatment()
         {
@@ -71,13 +71,60 @@ namespace _project.Scripts.Card_Core
             deckManager.selectedACardClick3D = null;
         }
 
-        private void ApplyQueuedTreatments()
+        public void ApplyQueuedTreatments()
         {
-            var cardHolders = CardGameMaster.Instance.cardHolders;
+            // TODO -- Re-Write this
+            // Get all cardholders from the CardGameMaster instance
+            var cardHolders = CardGameMaster.Instance?.cardHolders;
 
+            if (cardHolders == null || cardHolders.Count == 0)
+            {
+                Debug.LogWarning("No card holders found to apply treatments.");
+                return;
+            }
+
+            // Iterate through all cardholders
             foreach (var cardHolder in cardHolders)
             {
-                cardHolder.placedCardClick3D.cardView.GetCard().Treatment.ApplyTreatment(plantController);
+                // Null-check the cardholder object
+                if (cardHolder == null)
+                {
+                    Debug.LogWarning("Encountered a null card holder.");
+                    continue;
+                }
+
+                // Check if the cardholder is holding a card and validate
+                if (!cardHolder.HoldingCard) continue;
+                var cardView = cardHolder.placedCardView;
+                if (!cardView)
+                {
+                    Debug.LogWarning($"Card holder {cardHolder.name} is holding a card, but the CardView is null.");
+                    continue;
+                }
+
+                // Retrieve the action card and its treatment
+                var actionCard = cardView.GetCard();
+                if (actionCard == null)
+                {
+                    Debug.LogWarning($"Card view in holder {cardHolder.name} has no associated card.");
+                    continue;
+                }
+
+                var treatment = actionCard.Treatment;
+                if (treatment == null)
+                {
+                    Debug.LogWarning(
+                        $"Card {actionCard.Name} in holder {cardHolder.name} has no treatment to apply.");
+                    continue;
+                }
+
+                // Apply the treatment to the plant controller
+                treatment.ApplyTreatment(plantController);
+
+                // Log and track applied treatments
+                plantController.UsedTreatments.Add(treatment);
+                Debug.Log(
+                    $"Applied treatment {treatment} from card {actionCard.Name} to Plant {plantController.name}.");
             }
         }
     }

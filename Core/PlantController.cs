@@ -1,7 +1,9 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using _project.Scripts.Card_Core;
 using _project.Scripts.Classes;
+using Unity.Serialization;
 using UnityEngine;
 
 namespace _project.Scripts.Core
@@ -26,10 +28,12 @@ namespace _project.Scripts.Core
         [SerializeField] private List<string> cAfflictions = new();
         [SerializeField] private List<string> cTreatments = new();
         [SerializeField] private List<string> uTreatments = new();
-    
+        
         [SerializeField] private Shader litShader;
         [SerializeField] private Shader moldShader;
         [SerializeField] [Range(0, 1)] private float moldIntensity;
+
+        [DontSerialize] public PlantCardFunctions plantCardFunctions;
 
         public PlantType type;
         public ICard PlantCard;
@@ -41,6 +45,11 @@ namespace _project.Scripts.Core
         public List<PlantAfflictions.IAffliction> CurrentAfflictions { get; } = new();
         public List<PlantAfflictions.ITreatment> CurrentTreatments { get; } = new();
         public List<PlantAfflictions.ITreatment> UsedTreatments { get; } = new();
+
+        private void Start()
+        {
+            if (!TryGetComponent(out plantCardFunctions)) { }
+        }
 
         private void Awake()
         {
