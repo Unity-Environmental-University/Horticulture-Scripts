@@ -73,7 +73,12 @@ namespace _project.Scripts.Card_Core
 
         private void ApplyQueuedTreatments()
         {
-            
+            var cardHolders = CardGameMaster.Instance.cardHolders;
+
+            foreach (var cardHolder in cardHolders)
+            {
+                cardHolder.placedCardClick3D.cardView.GetCard().Treatment.ApplyTreatment(plantController);
+            }
         }
     }
 }

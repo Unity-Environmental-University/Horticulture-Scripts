@@ -390,6 +390,12 @@ namespace _project.Scripts.Card_Core
             if (debug) Debug.Log("Action Hand: " + string.Join(", ", _actionDiscardPile.ConvertAll(card => card.Name)));
         }
 
+        public void AddActionCard(ICard card)
+        {
+            _actionHand.Add(card);
+            if (debug) Debug.Log("Action Hand: " + string.Join(", ", _actionHand.ConvertAll(card => card.Name)));
+        }
+
         /// Displays action cards in a fanned-out sequence within the scene.
         /// This method creates GameObjects for each card in the action hand and positions them
         /// within a parent transform, arranging them in a visually pleasing fanned layout.
