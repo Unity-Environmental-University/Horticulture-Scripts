@@ -1,5 +1,7 @@
 using System;
 using System.Collections;
+using System.Linq;
+using _project.Scripts.Core;
 using UnityEngine;
 
 namespace _project.Scripts.Card_Core
@@ -8,6 +10,7 @@ namespace _project.Scripts.Card_Core
     {
         public ScoreManager scoreManager;
         public DeckManager deckManager;
+        private bool debugging;
         private static TurnController Instance { get; set; }
 
         private void Awake()
@@ -24,10 +27,7 @@ namespace _project.Scripts.Card_Core
             DontDestroyOnLoad(gameObject);
         }
 
-        private void Start()
-        {
-            StartCoroutine(BeginTurnSequence());
-        }
+        private void Start() { StartCoroutine(BeginTurnSequence()); }
 
         private IEnumerator BeginTurnSequence()
         {
@@ -58,6 +58,15 @@ namespace _project.Scripts.Card_Core
             deckManager.ClearActionHand();
             var score = scoreManager.CalculateScore();
             Debug.Log("Score: " + score);
+
+            var plantControllers = deckManager.plantLocations
+                .SelectMany(location => location.GetComponentsInChildren<PlantController>(false))
+                .ToArray();
+            if (debugging) Debug.Log($"Found {plantControllers.Length} PlantControllers in PlantLocation.");
+
+            // TODO Make this look for placed cards and do a thing
+            //
+            //
         }
     }
 }
