@@ -315,23 +315,35 @@ namespace _project.Scripts.Card_Core
         /// contain enough cards to complete the draw, and debug messages are logged if enabled.
         public void DrawActionHand()
         {
-            foreach (var card in _actionHand) DiscardActionCard(card, true);
+            // Create a temporary list to avoid modifying _actionHand while iterating
+            var cardsToDiscard = new List<ICard>(_actionHand);
+            foreach (var card in cardsToDiscard)
+            {
+                DiscardActionCard(card, true);
+            }
+
             _actionHand.Clear();
 
-            foreach (Transform child in actionCardParent) Destroy(child.gameObject);
+            // Clear all existing visualized cards in the action card parent
+            foreach (Transform child in actionCardParent)
+            {
+                Destroy(child.gameObject);
+            }
 
             for (var i = 0; i < cardsDrawnPerTurn; i++)
             {
-                if (_actionDeck.Count == 0 || _actionDeck.Count < cardsDrawnPerTurn)
-                    if (_actionDiscardPile.Count > 0)
-                    {
-                        _actionDeck.AddRange(_actionDiscardPile);
-                        _actionDiscardPile.Clear();
-                        ShuffleDeck(_actionDeck);
-                        if (debug) Debug.Log("Recycled discard pile into action deck.");
-                    }
+                // Handle case when action deck or discard pile is empty
+                if (_actionDeck.Count == 0 && _actionDiscardPile.Count > 0)
+                {
+                    _actionDeck.AddRange(_actionDiscardPile);
+                    _actionDiscardPile.Clear();
+                    ShuffleDeck(_actionDeck);
+                    if (debug) Debug.Log("Recycled discard pile into action deck.");
+                }
 
+                // Ensure we don't try to access an empty action deck
                 if (_actionDeck.Count <= 0) continue;
+
                 var drawnCard = _actionDeck[0];
                 _actionDeck.RemoveAt(0);
                 _actionHand.Add(drawnCard);
