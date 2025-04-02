@@ -7,3 +7,6 @@ Git-Setup.bat
 # Don't Upload files with Keys
 Data/HardwareDataCollector.cs
 Data/UnityServicesInitializer.cs
+
+# Un-Needed Files
+Scripts.asmdef

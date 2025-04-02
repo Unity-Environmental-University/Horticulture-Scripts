@@ -73,28 +73,25 @@ namespace _project.Scripts.Card_Core
 
         public void ApplyQueuedTreatments()
         {
-            // TODO -- Re-Write this
-            // Get all cardholders from the CardGameMaster instance
             var cardHolders = CardGameMaster.Instance?.cardHolders;
 
-            if (cardHolders == null || cardHolders.Count == 0)
+            if (cardHolders is null || cardHolders.Count is 0)
             {
                 Debug.LogWarning("No card holders found to apply treatments.");
                 return;
             }
-
-            // Iterate through all cardholders
+            
             foreach (var cardHolder in cardHolders)
             {
-                // Null-check the cardholder object
-                if (cardHolder == null)
+                if (!cardHolder)
                 {
                     Debug.LogWarning("Encountered a null card holder.");
                     continue;
                 }
-
+                
                 // Check if the cardholder is holding a card and validate
                 if (!cardHolder.HoldingCard) continue;
+                
                 var cardView = cardHolder.placedCardView;
                 if (!cardView)
                 {
@@ -104,24 +101,22 @@ namespace _project.Scripts.Card_Core
 
                 // Retrieve the action card and its treatment
                 var actionCard = cardView.GetCard();
-                if (actionCard == null)
+                if (actionCard is null)
                 {
                     Debug.LogWarning($"Card view in holder {cardHolder.name} has no associated card.");
                     continue;
                 }
 
                 var treatment = actionCard.Treatment;
-                if (treatment == null)
+                if (treatment is null)
                 {
                     Debug.LogWarning(
                         $"Card {actionCard.Name} in holder {cardHolder.name} has no treatment to apply.");
                     continue;
                 }
-
-                // Apply the treatment to the plant controller
+                
                 treatment.ApplyTreatment(plantController);
-
-                // Log and track applied treatments
+                
                 plantController.UsedTreatments.Add(treatment);
                 Debug.Log(
                     $"Applied treatment {treatment} from card {actionCard.Name} to Plant {plantController.name}.");
