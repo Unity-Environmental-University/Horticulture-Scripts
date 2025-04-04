@@ -1,5 +1,6 @@
 # Meta Files aren't Needed Here
 *.meta
+*.meta.*
 
 # Ignore Git Setup Files
 Git-Setup.bat
