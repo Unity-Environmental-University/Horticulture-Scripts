@@ -6,12 +6,12 @@ namespace _project.Scripts.Card_Core
     public class PlacedCardHolder : MonoBehaviour
     {
         private DeckManager _deckManager;
-        private ICard _placedCard; // ReSharper disable twice NotAccessedField.Local
         private Transform originalCardTransform;
+        
+        public ICard PlacedCard;
         public Click3D placedCardClick3D;
         public CardView placedCardView;
-
-        public bool HoldingCard => placedCardClick3D != null;
+        public bool HoldingCard => placedCardClick3D;
 
         private void Start() { _deckManager = CardGameMaster.Instance.deckManager; }
 
@@ -40,12 +40,12 @@ namespace _project.Scripts.Card_Core
             selectedCard.transform.localScale = Vector3.one; // or the original prefab scale, if different
 
             // Hold the Card Data
-            _placedCard = _deckManager.SelectedACard;
+            PlacedCard = _deckManager.SelectedACard;
             placedCardClick3D = selectedCard;
             placedCardView = selectedCard.GetComponent<CardView>();
 
             // Remove Card from hand
-            _deckManager.DiscardActionCard(_placedCard, false);
+            _deckManager.DiscardActionCard(PlacedCard, false);
 
 
             _deckManager.selectedACardClick3D = null;
@@ -80,7 +80,7 @@ namespace _project.Scripts.Card_Core
             // Clear the current PlacedCardHolder references
             placedCardView = null;
             placedCardClick3D = null;
-            _placedCard = null;
+            PlacedCard = null;
 
             // Show the parent object renderer again
             var parentRenderer = transform.GetComponent<Renderer>();

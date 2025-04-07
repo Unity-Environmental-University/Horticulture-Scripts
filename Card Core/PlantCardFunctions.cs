@@ -120,7 +120,17 @@ namespace _project.Scripts.Card_Core
                 plantController.UsedTreatments.Add(treatment);
                 Debug.Log(
                     $"Applied treatment {treatment} from card {actionCard.Name} to Plant {plantController.name}.");
+                
+                ClearCardHolder(cardHolder);
             }
+        }
+
+        private void ClearCardHolder(PlacedCardHolder cardHolder)
+        {
+            Destroy(cardHolder.placedCardClick3D.gameObject);
+            cardHolder.placedCardView = null;
+            cardHolder.placedCardClick3D = null;
+            cardHolder.PlacedCard = null;
         }
     }
 }

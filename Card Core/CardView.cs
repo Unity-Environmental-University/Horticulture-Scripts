@@ -10,6 +10,7 @@ namespace _project.Scripts.Card_Core
         private ICard _originalCard;
         
         public TextMeshPro titleText;
+        public TextMeshPro descriptionText;
 
         private void Start() => _deckManager = CardGameMaster.Instance.deckManager;
         
@@ -18,6 +19,7 @@ namespace _project.Scripts.Card_Core
         public void Setup(ICard card)
         {
             titleText.text = card.Name;
+            descriptionText.text = card.Description;
             _originalCard = card;
         }
 

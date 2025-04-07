@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using _project.Scripts.Core;
+using JetBrains.Annotations;
 using UnityEngine;
 
 // ReSharper disable UnusedAutoPropertyAccessor.Global
@@ -9,6 +10,7 @@ namespace _project.Scripts.Classes
     public interface ICard
     {
         string Name { get; }
+        string Description => null;
         int? Value => null;
         PlantAfflictions.IAffliction Affliction => null;
         PlantAfflictions.ITreatment Treatment => null;
@@ -176,6 +178,7 @@ namespace _project.Scripts.Classes
     {
         public PlantAfflictions.ITreatment Treatment => new PlantAfflictions.NeemOilTreatment();
         public string Name => "Neem Oil Basic";
+        public string Description => Treatment.Description;
         public GameObject Prefab { get; set; }
         public Sprite Sprite { get; set; }
 
@@ -194,6 +197,7 @@ namespace _project.Scripts.Classes
     {
         public PlantAfflictions.ITreatment Treatment => new PlantAfflictions.InsecticideTreatment();
         public string Name => "Insecticide Basic";
+        public string Description => Treatment.Description;
         public GameObject Prefab { get; set; }
         public Sprite Sprite { get; set; }
 
@@ -212,6 +216,7 @@ namespace _project.Scripts.Classes
     {
         public PlantAfflictions.ITreatment Treatment => new PlantAfflictions.FungicideTreatment();
         public string Name => "Fungicide Basic";
+        public string Description => Treatment.Description;
         public GameObject Prefab { get; set; }
         public Sprite Sprite { get; set; }
 
@@ -230,6 +235,7 @@ namespace _project.Scripts.Classes
     {
         public PlantAfflictions.ITreatment Treatment => new PlantAfflictions.SoapyWaterTreatment();
         public string Name => "SoapyWater Basic";
+        public string Description => Treatment.Description;
         public GameObject Prefab { get; set; }
         public Sprite Sprite { get; set; }
 
@@ -248,6 +254,7 @@ namespace _project.Scripts.Classes
     {
         public PlantAfflictions.ITreatment Treatment => new PlantAfflictions.Panacea();
         public string Name => "Panacea";
+        public string Description => Treatment.Description;
         public GameObject Prefab { get; set; }
         public Sprite Sprite { get; set; }
 
