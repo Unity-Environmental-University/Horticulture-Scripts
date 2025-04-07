@@ -29,6 +29,7 @@ namespace _project.Scripts.Card_Core
 
         private void Start() { StartCoroutine(BeginTurnSequence()); }
 
+        // ReSharper disable Unity.PerformanceAnalysis
         private IEnumerator BeginTurnSequence()
         {
             yield return new WaitForSeconds(2f);
@@ -67,6 +68,7 @@ namespace _project.Scripts.Card_Core
             foreach (var controller in plantControllers)
             {
                 controller.plantCardFunctions.ApplyQueuedTreatments();
+                controller.FlagShadersUpdate();
             }
         }
     }
