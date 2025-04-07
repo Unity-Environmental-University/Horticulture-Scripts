@@ -24,11 +24,25 @@ namespace _project.Scripts.Classes
 
             public void ApplyTreatment(PlantController plant)
             {
-                var afflictions = new List<IAffliction>(plant.CurrentAfflictions);
+                if (!plant)
+                {
+                    Debug.LogWarning("PlantController is null, cannot apply treatment.");
+                    return;
+                }
+
+                var afflictions = plant.CurrentAfflictions != null
+                    ? new List<IAffliction>(plant.CurrentAfflictions) // ✅ Clone the list
+                    : new List<IAffliction>();
+
+                if (afflictions.Count == 0)
+                {
+                    Debug.LogWarning("No afflictions found on the plant.");
+                }
+
                 foreach (var item in afflictions)
                 {
                     item.TreatWith(this, plant);
-                    Debug.Log(item.Name);
+                    Debug.Log($"Applied treatment to affliction: {item.Name}");
                 }
             }
         }

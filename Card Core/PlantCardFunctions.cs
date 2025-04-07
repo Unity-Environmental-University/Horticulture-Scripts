@@ -80,52 +80,36 @@ namespace _project.Scripts.Card_Core
                 Debug.LogWarning("No card holders found to apply treatments.");
                 return;
             }
-            
+
             foreach (var cardHolder in cardHolders)
             {
-                if (!cardHolder)
-                {
-                    Debug.LogWarning("Encountered a null card holder.");
-                    continue;
-                }
-                
-                // Check if the cardholder is holding a card and validate
-                if (!cardHolder.HoldingCard) continue;
-                
+                if (!cardHolder || !cardHolder.HoldingCard) continue;
+
                 var cardView = cardHolder.placedCardView;
-                if (!cardView)
-                {
-                    Debug.LogWarning($"Card holder {cardHolder.name} is holding a card, but the CardView is null.");
-                    continue;
-                }
+                if (!cardView) continue;
 
-                // Retrieve the action card and its treatment
                 var actionCard = cardView.GetCard();
-                if (actionCard is null)
+                if (actionCard?.Treatment is null) continue;
+                
+                var parent = cardHolder.transform.parent;
+                var targetPlant = parent.GetComponentInChildren<PlantController>();
+
+                if (!targetPlant)
                 {
-                    Debug.LogWarning($"Card view in holder {cardHolder.name} has no associated card.");
+                    Debug.LogWarning($"No PlantController found near CardHolder {cardHolder.name}");
                     continue;
                 }
 
-                var treatment = actionCard.Treatment;
-                if (treatment is null)
-                {
-                    Debug.LogWarning(
-                        $"Card {actionCard.Name} in holder {cardHolder.name} has no treatment to apply.");
-                    continue;
-                }
-                
-                treatment.ApplyTreatment(plantController);
-                
-                plantController.UsedTreatments.Add(treatment);
-                Debug.Log(
-                    $"Applied treatment {treatment} from card {actionCard.Name} to Plant {plantController.name}.");
-                
+                actionCard.Treatment.ApplyTreatment(targetPlant);
+                targetPlant.UsedTreatments.Add(actionCard.Treatment);
+
+                Debug.Log($"Applied treatment {actionCard.Treatment} from card {actionCard.Name} to Plant {targetPlant.name}");
+
                 ClearCardHolder(cardHolder);
             }
         }
 
-        private void ClearCardHolder(PlacedCardHolder cardHolder)
+        private static void ClearCardHolder(PlacedCardHolder cardHolder)
         {
             Destroy(cardHolder.placedCardClick3D.gameObject);
             cardHolder.placedCardView = null;
