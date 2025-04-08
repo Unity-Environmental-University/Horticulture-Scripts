@@ -77,11 +77,12 @@ namespace _project.Scripts.PlayModeTest
                 typeof(DeckManager).GetField("_actionDeck", BindingFlags.NonPublic | BindingFlags.Instance);
             var actionDeck = actionDeckField.GetValue(deckManager) as List<ICard>;
             actionDeck.Clear();
-            actionDeck.Add(new DummyCard("Dummy 1"));
-            actionDeck.Add(new DummyCard("Dummy 2"));
-            actionDeck.Add(new DummyCard("Dummy 3"));
-            actionDeck.Add(new DummyCard("Dummy 4"));
-            actionDeck.Add(new DummyCard("Dummy 5"));
+            
+            const int numOfDummyCards = 5;
+            for (var i = 0; i < numOfDummyCards; i++)
+            {
+                actionDeck.Add(new DummyCard("Dummy " + i));
+            }
 
             // Ensure _actionHand and _actionDiscardPile are empty.
             var actionHandField =
