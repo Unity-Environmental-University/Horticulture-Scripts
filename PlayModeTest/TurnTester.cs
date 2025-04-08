@@ -1,6 +1,8 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Reflection;
+using System.Text.RegularExpressions;
 using _project.Scripts.Card_Core;
 using _project.Scripts.Classes;
 using _project.Scripts.Core;
@@ -288,7 +290,7 @@ namespace _project.Scripts.PlayModeTest
             var throwingCard = new DummyCard("Explodes", new ThrowingTreatment());
             CreateCardHolder(throwingCard);
 
-            LogAssert.Expect(LogType.Exception, "System.Exception: Intentional test exception");
+            LogAssert.Expect(LogType.Exception, new Regex("Intentional test exception"));
 
             plant.plantCardFunctions.ApplyQueuedTreatments();
             yield return null;
@@ -304,7 +306,7 @@ namespace _project.Scripts.PlayModeTest
 
             public void ApplyTreatment(PlantController plant)
             {
-                Debug.LogException(new System.Exception("Intentional test exception"));
+                Debug.LogException(new Exception("Intentional test exception"));
             }
         }
 
@@ -312,6 +314,13 @@ namespace _project.Scripts.PlayModeTest
         [UnityTest]
         public IEnumerator MultipleAfflictions_AllGetTreated()
         {
+            // Remove all test objects created in Setup
+            Object.DestroyImmediate(_plantSpawnGo); 
+            CardGameMaster.Instance.cardHolders.Clear();
+
+            // Create a new test-specific plant holder
+            _plantSpawnGo = new GameObject("TestPlantSpawn");
+
             var plant = CreatePlant(new DummyAffliction(), new DummyAffliction());
             CreateCardHolder(new DummyCard("Panacea", new DummyTreatment()));
 
@@ -336,7 +345,12 @@ namespace _project.Scripts.PlayModeTest
         [UnityTest]
         public IEnumerator TreatmentThatModifiesList_DoesNotCrash()
         {
-            CardGameMaster.Instance.cardHolders.Clear(); // 🔥 Key fix
+            // Remove all test objects created in Setup
+            Object.DestroyImmediate(_plantSpawnGo); 
+            CardGameMaster.Instance.cardHolders.Clear();
+
+            // Create a new test-specific plant holder
+            _plantSpawnGo = new GameObject("TestPlantSpawn");
 
             var plant = CreatePlant(new DummyAffliction(), new DummyAffliction());
             var card = new DummyCard("Safe Clear", new SelfClearingTreatment());

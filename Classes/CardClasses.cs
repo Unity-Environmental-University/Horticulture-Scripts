@@ -1,6 +1,5 @@
 using System.Collections.Generic;
 using _project.Scripts.Core;
-using JetBrains.Annotations;
 using UnityEngine;
 
 // ReSharper disable UnusedAutoPropertyAccessor.Global
