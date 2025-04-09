@@ -109,6 +109,8 @@ namespace _project.Scripts.Card_Core
             }
         }
 
+        
+        // TODO make this recycle cards
         private static void ClearCardHolder(PlacedCardHolder cardHolder)
         {
             Destroy(cardHolder.placedCardClick3D.gameObject);

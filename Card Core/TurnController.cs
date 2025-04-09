@@ -1,5 +1,6 @@
 using System;
 using System.Collections;
+using System.Collections.Generic;
 using System.Linq;
 using _project.Scripts.Core;
 using UnityEngine;
@@ -72,10 +73,47 @@ namespace _project.Scripts.Card_Core
                 controller.plantCardFunctions.ApplyQueuedTreatments();
                 controller.FlagShadersUpdate();
             }
+            
+            // TODO Review this spread logic
 
             // Randomly check if a plant spreads an affliction from CurrentAfflictions to another plant controller
             var random = new Random();
-            foreach (var controller in plantControllers)
+
+            for (var i = 0; i < plantControllers.Length; i++)
+            {
+                var controller = plantControllers[i];
+                if (!controller.CurrentAfflictions.Any() || random.NextDouble() >= 0.5) continue; // 50% chance)
+
+                var affliction = controller.CurrentAfflictions.First();
+
+                //collect right/left neighbors
+                var neighborOptions = new List<PlantController>();
+
+                if (i > 0)
+                {
+                    var leftNeighbor = plantControllers[i - 1];
+                    if (leftNeighbor && !leftNeighbor.HasAffliction(affliction)) neighborOptions.Add(leftNeighbor);
+                }
+
+                if (i < plantControllers.Length - 1)
+                {
+                    var rightNeighbor = plantControllers[i + 1];
+                    if (rightNeighbor && !rightNeighbor.HasAffliction(affliction)) neighborOptions.Add(rightNeighbor);
+                }
+
+                // Spread to one neighbor at random
+                if (neighborOptions.Count > 0)
+                {
+                    var target = neighborOptions[random.Next(neighborOptions.Count)];
+                    target.AddAffliction(affliction);
+                    target.FlagShadersUpdate();
+                }
+
+                if (debugging)
+                    Debug.Log($"Affliction {affliction} spread from {controller.name} to {plantControllers[i].name}.");
+            }
+
+            /*foreach (var controller in plantControllers)
             {
                 if (!controller.CurrentAfflictions.Any() || !(random.NextDouble() < 0.5)) continue; // 50% chance
                 var targetController = plantControllers
@@ -90,7 +128,7 @@ namespace _project.Scripts.Card_Core
                 targetController.FlagShadersUpdate();
                 if (debugging)
                     Debug.Log($"Affliction {affliction} spread from {controller.name} to {targetController.name}.");
-            }
+            }*/
         }
 
     public void EndRound()
