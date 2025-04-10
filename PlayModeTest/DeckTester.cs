@@ -35,9 +35,7 @@ namespace _project.Scripts.PlayModeTest
             }
         }
 
-        private class CardViewDummy : MonoBehaviour
-        {
-        }
+        private class CardViewDummy : MonoBehaviour { }
 
         [SetUp]
         public void Setup()

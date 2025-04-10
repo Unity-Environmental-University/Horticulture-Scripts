@@ -193,6 +193,24 @@ namespace _project.Scripts.Card_Core
                 plant.transform.SetParent(plantLocation);
                 plant.GetComponent<PlantController>().PlantCard = _plantHand[i];
             }
+
+            StartCoroutine(UpdateCardHolderRenders());
+        }
+
+        // ReSharper disable Unity.PerformanceAnalysis
+        private IEnumerator UpdateCardHolderRenders()
+        {
+            yield return null;
+            
+            foreach (var location in plantLocations)
+            {
+                var plantController = location.GetComponentInChildren<PlantController>(true);
+                var cardHolder = location.GetComponentInChildren<PlacedCardHolder>();
+
+                if (cardHolder != null && plantController == null)
+                    cardHolder.ToggleCardHolder(false);
+                else if (cardHolder != null && plantController != null) cardHolder.ToggleCardHolder(true);
+            }
         }
 
         /// Clears all plant objects from their designated locations by destroying all
