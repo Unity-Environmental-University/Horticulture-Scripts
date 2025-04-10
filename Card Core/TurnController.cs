@@ -82,7 +82,7 @@ namespace _project.Scripts.Card_Core
             for (var i = 0; i < plantControllers.Length; i++)
             {
                 var controller = plantControllers[i];
-                if (!controller.CurrentAfflictions.Any() || random.NextDouble() >= 0.5) continue; // 50% chance)
+                if (!controller.CurrentAfflictions.Any() || random.NextDouble() >= 0.5) continue; // 50% chance
 
                 var affliction = controller.CurrentAfflictions.First();
 

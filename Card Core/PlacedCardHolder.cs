@@ -5,21 +5,22 @@ namespace _project.Scripts.Card_Core
 {
     public class PlacedCardHolder : MonoBehaviour
     {
-        private DeckManager _deckManager;
-        private Transform originalCardTransform;
-        
-        public ICard PlacedCard;
         public Click3D placedCardClick3D;
         public CardView placedCardView;
+        public ICard PlacedCard;
         public bool HoldingCard => placedCardClick3D;
+        
+        private DeckManager _deckManager;
+        private Transform originalCardTransform;
 
-        private void Start() { _deckManager = CardGameMaster.Instance.deckManager; }
+        private void Start() => _deckManager = CardGameMaster.Instance.deckManager;
+        
 
         /// <summary>
-        ///     Moves the currently selected card from the DeckManager to the PlacedCardHolder,
-        ///     snapping its position, rotation, and scale to match the PlacedCardHolder transform.
-        ///     Disables click interactions for the selected card and clears the selection in the DeckManager.
-        ///     Additionally, hides the renderer of the PlacedCardHolder without affecting its child objects.
+        ///     Transfers the currently selected card from the DeckManager to the PlacedCardHolder,
+        ///     aligning its position, rotation, and scale with the PlacedCardHolder's transform.
+        ///     Disables click interactions for the card, clears the selection in the DeckManager,
+        ///     and hides the PlacedCardHolder's button renderer.
         /// </summary>
         public void TakeSelectedCard()
         {
@@ -47,14 +48,13 @@ namespace _project.Scripts.Card_Core
             // Remove Card from hand
             _deckManager.DiscardActionCard(PlacedCard, false);
 
-
             _deckManager.selectedACardClick3D = null;
             _deckManager.SelectedACard = null;
 
-
-            // hide the parent object without hiding the children
-            var parentRenderer = transform.GetComponent<Renderer>();
-            if (parentRenderer) parentRenderer.enabled = false;
+            // Hide the CardButton
+            var buttonRenderer = GetComponentInChildren<MeshRenderer>(true);
+            if (buttonRenderer != null)
+                buttonRenderer.enabled = false;
         }
 
         private void GiveBackCard()
@@ -63,7 +63,7 @@ namespace _project.Scripts.Card_Core
 
             // Set card back to the deck manager for handling
             placedCardClick3D.transform.SetParent(_deckManager.actionCardParent, false);
-            
+
             // Snap to the transform exactly (position, rotation, scale)
             placedCardClick3D.transform.SetParent(originalCardTransform.parent, false);
             placedCardClick3D.transform.localPosition = originalCardTransform.localPosition;
@@ -72,10 +72,10 @@ namespace _project.Scripts.Card_Core
 
             // Enable interaction with the card again
             //placedCardClick3D.isEnabled = true;
-            
+
             // Add the card back to the deck manager's actionHand
             _deckManager.AddActionCard(placedCardView.GetCard());
-            
+
 
             // Clear the current PlacedCardHolder references
             placedCardView = null;
@@ -85,6 +85,13 @@ namespace _project.Scripts.Card_Core
             // Show the parent object renderer again
             var parentRenderer = transform.GetComponent<Renderer>();
             if (parentRenderer) parentRenderer.enabled = true;
+        }
+
+        public void ToggleCardHolder(bool state)
+        {
+            var buttonRenderer = GetComponentInChildren<MeshRenderer>(true);
+            if (buttonRenderer != null)
+                buttonRenderer.enabled = state;
         }
     }
 }
