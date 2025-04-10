@@ -364,7 +364,7 @@ namespace _project.Scripts.Card_Core
         public void DiscardActionCard(ICard card, bool addToDiscard)
         {
             _actionHand.Remove(card);
-            if (addToDiscard) _actionDiscardPile.Add(card);
+            if (addToDiscard) AddCardToDisscard(card);
             if (card != SelectedACard) return;
             SelectedACard = null;
             selectedACardClick3D = null;
@@ -378,11 +378,16 @@ namespace _project.Scripts.Card_Core
         {
             if (SelectedACard == null) return;
             _actionHand.Remove(SelectedACard);
-            _actionDiscardPile.Add(SelectedACard);
+            AddCardToDisscard(SelectedACard);
             SelectedACard = null;
 
             Destroy(selectedACardClick3D.gameObject);
             selectedACardClick3D = null;
+        }
+
+        private void AddCardToDisscard(ICard card)
+        {
+            _actionDiscardPile.Add(card);
         }
 
         /// Clears the action hand, action deck, and discard pile, and resets the action deck for the next sequence.
