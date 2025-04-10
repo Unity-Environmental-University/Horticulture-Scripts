@@ -108,9 +108,7 @@ namespace _project.Scripts.Card_Core
                 ClearCardHolder(cardHolder);
             }
         }
-
         
-        // TODO make this recycle cards
         private void ClearCardHolder(PlacedCardHolder cardHolder)
         {
             deckManager.AddActionCard(cardHolder.PlacedCard);
