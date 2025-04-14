@@ -129,6 +129,8 @@ namespace _project.Scripts.PlayModeTest
             // Add required components.
             deckManager = _cardGameMasterGo.AddComponent<DeckManager>();
             scoreManager = _cardGameMasterGo.AddComponent<ScoreManager>();
+            deckManager.plantLocations = new List<Transform>();
+            deckManager.actionCardParent = new GameObject("ActionCardParent").transform;
             var cardGameMaster = _cardGameMasterGo.AddComponent<CardGameMaster>();
             turnController = _cardGameMasterGo.AddComponent<TurnController>();
 

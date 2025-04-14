@@ -116,6 +116,7 @@ namespace _project.Scripts.Card_Core
             cardHolder.placedCardView = null;
             cardHolder.placedCardClick3D = null;
             cardHolder.PlacedCard = null;
+            StartCoroutine(deckManager.UpdateCardHolderRenders());
         }
     }
 }
