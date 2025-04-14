@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using _project.Scripts.Core;
+using TMPro;
 using UnityEngine;
 using Random = System.Random;
 
@@ -12,8 +13,13 @@ namespace _project.Scripts.Card_Core
     {
         public ScoreManager scoreManager;
         public DeckManager deckManager;
+        public TextMeshPro turnText;
+        public int turnCount = 4;
+        public int currentTurn;
+
         private bool debugging;
         private static TurnController Instance { get; set; }
+
 
         private void Awake()
         {
@@ -26,14 +32,16 @@ namespace _project.Scripts.Card_Core
             }
 
             Instance = this;
-            DontDestroyOnLoad(gameObject);
+            // DontDestroyOnLoad(gameObject);
         }
 
-        private void Start() { StartCoroutine(BeginTurnSequence()); }
-
-        // ReSharper disable Unity.PerformanceAnalysis
+        private void Start()
+        {
+            StartCoroutine(BeginTurnSequence());
+        } // ReSharper disable Unity.PerformanceAnalysis
         private IEnumerator BeginTurnSequence()
         {
+            currentTurn = 1;
             yield return new WaitForSeconds(2f);
             try
             {
@@ -56,6 +64,11 @@ namespace _project.Scripts.Card_Core
             }
         }
 
+        private void Update()
+        {
+            turnText.text = "Turn: " + currentTurn;
+        }
+
         public void EndTurn()
         {
             // Get PlantControllers in PlantLocation.
@@ -73,65 +86,62 @@ namespace _project.Scripts.Card_Core
                 controller.plantCardFunctions.ApplyQueuedTreatments();
                 controller.FlagShadersUpdate();
             }
-            
-            // TODO Review this spread logic
 
-            // Randomly check if a plant spreads an affliction from CurrentAfflictions to another plant controller
-            var random = new Random();
-
-            for (var i = 0; i < plantControllers.Length; i++)
+            if (currentTurn != turnCount)
             {
-                var controller = plantControllers[i];
-                if (!controller.CurrentAfflictions.Any() || random.NextDouble() >= 0.5) continue; // 50% chance
+                currentTurn++;
 
-                var affliction = controller.CurrentAfflictions.First();
+                // TODO Review this spread logic
 
-                //collect right/left neighbors
-                var neighborOptions = new List<PlantController>();
+                // Randomly check if a plant spreads an affliction from CurrentAfflictions to another plant controller
+                var random = new Random();
 
-                if (i > 0)
+                for (var i = 0; i < plantControllers.Length; i++)
                 {
-                    var leftNeighbor = plantControllers[i - 1];
-                    if (leftNeighbor && !leftNeighbor.HasAffliction(affliction)) neighborOptions.Add(leftNeighbor);
+                    var controller = plantControllers[i];
+                    if (!controller.CurrentAfflictions.Any() || random.NextDouble() >= 0.5) continue; // 50% chance
+
+                    var affliction = controller.CurrentAfflictions.First();
+
+                    //collect right/left neighbors
+                    var neighborOptions = new List<PlantController>();
+
+                    if (i > 0)
+                    {
+                        var leftNeighbor = plantControllers[i - 1];
+                        if (leftNeighbor && !leftNeighbor.HasAffliction(affliction)) neighborOptions.Add(leftNeighbor);
+                    }
+
+                    if (i < plantControllers.Length - 1)
+                    {
+                        var rightNeighbor = plantControllers[i + 1];
+                        if (rightNeighbor && !rightNeighbor.HasAffliction(affliction))
+                            neighborOptions.Add(rightNeighbor);
+                    }
+
+                    // Spread to one neighbor at random
+                    if (neighborOptions.Count > 0)
+                    {
+                        var target = neighborOptions[random.Next(neighborOptions.Count)];
+                        target.AddAffliction(affliction);
+                        target.FlagShadersUpdate();
+                    }
+
+                    if (debugging)
+                        Debug.Log(
+                            $"Affliction {affliction} spread from {controller.name} to {plantControllers[i].name}.");
                 }
 
-                if (i < plantControllers.Length - 1)
-                {
-                    var rightNeighbor = plantControllers[i + 1];
-                    if (rightNeighbor && !rightNeighbor.HasAffliction(affliction)) neighborOptions.Add(rightNeighbor);
-                }
-
-                // Spread to one neighbor at random
-                if (neighborOptions.Count > 0)
-                {
-                    var target = neighborOptions[random.Next(neighborOptions.Count)];
-                    target.AddAffliction(affliction);
-                    target.FlagShadersUpdate();
-                }
-
-                if (debugging)
-                    Debug.Log($"Affliction {affliction} spread from {controller.name} to {plantControllers[i].name}.");
+                deckManager.DrawActionHand();
             }
-
-            /*foreach (var controller in plantControllers)
+            else
             {
-                if (!controller.CurrentAfflictions.Any() || !(random.NextDouble() < 0.5)) continue; // 50% chance
-                var targetController = plantControllers
-                    .Where(c => c != controller)
-                    .OrderBy(_ => random.Next())
-                    .FirstOrDefault();
-
-                if (!targetController) continue;
-                var affliction = controller.CurrentAfflictions.First();
-                if (targetController == null) continue;
-                targetController.AddAffliction(affliction);
-                targetController.FlagShadersUpdate();
-                if (debugging)
-                    Debug.Log($"Affliction {affliction} spread from {controller.name} to {targetController.name}.");
-            }*/
+                currentTurn = 0;
+                EndRound();
+            }
         }
 
-    public void EndRound()
+        private void EndRound()
         {
             deckManager.ClearActionHand();
             var score = scoreManager.CalculateScore();

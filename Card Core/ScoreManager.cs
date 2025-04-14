@@ -19,7 +19,7 @@ namespace _project.Scripts.Card_Core
             }
 
             Instance = this;
-            DontDestroyOnLoad(gameObject);
+            // DontDestroyOnLoad(gameObject);
         }
 
         // ReSharper disable once MemberCanBeMadeStatic.Global

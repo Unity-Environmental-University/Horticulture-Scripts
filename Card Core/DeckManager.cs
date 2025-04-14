@@ -83,7 +83,7 @@ namespace _project.Scripts.Card_Core
             }
 
             Instance = this;
-            DontDestroyOnLoad(gameObject);
+            // DontDestroyOnLoad(gameObject);
         }
 
         private void Start()
@@ -198,7 +198,7 @@ namespace _project.Scripts.Card_Core
         }
 
         // ReSharper disable Unity.PerformanceAnalysis
-        private IEnumerator UpdateCardHolderRenders()
+        public IEnumerator UpdateCardHolderRenders()
         {
             yield return null;
             
@@ -382,7 +382,7 @@ namespace _project.Scripts.Card_Core
         public void DiscardActionCard(ICard card, bool addToDiscard)
         {
             _actionHand.Remove(card);
-            if (addToDiscard) AddCardToDisscard(card);
+            if (addToDiscard) AddCardToDiscard(card);
             if (card != SelectedACard) return;
             SelectedACard = null;
             selectedACardClick3D = null;
@@ -396,14 +396,14 @@ namespace _project.Scripts.Card_Core
         {
             if (SelectedACard == null) return;
             _actionHand.Remove(SelectedACard);
-            AddCardToDisscard(SelectedACard);
+            AddCardToDiscard(SelectedACard);
             SelectedACard = null;
 
             Destroy(selectedACardClick3D.gameObject);
             selectedACardClick3D = null;
         }
 
-        private void AddCardToDisscard(ICard card)
+        private void AddCardToDiscard(ICard card)
         {
             _actionDiscardPile.Add(card);
         }
@@ -447,12 +447,13 @@ namespace _project.Scripts.Card_Core
         {
             _updatingActionDisplay = true;
             
+            var cardsToDisplay = new List<ICard>(_actionHand);
             var totalCards = _actionHand.Count;
             const float totalFanAngle = -30f; // Total fan angle in degrees
 
             for (var i = 0; i < totalCards; i++)
             {
-                var card = _actionHand[i];
+                var card = cardsToDisplay[i];
                 var cardObj = Instantiate(cardPrefab, actionCardParent);
                 var cardView = cardObj.GetComponent<CardView>();
                 if (cardView)
