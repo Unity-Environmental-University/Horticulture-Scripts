@@ -16,8 +16,7 @@ namespace _project.Scripts.Card_Core
         public TextMeshPro turnText;
         public int turnCount = 4;
         public int currentTurn;
-
-        private bool debugging;
+        public bool debugging;
         private static TurnController Instance { get; set; }
 
 
