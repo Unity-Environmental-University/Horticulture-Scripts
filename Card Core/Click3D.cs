@@ -52,7 +52,7 @@ namespace _project.Scripts.Card_Core
             // Let's remove this from non-CardGame scenes
             if (SceneManager.GetActiveScene().name != "CardGame") Destroy(this);
 
-            // If the ClickObject has a CardView, lets store it
+            // If the ClickObject has a CardView, we store it
             if (GetComponent<CardView>() && !cardView) cardView = GetComponent<CardView>();
 
             _objectRenderer = GetComponentInChildren<Renderer>();
@@ -70,11 +70,38 @@ namespace _project.Scripts.Card_Core
             _mouseClickAction.performed += OnMouseClick;
             _mouseClickAction.Enable();
         }
-        //public void EnableClick3D() => isEnabled = true;
+
+        private void Update()
+        {
+            if (!isEnabled || SceneManager.GetActiveScene().name != "CardGame" || !_mainCamera)
+                return;
+
+            // Handle touch (mobile)
+            if (Touchscreen.current?.primaryTouch.press.wasPressedThisFrame == true)
+            {
+                var touchPos = Touchscreen.current.primaryTouch.position.ReadValue();
+                TryClick(touchPos);
+            }
+
+            // Handle mouse (editor, standalone)
+            if (Mouse.current?.leftButton.wasPressedThisFrame != true) return;
+            var mousePos = Mouse.current.position.ReadValue();
+            TryClick(mousePos);
+        }
+
+        private void TryClick(Vector2 screenPosition)
+        {
+            Ray ray = _mainCamera.ScreenPointToRay(screenPosition);
+            if (Physics.Raycast(ray, out RaycastHit hit) && hit.transform == transform)
+            {
+                onClick3D?.Invoke();
+            }
+        }
+
 
         private void OnDestroy()
         {
-            // Clean up when object is destroyed
+            // Clean up when the object is destroyed
             if (_mouseClickAction == null) return;
             _mouseClickAction.performed -= OnMouseClick;
             _mouseClickAction.Disable();
