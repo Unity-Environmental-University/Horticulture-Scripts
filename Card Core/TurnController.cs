@@ -85,6 +85,12 @@ namespace _project.Scripts.Card_Core
                 controller.FlagShadersUpdate();
             }
 
+            if (plantControllers.All(controller => !controller.CurrentAfflictions.Any()))
+            {
+                EndRound();
+                return;
+            }
+
             if (currentTurn != turnCount)
             {
                 currentTurn++;
@@ -134,13 +140,13 @@ namespace _project.Scripts.Card_Core
             }
             else
             {
-                currentTurn = 0;
                 EndRound();
             }
         }
 
         private void EndRound()
         {
+            currentTurn = 0;
             deckManager.ClearActionHand();
             var score = scoreManager.CalculateScore();
             Debug.Log("Score: " + score);
