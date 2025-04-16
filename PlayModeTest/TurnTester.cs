@@ -21,8 +21,8 @@ namespace _project.Scripts.PlayModeTest
         private ScoreManager scoreManager;
         private TurnController turnController;
 
-        // Dummy implementation for treatment.
-        private class DummyTreatment : PlantAfflictions.ITreatment
+        // Fake implementation for treatment.
+        private class FakeTreatment : PlantAfflictions.ITreatment
         {
             public string Name => "Panacea";
             public string Description => "Cures all afflictions";
@@ -40,8 +40,8 @@ namespace _project.Scripts.PlayModeTest
             }
         }
 
-        // Dummy affliction for testing.
-        private class DummyAffliction : PlantAfflictions.IAffliction
+        // Fake affliction for testing.
+        private class FakeAffliction : PlantAfflictions.IAffliction
         {
             public string Name => "Test Affliction";
             public string Description => "Just a test";
@@ -56,10 +56,10 @@ namespace _project.Scripts.PlayModeTest
             public void TickDay() { }
         }
 
-        // Dummy card that carries a treatment.
-        private class DummyCard : ICard
+        // Fake card that carries a treatment.
+        private class FakeCard : ICard
         {
-            public DummyCard(string name, PlantAfflictions.ITreatment treatment)
+            public FakeCard(string name, PlantAfflictions.ITreatment treatment)
             {
                 Name = name;
                 Treatment = treatment;
@@ -68,7 +68,7 @@ namespace _project.Scripts.PlayModeTest
             public string Name { get; }
             public PlantAfflictions.ITreatment Treatment { get; }
             public string Description => "Test card";
-            public ICard Clone() => new DummyCard(Name, Treatment);
+            public ICard Clone() => new FakeCard(Name, Treatment);
         }
 
         // Fake MonoBehaviour to bypass Click3D
@@ -148,7 +148,7 @@ namespace _project.Scripts.PlayModeTest
             _cardGameMasterGo.SetActive(true);
             yield return null; // Wait a frame so Awake runs.
 
-            // --- Set up the plant & cardholder hierarchy ---
+            // --- Set up the plant and cardholder hierarchy ---
             _plantSpawnGo = new GameObject("PlantSpawn");
 
             // Create a plant with a PlantController.
@@ -156,7 +156,7 @@ namespace _project.Scripts.PlayModeTest
             plantGo.transform.SetParent(_plantSpawnGo.transform);
             var plant = plantGo.AddComponent<PlantController>();
             plant.PlantCard = new ColeusCard();
-            plant.CurrentAfflictions.Add(new DummyAffliction());
+            plant.CurrentAfflictions.Add(new FakeAffliction());
 
             var plantFunctions = plantGo.AddComponent<PlantCardFunctions>();
             plantFunctions.plantController = plant;
@@ -192,14 +192,14 @@ namespace _project.Scripts.PlayModeTest
                 .GetField("placedCardClick3D", BindingFlags.Instance | BindingFlags.Public)
                 ?.SetValue(cardHolder, fakeClick);
 
-            // Use a DummyCard carrying our DummyTreatment.
-            var dummyCard = new DummyCard("Healing Card", new DummyTreatment());
+            // Use a FakeCard carrying our FakeTreatment.
+            var fakeCard = new FakeCard("Healing Card", new FakeTreatment());
             typeof(CardView)
                 .GetField("_originalCard", BindingFlags.NonPublic | BindingFlags.Instance)
-                ?.SetValue(cardView, dummyCard);
+                ?.SetValue(cardView, fakeCard);
 
             cardHolder.placedCardView = cardView;
-            cardHolder.PlacedCard = dummyCard;
+            cardHolder.PlacedCard = fakeCard;
 
             yield return null;
         }
@@ -229,7 +229,7 @@ namespace _project.Scripts.PlayModeTest
         public IEnumerator NoAfflictions_DoesNotThrow()
         {
             var plant = CreatePlant(); // No afflictions
-            CreateCardHolder(new DummyCard("Panacea", new DummyTreatment()));
+            CreateCardHolder(new FakeCard("Panacea", new FakeTreatment()));
 
             LogAssert.ignoreFailingMessages = true; // Ignore warning logs for this test
 
@@ -242,7 +242,7 @@ namespace _project.Scripts.PlayModeTest
         [UnityTest]
         public IEnumerator NoPlacedCard_DoesNotThrow()
         {
-            var plant = CreatePlant(new DummyAffliction());
+            var plant = CreatePlant(new FakeAffliction());
             var holder = new GameObject("CardHolder").AddComponent<PlacedCardHolder>();
             CardGameMaster.Instance.cardHolders.Add(holder);
 
@@ -257,10 +257,10 @@ namespace _project.Scripts.PlayModeTest
         [UnityTest]
         public IEnumerator NoCardView_DoesNotThrow()
         {
-            var plant = CreatePlant(new DummyAffliction());
+            var plant = CreatePlant(new FakeAffliction());
 
             var cardHolder = new GameObject("CardHolder").AddComponent<PlacedCardHolder>();
-            cardHolder.PlacedCard = new DummyCard("Healing", new DummyTreatment());
+            cardHolder.PlacedCard = new FakeCard("Healing", new FakeTreatment());
             cardHolder.placedCardClick3D = cardHolder.gameObject.AddComponent<SafeClick3D>();
             CardGameMaster.Instance.cardHolders.Add(cardHolder);
 
@@ -273,10 +273,10 @@ namespace _project.Scripts.PlayModeTest
         [UnityTest]
         public IEnumerator NullTreatment_DoesNotApply()
         {
-            var plant = CreatePlant(new DummyAffliction());
+            var plant = CreatePlant(new FakeAffliction());
 
-            var dummy = new DummyCard("Broken", null); // null treatment
-            CreateCardHolder(dummy);
+            var fake = new FakeCard("Broken", null); // null treatment
+            CreateCardHolder(fake);
 
             plant.plantCardFunctions.ApplyQueuedTreatments();
             yield return null;
@@ -287,9 +287,9 @@ namespace _project.Scripts.PlayModeTest
         [UnityTest]
         public IEnumerator TreatmentThatThrows_DoesNotBreakLoop()
         {
-            var plant = CreatePlant(new DummyAffliction());
+            var plant = CreatePlant(new FakeAffliction());
 
-            var throwingCard = new DummyCard("Explodes", new ThrowingTreatment());
+            var throwingCard = new FakeCard("Explodes", new ThrowingTreatment());
             CreateCardHolder(throwingCard);
 
             LogAssert.Expect(LogType.Exception, new Regex("Intentional test exception"));
@@ -323,8 +323,8 @@ namespace _project.Scripts.PlayModeTest
             // Create a new test-specific plant holder
             _plantSpawnGo = new GameObject("TestPlantSpawn");
 
-            var plant = CreatePlant(new DummyAffliction(), new DummyAffliction());
-            CreateCardHolder(new DummyCard("Panacea", new DummyTreatment()));
+            var plant = CreatePlant(new FakeAffliction(), new FakeAffliction());
+            CreateCardHolder(new FakeCard("Panacea", new FakeTreatment()));
 
             plant.plantCardFunctions.ApplyQueuedTreatments();
             yield return null;
@@ -335,8 +335,8 @@ namespace _project.Scripts.PlayModeTest
         [UnityTest]
         public IEnumerator CardWithoutClick3D_DoesNotApply()
         {
-            var plant = CreatePlant(new DummyAffliction());
-            CreateCardHolder(new DummyCard("Panacea", new DummyTreatment()), false);
+            var plant = CreatePlant(new FakeAffliction());
+            CreateCardHolder(new FakeCard("Panacea", new FakeTreatment()), false);
 
             plant.plantCardFunctions.ApplyQueuedTreatments();
             yield return null;
@@ -354,8 +354,8 @@ namespace _project.Scripts.PlayModeTest
             // Create a new test-specific plant holder
             _plantSpawnGo = new GameObject("TestPlantSpawn");
 
-            var plant = CreatePlant(new DummyAffliction(), new DummyAffliction());
-            var card = new DummyCard("Safe Clear", new SelfClearingTreatment());
+            var plant = CreatePlant(new FakeAffliction(), new FakeAffliction());
+            var card = new FakeCard("Safe Clear", new SelfClearingTreatment());
             CreateCardHolder(card);
 
             plant.plantCardFunctions.ApplyQueuedTreatments();

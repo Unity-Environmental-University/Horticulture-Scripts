@@ -17,12 +17,12 @@ namespace _project.Scripts.PlayModeTest
         private GameObject _deckManagerGo;
 
         private DeckManager deckManager;
-        private GameObject dummyPrefab;
+        private GameObject fakePrefab;
         
         // Fake implementation of ICard for testing.
-        private class DummyCard : ICard
+        private class FakeCard : ICard
         {
-            public DummyCard(string name)
+            public FakeCard(string name)
             {
                 Name = name;
             }
@@ -31,11 +31,11 @@ namespace _project.Scripts.PlayModeTest
 
             public ICard Clone()
             {
-                return new DummyCard(Name);
+                return new FakeCard(Name);
             }
         }
 
-        private class CardViewDummy : MonoBehaviour { }
+        private class CardViewFake : MonoBehaviour { }
 
         [SetUp]
         public void Setup()
@@ -48,10 +48,10 @@ namespace _project.Scripts.PlayModeTest
             _actionParentGo = new GameObject("ActionCardParent");
             deckManager.actionCardParent = _actionParentGo.transform;
 
-            // Set up a fake card prefab with CardViewDummy.
-            dummyPrefab = new GameObject("DummyCardPrefab");
-            dummyPrefab.AddComponent<CardViewDummy>();
-            deckManager.cardPrefab = dummyPrefab;
+            // Set up a fake card prefab with CardViewFake.
+            fakePrefab = new GameObject("FakeCardPrefab");
+            fakePrefab.AddComponent<CardViewFake>();
+            deckManager.cardPrefab = fakePrefab;
 
             // Allow Unity to run initial setup code.
             LogAssert.ignoreFailingMessages = true;
@@ -62,7 +62,7 @@ namespace _project.Scripts.PlayModeTest
         {
             Object.Destroy(_deckManagerGo);
             Object.Destroy(_actionParentGo);
-            Object.Destroy(dummyPrefab);
+            Object.Destroy(fakePrefab);
         }
 
         #region Regular DrawActionHand Test
@@ -76,10 +76,10 @@ namespace _project.Scripts.PlayModeTest
             var actionDeck = actionDeckField.GetValue(deckManager) as List<ICard>;
             actionDeck.Clear();
             
-            const int numOfDummyCards = 5;
-            for (var i = 0; i < numOfDummyCards; i++)
+            const int numOfFakeCards = 5;
+            for (var i = 0; i < numOfFakeCards; i++)
             {
-                actionDeck.Add(new DummyCard("Dummy " + i));
+                actionDeck.Add(new FakeCard("Fake " + i));
             }
 
             // Ensure _actionHand and _actionDiscardPile are empty.
@@ -126,7 +126,7 @@ namespace _project.Scripts.PlayModeTest
             actionDiscard.Clear();
 
             // Add cards to the discard pile (to simulate recycling).
-            for (var i = 0; i < deckManager.cardsDrawnPerTurn; i++) actionDiscard.Add(new DummyCard($"Dummy {i + 1}"));
+            for (var i = 0; i < deckManager.cardsDrawnPerTurn; i++) actionDiscard.Add(new FakeCard($"Fake {i + 1}"));
 
             // Call DrawActionHand (it should recycle the discard pile if needed).
             deckManager.DrawActionHand();
@@ -190,7 +190,7 @@ namespace _project.Scripts.PlayModeTest
             actionDiscard.Clear();
 
             // Add enough cards to the discard pile to meet the draw count.
-            for (var i = 0; i < cardsToDraw; i++) actionDiscard.Add(new DummyCard($"Discarded {i + 1}"));
+            for (var i = 0; i < cardsToDraw; i++) actionDiscard.Add(new FakeCard($"Discarded {i + 1}"));
 
             // Call DrawActionHand (it should recycle the discard pile if needed).
             deckManager.DrawActionHand();
@@ -218,7 +218,7 @@ namespace _project.Scripts.PlayModeTest
             var actionDeck = actionDeckField.GetValue(deckManager) as List<ICard>;
             actionDeck.Clear();
             // Draw as many cards as cardsDrawnPerTurn.
-            for (var i = 0; i < deckManager.cardsDrawnPerTurn; i++) actionDeck.Add(new DummyCard($"Dummy {i + 1}"));
+            for (var i = 0; i < deckManager.cardsDrawnPerTurn; i++) actionDeck.Add(new FakeCard($"Fake {i + 1}"));
             // Ensure _actionHand and _actionDiscardPile are empty.
             var actionHandField =
                 typeof(DeckManager).GetField("_actionHand", BindingFlags.NonPublic | BindingFlags.Instance);
