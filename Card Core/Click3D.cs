@@ -26,10 +26,14 @@ namespace _project.Scripts.Card_Core
         public float popHeight = 0.2f;
 
         [DontSerialize] public bool selected;
-        [DontSerialize] public CardView cardView;
         [DontSerialize] public bool isEnabled;
+        [DontSerialize] public bool mouseOver;
+        [DontSerialize] public CardView cardView;
+
         
         private Color _baseColor;
+        private readonly Color _hoverColor = Color.red;
+        private readonly Color _disabledColor = Color.grey;
         private Camera _mainCamera;
         private Mouse _mouse;
         private InputAction _mouseClickAction;
@@ -78,11 +82,13 @@ namespace _project.Scripts.Card_Core
 
         private void OnMouseEnter()
         {
+            mouseOver = true;
+            RefreshState();
             if (!isEnabled) return;
             if (!handItem)
             {
-                _objectRenderer.material.color = Color.red; // this works for 90% of the time
-                _sharedPropertyBlock.SetColor(Color1, Color.red); // this gets the rest
+                _objectRenderer.material.color = _hoverColor; // this works for 90% of the time
+                _sharedPropertyBlock.SetColor(Color1, _hoverColor); // this gets the rest
                 _objectRenderer.SetPropertyBlock(_sharedPropertyBlock);
                 return;
             }
@@ -94,6 +100,8 @@ namespace _project.Scripts.Card_Core
 
         private void OnMouseExit()
         {
+            mouseOver = false;
+            RefreshState();
             if (!isEnabled) return;
             var targetColor = _baseColor;
 
@@ -115,6 +123,18 @@ namespace _project.Scripts.Card_Core
             StartCoroutine(AnimateCardBack());
         }
 
+        public void RefreshState()
+        {
+            if (isEnabled)
+            {
+                _objectRenderer.material.color = mouseOver ? _hoverColor : _baseColor;
+            }
+            else
+            {
+                _objectRenderer.material.color = _disabledColor;
+            }
+        }
+
         public void DisableClick3D()
         {
             isEnabled = false;
@@ -125,9 +145,7 @@ namespace _project.Scripts.Card_Core
             if (!isEnabled) return;
             if (_mouse == null || !_mainCamera) return;
 
-            if (handItem)
-            {
-            }
+            if (handItem) { }
 
             var mousePosition = _mouse.position.ReadValue();
             var ray = _mainCamera.ScreenPointToRay(mousePosition);

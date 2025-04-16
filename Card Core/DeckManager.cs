@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using _project.Scripts.Classes;
 using _project.Scripts.Core;
+using Unity.Serialization;
 using UnityEngine;
 using Random = UnityEngine.Random;
 
@@ -50,12 +51,13 @@ namespace _project.Scripts.Card_Core
         #endregion
 
         #region Class Variables
+
+        [DontSerialize] public bool updatingActionDisplay;
         
         private readonly CardHand _afflictionHand = new("Afflictions Hand", AfflictionsDeck, PrototypeAfflictionsDeck);
         private readonly CardHand _plantHand = new("Plants Hand", PlantDeck, PrototypePlantsDeck);
         private readonly List<ICard> _actionHand = new();
         private TurnController _turnController;
-        private bool _updatingActionDisplay;
         private static DeckManager Instance { get; set; }
         public List<Transform> plantLocations;
         public Transform actionCardParent;
@@ -334,7 +336,7 @@ namespace _project.Scripts.Card_Core
         /// contain enough cards to complete the draw, and debug messages are logged if enabled.
         public void DrawActionHand()
         {
-            if (_updatingActionDisplay) return;
+            if (updatingActionDisplay) return;
             
             // Create a temporary list to avoid modifying _actionHand while iterating
             var cardsToDiscard = new List<ICard>(_actionHand);
@@ -445,7 +447,8 @@ namespace _project.Scripts.Card_Core
         /// </returns>
         private IEnumerator DisplayActionCardsSequence()
         {
-            _updatingActionDisplay = true;
+            updatingActionDisplay = true;
+
             
             var cardsToDisplay = new List<ICard>(_actionHand);
             var totalCards = _actionHand.Count;
@@ -477,7 +480,7 @@ namespace _project.Scripts.Card_Core
 
                 yield return new WaitForSeconds(0.5f);
             }
-            _updatingActionDisplay = false;
+            updatingActionDisplay = false;
         }
 
         #endregion
