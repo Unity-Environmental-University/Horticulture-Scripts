@@ -70,14 +70,13 @@ namespace _project.Scripts.Card_Core
 
         public void EndTurn()
         {
+            if (deckManager.updatingActionDisplay) return;
+
             // Get PlantControllers in PlantLocation.
             var plantControllers = deckManager.plantLocations
                 .SelectMany(location => location.GetComponentsInChildren<PlantController>(false))
                 .ToArray();
             if (debugging) Debug.Log($"Found {plantControllers.Length} PlantControllers in PlantLocation.");
-
-            // Drawn new Hand
-            deckManager.DrawActionHand();
 
             // Cure queued afflictions
             foreach (var controller in plantControllers)
