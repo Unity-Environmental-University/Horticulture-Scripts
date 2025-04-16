@@ -18,6 +18,7 @@ namespace _project.Scripts.Card_Core
         public int currentTurn;
         public bool debugging;
         private static TurnController Instance { get; set; }
+        private bool _newRoundReady;
 
 
         private void Awake()
@@ -34,10 +35,9 @@ namespace _project.Scripts.Card_Core
             // DontDestroyOnLoad(gameObject);
         }
 
-        private void Start()
-        {
-            StartCoroutine(BeginTurnSequence());
-        } // ReSharper disable Unity.PerformanceAnalysis
+        private void Start() { StartCoroutine(BeginTurnSequence()); }
+
+        // ReSharper disable Unity.PerformanceAnalysis
         private IEnumerator BeginTurnSequence()
         {
             currentTurn = 1;
@@ -63,14 +63,19 @@ namespace _project.Scripts.Card_Core
             }
         }
 
-        private void Update()
-        {
-            turnText.text = "Turn: " + currentTurn;
-        }
+        private void Update() { turnText.text = "Turn: " + currentTurn; }
 
         public void EndTurn()
         {
             if (deckManager.updatingActionDisplay) return;
+
+            if (_newRoundReady)
+            {
+                deckManager.ClearAllPlants();
+                StartCoroutine(BeginTurnSequence());
+                _newRoundReady = false;
+                return;
+            }
 
             // Get PlantControllers in PlantLocation.
             var plantControllers = deckManager.plantLocations
@@ -161,6 +166,8 @@ namespace _project.Scripts.Card_Core
                 controller.plantCardFunctions.ApplyQueuedTreatments();
                 controller.FlagShadersUpdate();
             }
+
+            _newRoundReady = true;
         }
     }
 }
