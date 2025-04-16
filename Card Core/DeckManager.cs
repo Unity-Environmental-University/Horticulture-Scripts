@@ -219,7 +219,7 @@ namespace _project.Scripts.Card_Core
         /// associated GameObjects with `PlantController` components at each location.
         /// Ensures the randomness of subsequent plant arrangements by invoking a
         /// random draw on the plant deck. Outputs debug messages if enabled.
-        private void ClearAllPlants()
+        public void ClearAllPlants()
         {
             foreach (var child in plantLocations
                          .Select(slot => slot.GetComponentsInChildren<PlantController>(true))

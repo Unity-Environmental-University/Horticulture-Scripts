@@ -19,7 +19,7 @@ namespace _project.Scripts.PlayModeTest
         private DeckManager deckManager;
         private GameObject dummyPrefab;
         
-        // Dummy implementation of ICard for testing.
+        // Fake implementation of ICard for testing.
         private class DummyCard : ICard
         {
             public DummyCard(string name)
@@ -44,11 +44,11 @@ namespace _project.Scripts.PlayModeTest
             _deckManagerGo = new GameObject("DeckManagerTestObject");
             deckManager = _deckManagerGo.AddComponent<DeckManager>();
 
-            // Set up a dummy parent for action cards.
+            // Set up a fake parent for action cards.
             _actionParentGo = new GameObject("ActionCardParent");
             deckManager.actionCardParent = _actionParentGo.transform;
 
-            // Set up a dummy card prefab with CardViewDummy.
+            // Set up a fake card prefab with CardViewDummy.
             dummyPrefab = new GameObject("DummyCardPrefab");
             dummyPrefab.AddComponent<CardViewDummy>();
             deckManager.cardPrefab = dummyPrefab;

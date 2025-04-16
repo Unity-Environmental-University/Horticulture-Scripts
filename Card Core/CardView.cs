@@ -43,7 +43,7 @@ namespace _project.Scripts.Card_Core
                 StartCoroutine(selCard.AnimateCardBack());
             }
 
-            // otherwise, select clicked card
+            // otherwise, select the clicked card
             _deckManager.selectedACardClick3D = clickedCard;
             _deckManager.SelectedACard = _originalCard;
             _originalCard.Selected();
