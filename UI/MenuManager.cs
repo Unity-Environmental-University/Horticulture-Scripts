@@ -4,6 +4,7 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.SceneManagement;
+using UnityEngine.UI;
 
 namespace _project.Scripts.UI
 {
@@ -16,8 +17,11 @@ namespace _project.Scripts.UI
 
         public GameObject pauseCanvas;
         public GameObject settingsUI;
+        public GameObject buttonsUI;
         public TextMeshProUGUI versionText;
+        public Button mainStartB;
         public bool isPaused;
+        public float mobileUIScaleMult;
 
 
         public void Start()
@@ -25,6 +29,13 @@ namespace _project.Scripts.UI
             if (SceneManager.GetActiveScene().name == "Main") menuCanvas = null;
 
             if (versionText) versionText.text = "v" + Application.version;
+
+#if PLATFORM_IOS || PLATFORM_IPHONE || UNITY_ANDROID || UNITY_IOS
+            {
+                if (mainStartB) mainStartB.enabled = false;
+                buttonsUI.transform.localScale *= mobileUIScaleMult;
+            }
+#endif
         }
 
         public void StartGame()
