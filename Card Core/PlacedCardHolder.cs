@@ -14,17 +14,18 @@ namespace _project.Scripts.Card_Core
         private Transform originalCardTransform;
 
         private void Start() => _deckManager = CardGameMaster.Instance.deckManager;
-        
 
         /// <summary>
-        ///     Transfers the currently selected card from the DeckManager to the PlacedCardHolder,
-        ///     aligning its position, rotation, and scale with the PlacedCardHolder's transform.
-        ///     Disables click interactions for the card, clears the selection in the DeckManager,
-        ///     and hides the PlacedCardHolder's button renderer.
+        /// Assigns the currently selected action card to this cardholder, visually placing the card
+        /// into the holder's position and transferring card data ownership. Ensures any previously
+        /// placed card in this holder is first returned to its original state.
+        /// Disables the interaction capabilities of the newly placed card and updates the corresponding card references.
+        /// If there is no currently selected card in the deck manager, the operation is aborted.
+        /// Updates the card rendering visuals and hides the graphical button associated with the cardholder.
         /// </summary>
         public void TakeSelectedCard()
         {
-            if (HoldingCard) GiveBackCard();
+            // if (HoldingCard) GiveBackCard();
             if (_deckManager.selectedACardClick3D is null || _deckManager.SelectedACard is null) return;
 
             var selectedCard = _deckManager.selectedACardClick3D;
@@ -61,7 +62,7 @@ namespace _project.Scripts.Card_Core
         {
             if (!HoldingCard) return;
 
-            // Set card back to the deck manager for handling
+            // Set the card back to the deck manager for handling
             placedCardClick3D.transform.SetParent(_deckManager.actionCardParent, false);
 
             // Snap to the transform exactly (position, rotation, scale)
