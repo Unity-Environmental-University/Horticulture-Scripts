@@ -1,5 +1,6 @@
 using System.Collections;
 using _project.Scripts.Card_Core;
+using JetBrains.Annotations;
 using TMPro;
 using UnityEngine;
 using UnityEngine.EventSystems;
@@ -14,10 +15,9 @@ namespace _project.Scripts.UI
         [SerializeField] private GameObject menuCanvas;
 
         private AsyncOperation _preloadOperation;
-
+        public GameObject buttonsUI;
         public GameObject pauseCanvas;
         public GameObject settingsUI;
-        public GameObject buttonsUI;
         public TextMeshProUGUI versionText;
         public Button mainStartB;
         public bool isPaused;
@@ -33,7 +33,7 @@ namespace _project.Scripts.UI
 #if PLATFORM_IOS || PLATFORM_IPHONE || UNITY_ANDROID || UNITY_IOS
             {
                 if (mainStartB) mainStartB.enabled = false;
-                buttonsUI.transform.localScale *= mobileUIScaleMult;
+                if (buttonsUI) buttonsUI.transform.localScale *= mobileUIScaleMult;
             }
 #endif
         }
