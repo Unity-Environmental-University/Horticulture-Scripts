@@ -17,8 +17,8 @@ namespace _project.Scripts.Card_Core
         public int turnCount = 4;
         public int currentTurn;
         public bool canClickEnd;
+        public bool newRoundReady;
         public bool debugging;
-        private bool _newRoundReady;
         private static TurnController Instance { get; set; }
 
 
@@ -95,9 +95,9 @@ namespace _project.Scripts.Card_Core
             if (deckManager.updatingActionDisplay || !canClickEnd) return;
 
             // If we're ready for a new round, call setup and return
-            if (_newRoundReady)
+            if (newRoundReady)
             {
-                _newRoundReady = false;
+                newRoundReady = false;
                 StartCoroutine(BeginTurnSequence());
                 return;
             }
@@ -217,7 +217,7 @@ namespace _project.Scripts.Card_Core
                 controller.FlagShadersUpdate();
             }
 
-            _newRoundReady = true;
+            newRoundReady = true;
         }
     }
 }
