@@ -8,7 +8,7 @@ namespace _project.Scripts.Card_Core
         private DeckManager _deckManager;
         private TurnController _turnController;
         private Click3D _click3D;
-       [SerializeField] private TextMeshPro _buttonText;
+        private TextMeshPro _buttonText;
 
         private void Awake() { _click3D = GetComponent<Click3D>(); }
 
