@@ -27,6 +27,32 @@ namespace _project.Scripts.Card_Core
         {
             var plantScore = 0;
             var afflictionScore = 0;
+
+            var plants = CardGameMaster.Instance.deckManager.plantLocations
+                .Select(location => location.GetComponentInChildren<PlantController>(false))
+                .Where(controller => controller)
+                .ToList();
+
+            foreach (var plant in plants)
+            {
+                if (plant.PlantCard.Value != null) plantScore += plant.PlantCard.Value.Value;
+
+                afflictionScore += plant.CurrentAfflictions.Sum(affliction => affliction.Damage);
+            }
+
+            Debug.Log("Score: " + Score + " / " + plantScore + " / " + afflictionScore + " / " + BeeScore);
+            
+            Score = plantScore - afflictionScore;
+
+            if (CardGameMaster.Instance.scoreText)
+                CardGameMaster.Instance.scoreText.text = "Score: " + Score;
+            return Score;
+        }
+
+        public int CalculateScoreOld()
+        {
+            var plantScore = 0;
+            var afflictionScore = 0;
             BeeScore = 10;
 
             var plants = CardGameMaster.Instance.deckManager.plantLocations
@@ -44,7 +70,7 @@ namespace _project.Scripts.Card_Core
             }
 
             Debug.Log("Score: " + Score + " / " + plantScore + " / " + afflictionScore + " / " + BeeScore);
-            
+
             Score = (plantScore - afflictionScore) * BeeScore;
 
             if (CardGameMaster.Instance.scoreText)

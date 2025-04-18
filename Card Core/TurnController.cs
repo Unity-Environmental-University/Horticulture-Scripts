@@ -16,9 +16,10 @@ namespace _project.Scripts.Card_Core
         public TextMeshPro turnText;
         public int turnCount = 4;
         public int currentTurn;
+        public bool canClickEnd;
         public bool debugging;
-        private static TurnController Instance { get; set; }
         private bool _newRoundReady;
+        private static TurnController Instance { get; set; }
 
 
         private void Awake()
@@ -32,7 +33,6 @@ namespace _project.Scripts.Card_Core
             }
 
             Instance = this;
-            // DontDestroyOnLoad(gameObject);
         }
 
         private void Start() { StartCoroutine(BeginTurnSequence()); }
@@ -40,6 +40,7 @@ namespace _project.Scripts.Card_Core
         // ReSharper disable Unity.PerformanceAnalysis
         private IEnumerator BeginTurnSequence()
         {
+            canClickEnd = false;
             currentTurn = 1;
             yield return new WaitForSeconds(2f);
             try
@@ -61,74 +62,104 @@ namespace _project.Scripts.Card_Core
             {
                 throw new Exception(e.Message);
             }
+
+            yield return new WaitForSeconds(.5f);
+            canClickEnd = true;
         }
 
         private void Update() { turnText.text = "Turn: " + currentTurn; }
 
+        /// <summary>
+        /// Ends the current turn, updates the game state, and prepares for the next turn or round as needed.
+        /// </summary>
+        /// <remarks>
+        /// This method performs the following operations:
+        /// 1. Checks if the action display is still updating or if the "End Turn" button is not clickable. If either is true, the method returns early.
+        /// 2. Verifies if a new round is ready. If so, prepares for the next round by resetting the round state and starting the turn sequence, then returns.
+        /// 3. Retrieves all active plant controllers from the defined plant locations.
+        /// 4. For each plant controller:
+        /// a. Applies all queued treatments.
+        /// B. Flags the associated shaders for an update.
+        /// 5. If all plants are free of afflictions, ends the current round early.
+        /// 6. If the maximum turn count has not been reached:
+        /// a. Increments the turn counter for tracking progress.
+        /// B. Iterates through plant controllers to evaluate affliction spread to neighboring plants, considering randomized probabilities and valid neighboring plants.
+        /// c. Draws an action hand for the next turn.
+        /// 7. If the maximum turn count has been reached, ends the current round.
+        /// </remarks>
+        /// <exception cref="System.NullReferenceException">
+        /// Thrown if `deckManager`, `plantLocations`, or any dependencies (e.g., `PlantController` or `PlantCardFunctions`) are not properly initialized.
+        /// </exception>
         public void EndTurn()
         {
-            if (deckManager.updatingActionDisplay) return;
+            if (deckManager.updatingActionDisplay || !canClickEnd) return;
 
+            // If we're ready for a new round, call setup and return
             if (_newRoundReady)
             {
-                deckManager.ClearAllPlants();
-                StartCoroutine(BeginTurnSequence());
                 _newRoundReady = false;
+                StartCoroutine(BeginTurnSequence());
                 return;
             }
 
-            // Get PlantControllers in PlantLocation.
+            // Get an array of plant controllers
             var plantControllers = deckManager.plantLocations
                 .SelectMany(location => location.GetComponentsInChildren<PlantController>(false))
                 .ToArray();
+
             if (debugging) Debug.Log($"Found {plantControllers.Length} PlantControllers in PlantLocation.");
 
-            // Cure queued afflictions
+            // Apply queued treatments and update shaders
             foreach (var controller in plantControllers)
             {
                 controller.plantCardFunctions.ApplyQueuedTreatments();
                 controller.FlagShadersUpdate();
             }
 
+            // End round early if all plants are free of afflictions
             if (plantControllers.All(controller => !controller.CurrentAfflictions.Any()))
             {
                 EndRound();
                 return;
             }
 
-            if (currentTurn != turnCount)
+            if (currentTurn < turnCount)
             {
                 currentTurn++;
 
-                // TODO Review this spread logic
-
-                // Randomly check if a plant spreads an affliction from CurrentAfflictions to another plant controller
                 var random = new Random();
 
+                // Process each plant controller
                 for (var i = 0; i < plantControllers.Length; i++)
                 {
                     var controller = plantControllers[i];
-                    if (!controller.CurrentAfflictions.Any() || random.NextDouble() >= 0.5) continue; // 50% chance
+                    // Skip if no afflictions or 50% chance
+                    if (!controller.CurrentAfflictions.Any() || random.NextDouble() >= 0.5) continue;
 
+                    // Get first affliction from a plant
                     var affliction = controller.CurrentAfflictions.First();
 
-                    //collect right/left neighbors
+                    // Track possible neighbors to spread to
                     var neighborOptions = new List<PlantController>();
 
+                    // Check left neighbor if exists
                     if (i > 0)
                     {
                         var leftNeighbor = plantControllers[i - 1];
+                        // Add if a neighbor exists and doesn't have affliction
                         if (leftNeighbor && !leftNeighbor.HasAffliction(affliction)) neighborOptions.Add(leftNeighbor);
                     }
 
+                    // Check right neighbor if exists
                     if (i < plantControllers.Length - 1)
                     {
                         var rightNeighbor = plantControllers[i + 1];
+                        // Add if a neighbor exists and doesn't have affliction
                         if (rightNeighbor && !rightNeighbor.HasAffliction(affliction))
                             neighborOptions.Add(rightNeighbor);
                     }
 
-                    // Spread to one neighbor at random
+                    // Spread affliction to a random neighbor if any available
                     if (neighborOptions.Count > 0)
                     {
                         var target = neighborOptions[random.Next(neighborOptions.Count)];
@@ -145,13 +176,31 @@ namespace _project.Scripts.Card_Core
             }
             else
             {
+                deckManager.ClearAllPlants();
                 EndRound();
             }
         }
 
+        /// <summary>
+        /// Ends the current round and resets the relevant game state for the next round preparation phase.
+        /// </summary>
+        /// <remarks>
+        /// This method performs the following operations in sequence:
+        /// 1. Resets the turn counter to 0 in preparation for a new round.
+        /// 2. Clears the current action hand, deck, and discard pile by invoking the `ClearActionHand` method in the `DeckManager`.
+        /// 3. Calculates and logs the player's score using the `ScoreManager`.
+        /// 4. Retrieves all plant controllers across the defined plant locations and performs the following actions:
+        /// a. Applies all queued treatments to each plant controller, ensuring pending effects are resolved.
+        /// B. Flags the shaders associated with each plant for an update.
+        /// 5. Sets the `_newRoundReady` flag to `true`, indicating readiness for the next game's round setup.
+        /// </remarks>
+        /// <exception cref="System.NullReferenceException">
+        /// Thrown if `deckManager`, `scoreManager`, or any of their required components are not properly initialized.
+        /// </exception>
         private void EndRound()
         {
             currentTurn = 0;
+            deckManager.ClearAllPlants();
             deckManager.ClearActionHand();
             var score = scoreManager.CalculateScore();
             Debug.Log("Score: " + score);
@@ -159,6 +208,7 @@ namespace _project.Scripts.Card_Core
             var plantControllers = deckManager.plantLocations
                 .SelectMany(location => location.GetComponentsInChildren<PlantController>(false))
                 .ToArray();
+
             if (debugging) Debug.Log($"Found {plantControllers.Length} PlantControllers in PlantLocation.");
 
             foreach (var controller in plantControllers)

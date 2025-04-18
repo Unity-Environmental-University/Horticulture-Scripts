@@ -29,11 +29,10 @@ namespace _project.Scripts.Card_Core
         [DontSerialize] public bool isEnabled;
         [DontSerialize] public bool mouseOver;
         [DontSerialize] public CardView cardView;
-
-        
-        private Color _baseColor;
-        private readonly Color _hoverColor = Color.red;
         private readonly Color _disabledColor = Color.grey;
+        private readonly Color _hoverColor = Color.red;
+
+        private Color _baseColor;
         private Camera _mainCamera;
         private Mouse _mouse;
         private InputAction _mouseClickAction;
@@ -71,33 +70,23 @@ namespace _project.Scripts.Card_Core
             _mouseClickAction.Enable();
         }
 
+        /// Updates the state of the component, handling inputs and interactions during runtime.
+        /// This method checks if the component is enabled and is operating in the correct scene.
+        /// It specifically handles touch inputs (e.g., from mobile devices) to detect screen taps.
+        /// When a touch input is detected, its position is processed to determine if the object
+        /// corresponding to this component was clicked, triggering the `onClick3D` event in such cases.
+        /// The update process also ensures proper behavior by verifying necessary conditions
+        /// such as the active scene and main camera availability before performing any operations.
         private void Update()
         {
             if (!isEnabled || SceneManager.GetActiveScene().name != "CardGame" || !_mainCamera)
                 return;
 
             // Handle touch (mobile)
-            if (Touchscreen.current?.primaryTouch.press.wasPressedThisFrame == true)
-            {
-                var touchPos = Touchscreen.current.primaryTouch.position.ReadValue();
-                TryClick(touchPos);
-            }
-
-            // Handle mouse (editor, standalone)
-            if (Mouse.current?.leftButton.wasPressedThisFrame != true) return;
-            var mousePos = Mouse.current.position.ReadValue();
-            TryClick(mousePos);
+            if (Touchscreen.current?.primaryTouch.press.wasPressedThisFrame != true) return;
+            var touchPos = Touchscreen.current.primaryTouch.position.ReadValue();
+            TryClick(touchPos);
         }
-
-        private void TryClick(Vector2 screenPosition)
-        {
-            Ray ray = _mainCamera.ScreenPointToRay(screenPosition);
-            if (Physics.Raycast(ray, out RaycastHit hit) && hit.transform == transform)
-            {
-                onClick3D?.Invoke();
-            }
-        }
-
 
         private void OnDestroy()
         {
@@ -109,11 +98,11 @@ namespace _project.Scripts.Card_Core
 
         private void OnMouseEnter()
         {
-            mouseOver = true;
             RefreshState();
             if (!isEnabled) return;
             if (!handItem)
             {
+                mouseOver = true;
                 _objectRenderer.material.color = _hoverColor; // this works for 90% of the time
                 _sharedPropertyBlock.SetColor(Color1, _hoverColor); // this gets the rest
                 _objectRenderer.SetPropertyBlock(_sharedPropertyBlock);
@@ -127,9 +116,9 @@ namespace _project.Scripts.Card_Core
 
         private void OnMouseExit()
         {
-            mouseOver = false;
             RefreshState();
             if (!isEnabled) return;
+            mouseOver = false;
             var targetColor = _baseColor;
 
             // Check if this object is a plant by looking for a PlantController
@@ -150,22 +139,21 @@ namespace _project.Scripts.Card_Core
             StartCoroutine(AnimateCardBack());
         }
 
+        private void TryClick(Vector2 screenPosition)
+        {
+            var ray = _mainCamera.ScreenPointToRay(screenPosition);
+            if (Physics.Raycast(ray, out var hit) && hit.transform == transform) onClick3D?.Invoke();
+        }
+
         public void RefreshState()
         {
             if (isEnabled)
-            {
                 _objectRenderer.material.color = mouseOver ? _hoverColor : _baseColor;
-            }
             else
-            {
                 _objectRenderer.material.color = _disabledColor;
-            }
         }
 
-        public void DisableClick3D()
-        {
-            isEnabled = false;
-        }
+        public void DisableClick3D() { isEnabled = false; }
 
         private void OnMouseClick(InputAction.CallbackContext context)
         {
@@ -191,7 +179,7 @@ namespace _project.Scripts.Card_Core
         /// The animation will interpolate scale and position components separately
         /// to prevent exceeding target values, ensuring a natural movement.
         /// <returns>
-        /// IEnumerator used to control and yield execution for Unity's coroutine system.
+        ///     IEnumerator used to control and yield execution for Unity's coroutine system.
         /// </returns>
         private IEnumerator AnimateCard()
         {
@@ -240,7 +228,7 @@ namespace _project.Scripts.Card_Core
         /// that the scale and position values are clamped to avoid transitioning below the original state.
         /// The interpolation is managed over the duration specified by `animTime`.
         /// <returns>
-        /// IEnumerator used to manage and yield execution for Unity's coroutine system.
+        ///     IEnumerator used to manage and yield execution for Unity's coroutine system.
         /// </returns>
         public IEnumerator AnimateCardBack()
         {
