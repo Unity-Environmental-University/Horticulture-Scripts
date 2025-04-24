@@ -225,6 +225,10 @@ namespace _project.Scripts.Card_Core
                          .Select(slot => slot.GetComponentsInChildren<PlantController>(true))
                          .SelectMany(children => children)) Destroy(child.gameObject);
 
+            // hide all cardholders
+            foreach (var location in plantLocations)
+                location.GetComponentInChildren<PlacedCardHolder>()?.ToggleCardHolder(false);
+
             _plantHand.DeckRandomDraw();
 
             if (debug) Debug.Log("All plants cleared");

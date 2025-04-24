@@ -14,6 +14,7 @@ namespace _project.Scripts.Data
         private RadioButton _highQualityRadioButton;
         private RadioButton _lowQualityRadioButton;
         private RadioButton _mediumQualityRadioButton;
+        private RadioButton _mobileQualityRadioButton;
         private RadioButtonGroup _qualityRadioButtonGroup;
         private VisualElement _rootElement;
         private UIDocument _settingsUIDocument;
@@ -21,11 +22,12 @@ namespace _project.Scripts.Data
 
         private void OnEnable()
         {
-            // Obtain the root VisualElement from the UIDocument
+            // Get the root VisualElement from the UIDocument
             _rootElement = uiDocument.rootVisualElement;
 
             // Query the root for all items
             _qualityRadioButtonGroup = _rootElement.Q<RadioButtonGroup>("QualityRadioButtonGroup");
+            _mobileQualityRadioButton = _qualityRadioButtonGroup.Q<RadioButton>("MobileQualityRadioButton");
             _lowQualityRadioButton = _qualityRadioButtonGroup.Q<RadioButton>("LowQualityRadioButton");
             _mediumQualityRadioButton = _qualityRadioButtonGroup.Q<RadioButton>("MediumQualityRadioButton");
             _highQualityRadioButton = _qualityRadioButtonGroup.Q<RadioButton>("HighQualityRadioButton");
@@ -48,11 +50,16 @@ namespace _project.Scripts.Data
             {
                 ("HighQualityRadioButton", _highQualityRadioButton),
                 ("MediumQualityRadioButton", _mediumQualityRadioButton),
-                ("LowQualityRadioButton", _lowQualityRadioButton)
+                ("LowQualityRadioButton", _lowQualityRadioButton),
+                ("MobileQualityRadioButton", _mobileQualityRadioButton)
             };
             foreach (var rb in radioButtons)
                 if (rb.Value == null)
                     Debug.LogError($"{rb.Name} was not found");
+
+            // if not mobile platform, hide the mobile button option
+            _mobileQualityRadioButton.style.display =
+                !Application.isMobilePlatform ? DisplayStyle.None : DisplayStyle.Flex;
 
 
             // Set the initially checked RadioButton based on the current quality level
