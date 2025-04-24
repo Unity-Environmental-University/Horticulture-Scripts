@@ -217,7 +217,7 @@ namespace _project.Scripts.Card_Core
 
         /// Clears all plant objects from their designated locations by destroying all
         /// associated GameObjects with `PlantController` components at each location.
-        /// Ensures the randomness of subsequent plant arrangements by invoking a
+        /// Ensures the randomness of later plant arrangements by invoking a
         /// random draw on the plant deck. Outputs debug messages if enabled.
         public void ClearAllPlants()
         {
@@ -256,11 +256,11 @@ namespace _project.Scripts.Card_Core
 
         #region Afflictions Management
 
-        /// Draws a random number of affliction cards from the afflictions deck, with the number
+        /// Draws a random number of affliction cards from the affliction deck, with the number
         /// of cards to be drawn determined using a weighted random value based on the current plant hand size.
-        /// The method first shuffles the affliction deck, clears any existing cards in the afflictions hand,
+        /// The method first shuffles the affliction deck, clears any existing cards in the affliction hand,
         /// and then draws a specified number of cards while updating the affliction hand.
-        /// Logs information about the drawn cards if debugging is enabled,
+        /// Log information about the drawn cards if debugging is enabled
         /// and applies the newly drawn affliction deck to the game.
         public void DrawAfflictions()
         {
@@ -284,7 +284,7 @@ namespace _project.Scripts.Card_Core
         /// plants or affliction cards.
         /// If the affliction is a mildew type, an intensity value is generated and set for the plant.
         /// Each plant's shaders are flagged for updates after the affliction is applied.
-        /// Optionally log Debug messages, including details about the applied afflictions.
+        /// Optionally, log Debug messages, including details about the applied afflictions.
         /// Afflictions that fail to assign due to missing related data will log a warning.
         private void ApplyAfflictionDeck()
         {
@@ -334,7 +334,7 @@ namespace _project.Scripts.Card_Core
 
         /// Draws the player's action hand by clearing the current hand, recycling cards
         /// from the discard pile into the deck if necessary, and then drawing a specified
-        /// number of cards from the action deck. Repositions and visualizes the drawn cards
+        /// number of cards from the action deck. Repositions and visualize the drawn cards
         /// within the scene using the DisplayActionCardsSequence method.
         /// The discard pile is shuffled back into the action deck if the deck does not
         /// contain enough cards to complete the draw, and debug messages are logged if enabled.
@@ -359,7 +359,7 @@ namespace _project.Scripts.Card_Core
 
             for (var i = 0; i < cardsDrawnPerTurn; i++)
             {
-                // Handle case when action deck or discard pile is empty
+                // Handle a case when the action deck or discard pile is empty
                 if (_actionDeck.Count == 0 && _actionDiscardPile.Count > 0)
                 {
                     _actionDeck.AddRange(_actionDiscardPile);
@@ -382,7 +382,7 @@ namespace _project.Scripts.Card_Core
 
         /// Discards the specified action card by removing it from the action hand.
         /// Optionally adds the card to the discard pile if the parameter is set to true.
-        /// Resets the currently selected action card if the discarded card matches the selected one.
+        /// Reset the currently selected action card if the discarded card matches the selected one.
         /// <param name="card">The action card to be discarded.</param>
         /// <param name="addToDiscard">Whether to add the discarded card to the discard pile.</param>
         public void DiscardActionCard(ICard card, bool addToDiscard)
@@ -418,7 +418,7 @@ namespace _project.Scripts.Card_Core
         /// This method removes all current action cards from the action hand and discard pile,
         /// destroys any card GameObjects under the action card parent transform, and reinitializes
         /// the action deck to its original shuffled state.
-        /// Logs the state of the action hand, action deck, and discard pile if debugging is enabled.
+        /// Log the state of the action hand, action deck, and discard the pile if debugging is enabled.
         public void ClearActionHand()
         {
             _actionHand.Clear();

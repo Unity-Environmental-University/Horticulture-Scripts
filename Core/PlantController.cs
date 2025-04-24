@@ -33,6 +33,8 @@ namespace _project.Scripts.Core
         [SerializeField] private Shader moldShader;
         [SerializeField] [Range(0, 1)] private float moldIntensity;
 
+        [SerializeField] private ParticleSystem debuffSystem;
+
         [DontSerialize] public PlantCardFunctions plantCardFunctions;
 
         public PlantType type;
@@ -120,7 +122,11 @@ namespace _project.Scripts.Core
                 SetMoldIntensity(0);
         }
 
-        public void AddAffliction(PlantAfflictions.IAffliction affliction) => CurrentAfflictions.Add(affliction);
+        public void AddAffliction(PlantAfflictions.IAffliction affliction)
+        {
+            CurrentAfflictions.Add(affliction);
+            debuffSystem.Play();
+        }
     
         public void ProcessDay()
         {
