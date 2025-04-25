@@ -1,6 +1,5 @@
 using System.Collections;
 using _project.Scripts.Card_Core;
-using JetBrains.Annotations;
 using TMPro;
 using UnityEngine;
 using UnityEngine.EventSystems;
@@ -11,10 +10,6 @@ namespace _project.Scripts.UI
 {
     public class MenuManager : MonoBehaviour
     {
-        [SerializeField] private GameObject crosshair;
-        [SerializeField] private GameObject menuCanvas;
-
-        private AsyncOperation _preloadOperation;
         public GameObject buttonsUI;
         public GameObject pauseCanvas;
         public GameObject settingsUI;
@@ -23,6 +18,10 @@ namespace _project.Scripts.UI
         public bool isPaused;
         public float mobileUIScaleMult;
 
+        private AsyncOperation _preloadOperation;
+
+        [SerializeField] private GameObject crosshair;
+        [SerializeField] private GameObject menuCanvas;
 
         public void Start()
         {
@@ -41,7 +40,6 @@ namespace _project.Scripts.UI
         public void StartGame()
         {
             menuCanvas.SetActive(false);
-
             StartCoroutine(LoadScene("Main"));
         }
 
@@ -63,7 +61,7 @@ namespace _project.Scripts.UI
             var asyncLoad = SceneManager.LoadSceneAsync(sceneToLoad);
             while (asyncLoad is { isDone: false }) yield return null;
         }
-    
+
         // ReSharper disable Unity.PerformanceAnalysis
         public void PauseGame()
         {
@@ -99,9 +97,6 @@ namespace _project.Scripts.UI
             if (menuCanvas) menuCanvas.SetActive(true);
         }
 
-        public void QuitGame()
-        {
-            Application.Quit();
-        }
+        public void QuitGame() { Application.Quit(); }
     }
 }

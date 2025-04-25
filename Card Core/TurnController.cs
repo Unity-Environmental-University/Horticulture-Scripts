@@ -119,7 +119,7 @@ namespace _project.Scripts.Card_Core
             // End round early if all plants are free of afflictions
             if (plantControllers.All(controller => !controller.CurrentAfflictions.Any()))
             {
-                EndRound();
+                StartCoroutine(EndRound());
                 return;
             }
 
@@ -177,31 +177,40 @@ namespace _project.Scripts.Card_Core
             else
             {
                 deckManager.ClearAllPlants();
-                EndRound();
+                StartCoroutine(EndRound());
             }
         }
 
         /// <summary>
-        /// Ends the current round and resets the relevant game state for the next round preparation phase.
+        /// Ends the current round, updates the game state, and prepares for the next round.
         /// </summary>
         /// <remarks>
-        /// This method performs the following operations in sequence:
-        /// 1. Resets the turn counter to 0 in preparation for a new round.
-        /// 2. Clears the current action hand, deck, and discard pile by invoking the `ClearActionHand` method in the `DeckManager`.
-        /// 3. Calculates and logs the player's score using the `ScoreManager`.
-        /// 4. Retrieves all plant controllers across the defined plant locations and performs the following actions:
-        /// a. Applies all queued treatments to each plant controller, ensuring pending effects are resolved.
-        /// B. Flags the shaders associated with each plant for an update.
-        /// 5. Sets the `_newRoundReady` flag to `true`, indicating readiness for the next game's round setup.
+        /// This method performs the following operations:
+        /// 1. Checks if the action display is still updating or if the "End Turn" button is not clickable. If either is true, the method returns early.
+        /// 2. Verifies if a new round is ready. If so, prepares for the next round by resetting the round state and starting the turn sequence, then returns.
+        /// 3. Retrieves all active plant controllers from the defined plant locations.
+        /// 4. For each plant controller:
+        /// a. Applies all queued treatments.
+        /// B. Flags the associated shaders for an update.
+        /// 5. If all plants are free of afflictions, ends the current round early.
+        /// 6. If the maximum turn count has not been reached:
+        /// a. Increments the turn counter for tracking progress.
+        /// B. Iterates through plant controllers to evaluate affliction spread to neighboring plants, considering randomized probabilities and valid neighboring plants.
+        /// c. Draws an action hand for the next turn.
+        /// 7. If the maximum turn count has been reached, ends the current round.
         /// </remarks>
         /// <exception cref="System.NullReferenceException">
-        /// Thrown if `deckManager`, `scoreManager`, or any of their required components are not properly initialized.
+        /// Thrown if `deckManager`, `plantLocations`, or any dependencies (e.g., `PlantController` or `PlantCardFunctions`) are not properly initialized.
         /// </exception>
-        private void EndRound()
+        private IEnumerator EndRound(float delayTime = 3f)
         {
             currentTurn = 0;
-            deckManager.ClearAllPlants();
             deckManager.ClearActionHand();
+
+            yield return new WaitForSeconds(delayTime);
+
+            deckManager.ClearAllPlants();
+
             var score = scoreManager.CalculateScore();
             Debug.Log("Score: " + score);
 
