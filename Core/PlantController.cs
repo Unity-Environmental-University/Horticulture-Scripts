@@ -34,6 +34,7 @@ namespace _project.Scripts.Core
         [SerializeField] [Range(0, 1)] private float moldIntensity;
 
         [SerializeField] private ParticleSystem debuffSystem;
+        [SerializeField] private ParticleSystem buffSystem;
 
         [DontSerialize] public PlantCardFunctions plantCardFunctions;
 
@@ -120,6 +121,8 @@ namespace _project.Scripts.Core
             if (!CurrentAfflictions.Remove(affliction)) return;
             if (affliction is PlantAfflictions.MildewAffliction)
                 SetMoldIntensity(0);
+
+            buffSystem.Play();
         }
 
         public void AddAffliction(PlantAfflictions.IAffliction affliction)
