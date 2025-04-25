@@ -122,13 +122,13 @@ namespace _project.Scripts.Core
             if (affliction is PlantAfflictions.MildewAffliction)
                 SetMoldIntensity(0);
 
-            buffSystem.Play();
+            if(buffSystem) buffSystem.Play();
         }
 
         public void AddAffliction(PlantAfflictions.IAffliction affliction)
         {
             CurrentAfflictions.Add(affliction);
-            debuffSystem.Play();
+            if(debuffSystem) debuffSystem.Play();
         }
     
         public void ProcessDay()
