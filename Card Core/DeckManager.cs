@@ -194,6 +194,11 @@ namespace _project.Scripts.Card_Core
                 var plant = Instantiate(prefab, plantLocation.position, plantLocation.rotation);
                 plant.transform.SetParent(plantLocation);
                 plant.GetComponent<PlantController>().PlantCard = _plantHand[i];
+                var plantClick3D = plant.GetComponent<Click3D>();
+
+                // disable plantClick3D component
+                plantClick3D.isEnabled = false;
+                plantClick3D.enabled = false;
             }
 
             StartCoroutine(UpdateCardHolderRenders());

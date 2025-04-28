@@ -147,6 +147,7 @@ namespace _project.Scripts.Card_Core
 
         public void RefreshState()
         {
+            if (!_objectRenderer) return;
             if (isEnabled)
                 _objectRenderer.material.color = mouseOver ? _hoverColor : _baseColor;
             else
