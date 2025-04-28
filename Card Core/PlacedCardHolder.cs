@@ -26,6 +26,7 @@ namespace _project.Scripts.Card_Core
         public void TakeSelectedCard()
         {
             // if (HoldingCard) GiveBackCard();
+            if (HoldingCard) return;
             if (_deckManager.selectedACardClick3D is null || _deckManager.SelectedACard is null) return;
 
             var selectedCard = _deckManager.selectedACardClick3D;
@@ -91,7 +92,7 @@ namespace _project.Scripts.Card_Core
         public void ToggleCardHolder(bool state)
         {
             var buttonRenderer = GetComponentInChildren<MeshRenderer>(true);
-            if (buttonRenderer != null)
+            if (buttonRenderer)
                 buttonRenderer.enabled = state;
         }
     }
