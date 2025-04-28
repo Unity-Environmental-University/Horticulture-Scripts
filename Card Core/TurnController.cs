@@ -209,9 +209,9 @@ namespace _project.Scripts.Card_Core
 
             yield return new WaitForSeconds(delayTime);
 
+            var score = scoreManager.CalculateScore();
             deckManager.ClearAllPlants();
 
-            var score = scoreManager.CalculateScore();
             Debug.Log("Score: " + score);
 
             var plantControllers = deckManager.plantLocations

@@ -41,8 +41,8 @@ namespace _project.Scripts.Card_Core
             }
 
             Debug.Log("Score: " + Score + " / " + plantScore + " / " + afflictionScore + " / " + BeeScore);
-            
-            Score = plantScore - afflictionScore;
+
+            Score = Score + plantScore - afflictionScore;
 
             if (CardGameMaster.Instance.scoreText)
                 CardGameMaster.Instance.scoreText.text = "Score: " + Score;
