@@ -15,7 +15,7 @@ namespace _project.Scripts.Card_Core
         private void Start() { _deckManager = CardGameMaster.Instance.deckManager; }
 
         /// <summary>
-        /// Handles the selection of a card and attaches it to the card holder, effectively "placing" the card.
+        /// Handles the selection of a card and attaches it to the cardholder, effectively "placing" the card.
         /// If a card is already placed, it will be returned to its original position before placing the selected one.
         /// </summary>
         /// <remarks>
@@ -23,7 +23,7 @@ namespace _project.Scripts.Card_Core
         /// 1. Checks if a card is currently being held:
         /// - If yes, the existing card is returned to its original position.
         /// 2. Verifies if a card is selected in the deck. If no card is selected, the method exits without action.
-        /// 3. Clones the selected card and its associated components, then places it in the card holder:
+        /// 3. Clones the selected card and its associated components, then places it in the cardholder:
         /// - The cloned card is configured to replace the selected card.
         /// - Its transform properties (position, rotation, scale) are updated for proper appearance.
         /// 4. Updates internal references to track the new "placed" card.
