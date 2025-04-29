@@ -18,9 +18,7 @@ namespace _project.Scripts.Classes
         Sprite Sprite => null;
         ICard Clone();
 
-        void Selected()
-        {
-        }
+        void Selected() { }
     }
 
     #region Decks
@@ -73,10 +71,7 @@ namespace _project.Scripts.Classes
         public int? Value => 5;
         public GameObject Prefab { get; set; }
 
-        public ICard Clone()
-        {
-            return new ColeusCard();
-        }
+        public ICard Clone() { return new ColeusCard(); }
     }
 
     public class ChrysanthemumCard : ICard
@@ -86,10 +81,7 @@ namespace _project.Scripts.Classes
         public int? Value => 8;
         public GameObject Prefab { get; set; }
 
-        public ICard Clone()
-        {
-            return new ChrysanthemumCard();
-        }
+        public ICard Clone() { return new ChrysanthemumCard(); }
     }
 
     public class PepperCard : ICard
@@ -99,10 +91,7 @@ namespace _project.Scripts.Classes
         public int? Value => 4;
         public GameObject Prefab { get; set; }
 
-        public ICard Clone()
-        {
-            return new PepperCard();
-        }
+        public ICard Clone() { return new PepperCard(); }
     }
 
     public class CucumberCard : ICard
@@ -112,10 +101,7 @@ namespace _project.Scripts.Classes
         public int? Value => 3;
         public GameObject Prefab { get; set; }
 
-        public ICard Clone()
-        {
-            return new CucumberCard();
-        }
+        public ICard Clone() { return new CucumberCard(); }
     }
 
     #endregion
@@ -128,10 +114,7 @@ namespace _project.Scripts.Classes
         public string Name => "Aphids";
         public int? Value => -2;
 
-        public ICard Clone()
-        {
-            return new AphidsCard();
-        }
+        public ICard Clone() { return new AphidsCard(); }
     }
 
     public class MealyBugsCard : ICard
@@ -140,10 +123,7 @@ namespace _project.Scripts.Classes
         public string Name => "Mealy Bugs";
         public int? Value => -4;
 
-        public ICard Clone()
-        {
-            return new MealyBugsCard();
-        }
+        public ICard Clone() { return new MealyBugsCard(); }
     }
 
     public class ThripsCard : ICard
@@ -152,10 +132,7 @@ namespace _project.Scripts.Classes
         public string Name => "Thrips";
         public int? Value => -5;
 
-        public ICard Clone()
-        {
-            return new ThripsCard();
-        }
+        public ICard Clone() { return new ThripsCard(); }
     }
 
     public class MildewCard : ICard
@@ -163,11 +140,7 @@ namespace _project.Scripts.Classes
         public PlantAfflictions.IAffliction Affliction => new PlantAfflictions.MildewAffliction();
         public string Name => "Mildew";
         public int? Value => -4;
-
-        public ICard Clone()
-        {
-            return new MildewCard();
-        }
+        public ICard Clone() { return new MildewCard(); }
     }
 
     #endregion
@@ -176,122 +149,102 @@ namespace _project.Scripts.Classes
 
     public class NeemOilBasic : ICard
     {
+        [CanBeNull] private string _description;
         public PlantAfflictions.ITreatment Treatment => new PlantAfflictions.NeemOilTreatment();
         public string Name => "Neem Oil Basic";
-        [CanBeNull] private string _description;
+
         public string Description
         {
-            set =>  _description = value;
+            set => _description = value;
             get => _description ?? Treatment.Description;
         }
 
         public GameObject Prefab { get; set; }
         public Sprite Sprite { get; set; }
 
-        public void Selected()
-        {
-            Debug.Log("Selected " + Name);
-        }
+        public void Selected() { Debug.Log("Selected " + Name); }
 
-        public ICard Clone()
-        {
-            return new NeemOilBasic();
-        }
+        public ICard Clone() { return new NeemOilBasic(); }
     }
 
     public class InsecticideBasic : ICard
     {
+        [CanBeNull] private string _description;
         public PlantAfflictions.ITreatment Treatment => new PlantAfflictions.InsecticideTreatment();
         public string Name => "Insecticide Basic";
-        [CanBeNull] private string _description;
+
         public string Description
         {
-            set =>  _description = value;
+            set => _description = value;
             get => _description ?? Treatment.Description;
         }
+
         public GameObject Prefab { get; set; }
         public Sprite Sprite { get; set; }
 
-        public void Selected()
-        {
-            Debug.Log("Selected " + Name);
-        }
+        public void Selected() { Debug.Log("Selected " + Name); }
 
-        public ICard Clone()
-        {
-            return new InsecticideBasic();
-        }
+        public ICard Clone() { return new InsecticideBasic(); }
     }
 
     public class FungicideBasic : ICard
     {
+        [CanBeNull] private string _description;
         public PlantAfflictions.ITreatment Treatment => new PlantAfflictions.FungicideTreatment();
         public string Name => "Fungicide Basic";
-        [CanBeNull] private string _description;
+
         public string Description
         {
-            set =>  _description = value;
+            set => _description = value;
             get => _description ?? Treatment.Description;
         }
+
         public GameObject Prefab { get; set; }
         public Sprite Sprite { get; set; }
 
-        public void Selected()
-        {
-            Debug.Log("Selected " + Name);
-        }
+        public void Selected() { Debug.Log("Selected " + Name); }
 
-        public ICard Clone()
-        {
-            return new FungicideBasic();
-        }
+        public ICard Clone() { return new FungicideBasic(); }
     }
 
     public class SoapyWaterBasic : ICard
     {
+        [CanBeNull] private string _description;
         public PlantAfflictions.ITreatment Treatment => new PlantAfflictions.SoapyWaterTreatment();
         public string Name => "SoapyWater Basic";
-        [CanBeNull] private string _description;
+
         public string Description
         {
-            set =>  _description = value;
+            set => _description = value;
             get => _description ?? Treatment.Description;
         }
+
         public GameObject Prefab { get; set; }
         public Sprite Sprite { get; set; }
 
-        public void Selected()
-        {
-            Debug.Log("Selected " + Name);
-        }
+        public void Selected() { Debug.Log("Selected " + Name); }
 
-        public ICard Clone()
-        {
-            return new SoapyWaterBasic();
-        }
+        public ICard Clone() { return new SoapyWaterBasic(); }
     }
-    
+
     public class Panacea : ICard
     {
+        [CanBeNull] private string _description;
         public PlantAfflictions.ITreatment Treatment => new PlantAfflictions.Panacea();
         public string Name => "Panacea";
-        [CanBeNull] private string _description;
+
         public string Description
         {
-            set =>  _description = value;
+            set => _description = value;
             get => _description ?? Treatment.Description;
         }
+
         public GameObject Prefab { get; set; }
         public Sprite Sprite { get; set; }
 
-        public void Selected()
-        {
-            Debug.Log("Selected " + Name);
-        }
-        public ICard Clone()
-        {
-            return new Panacea();
-        }
+        public void Selected() { Debug.Log("Selected " + Name); }
+
+        public ICard Clone() { return new Panacea(); }
     }
 
     #endregion
