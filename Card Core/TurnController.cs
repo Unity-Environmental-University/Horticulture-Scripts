@@ -33,6 +33,7 @@ namespace _project.Scripts.Card_Core
             }
 
             Instance = this;
+            canClickEnd = false;
         }
 
         private void Start() { StartCoroutine(BeginTurnSequence()); }
@@ -176,7 +177,6 @@ namespace _project.Scripts.Card_Core
             }
             else
             {
-                deckManager.ClearAllPlants();
                 StartCoroutine(EndRound());
             }
         }
@@ -204,12 +204,16 @@ namespace _project.Scripts.Card_Core
         /// </exception>
         private IEnumerator EndRound(float delayTime = 3f)
         {
+            canClickEnd = false;
             currentTurn = 0;
             deckManager.ClearActionHand();
 
             yield return new WaitForSeconds(delayTime);
 
             var score = scoreManager.CalculateScore();
+
+            // wait for the score to update
+            yield return new WaitForSeconds(1f);
             deckManager.ClearAllPlants();
 
             Debug.Log("Score: " + score);
@@ -227,6 +231,7 @@ namespace _project.Scripts.Card_Core
             }
 
             newRoundReady = true;
+            canClickEnd = true;
         }
     }
 }

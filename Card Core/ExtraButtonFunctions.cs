@@ -23,7 +23,12 @@ namespace _project.Scripts.Card_Core
         {
             _buttonText.text = _turnController.newRoundReady ? "Next Round" : "End";
 
-            if (_click3D.isEnabled == _turnController.canClickEnd && !_deckManager.updatingActionDisplay) return;
+            if (!_turnController.canClickEnd || _deckManager.updatingActionDisplay) 
+            {
+                _click3D.isEnabled = false;
+                _click3D.RefreshState();
+                return;
+            }
             _click3D.isEnabled = !_deckManager.updatingActionDisplay;
             _click3D.RefreshState();
         }
