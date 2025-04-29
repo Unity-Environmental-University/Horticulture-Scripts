@@ -33,7 +33,7 @@ namespace _project.Scripts.Card_Core
 
             foreach (var plant in plants)
             {
-                if (plant.PlantCard.Value != null && plant.CurrentAfflictions.Count < 0)
+                if (plant.PlantCard.Value != null && plant.CurrentAfflictions.Count <= 0)
                     plantScore += plant.PlantCard.Value.Value;
 
                 if (plant.CurrentAfflictions.Any())
