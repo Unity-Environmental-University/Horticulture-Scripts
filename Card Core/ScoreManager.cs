@@ -8,7 +8,6 @@ namespace _project.Scripts.Card_Core
     {
         private static ScoreManager Instance { get; set; }
         private static int Score { get; set; }
-        private static int BeeScore { get; set; }
 
         private void Awake()
         {
@@ -19,7 +18,6 @@ namespace _project.Scripts.Card_Core
             }
 
             Instance = this;
-            // DontDestroyOnLoad(gameObject);
         }
 
         // ReSharper disable once MemberCanBeMadeStatic.Global
@@ -35,43 +33,19 @@ namespace _project.Scripts.Card_Core
 
             foreach (var plant in plants)
             {
-                if (plant.PlantCard.Value != null) plantScore += plant.PlantCard.Value.Value;
+                if (plant.PlantCard.Value != null && plant.CurrentAfflictions.Count < 0)
+                    plantScore += plant.PlantCard.Value.Value;
 
-                afflictionScore += plant.CurrentAfflictions.Sum(affliction => affliction.Damage);
+                if (plant.CurrentAfflictions.Any())
+                    afflictionScore += plant.CurrentAfflictions.Select(affliction => affliction.GetCard()!.Value)
+                        .Where(damage => damage != null).Sum(damage => damage.Value);
             }
 
-            Debug.Log("Score: " + Score + " / " + plantScore + " / " + afflictionScore + " / " + BeeScore);
+            Debug.Log("Plant Score: " + plantScore);
+            Debug.Log("Affliction Score: " + afflictionScore);
+            Debug.Log("Current Score: " + Score);
 
-            Score = Score + plantScore - afflictionScore;
-
-            if (CardGameMaster.Instance.scoreText)
-                CardGameMaster.Instance.scoreText.text = "Score: " + Score;
-            return Score;
-        }
-
-        public int CalculateScoreOld()
-        {
-            var plantScore = 0;
-            var afflictionScore = 0;
-            BeeScore = 10;
-
-            var plants = CardGameMaster.Instance.deckManager.plantLocations
-                .Select(location => location.GetComponentInChildren<PlantController>(false))
-                .Where(controller => controller)
-                .ToList();
-
-            foreach (var plant in plants)
-            {
-                if (plant.PlantCard.Value != null) plantScore += plant.PlantCard.Value.Value;
-
-                afflictionScore += plant.CurrentAfflictions.Sum(affliction => affliction.Damage);
-
-                BeeScore += plant.UsedTreatments.Sum(treatment => treatment.BeeValue);
-            }
-
-            Debug.Log("Score: " + Score + " / " + plantScore + " / " + afflictionScore + " / " + BeeScore);
-
-            Score = (plantScore - afflictionScore) * BeeScore;
+            Score += plantScore + afflictionScore;
 
             if (CardGameMaster.Instance.scoreText)
                 CardGameMaster.Instance.scoreText.text = "Score: " + Score;
