@@ -57,7 +57,6 @@ namespace _project.Scripts.Card_Core
         private readonly CardHand _afflictionHand = new("Afflictions Hand", AfflictionsDeck, PrototypeAfflictionsDeck);
         private readonly CardHand _plantHand = new("Plants Hand", PlantDeck, PrototypePlantsDeck);
         private readonly List<ICard> _actionHand = new();
-        private TurnController _turnController;
         private static DeckManager Instance { get; set; }
         public List<Transform> plantLocations;
         public Transform actionCardParent;
@@ -85,7 +84,6 @@ namespace _project.Scripts.Card_Core
             }
 
             Instance = this;
-            // DontDestroyOnLoad(gameObject);
         }
 
         private void Start()
@@ -150,11 +148,42 @@ namespace _project.Scripts.Card_Core
         ///     A random integer between the specified minimum and maximum bounds,
         ///     with a higher probability of being closer to the minimum.
         /// </returns>
-        private static int WeightedRandom(int min, int max)
+        private static int MinWeightedRandom(int min, int max)
         {
             var t = Random.value; // rand float (between 0.0 - 1.0)
             t *= t; // Squares the float => closer to 0 (or the minimum)
             return min + Mathf.FloorToInt(t * (max - min)); // * this value can be 0 *
+        }
+
+
+        /// <summary>
+        /// Generates a weighted random integer within a specified range.
+        /// The weight increases with the round number, favoring higher numbers towards later rounds.
+        /// </summary>
+        /// <param name="min">The inclusive lower bound of the random range.</param>
+        /// <param name="maxExclusive">The exclusive upper bound of the random range.</param>
+        /// <returns>A weighted random integer within the specified range.</returns>
+        private static int RoundWeightedRandom(int min, int maxExclusive)
+        {
+            // 0 at round 1, 1 at round 7+
+            var round01 = Mathf.Clamp01((CardGameMaster.Instance.turnController.currentRound - 1f) / 6f);
+
+            // Get a random t in 0-1 and build two *opposite* biases ----
+            var r  = Random.value;
+
+            // lowBias  →   r²   (strongly favours 0)
+            // highBias → 1-(1-r)²  (strongly favours 1)
+            var lowBias  = r * r;
+            var highBias = 1f - (1f - r) * (1f - r);
+
+            // Blend between those two curves based on how far into the game we are ----
+            var blended = Mathf.Lerp(lowBias, highBias, round01);
+
+            // Convert to an integer in [min, maxExclusive) ----
+            var result = min + Mathf.FloorToInt(blended * (maxExclusive - min));
+
+            // Safety clamp (handles edge-cases where maxExclusive == min + 1)
+            return Mathf.Clamp(result, min, maxExclusive - 1);
         }
 
         #endregion
@@ -180,7 +209,8 @@ namespace _project.Scripts.Card_Core
             _plantHand.Clear();
 
             var max = Mathf.Min(plantLocations.Count, PlantDeck.Count);
-            var cardsToDraw = Random.Range(1, max + 1);
+            //var cardsToDraw = Random.Range(1, max + 1);
+            var cardsToDraw = RoundWeightedRandom(1, max + 1);
             _plantHand.DrawCards(cardsToDraw);
 
             for (var i = 0; i < _plantHand.Count && i < plantLocations.Count; i++)
@@ -274,7 +304,8 @@ namespace _project.Scripts.Card_Core
             _afflictionHand.Clear();
 
             var max = _plantHand.Count;
-            var cardsToDraw = WeightedRandom(1, max);
+            //var cardsToDraw = MinWeightedRandom(1, max);
+            var cardsToDraw = RoundWeightedRandom(1, max + 1);
 
             _afflictionHand.DrawCards(cardsToDraw);
 

@@ -20,6 +20,12 @@ namespace _project.Scripts.Card_Core
             Instance = this;
         }
 
+        public void ResetScore()
+        {
+            Score = 0;
+            UpdateScoreText();
+        }
+
         // ReSharper disable once MemberCanBeMadeStatic.Global
         public int CalculateScore()
         {
@@ -47,9 +53,14 @@ namespace _project.Scripts.Card_Core
 
             Score += plantScore + afflictionScore;
 
+            UpdateScoreText();
+            return Score;
+        }
+
+        private static void UpdateScoreText()
+        {
             if (CardGameMaster.Instance.scoreText)
                 CardGameMaster.Instance.scoreText.text = "Score: " + Score;
-            return Score;
         }
     }
 }

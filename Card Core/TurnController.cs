@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using _project.Scripts.Classes;
 using _project.Scripts.Core;
 using TMPro;
 using UnityEngine;
@@ -14,8 +15,10 @@ namespace _project.Scripts.Card_Core
         public ScoreManager scoreManager;
         public DeckManager deckManager;
         public TextMeshPro turnText;
+        public GameObject lostGameObjects;
         public int turnCount = 4;
         public int currentTurn;
+        public int currentRound;
         public bool canClickEnd;
         public bool newRoundReady;
         public bool debugging;
@@ -41,8 +44,10 @@ namespace _project.Scripts.Card_Core
         // ReSharper disable Unity.PerformanceAnalysis
         private IEnumerator BeginTurnSequence()
         {
+            if (lostGameObjects.activeInHierarchy) lostGameObjects.SetActive(false);
             canClickEnd = false;
             currentTurn = 1;
+            currentRound++;
             yield return new WaitForSeconds(2f);
             try
             {
@@ -76,16 +81,16 @@ namespace _project.Scripts.Card_Core
         /// <remarks>
         /// This method performs the following operations:
         /// 1. Checks if the action display is still updating or if the "End Turn" button is not clickable. If either is true, the method returns early.
-        /// 2. Verifies if a new round is ready. If so, prepares for the next round by resetting the round state and starting the turn sequence, then returns.
-        /// 3. Retrieves all active plant controllers from the defined plant locations.
+        /// 2. Verify if a new round is ready. If so, prepare for the next round by resetting the round state and starting the turn sequence, then returns.
+        /// 3. Retrieve all active plant controllers from the defined plant locations.
         /// 4. For each plant controller:
         /// a. Applies all queued treatments.
         /// B. Flags the associated shaders for an update.
-        /// 5. If all plants are free of afflictions, ends the current round early.
+        /// 5. If all plants are free of afflictions, end the current round early.
         /// 6. If the maximum turn count has not been reached:
         /// a. Increments the turn counter for tracking progress.
         /// B. Iterates through plant controllers to evaluate affliction spread to neighboring plants, considering randomized probabilities and valid neighboring plants.
-        /// c. Draws an action hand for the next turn.
+        /// C. Draws an action hand for the next turn.
         /// 7. If the maximum turn count has been reached, ends the current round.
         /// </remarks>
         /// <exception cref="System.NullReferenceException">
@@ -165,6 +170,8 @@ namespace _project.Scripts.Card_Core
                     {
                         var target = neighborOptions[random.Next(neighborOptions.Count)];
                         target.AddAffliction(affliction);
+                        if (affliction is PlantAfflictions.MildewAffliction)
+                            target.SetMoldIntensity(UnityEngine.Random.Range(.5f, 1f));
                         target.FlagShadersUpdate();
                     }
 
@@ -187,22 +194,22 @@ namespace _project.Scripts.Card_Core
         /// <remarks>
         /// This method performs the following operations:
         /// 1. Checks if the action display is still updating or if the "End Turn" button is not clickable. If either is true, the method returns early.
-        /// 2. Verifies if a new round is ready. If so, prepares for the next round by resetting the round state and starting the turn sequence, then returns.
-        /// 3. Retrieves all active plant controllers from the defined plant locations.
+        /// 2. Verify if a new round is ready. If so, prepare for the next round by resetting the round state and starting the turn sequence, then returns.
+        /// 3. Retrieve all active plant controllers from the defined plant locations.
         /// 4. For each plant controller:
         /// a. Applies all queued treatments.
         /// B. Flags the associated shaders for an update.
-        /// 5. If all plants are free of afflictions, ends the current round early.
+        /// 5. If all plants are free of afflictions, end the current round early.
         /// 6. If the maximum turn count has not been reached:
         /// a. Increments the turn counter for tracking progress.
         /// B. Iterates through plant controllers to evaluate affliction spread to neighboring plants, considering randomized probabilities and valid neighboring plants.
-        /// c. Draws an action hand for the next turn.
+        /// C. Draws an action hand for the next turn.
         /// 7. If the maximum turn count has been reached, ends the current round.
         /// </remarks>
         /// <exception cref="System.NullReferenceException">
         /// Thrown if `deckManager`, `plantLocations`, or any dependencies (e.g., `PlantController` or `PlantCardFunctions`) are not properly initialized.
         /// </exception>
-        private IEnumerator EndRound(float delayTime = 3f)
+        private IEnumerator EndRound(float delayTime = 2f)
         {
             canClickEnd = false;
             currentTurn = 0;
@@ -212,8 +219,6 @@ namespace _project.Scripts.Card_Core
 
             var score = scoreManager.CalculateScore();
 
-            // wait for the score to update
-            yield return new WaitForSeconds(1f);
             deckManager.ClearAllPlants();
 
             Debug.Log("Score: " + score);
@@ -230,8 +235,24 @@ namespace _project.Scripts.Card_Core
                 controller.FlagShadersUpdate();
             }
 
-            newRoundReady = true;
-            canClickEnd = true;
+            if (score > 0)
+            {
+                newRoundReady = true;
+                canClickEnd = true;
+            }
+            else
+            {
+                GameLost();
+            }
         }
+
+        public void ResetGame()
+        {
+            currentRound = 0;
+            StartCoroutine(BeginTurnSequence());
+            scoreManager.ResetScore();
+        }
+
+        private void GameLost() { lostGameObjects.SetActive(true); }
     }
 }
