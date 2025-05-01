@@ -17,9 +17,9 @@ namespace _project.Scripts.PlayModeTest
     {
         private GameObject _cardGameMasterGo;
         private GameObject _plantSpawnGo;
-        private DeckManager deckManager;
-        private ScoreManager scoreManager;
-        private TurnController turnController;
+        private DeckManager _deckManager;
+        private ScoreManager _scoreManager;
+        private TurnController _turnController;
 
         // Fake implementation for treatment.
         private class FakeTreatment : PlantAfflictions.ITreatment
@@ -45,7 +45,6 @@ namespace _project.Scripts.PlayModeTest
         {
             public string Name => "Test Affliction";
             public string Description => "Just a test";
-            public int Damage => 2;
             public Color Color => Color.gray;
 
             public void TreatWith(PlantAfflictions.ITreatment treatment, PlantController plant)
@@ -76,7 +75,7 @@ namespace _project.Scripts.PlayModeTest
         private class SafeClick3D : Click3D
         {
             // ReSharper disable once Unity.RedundantEventFunction
-            private void Start() { /* No-op to prevent scene check from running */ }
+            private void Start() { /* No-op to prevent self-destruction check from running */ }
         }
         
         private void CreateCardHolder(ICard card, bool assignClick3D = true)
@@ -113,7 +112,7 @@ namespace _project.Scripts.PlayModeTest
 
             var plantFunctions = plantGo.AddComponent<PlantCardFunctions>();
             plantFunctions.plantController = plant;
-            plantFunctions.deckManager = deckManager;
+            plantFunctions.deckManager = _deckManager;
             plant.plantCardFunctions = plantFunctions;
 
             return plant;
@@ -127,17 +126,17 @@ namespace _project.Scripts.PlayModeTest
             _cardGameMasterGo.SetActive(false);
 
             // Add required components.
-            deckManager = _cardGameMasterGo.AddComponent<DeckManager>();
-            scoreManager = _cardGameMasterGo.AddComponent<ScoreManager>();
-            deckManager.plantLocations = new List<Transform>();
-            deckManager.actionCardParent = new GameObject("ActionCardParent").transform;
+            _deckManager = _cardGameMasterGo.AddComponent<DeckManager>();
+            _scoreManager = _cardGameMasterGo.AddComponent<ScoreManager>();
+            _deckManager.plantLocations = new List<Transform>();
+            _deckManager.actionCardParent = new GameObject("ActionCardParent").transform;
             var cardGameMaster = _cardGameMasterGo.AddComponent<CardGameMaster>();
-            turnController = _cardGameMasterGo.AddComponent<TurnController>();
+            _turnController = _cardGameMasterGo.AddComponent<TurnController>();
 
             // Inject dependencies into CardGameMaster.
-            cardGameMaster.deckManager = deckManager;
-            cardGameMaster.scoreManager = scoreManager;
-            cardGameMaster.turnController = turnController;
+            cardGameMaster.deckManager = _deckManager;
+            cardGameMaster.scoreManager = _scoreManager;
+            cardGameMaster.turnController = _turnController;
 
             // Use reflection to set the private static Instance property.
             typeof(CardGameMaster)
@@ -160,7 +159,7 @@ namespace _project.Scripts.PlayModeTest
 
             var plantFunctions = plantGo.AddComponent<PlantCardFunctions>();
             plantFunctions.plantController = plant;
-            plantFunctions.deckManager = deckManager;
+            plantFunctions.deckManager = _deckManager;
             plant.plantCardFunctions = plantFunctions;
 
             // Create a cardholder.
