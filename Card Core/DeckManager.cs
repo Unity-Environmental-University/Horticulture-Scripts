@@ -166,7 +166,7 @@ namespace _project.Scripts.Card_Core
         private static int RoundWeightedRandom(int min, int maxExclusive)
         {
             // 0 at round 1, 1 at round 7+
-            var round01 = Mathf.Clamp01((CardGameMaster.Instance.turnController.currentRound - 1f) / 6f);
+            var round01 = Mathf.Clamp01((CardGameMaster.Instance.turnController.currentRound - 1f) / 4f);
 
             // Get a random t in 0-1 and build two *opposite* biases ----
             var r  = Random.value;
@@ -177,7 +177,8 @@ namespace _project.Scripts.Card_Core
             var highBias = 1f - (1f - r) * (1f - r);
 
             // Blend between those two curves based on how far into the game we are ----
-            var blended = Mathf.Lerp(lowBias, highBias, round01);
+            // Exaggerate round01 to make early rounds more biased, and late rounds scale up faster.
+            var blended = Mathf.Lerp(lowBias, highBias, round01 * 2f);
 
             // Convert to an integer in [min, maxExclusive) ----
             var result = min + Mathf.FloorToInt(blended * (maxExclusive - min));
