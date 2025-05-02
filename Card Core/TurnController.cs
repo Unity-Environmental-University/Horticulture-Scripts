@@ -76,25 +76,29 @@ namespace _project.Scripts.Card_Core
         private void Update() { turnText.text = "Turn: " + currentTurn; }
 
         /// <summary>
-        /// Ends the current turn, updates the game state, and prepares for the next turn or round as needed.
+        ///     Ends the current turn, updates the game state, and prepares for the next turn or round as needed.
         /// </summary>
         /// <remarks>
-        /// This method performs the following operations:
-        /// 1. Checks if the action display is still updating or if the "End Turn" button is not clickable. If either is true, the method returns early.
-        /// 2. Verify if a new round is ready. If so, prepare for the next round by resetting the round state and starting the turn sequence, then returns.
-        /// 3. Retrieve all active plant controllers from the defined plant locations.
-        /// 4. For each plant controller:
-        /// a. Applies all queued treatments.
-        /// B. Flags the associated shaders for an update.
-        /// 5. If all plants are free of afflictions, end the current round early.
-        /// 6. If the maximum turn count has not been reached:
-        /// a. Increments the turn counter for tracking progress.
-        /// B. Iterates through plant controllers to evaluate affliction spread to neighboring plants, considering randomized probabilities and valid neighboring plants.
-        /// C. Draws an action hand for the next turn.
-        /// 7. If the maximum turn count has been reached, ends the current round.
+        ///     This method performs the following operations:
+        ///     1. Checks if the action display is still updating or if the "End Turn" button is not clickable. If either is true,
+        ///     the method returns early.
+        ///     2. Verify if a new round is ready. If so, prepare for the next round by resetting the round state and starting the
+        ///     turn sequence, then returns.
+        ///     3. Retrieve all active plant controllers from the defined plant locations.
+        ///     4. For each plant controller:
+        ///     a. Applies all queued treatments.
+        ///     B. Flags the associated shaders for an update.
+        ///     5. If all plants are free of afflictions, end the current round early.
+        ///     6. If the maximum turn count has not been reached:
+        ///     a. Increments the turn counter for tracking progress.
+        ///     B. Iterates through plant controllers to evaluate affliction spread to neighboring plants, considering randomized
+        ///     probabilities and valid neighboring plants.
+        ///     C. Draws an action hand for the next turn.
+        ///     7. If the maximum turn count has been reached, ends the current round.
         /// </remarks>
         /// <exception cref="System.NullReferenceException">
-        /// Thrown if `deckManager`, `plantLocations`, or any dependencies (e.g., `PlantController` or `PlantCardFunctions`) are not properly initialized.
+        ///     Thrown if `deckManager`, `plantLocations`, or any dependencies (e.g., `PlantController` or `PlantCardFunctions`)
+        ///     are not properly initialized.
         /// </exception>
         public void EndTurn()
         {
@@ -119,6 +123,7 @@ namespace _project.Scripts.Card_Core
             foreach (var controller in plantControllers)
             {
                 controller.plantCardFunctions.ApplyQueuedTreatments();
+                StartCoroutine(PauseRoutine());
                 controller.FlagShadersUpdate();
             }
 
@@ -169,9 +174,24 @@ namespace _project.Scripts.Card_Core
                     if (neighborOptions.Count > 0)
                     {
                         var target = neighborOptions[random.Next(neighborOptions.Count)];
+                        if (target.HasAffliction(affliction)) continue;
                         target.AddAffliction(affliction);
-                        if (affliction is PlantAfflictions.MildewAffliction)
-                            target.SetMoldIntensity(UnityEngine.Random.Range(.5f, 1f));
+                        switch (affliction)
+                        {
+                            case PlantAfflictions.MildewAffliction:
+                                target.SetMoldIntensity(UnityEngine.Random.Range(.5f, 1f));
+                                break;
+                            case PlantAfflictions.ThripsAffliction:
+                                foreach (var localAffliction in target.CurrentAfflictions)
+                                {
+                                    // TODO Make this work in a player-friendly way.
+                                    //localAffliction.TickDay();
+                                }
+
+                                break;
+                        }
+
+                        StartCoroutine(PauseRoutine());
                         target.FlagShadersUpdate();
                     }
 
@@ -188,26 +208,33 @@ namespace _project.Scripts.Card_Core
             }
         }
 
+        private IEnumerator PauseRoutine(float delay = 1f) { yield return new WaitForSeconds(delay); }
+
+
         /// <summary>
-        /// Ends the current round, updates the game state, and prepares for the next round.
+        ///     Ends the current round, updates the game state, and prepares for the next round.
         /// </summary>
         /// <remarks>
-        /// This method performs the following operations:
-        /// 1. Checks if the action display is still updating or if the "End Turn" button is not clickable. If either is true, the method returns early.
-        /// 2. Verify if a new round is ready. If so, prepare for the next round by resetting the round state and starting the turn sequence, then returns.
-        /// 3. Retrieve all active plant controllers from the defined plant locations.
-        /// 4. For each plant controller:
-        /// a. Applies all queued treatments.
-        /// B. Flags the associated shaders for an update.
-        /// 5. If all plants are free of afflictions, end the current round early.
-        /// 6. If the maximum turn count has not been reached:
-        /// a. Increments the turn counter for tracking progress.
-        /// B. Iterates through plant controllers to evaluate affliction spread to neighboring plants, considering randomized probabilities and valid neighboring plants.
-        /// C. Draws an action hand for the next turn.
-        /// 7. If the maximum turn count has been reached, ends the current round.
+        ///     This method performs the following operations:
+        ///     1. Checks if the action display is still updating or if the "End Turn" button is not clickable. If either is true,
+        ///     the method returns early.
+        ///     2. Verify if a new round is ready. If so, prepare for the next round by resetting the round state and starting the
+        ///     turn sequence, then returns.
+        ///     3. Retrieve all active plant controllers from the defined plant locations.
+        ///     4. For each plant controller:
+        ///     a. Applies all queued treatments.
+        ///     B. Flags the associated shaders for an update.
+        ///     5. If all plants are free of afflictions, end the current round early.
+        ///     6. If the maximum turn count has not been reached:
+        ///     a. Increments the turn counter for tracking progress.
+        ///     B. Iterates through plant controllers to evaluate affliction spread to neighboring plants, considering randomized
+        ///     probabilities and valid neighboring plants.
+        ///     C. Draws an action hand for the next turn.
+        ///     7. If the maximum turn count has been reached, ends the current round.
         /// </remarks>
         /// <exception cref="System.NullReferenceException">
-        /// Thrown if `deckManager`, `plantLocations`, or any dependencies (e.g., `PlantController` or `PlantCardFunctions`) are not properly initialized.
+        ///     Thrown if `deckManager`, `plantLocations`, or any dependencies (e.g., `PlantController` or `PlantCardFunctions`)
+        ///     are not properly initialized.
         /// </exception>
         private IEnumerator EndRound(float delayTime = 2f)
         {
