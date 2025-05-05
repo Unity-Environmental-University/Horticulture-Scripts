@@ -9,6 +9,8 @@ namespace _project.Scripts.Card_Core
         private static ScoreManager Instance { get; set; }
         private static int Score { get; set; }
 
+        public int treatmentCost;
+
         private void Awake()
         {
             if (Instance && Instance != this)
@@ -50,8 +52,8 @@ namespace _project.Scripts.Card_Core
             Debug.Log("Plant Score: " + plantScore);
             Debug.Log("Affliction Score: " + afflictionScore);
             Debug.Log("Current Score: " + Score);
-
-            Score += plantScore + afflictionScore;
+            
+            Score += plantScore + afflictionScore + treatmentCost;
 
             UpdateScoreText();
             return Score;

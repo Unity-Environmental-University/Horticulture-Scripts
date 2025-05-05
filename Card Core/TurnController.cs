@@ -116,15 +116,23 @@ namespace _project.Scripts.Card_Core
             var plantControllers = deckManager.plantLocations
                 .SelectMany(location => location.GetComponentsInChildren<PlantController>(false))
                 .ToArray();
-
-            if (debugging) Debug.Log($"Found {plantControllers.Length} PlantControllers in PlantLocation.");
-
-            // Apply queued treatments and update shaders
-            foreach (var controller in plantControllers)
+            
+            var cardHolders = CardGameMaster.Instance?.cardHolders;
+            if (cardHolders != null)
             {
-                controller.plantCardFunctions.ApplyQueuedTreatments();
-                StartCoroutine(PauseRoutine());
-                controller.FlagShadersUpdate();
+                var treatmentCost = cardHolders.Where(cardHolder => cardHolder.PlacedCard?.Value != null)
+                    .Sum(cardHolder => cardHolder.PlacedCard.Value.Value);
+
+                if (debugging) Debug.Log($"Found {plantControllers.Length} PlantControllers in PlantLocation.");
+
+                // Apply queued treatments and update shaders
+                foreach (var controller in plantControllers)
+                {
+                    scoreManager.treatmentCost += treatmentCost;
+                    controller.plantCardFunctions.ApplyQueuedTreatments();
+                    StartCoroutine(PauseRoutine());
+                    controller.FlagShadersUpdate();
+                }
             }
 
             // End round early if all plants are free of afflictions
@@ -208,7 +216,7 @@ namespace _project.Scripts.Card_Core
             }
         }
 
-        private IEnumerator PauseRoutine(float delay = 1f) { yield return new WaitForSeconds(delay); }
+        private static IEnumerator PauseRoutine(float delay = 1f) { yield return new WaitForSeconds(delay); }
 
 
         /// <summary>
@@ -240,6 +248,8 @@ namespace _project.Scripts.Card_Core
         {
             canClickEnd = false;
             currentTurn = 0;
+            Debug.Log($"Treatment Cost: {scoreManager.treatmentCost}");
+            if (scoreManager != null) scoreManager.treatmentCost = 0;
             deckManager.ClearActionHand();
 
             yield return new WaitForSeconds(delayTime);

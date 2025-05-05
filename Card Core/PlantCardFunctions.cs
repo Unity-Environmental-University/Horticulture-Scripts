@@ -74,6 +74,7 @@ namespace _project.Scripts.Card_Core
         public void ApplyQueuedTreatments()
         {
             var cardHolders = CardGameMaster.Instance?.cardHolders;
+            var scoreManager = CardGameMaster.Instance?.scoreManager;
 
             if (cardHolders is null || cardHolders.Count is 0)
             {
