@@ -11,6 +11,7 @@ namespace _project.Scripts.Card_Core
         
         public TextMeshPro titleText;
         public TextMeshPro descriptionText;
+        public TextMeshPro treatmentCostText;
 
         private void Start() => _deckManager = CardGameMaster.Instance.deckManager;
         
@@ -20,6 +21,7 @@ namespace _project.Scripts.Card_Core
         {
             titleText.text = card.Name;
             descriptionText.text = card.Description;
+            if (card.Value != null) treatmentCostText.text = "$ " + card.Value;
             _originalCard = card;
         }
 
