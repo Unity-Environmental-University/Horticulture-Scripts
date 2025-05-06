@@ -6,13 +6,18 @@ namespace _project.Scripts.Card_Core
     public class PlacedCardHolder : MonoBehaviour
     {
         private DeckManager _deckManager;
+        private ScoreManager _scoreManager;
 
         public Click3D placedCardClick3D;
         public CardView placedCardView;
         public ICard PlacedCard;
         public bool HoldingCard => placedCardClick3D;
 
-        private void Start() { _deckManager = CardGameMaster.Instance.deckManager; }
+        private void Start()
+        {
+            _deckManager = CardGameMaster.Instance.deckManager;
+            _scoreManager = CardGameMaster.Instance.scoreManager;
+        }
 
         /// <summary>
         /// Handles the selection of a card and attaches it to the cardholder, effectively "placing" the card.
@@ -22,7 +27,7 @@ namespace _project.Scripts.Card_Core
         /// This method:
         /// 1. Checks if a card is currently being held:
         /// - If yes, the existing card is returned to its original position.
-        /// 2. Verifies if a card is selected in the deck. If no card is selected, the method exits without action.
+        /// 2. Verify if a card is selected on the deck. If no card is selected, the method exits without action.
         /// 3. Clones the selected card and its associated components, then places it in the cardholder:
         /// - The cloned card is configured to replace the selected card.
         /// - Its transform properties (position, rotation, scale) are updated for proper appearance.
@@ -72,6 +77,9 @@ namespace _project.Scripts.Card_Core
             var cardRenderers = selectedCard.GetComponentsInChildren<Renderer>();
             if (cardRenderers == null) return;
             foreach (var renderer1 in cardRenderers) renderer1.enabled = false;
+
+            if (PlacedCard.Value != null) _scoreManager.treatmentCost += PlacedCard.Value.Value;
+            _scoreManager.CalculateTreatmentCost();
         }
 
         /// <summary>
@@ -85,8 +93,8 @@ namespace _project.Scripts.Card_Core
         /// 2. Iterates through all card views in the action card parent to locate the originally placed card:
         /// - Enables all associated renderers to make the card visible again.
         /// - Re-enables the 3D click interaction system on the card, resets its selection state, and animates it back to its original position.
-        /// 3. Destroys the cloned card held in the holder.
-        /// 4. Resets internal references associated with the placed card, clearing the holder state.
+        /// 3. Destroy the cloned card held in the holder.
+        /// 4. Reset internal references associated with the placed card, clearing the holder state.
         /// 5. Re-enables the visual appearance of the holder UI, such as button or parent object rendering, to indicate it is no longer holding a card.
         /// </remarks>
         private void GiveBackCard()
@@ -113,6 +121,9 @@ namespace _project.Scripts.Card_Core
                 }
 
             Destroy(placedCardClick3D.gameObject);
+            
+            if (PlacedCard.Value != null) _scoreManager.treatmentCost -= PlacedCard.Value.Value;
+            _scoreManager.CalculateTreatmentCost();
 
             // Clear the current PlacedCardHolder references
             placedCardView = null;
