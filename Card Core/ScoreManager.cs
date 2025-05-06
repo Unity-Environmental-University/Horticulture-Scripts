@@ -1,5 +1,6 @@
 using System.Linq;
 using _project.Scripts.Core;
+using TMPro;
 using UnityEngine;
 
 namespace _project.Scripts.Card_Core
@@ -8,6 +9,7 @@ namespace _project.Scripts.Card_Core
     {
         private static ScoreManager Instance { get; set; }
         private static int Score { get; set; }
+        private static TextMeshPro TreatmentCostText => CardGameMaster.Instance.treatmentCostText;
 
         public int treatmentCost;
 
@@ -26,6 +28,17 @@ namespace _project.Scripts.Card_Core
         {
             Score = 0;
             UpdateScoreText();
+        }
+        
+        private static void UpdateScoreText()
+        {
+            if (CardGameMaster.Instance.scoreText)
+                CardGameMaster.Instance.scoreText.text = "Score: " + Score;
+        }
+        
+        private void UpdateCostText(int totalCost)
+        {
+            TreatmentCostText.text = $"Treatment Cost: " + totalCost;
         }
 
         // ReSharper disable once MemberCanBeMadeStatic.Global
@@ -56,13 +69,33 @@ namespace _project.Scripts.Card_Core
             Score += plantScore + afflictionScore + treatmentCost;
 
             UpdateScoreText();
+            UpdateCostText(0);
             return Score;
         }
 
-        private static void UpdateScoreText()
+        public int CalculateTreatmentCost()
         {
-            if (CardGameMaster.Instance.scoreText)
-                CardGameMaster.Instance.scoreText.text = "Score: " + Score;
+            var afflictionScore = 0;
+
+            var plants = CardGameMaster.Instance.deckManager.plantLocations
+                .Select(location => location.GetComponentInChildren<PlantController>(false))
+                .Where(controller => controller)
+                .ToList();
+
+            foreach (var plant in plants)
+            {
+                if (plant.PlantCard.Value != null && plant.CurrentAfflictions.Count <= 0) { }
+
+                if (plant.CurrentAfflictions.Any())
+                    afflictionScore += plant.CurrentAfflictions.Select(affliction => affliction.GetCard()!.Value)
+                        .Where(damage => damage != null).Sum(damage => damage.Value);
+            }
+
+            var totalCost = afflictionScore + treatmentCost;
+
+            UpdateCostText(totalCost);
+
+            return totalCost;
         }
     }
 }

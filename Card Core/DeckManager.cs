@@ -313,6 +313,7 @@ namespace _project.Scripts.Card_Core
             if (debug)
                 Debug.Log("Afflictions Drawn: " + string.Join(", ", _afflictionHand.ConvertAll(card => card.Name)));
             ApplyAfflictionDeck();
+            CardGameMaster.Instance.scoreManager.CalculateTreatmentCost();
         }
 
         /// Applies afflictions from the affliction deck to available plants in the scene.
