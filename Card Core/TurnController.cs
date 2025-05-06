@@ -4,7 +4,6 @@ using System.Collections.Generic;
 using System.Linq;
 using _project.Scripts.Classes;
 using _project.Scripts.Core;
-using TMPro;
 using UnityEngine;
 using Random = System.Random;
 
@@ -12,9 +11,8 @@ namespace _project.Scripts.Card_Core
 {
     public class TurnController : MonoBehaviour
     {
-        public ScoreManager scoreManager;
-        public DeckManager deckManager;
-        public TextMeshPro turnText;
+        private ScoreManager _scoreManager;
+        private DeckManager _deckManager;
         public GameObject lostGameObjects;
         public int turnCount = 4;
         public int currentTurn;
@@ -27,8 +25,8 @@ namespace _project.Scripts.Card_Core
 
         private void Awake()
         {
-            deckManager = CardGameMaster.Instance.deckManager;
-            scoreManager = CardGameMaster.Instance.scoreManager;
+            _deckManager = CardGameMaster.Instance.deckManager;
+            _scoreManager = CardGameMaster.Instance.scoreManager;
             if (Instance && Instance != this)
             {
                 Destroy(gameObject);
@@ -51,7 +49,7 @@ namespace _project.Scripts.Card_Core
             yield return new WaitForSeconds(2f);
             try
             {
-                deckManager.PlacePlants();
+                _deckManager.PlacePlants();
             }
             catch (Exception e)
             {
@@ -61,8 +59,8 @@ namespace _project.Scripts.Card_Core
             yield return new WaitForSeconds(1f);
             try
             {
-                deckManager.DrawAfflictions();
-                deckManager.DrawActionHand();
+                _deckManager.DrawAfflictions();
+                _deckManager.DrawActionHand();
             }
             catch (Exception e)
             {
@@ -73,7 +71,11 @@ namespace _project.Scripts.Card_Core
             canClickEnd = true;
         }
 
-        private void Update() { turnText.text = "Turn: " + currentTurn; }
+        private void Update()
+        {
+            if (CardGameMaster.Instance.turnText)
+                CardGameMaster.Instance.turnText.text = "Turn: " + currentTurn;
+        }
 
         /// <summary>
         ///     Ends the current turn, updates the game state, and prepares for the next turn or round as needed.
@@ -102,7 +104,7 @@ namespace _project.Scripts.Card_Core
         /// </exception>
         public void EndTurn()
         {
-            if (deckManager.updatingActionDisplay || !canClickEnd) return;
+            if (_deckManager.updatingActionDisplay || !canClickEnd) return;
 
             // If we're ready for a new round, call setup and return
             if (newRoundReady)
@@ -113,7 +115,7 @@ namespace _project.Scripts.Card_Core
             }
 
             // Get an array of plant controllers
-            var plantControllers = deckManager.plantLocations
+            var plantControllers = _deckManager.plantLocations
                 .SelectMany(location => location.GetComponentsInChildren<PlantController>(false))
                 .ToArray();
             
@@ -128,7 +130,7 @@ namespace _project.Scripts.Card_Core
                 // Apply queued treatments and update shaders
                 foreach (var controller in plantControllers)
                 {
-                    scoreManager.treatmentCost += treatmentCost;
+                    _scoreManager.treatmentCost += treatmentCost;
                     controller.plantCardFunctions.ApplyQueuedTreatments();
                     StartCoroutine(PauseRoutine());
                     controller.FlagShadersUpdate();
@@ -183,22 +185,14 @@ namespace _project.Scripts.Card_Core
                     {
                         var target = neighborOptions[random.Next(neighborOptions.Count)];
                         if (target.HasAffliction(affliction)) continue;
-                        target.AddAffliction(affliction);
-                        switch (affliction)
+                        
+                        // Don't spread to something that's been given the Panacea
+                        if (!target.UsedTreatments.Any(treatment => treatment is PlantAfflictions.Panacea))
                         {
-                            case PlantAfflictions.MildewAffliction:
-                                target.SetMoldIntensity(UnityEngine.Random.Range(.5f, 1f));
-                                break;
-                            case PlantAfflictions.ThripsAffliction:
-                                foreach (var localAffliction in target.CurrentAfflictions)
-                                {
-                                    // TODO Make this work in a player-friendly way.
-                                    //localAffliction.TickDay();
-                                }
-
-                                break;
+                            target.AddAffliction(affliction);
+                            _scoreManager.CalculateTreatmentCost();
                         }
-
+                        
                         StartCoroutine(PauseRoutine());
                         target.FlagShadersUpdate();
                     }
@@ -208,7 +202,7 @@ namespace _project.Scripts.Card_Core
                             $"Affliction {affliction} spread from {controller.name} to {plantControllers[i].name}.");
                 }
 
-                deckManager.DrawActionHand();
+                _deckManager.DrawActionHand();
             }
             else
             {
@@ -248,19 +242,20 @@ namespace _project.Scripts.Card_Core
         {
             canClickEnd = false;
             currentTurn = 0;
-            Debug.Log($"Treatment Cost: {scoreManager.treatmentCost}");
-            if (scoreManager != null) scoreManager.treatmentCost = 0;
-            deckManager.ClearActionHand();
+            Debug.Log($"Treatment Cost: {_scoreManager.treatmentCost}");
+            if (_scoreManager) _scoreManager.treatmentCost = 0;
+            _deckManager.ClearActionHand();
+            _scoreManager.CalculateTreatmentCost();
 
             yield return new WaitForSeconds(delayTime);
 
-            var score = scoreManager.CalculateScore();
+            var score = _scoreManager.CalculateScore();
 
-            deckManager.ClearAllPlants();
+            _deckManager.ClearAllPlants();
 
             Debug.Log("Score: " + score);
 
-            var plantControllers = deckManager.plantLocations
+            var plantControllers = _deckManager.plantLocations
                 .SelectMany(location => location.GetComponentsInChildren<PlantController>(false))
                 .ToArray();
 
@@ -287,7 +282,7 @@ namespace _project.Scripts.Card_Core
         {
             currentRound = 0;
             StartCoroutine(BeginTurnSequence());
-            scoreManager.ResetScore();
+            _scoreManager.ResetScore();
         }
 
         private void GameLost() { lostGameObjects.SetActive(true); }

@@ -23,9 +23,12 @@ namespace _project.Scripts.Card_Core
         public DeckManager deckManager;
         public ScoreManager scoreManager;
         public TurnController turnController;
-        public List<PlacedCardHolder> cardHolders;
 
         [CanBeNull] public TextMeshPro scoreText;
+        [CanBeNull] public TextMeshPro turnText;
+        [CanBeNull] public TextMeshPro treatmentCostText;
+
+        public List<PlacedCardHolder> cardHolders;
         public static CardGameMaster Instance { get; private set; }
 
         /// <summary>
