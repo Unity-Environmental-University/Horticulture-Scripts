@@ -215,7 +215,7 @@ namespace _project.Scripts.Classes
         [CanBeNull] private string _description;
         public PlantAfflictions.ITreatment Treatment => new PlantAfflictions.SoapyWaterTreatment();
         public string Name => "SoapyWater Basic";
-        public int? Value => 1;
+        public int? Value => -1;
 
         public string Description
         {
