@@ -45,7 +45,9 @@ namespace _project.Scripts.Card_Core
         public int CalculateScore()
         {
             var plantScore = 0;
-            var afflictionScore = 0;
+            var afflictionDamage = 0;
+            
+            // TODO Reduce linq expressions in score manager
 
             var plants = CardGameMaster.Instance.deckManager.plantLocations
                 .Select(location => location.GetComponentInChildren<PlantController>(false))
@@ -58,15 +60,15 @@ namespace _project.Scripts.Card_Core
                     plantScore += plant.PlantCard.Value.Value;
 
                 if (plant.CurrentAfflictions.Any())
-                    afflictionScore += plant.CurrentAfflictions.Select(affliction => affliction.GetCard()!.Value)
+                    afflictionDamage += plant.CurrentAfflictions.Select(affliction => affliction.GetCard()!.Value)
                         .Where(damage => damage != null).Sum(damage => damage.Value);
             }
 
             Debug.Log("Plant Score: " + plantScore);
-            Debug.Log("Affliction Score: " + afflictionScore);
+            Debug.Log("Affliction Score: " + afflictionDamage);
             Debug.Log("Current Score: " + Score);
             
-            Score += plantScore + afflictionScore + treatmentCost;
+            Score += plantScore + afflictionDamage + treatmentCost;
 
             UpdateScoreText();
             UpdateCostText(0);
