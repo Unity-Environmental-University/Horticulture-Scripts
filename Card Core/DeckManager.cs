@@ -226,7 +226,8 @@ namespace _project.Scripts.Card_Core
                 plant.transform.SetParent(plantLocation);
                 var plantController = plant.GetComponent<PlantController>();
                 plantController.PlantCard = _plantHand[i];
-                //if (plantController.priceFlag) plantController.priceFlagText.text = "$" + plant
+                if (plantController.priceFlag && plantController.priceFlagText)
+                    plantController.priceFlagText.text = "$" + plantController.PlantCard.Value;
                 var plantClick3D = plant.GetComponent<Click3D>();
 
                 // disable plantClick3D component
