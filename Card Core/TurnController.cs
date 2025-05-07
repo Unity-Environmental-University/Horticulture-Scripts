@@ -46,6 +46,7 @@ namespace _project.Scripts.Card_Core
             canClickEnd = false;
             currentTurn = 1;
             currentRound++;
+            
             yield return new WaitForSeconds(2f);
             try
             {
