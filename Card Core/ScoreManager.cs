@@ -67,6 +67,7 @@ namespace _project.Scripts.Card_Core
 
             UpdateScoreText();
             UpdateCostText(0);
+            UpdateProfitText(0);
             return Score;
         }
 
