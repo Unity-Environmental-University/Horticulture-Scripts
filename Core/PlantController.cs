@@ -7,6 +7,7 @@ using JetBrains.Annotations;
 using TMPro;
 using Unity.Serialization;
 using UnityEngine;
+using Random = System.Random;
 
 namespace _project.Scripts.Core
 {
@@ -131,8 +132,13 @@ namespace _project.Scripts.Core
 
         public void AddAffliction(PlantAfflictions.IAffliction affliction)
         {
+            var rand = new Random();
+            var randomValue = rand.NextDouble() * 0.5f + 0.5f;
             CurrentAfflictions.Add(affliction);
-            if(debuffSystem) debuffSystem.Play();
+            if (affliction is PlantAfflictions.MildewAffliction)
+                SetMoldIntensity((float)randomValue);
+
+            if (debuffSystem) debuffSystem.Play();
         }
     
         public void ProcessDay()

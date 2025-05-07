@@ -63,13 +63,16 @@ namespace _project.Scripts.Classes
                 {
                     case "Insecticide":
                         _hasAdults = false;
+                        //Debug.LogError("HadAdults: " + _hasAdults + "HasLarvae " + _hasLarvae);
                         break;
                     case "NeemOil":
                         _hasLarvae = false;
+                        //Debug.LogError("HadAdults: " + _hasAdults + "HasLarvae " + _hasLarvae);
                         break;
                     case "Panacea":
                         _hasAdults = false;
                         _hasLarvae = false;
+                        //Debug.LogError("HadAdults: " + _hasAdults + "HasLarvae " + _hasLarvae);
                         break;
                 }
 

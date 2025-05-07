@@ -61,6 +61,7 @@ namespace _project.Scripts.Card_Core
 
             Debug.Log("Plant Score: " + plantScore);
             Debug.Log("Affliction Score: " + afflictionDamage);
+            Debug.Log("Treatment Cost: " + treatmentCost);
             Debug.Log("Current Score: " + Score);
             
             Score += plantScore + afflictionDamage + treatmentCost;

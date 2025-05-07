@@ -131,7 +131,6 @@ namespace _project.Scripts.Card_Core
                 // Apply queued treatments and update shaders
                 foreach (var controller in plantControllers)
                 {
-                    _scoreManager.treatmentCost += treatmentCost;
                     controller.plantCardFunctions.ApplyQueuedTreatments();
                     StartCoroutine(PauseRoutine());
                     controller.FlagShadersUpdate();
@@ -244,13 +243,13 @@ namespace _project.Scripts.Card_Core
             canClickEnd = false;
             currentTurn = 0;
             Debug.Log($"Treatment Cost: {_scoreManager.treatmentCost}");
-            if (_scoreManager) _scoreManager.treatmentCost = 0;
             _deckManager.ClearActionHand();
             _scoreManager.CalculateTreatmentCost();
 
             yield return new WaitForSeconds(delayTime);
 
             var score = _scoreManager.CalculateScore();
+            if (_scoreManager) _scoreManager.treatmentCost = 0;
 
             _deckManager.ClearAllPlants();
 
