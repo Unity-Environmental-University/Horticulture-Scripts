@@ -27,6 +27,7 @@ namespace _project.Scripts.Card_Core
         [CanBeNull] public TextMeshPro scoreText;
         [CanBeNull] public TextMeshPro turnText;
         [CanBeNull] public TextMeshPro treatmentCostText;
+        [CanBeNull] public TextMeshPro potentialProfitText;
 
         public List<PlacedCardHolder> cardHolders;
         public static CardGameMaster Instance { get; private set; }
