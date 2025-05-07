@@ -233,6 +233,7 @@ namespace _project.Scripts.Card_Core
             }
 
             StartCoroutine(UpdateCardHolderRenders());
+            CardGameMaster.Instance.scoreManager.CalculatePotentialProfit();
         }
 
         // ReSharper disable Unity.PerformanceAnalysis
