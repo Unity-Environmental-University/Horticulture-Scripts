@@ -21,7 +21,7 @@ namespace _project.Scripts.Card_Core
 
         private void Update()
         {
-            _buttonText.text = _turnController.newRoundReady ? "Next Round" : "End";
+            _buttonText.text = _turnController.newRoundReady ? "Next Round" : "Apply";
 
             if (!_turnController.canClickEnd || _deckManager.updatingActionDisplay) 
             {

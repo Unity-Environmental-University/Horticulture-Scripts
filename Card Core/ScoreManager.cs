@@ -32,14 +32,14 @@ namespace _project.Scripts.Card_Core
             Score = 0;
             UpdateScoreText();
         }
-        
+
         private static void UpdateScoreText()
         {
             if (CardGameMaster.Instance.scoreText)
-                CardGameMaster.Instance.scoreText.text = "Score: " + Score;
+                CardGameMaster.Instance.scoreText.text = "Moneys: " + "$" + Score;
         }
 
-        private static void UpdateCostText(int totalCost) { TreatmentCostText.text = "Treatment Cost: " + totalCost; }
+        private static void UpdateCostText(int totalCost) { TreatmentCostText.text = "Potential Loss: " + totalCost; }
         
         private static void UpdateProfitText(int potProfit) {PotentialProfitText.text = $"Potential Profit: " + potProfit;}
 
