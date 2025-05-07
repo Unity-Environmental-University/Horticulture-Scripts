@@ -75,7 +75,7 @@ namespace _project.Scripts.Card_Core
         private void Update()
         {
             if (CardGameMaster.Instance.turnText)
-                CardGameMaster.Instance.turnText.text = "Turn: " + currentTurn;
+                CardGameMaster.Instance.turnText.text = "Turn: " + currentTurn + "/" + turnCount;
         }
 
         /// <summary>

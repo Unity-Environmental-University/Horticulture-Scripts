@@ -224,7 +224,9 @@ namespace _project.Scripts.Card_Core
                 // instantiate plant and get some components
                 var plant = Instantiate(prefab, plantLocation.position, plantLocation.rotation);
                 plant.transform.SetParent(plantLocation);
-                plant.GetComponent<PlantController>().PlantCard = _plantHand[i];
+                var plantController = plant.GetComponent<PlantController>();
+                plantController.PlantCard = _plantHand[i];
+                //if (plantController.priceFlag) plantController.priceFlagText.text = "$" + plant
                 var plantClick3D = plant.GetComponent<Click3D>();
 
                 // disable plantClick3D component

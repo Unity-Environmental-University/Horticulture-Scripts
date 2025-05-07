@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Linq;
 using _project.Scripts.Card_Core;
 using _project.Scripts.Classes;
+using JetBrains.Annotations;
+using TMPro;
 using Unity.Serialization;
 using UnityEngine;
 
@@ -38,6 +40,8 @@ namespace _project.Scripts.Core
 
         [DontSerialize] public PlantCardFunctions plantCardFunctions;
 
+        [CanBeNull] public GameObject priceFlag;
+        [CanBeNull] public TextMeshPro priceFlagText;
         public PlantType type;
         public ICard PlantCard;
     
