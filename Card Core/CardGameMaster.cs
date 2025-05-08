@@ -45,7 +45,7 @@ namespace _project.Scripts.Card_Core
         /// </exception>
         private void Awake()
         {
-            if (Instance != null && Instance != this)
+            if (Instance && Instance != this)
             {
                 Destroy(gameObject);
                 return;
