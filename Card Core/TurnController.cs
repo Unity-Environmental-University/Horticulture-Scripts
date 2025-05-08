@@ -37,7 +37,11 @@ namespace _project.Scripts.Card_Core
             canClickEnd = false;
         }
 
-        private void Start() { StartCoroutine(BeginTurnSequence()); }
+        private void Start()
+        {
+            _scoreManager.ResetScore();
+            StartCoroutine(BeginTurnSequence());
+        }
 
         // ReSharper disable Unity.PerformanceAnalysis
         private IEnumerator BeginTurnSequence()

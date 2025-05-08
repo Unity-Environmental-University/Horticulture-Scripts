@@ -9,6 +9,7 @@ namespace _project.Scripts.Card_Core
     public class ScoreManager : MonoBehaviour
     {
         private static ScoreManager Instance { get; set; }
+        private const int StartingScore = 10;
         private static int Score { get; set; }
         private static TextMeshPro TreatmentCostText => CardGameMaster.Instance.treatmentCostText;
         private static TextMeshPro PotentialProfitText => CardGameMaster.Instance.potentialProfitText;
@@ -29,7 +30,7 @@ namespace _project.Scripts.Card_Core
 
         public void ResetScore()
         {
-            Score = 0;
+            Score = StartingScore;
             UpdateScoreText();
         }
 
