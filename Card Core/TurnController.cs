@@ -11,8 +11,6 @@ namespace _project.Scripts.Card_Core
 {
     public class TurnController : MonoBehaviour
     {
-        private ScoreManager _scoreManager;
-        private DeckManager _deckManager;
         public GameObject lostGameObjects;
         public int turnCount = 4;
         public int currentTurn;
@@ -20,6 +18,8 @@ namespace _project.Scripts.Card_Core
         public bool canClickEnd;
         public bool newRoundReady;
         public bool debugging;
+        private DeckManager _deckManager;
+        private ScoreManager _scoreManager;
         private static TurnController Instance { get; set; }
 
 
@@ -50,7 +50,7 @@ namespace _project.Scripts.Card_Core
             canClickEnd = false;
             currentTurn = 1;
             currentRound++;
-            
+
             yield return new WaitForSeconds(2f);
             try
             {
@@ -123,13 +123,10 @@ namespace _project.Scripts.Card_Core
             var plantControllers = _deckManager.plantLocations
                 .SelectMany(location => location.GetComponentsInChildren<PlantController>(false))
                 .ToArray();
-            
+
             var cardHolders = CardGameMaster.Instance?.cardHolders;
             if (cardHolders != null)
             {
-                var treatmentCost = cardHolders.Where(cardHolder => cardHolder.PlacedCard?.Value != null)
-                    .Sum(cardHolder => cardHolder.PlacedCard.Value.Value);
-
                 if (debugging) Debug.Log($"Found {plantControllers.Length} PlantControllers in PlantLocation.");
 
                 // Apply queued treatments and update shaders
@@ -189,14 +186,14 @@ namespace _project.Scripts.Card_Core
                     {
                         var target = neighborOptions[random.Next(neighborOptions.Count)];
                         if (target.HasAffliction(affliction)) continue;
-                        
+
                         // Don't spread to something that's been given the Panacea
                         if (!target.UsedTreatments.Any(treatment => treatment is PlantAfflictions.Panacea))
                         {
                             target.AddAffliction(affliction);
                             _scoreManager.CalculateTreatmentCost();
                         }
-                        
+
                         StartCoroutine(PauseRoutine());
                         target.FlagShadersUpdate();
                     }
@@ -214,7 +211,10 @@ namespace _project.Scripts.Card_Core
             }
         }
 
-        private static IEnumerator PauseRoutine(float delay = 1f) { yield return new WaitForSeconds(delay); }
+        private static IEnumerator PauseRoutine(float delay = 1f)
+        {
+            yield return new WaitForSeconds(delay);
+        }
 
 
         /// <summary>
@@ -246,7 +246,7 @@ namespace _project.Scripts.Card_Core
         {
             canClickEnd = false;
             currentTurn = 0;
-            Debug.Log($"Treatment Cost: {_scoreManager.treatmentCost}");
+            if (debugging) Debug.Log($"Treatment Cost: {_scoreManager.treatmentCost}");
             _deckManager.ClearActionHand();
             _scoreManager.CalculateTreatmentCost();
 
@@ -257,7 +257,7 @@ namespace _project.Scripts.Card_Core
 
             _deckManager.ClearAllPlants();
 
-            Debug.Log("Score: " + score);
+            if (debugging) Debug.Log("Score: " + score);
 
             var plantControllers = _deckManager.plantLocations
                 .SelectMany(location => location.GetComponentsInChildren<PlantController>(false))
@@ -289,6 +289,9 @@ namespace _project.Scripts.Card_Core
             _scoreManager.ResetScore();
         }
 
-        private void GameLost() { lostGameObjects.SetActive(true); }
+        private void GameLost()
+        {
+            lostGameObjects.SetActive(true);
+        }
     }
 }
