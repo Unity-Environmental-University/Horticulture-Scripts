@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using JetBrains.Annotations;
 using TMPro;
 using UnityEngine;
+using UnityEngine.Serialization;
 
 namespace _project.Scripts.Card_Core
 {
@@ -24,7 +25,7 @@ namespace _project.Scripts.Card_Core
         public ScoreManager scoreManager;
         public TurnController turnController;
 
-        [CanBeNull] public TextMeshPro scoreText;
+        [FormerlySerializedAs("scoreText")] [CanBeNull] public TextMeshPro MoneysText;
         [CanBeNull] public TextMeshPro turnText;
         [CanBeNull] public TextMeshPro treatmentCostText;
         [CanBeNull] public TextMeshPro potentialProfitText;

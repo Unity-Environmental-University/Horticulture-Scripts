@@ -30,6 +30,7 @@ namespace _project.Scripts.Core
         // ReSharper disable twice NotAccessedField.Local
         [SerializeField] private List<string> cAfflictions = new();
         [SerializeField] private List<string> cTreatments = new();
+        [SerializeField] private List<string> uAfflictions = new();
         [SerializeField] private List<string> uTreatments = new();
         
         [SerializeField] private Shader litShader;
@@ -52,6 +53,7 @@ namespace _project.Scripts.Core
 
         public List<PlantAfflictions.IAffliction> CurrentAfflictions { get; } = new();
         public List<PlantAfflictions.ITreatment> CurrentTreatments { get; } = new();
+        public List<PlantAfflictions.IAffliction> PriorAfflictions { get; } = new();
         public List<PlantAfflictions.ITreatment> UsedTreatments { get; } = new();
 
         private void Start()
@@ -75,6 +77,7 @@ namespace _project.Scripts.Core
         {
             cAfflictions = CurrentAfflictions.Select(a => a.Name).ToList();
             cTreatments = CurrentTreatments.Select(a => a.Name).ToList();
+            uAfflictions = PriorAfflictions.Select(a => a.Name).ToList();
             uTreatments = UsedTreatments.Select(a => a.Name).ToList();
             if (!_needsShaderUpdate) return;
             UpdateShaders();
@@ -132,6 +135,7 @@ namespace _project.Scripts.Core
 
         public void AddAffliction(PlantAfflictions.IAffliction affliction)
         {
+            PriorAfflictions.Add(affliction);
             var rand = new Random();
             var randomValue = rand.NextDouble() * 0.5f + 0.5f;
             CurrentAfflictions.Add(affliction);
@@ -139,6 +143,11 @@ namespace _project.Scripts.Core
                 SetMoldIntensity((float)randomValue);
 
             if (debuffSystem) debuffSystem.Play();
+        }
+
+        public bool HasHadAffliction(PlantAfflictions.IAffliction affliction)
+        {
+            return PriorAfflictions.Any(existing => existing.GetType() == affliction.GetType());
         }
     
         public void ProcessDay()

@@ -39,7 +39,7 @@ namespace _project.Scripts.Card_Core
 
         private void Start()
         {
-            _scoreManager.ResetScore();
+            _scoreManager.ResetMoneys();
             StartCoroutine(BeginTurnSequence());
         }
 
@@ -188,7 +188,8 @@ namespace _project.Scripts.Card_Core
                         if (target.HasAffliction(affliction)) continue;
 
                         // Don't spread to something that's been given the Panacea
-                        if (!target.UsedTreatments.Any(treatment => treatment is PlantAfflictions.Panacea))
+                        if (!target.UsedTreatments.Any(treatment =>
+                                treatment is PlantAfflictions.Panacea || !target.HasHadAffliction(affliction)))
                         {
                             target.AddAffliction(affliction);
                             _scoreManager.CalculateTreatmentCost();
@@ -209,6 +210,8 @@ namespace _project.Scripts.Card_Core
             {
                 StartCoroutine(EndRound());
             }
+
+            _scoreManager.CalculateTreatmentCost();
         }
 
         private static IEnumerator PauseRoutine(float delay = 1f)
@@ -286,7 +289,7 @@ namespace _project.Scripts.Card_Core
         {
             currentRound = 0;
             StartCoroutine(BeginTurnSequence());
-            _scoreManager.ResetScore();
+            _scoreManager.ResetMoneys();
         }
 
         private void GameLost()
