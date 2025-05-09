@@ -53,7 +53,7 @@ namespace _project.Scripts.Core
 
         public List<PlantAfflictions.IAffliction> CurrentAfflictions { get; } = new();
         public List<PlantAfflictions.ITreatment> CurrentTreatments { get; } = new();
-        public List<PlantAfflictions.IAffliction> PriorAfflictions { get; } = new();
+        private List<PlantAfflictions.IAffliction> PriorAfflictions { get; } = new();
         public List<PlantAfflictions.ITreatment> UsedTreatments { get; } = new();
 
         private void Start()
