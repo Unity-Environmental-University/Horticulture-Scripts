@@ -12,6 +12,7 @@ namespace _project.Scripts.Classes
             string Name { get; }
             string Description { get; }
             public Color Color { get; }
+            [CanBeNull] public Shader Shader { get; }
             public void TreatWith(ITreatment treatment, PlantController plant);
             public void TickDay();
 
@@ -56,6 +57,7 @@ namespace _project.Scripts.Classes
             public string Name => "Thrips";
             public string Description => "";
             public Color Color => Color.black;
+            public Shader Shader => null;
 
             public void TreatWith(ITreatment treatment, PlantController plant)
             {
@@ -93,6 +95,7 @@ namespace _project.Scripts.Classes
             public string Name => "MealyBugs";
             public string Description => "";
             public Color Color => Color.red;
+            public Shader Shader => null;
 
             public void TreatWith(ITreatment treatment, PlantController plant)
             {
@@ -108,6 +111,7 @@ namespace _project.Scripts.Classes
             public string Name => "Mildew";
             public string Description => "";
             public Color Color => Color.white;
+            public Shader Shader => null;
 
             public void TreatWith(ITreatment treatment, PlantController plant)
             {
@@ -123,6 +127,7 @@ namespace _project.Scripts.Classes
             public string Name => "Aphids";
             public string Description => "";
             public Color Color => Color.cyan;
+            public Shader Shader => null;
 
             public void TreatWith(ITreatment treatment, PlantController plant)
             {
