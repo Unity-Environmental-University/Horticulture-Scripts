@@ -1,12 +1,13 @@
 /*
  1. Usage - Attach this to the Player Character
- 2. Create the Layers for "InspectableObject" & "Large-Inspect"
+ 2. Create the Layers for "InspectableObject" and "Large-Inspect"
  3. Attach your Player Controller script to the 'controller' param
  4. Attach all respective components to the script in the inspector
 
  ~Donovan Montoya
 */
 
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using _project.Scripts.Classes;
@@ -29,7 +30,7 @@ namespace _project.Scripts.Core
         [SerializeField] private GameObject inspectImage;
         [SerializeField] private GameObject inspectImageTwo;
     
-        public Color highlightColor = Color.yellow; // Color of the object when within the inspect distance
+        public Color highlightColor = Color.yellow; // Color of the object when within the inspected distance
         public float inspectDistanceDefault = 2f; // Sets the Default distance
         public float rotateSpeed = 2.0f; // Speed of the object rotation
         public float highlightIntensity = 1; // Intensity of Highlight
@@ -186,7 +187,7 @@ namespace _project.Scripts.Core
 
             //if the player scrolls the mouse wheel, move the object closer or further away
             if (Input.GetAxis("Mouse ScrollWheel") == 0) return;
-            // Get the mouse scroll wheel movement
+            // Get the mouse scroll-wheel movement
             var scrollWheel = Input.GetAxis("Mouse ScrollWheel");
 
             // Move the object closer or further away
@@ -211,7 +212,7 @@ namespace _project.Scripts.Core
                 _inspectableObject.transform.Rotate(Vector3.right, joyY * rotateSpeed, Space.World);
             }
 
-            // If player moves the right joystick, move along x/y-axis
+            // If a player moves the right joystick, move along x/y-axis
             if (!_rightJoyStickAction.IsInProgress()) return;
             {
                 var joyX = _rightJoyStickAction.ReadValue<Vector2>().x;
@@ -235,14 +236,14 @@ namespace _project.Scripts.Core
 
             // Check if the ray hits the target object
             if (!Physics.Raycast(cameraRay, out var hit)) return false;
-            // _inspectDistance = hit.transform.CompareTag("Large-Inspect") ? 3.0f : inspectDistanceDefault;
+            // _inspectDistance = hit.transform.CompareTag("Large-Inspect") ? 3.0f: inspectDistanceDefault;
             if (hit.transform.gameObject.layer != LayerMask.NameToLayer(raycastLayer)) return false;
             // Set the inspectable object
             _inspectableObject = hit.transform.gameObject;
             return true;
         }
 
-        //check if player is close enough to the object to inspect it
+        //check if the player is close enough to the object to inspect it
         private bool IsCloseEnoughToInspect()
         {
             // Create a ray from the camera to the target object
@@ -277,8 +278,8 @@ namespace _project.Scripts.Core
             var newRotation = Quaternion.LookRotation(playerCameraTransform.forward, playerCameraTransform.up);
             _inspectableObject.transform.rotation = newRotation;
 
-            // Calculate the bounds center of the object
-            // ReSharper disable once Unity.PerformanceCriticalCodeInvocation
+            // Calculate the bound center of the object
+            // ReSharper disabling once Unity.PerformanceCriticalCodeInvocation
             var localRenderer = _inspectableObject.GetComponent<Renderer>();
             if (localRenderer)
             {
@@ -361,23 +362,30 @@ namespace _project.Scripts.Core
         // ReSharper disable Unity.PerformanceAnalysis
         private void CheckHighlight()
         {
-            //highlight only when player is looking at the object and remove highlight when player is not looking at the object
-            if (_isCheckingForHighlight)
+            try
             {
-                if (IsLookingAtLayer("InspectableObject") && IsCloseEnoughToInspect())
+                //highlight only when player is looking at the object and remove highlight when player is not looking at the object
+                if (_isCheckingForHighlight)
                 {
-                    //highlight the object and its children
-                    HighlightObject(_inspectableObject, highlightColor);
-                }
-                else
-                {
-                    //remove highlight from the object and its children -- if statement to prevent call on non-set object
-                    if (_inspectableObject != null) RestoreOriginalColors(_inspectableObject);
-                    return;
+                    if (IsLookingAtLayer("InspectableObject") && IsCloseEnoughToInspect())
+                    {
+                        //highlight the object and its children
+                        HighlightObject(_inspectableObject, highlightColor);
+                    }
+                    else
+                    {
+                        //remove highlight from the object and its children -- if statement to prevent call on a non-set object
+                        if (_inspectableObject) RestoreOriginalColors(_inspectableObject);
+                        return;
+                    }
                 }
             }
+            catch(Exception e)
+            {
+                Debug.LogError(e);
+            }
 
-            //if player is inspecting the object, stop checking for highlight and remove highlight
+            //if the player is inspecting the object, stop checking for highlight and remove highlight
             if (!_inspecting) return;
             _isCheckingForHighlight = false;
             RestoreOriginalColors(_inspectableObject);
@@ -387,9 +395,9 @@ namespace _project.Scripts.Core
         {
             if (!obj) return;
 
-            // Change color of the current object if it has a Renderer
+            // Change the color of the current object if it has a Renderer
             var objectRenderer = obj.GetComponent<Renderer>();
-            if (objectRenderer != null)
+            if (objectRenderer)
             {
                 // Remember the original color
                 if (!_originalColors.ContainsKey(objectRenderer))
@@ -411,12 +419,12 @@ namespace _project.Scripts.Core
         {
             if (!obj) return;
 
-            // Restore color of the current object if it has a Renderer
+            // Restore the color of the current object if it has a Renderer
             var objectRenderer = obj.GetComponent<Renderer>();
             if (objectRenderer && _originalColors.TryGetValue(objectRenderer, out var originalColor))
                 objectRenderer.sharedMaterial.color = originalColor;
 
-            // Recursively restore color of all child objects
+            // Recursively restore the color of all child objects
             foreach (Transform child in obj.transform) RestoreOriginalColors(child.gameObject);
         }
     }
