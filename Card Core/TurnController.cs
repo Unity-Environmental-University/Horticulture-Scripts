@@ -82,26 +82,25 @@ namespace _project.Scripts.Card_Core
                 CardGameMaster.Instance.turnText.text = "Turn: " + currentTurn + "/" + turnCount;
         }
 
+
         /// <summary>
-        ///     Ends the current turn, updates the game state, and prepares for the next turn or round as needed.
+        ///     Ends the current turn, applies treatments to plants, checks for affliction spread, and updates game state.
         /// </summary>
         /// <remarks>
         ///     This method performs the following operations:
-        ///     1. Checks if the action display is still updating or if the "End Turn" button is not clickable. If either is true,
+        ///     1. Checks if the action display is still updating or if ending the turn is not allowed. If either is true,
         ///     the method returns early.
-        ///     2. Verify if a new round is ready. If so, prepare for the next round by resetting the round state and starting the
-        ///     turn sequence, then returns.
-        ///     3. Retrieve all active plant controllers from the defined plant locations.
+        ///     2. Verifies if a new round is ready. If so, starts the next round and returns.
+        ///     3. Retrieves all active plant controllers from defined plant locations.
         ///     4. For each plant controller:
         ///     a. Applies all queued treatments.
         ///     B. Flags the associated shaders for an update.
-        ///     5. If all plants are free of afflictions, end the current round early.
+        ///     5. Ends the current round early if all plants are free of afflictions.
         ///     6. If the maximum turn count has not been reached:
-        ///     a. Increments the turn counter for tracking progress.
-        ///     B. Iterates through plant controllers to evaluate affliction spread to neighboring plants, considering randomized
-        ///     probabilities and valid neighboring plants.
+        ///     a. Increments the turn counter.
+        ///     B. Spreads afflictions to neighboring plants based on randomized probabilities and valid neighbors.
         ///     C. Draws an action hand for the next turn.
-        ///     7. If the maximum turn count has been reached, ends the current round.
+        ///     7. Ends the current round if the maximum turn count is reached.
         /// </remarks>
         /// <exception cref="System.NullReferenceException">
         ///     Thrown if `deckManager`, `plantLocations`, or any dependencies (e.g., `PlantController` or `PlantCardFunctions`)
@@ -148,20 +147,68 @@ namespace _project.Scripts.Card_Core
             if (currentTurn < turnCount)
             {
                 currentTurn++;
+                SpreadAfflictions(plantControllers);
+                _deckManager.DrawActionHand();
+            }
+            else
+            {
+                StartCoroutine(EndRound());
+            }
 
-                var random = new Random();
+            _scoreManager.CalculateTreatmentCost();
+        }
 
-                // Process each plant controller
-                for (var i = 0; i < plantControllers.Length; i++)
+        /// <summary>
+        ///     Spreads afflictions to neighboring plants based on randomized probabilities and valid neighbors.
+        /// </summary>
+        /// <param name="plantControllers">Array of plant controllers representing the current arrangement of plants.</param>
+        /// <remarks>
+        ///     This method iterates through each plant controller in the provided array. For each plant, it checks if there are
+        ///     any
+        ///     active afflictions and if a 50% chance condition is met. If both conditions are satisfied, it selects a random
+        ///     neighbor
+        ///     (left or right) that does not currently have the same affliction and spreads the affliction to that neighbor.
+        ///     If debugging is enabled, it logs the spread of each affliction.
+        /// </remarks>
+        /// <exception cref="System.NullReferenceException">
+        ///     Thrown if any plant controller in the array or their associated properties (e.g., `CurrentAfflictions`) are not
+        ///     properly initialized.
+        /// </exception>
+        private void SpreadAfflictions(PlantController[] plantControllers)
+        {
+            var random = new Random();
+            for (var i = 0; i < plantControllers.Length; i++)
+            {
+                var controller = plantControllers[i];
+
+                // Skip if no afflictions or 50% chance
+                if (!controller.CurrentAfflictions.Any() || random.NextDouble() >= 0.5) continue;
+
+                var affliction = controller.CurrentAfflictions.First();
+
+                if (affliction is PlantAfflictions.ThripsAffliction)
                 {
-                    var controller = plantControllers[i];
-                    // Skip if no afflictions or 50% chance
-                    if (!controller.CurrentAfflictions.Any() || random.NextDouble() >= 0.5) continue;
+                    // Spread ThripsAffliction to any plant that doesn't have it
+                    var targets = plantControllers.Where(p => !p.HasAffliction(affliction)).ToList();
+                    if (targets.Count == 0) continue;
 
-                    // Get first affliction from a plant
-                    var affliction = controller.CurrentAfflictions.First();
+                    var target = targets[random.Next(targets.Count)];
 
-                    // Track possible neighbors to spread to
+                    // Don't spread to something treated with Panacea or that had the affliction before
+                    if (target.UsedTreatments.Any(t => t is PlantAfflictions.Panacea) ||
+                        target.HasHadAffliction(affliction))
+                        continue;
+
+                    target.AddAffliction(affliction);
+                    _scoreManager.CalculateTreatmentCost();
+                    StartCoroutine(PauseRoutine());
+                    target.FlagShadersUpdate();
+
+                    if (debugging)
+                        Debug.Log($"ThripsAffliction spread from {controller.name} to {target.name}.");
+                }
+                else
+                {
                     var neighborOptions = new List<PlantController>();
 
                     // Check left neighbor if exists
@@ -198,20 +245,12 @@ namespace _project.Scripts.Card_Core
                         StartCoroutine(PauseRoutine());
                         target.FlagShadersUpdate();
                     }
-
-                    if (debugging)
-                        Debug.Log(
-                            $"Affliction {affliction} spread from {controller.name} to {plantControllers[i].name}.");
                 }
 
-                _deckManager.DrawActionHand();
+                if (debugging)
+                    Debug.Log(
+                        $"Affliction {affliction} spread from {controller.name} to {plantControllers[i].name}.");
             }
-            else
-            {
-                StartCoroutine(EndRound());
-            }
-
-            _scoreManager.CalculateTreatmentCost();
         }
 
         private static IEnumerator PauseRoutine(float delay = 1f)
