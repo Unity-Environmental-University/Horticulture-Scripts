@@ -121,7 +121,8 @@ namespace _project.Scripts.Core
                 }
 
                 _sharedPropertyBlock.SetFloat(_moldIntensityID, moldIntensity);
-                _sharedPropertyBlock.SetColor(_color1, GetAfflictionColor());
+                // Sets color to debug colors
+               // _sharedPropertyBlock.SetColor(_color1, GetAfflictionColor());
                 renderer1.SetPropertyBlock(_sharedPropertyBlock);
             }
         }
@@ -129,13 +130,8 @@ namespace _project.Scripts.Core
         private Shader GetShader(Renderer renderer1)
         {
             var afflictions = renderer1.GetComponentInParent<PlantController>().CurrentAfflictions;
-
-            foreach (var affliction in afflictions.OfType<PlantAfflictions.AphidsAffliction>())
-            {
-                return ((PlantAfflictions.IAffliction)affliction).Shader;
-            }
             
-            return litShader;
+            return afflictions.Any() ? CurrentAfflictions.FirstOrDefault(a => a.Shader)?.Shader : litShader;
         }
 
         public void RemoveAffliction(PlantAfflictions.IAffliction affliction)

@@ -57,7 +57,7 @@ namespace _project.Scripts.Classes
             public string Name => "Thrips";
             public string Description => "";
             public Color Color => Color.black;
-            public Shader Shader => null;
+            public Shader Shader => Shader.Find($"Shader Graphs/Thrips");
 
             public void TreatWith(ITreatment treatment, PlantController plant)
             {
@@ -95,7 +95,7 @@ namespace _project.Scripts.Classes
             public string Name => "MealyBugs";
             public string Description => "";
             public Color Color => Color.red;
-            public Shader Shader => null;
+            public Shader Shader => Shader.Find($"Shader Graphs/MealyBugs");
 
             public void TreatWith(ITreatment treatment, PlantController plant)
             {
