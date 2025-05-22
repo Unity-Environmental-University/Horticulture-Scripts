@@ -90,17 +90,17 @@ namespace _project.Scripts.Card_Core
         ///     This method performs the following operations:
         ///     1. Checks if the action display is still updating or if ending the turn is not allowed. If either is true,
         ///     the method returns early.
-        ///     2. Verifies if a new round is ready. If so, starts the next round and returns.
-        ///     3. Retrieves all active plant controllers from defined plant locations.
+        ///     2. Verify if a new round is ready. If so, start the next round and return.
+        ///     3. Retrieve all active plant controllers from defined plant locations.
         ///     4. For each plant controller:
         ///     a. Applies all queued treatments.
         ///     B. Flags the associated shaders for an update.
-        ///     5. Ends the current round early if all plants are free of afflictions.
+        ///     5. End the current round early if all plants are free of afflictions.
         ///     6. If the maximum turn count has not been reached:
         ///     a. Increments the turn counter.
         ///     B. Spreads afflictions to neighboring plants based on randomized probabilities and valid neighbors.
         ///     C. Draws an action hand for the next turn.
-        ///     7. Ends the current round if the maximum turn count is reached.
+        ///     7. End the current round if the maximum turn count is reached.
         /// </remarks>
         /// <exception cref="System.NullReferenceException">
         ///     Thrown if `deckManager`, `plantLocations`, or any dependencies (e.g., `PlantController` or `PlantCardFunctions`)
@@ -194,7 +194,7 @@ namespace _project.Scripts.Card_Core
 
                     var target = targets[random.Next(targets.Count)];
 
-                    // Don't spread to something treated with Panacea or that had the affliction before
+                    // Don't spread to something treated with Panacea, or that had the affliction before
                     if (target.UsedTreatments.Any(t => t is PlantAfflictions.Panacea) ||
                         target.HasHadAffliction(affliction))
                         continue;
