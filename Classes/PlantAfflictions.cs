@@ -111,7 +111,7 @@ namespace _project.Scripts.Classes
             public string Name => "Mildew";
             public string Description => "";
             public Color Color => Color.white;
-            public Shader Shader => null;
+            public Shader Shader => Shader.Find($"Shader Graphs/Mold");
 
             public void TreatWith(ITreatment treatment, PlantController plant)
             {
@@ -127,7 +127,7 @@ namespace _project.Scripts.Classes
             public string Name => "Aphids";
             public string Description => "";
             public Color Color => Color.cyan;
-            public Shader Shader => null;
+            public Shader Shader => Shader.Find($"Shader Graphs/Aphids");
 
             public void TreatWith(ITreatment treatment, PlantController plant)
             {

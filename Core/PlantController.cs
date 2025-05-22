@@ -24,8 +24,8 @@ namespace _project.Scripts.Core
 
     public class PlantController : MonoBehaviour
     {
-        private static readonly int MoldIntensityID = Shader.PropertyToID("_Mold_Intensity");
-        private static readonly int Color1 = Shader.PropertyToID("_Color");
+        private readonly int _moldIntensityID = Shader.PropertyToID("_Mold_Intensity");
+        private readonly int _color1 = Shader.PropertyToID("_Color");
     
         // ReSharper disable twice NotAccessedField.Local
         [SerializeField] private List<string> cAfflictions = new();
@@ -67,7 +67,9 @@ namespace _project.Scripts.Core
             _sharedPropertyBlock = new MaterialPropertyBlock();
 
             // ReSharper disable Twice ShaderLabShaderReferenceNotResolved
-            if (!moldShader) moldShader = Shader.Find("Shader Graphs/Mold");
+            //if (!moldShader) moldShader = Shader.Find("Shader Graphs/Mold");
+            var mildewAfflictionInstance = new PlantAfflictions.MildewAffliction();
+            if (!moldShader) moldShader = mildewAfflictionInstance.Shader;
             if (!litShader) litShader = Shader.Find("Shader Graphs/CustomLit");
 
             UpdateShaders();
@@ -113,15 +115,27 @@ namespace _project.Scripts.Core
                 renderer1.GetMaterials(mats);
                 foreach (var material in mats)
                 {
-                    var targetShader = hasMildew ? moldShader : litShader;
+                    var targetShader = hasMildew ? moldShader : GetShader(renderer1);
                     if (material.shader != targetShader)
                         material.shader = targetShader;
                 }
 
-                _sharedPropertyBlock.SetFloat(MoldIntensityID, moldIntensity);
-                _sharedPropertyBlock.SetColor(Color1, GetAfflictionColor());
+                _sharedPropertyBlock.SetFloat(_moldIntensityID, moldIntensity);
+                _sharedPropertyBlock.SetColor(_color1, GetAfflictionColor());
                 renderer1.SetPropertyBlock(_sharedPropertyBlock);
             }
+        }
+
+        private Shader GetShader(Renderer renderer1)
+        {
+            var afflictions = renderer1.GetComponentInParent<PlantController>().CurrentAfflictions;
+
+            foreach (var affliction in afflictions.OfType<PlantAfflictions.AphidsAffliction>())
+            {
+                return ((PlantAfflictions.IAffliction)affliction).Shader;
+            }
+            
+            return litShader;
         }
 
         public void RemoveAffliction(PlantAfflictions.IAffliction affliction)
