@@ -63,7 +63,8 @@ namespace _project.Scripts.Core
 
         private void Awake()
         {
-            _renderers = Array.FindAll(GetComponentsInChildren<Renderer>(true), r => r.CompareTag("Plant"));
+            _renderers = Array.FindAll(GetComponentsInChildren<Renderer>
+                (true), r => r.CompareTag("Plant"));
             _sharedPropertyBlock = new MaterialPropertyBlock();
 
             // ReSharper disable Twice ShaderLabShaderReferenceNotResolved
@@ -115,7 +116,8 @@ namespace _project.Scripts.Core
                 renderer1.GetMaterials(mats);
                 foreach (var material in mats)
                 {
-                    var targetShader = hasMildew ? moldShader : GetShader(renderer1);
+                   // var targetShader = hasMildew ? moldShader : GetShader(renderer1);
+                    var targetShader = GetShader(renderer1);
                     if (material.shader != targetShader)
                         material.shader = targetShader;
                 }
