@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using _project.Scripts.UI;
 using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.Rendering;
@@ -11,7 +12,7 @@ namespace _project.Scripts.Core
         [SerializeField] private Camera playerCamera;
         [SerializeField] private GameObject overlayCamera;
         [SerializeField] private Volume postProcessVolume;
-        [SerializeField] private float inspectDistance;
+        [SerializeField] private float inspectDistance = 1.5f;
 
         private readonly Dictionary<GameObject, int> _originalLayers = new();
         private DepthOfField _depthOfField;
@@ -22,6 +23,15 @@ namespace _project.Scripts.Core
         private GameObject[] _objectCache;
         private Vector3 _originalPosition;
         private Quaternion _originalRotation;
+
+        private void Awake()
+        {
+            if (!playerCamera) playerCamera = Camera.main;
+            if (!overlayCamera) overlayCamera = playerCamera!.GetComponent<CameraTweaks>().overlayCamera;
+
+            if (!postProcessVolume)
+                postProcessVolume = FindFirstObjectByType<Volume>(FindObjectsInactive.Include);
+        }
 
         private void Update()
         {
@@ -45,9 +55,6 @@ namespace _project.Scripts.Core
             //Time.timeScale = 0;
             _originalPosition = _inspectableObject.transform.position;
             _originalRotation = _inspectableObject.transform.rotation;
-
-            // in PlayerCamera, stop rendering "CardUI" layer
-            // playerCamera.cullingMask &= ~(1 << LayerMask.NameToLayer($"CardUI"));
 
             // Deactivate game objects with tag 'Card'
             _objectCache = GameObject.FindGameObjectsWithTag("Card");
@@ -107,10 +114,8 @@ namespace _project.Scripts.Core
             Time.timeScale = 1;
             _inspectableObject.transform.position = _originalPosition;
             _inspectableObject.transform.rotation = _originalRotation;
-
-            // Render the Card Layer again
-            // playerCamera.cullingMask |= 1 << LayerMask.NameToLayer($"CardUI");
-
+            
+            // Reactivate 'Card' Objects
             foreach (var obj in _objectCache) obj.SetActive(true);
 
             //set inspectableObject to null
