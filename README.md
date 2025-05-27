@@ -10,6 +10,6 @@
 **Technical Details:**
 
 *   **Unity Version:** 6
-*   **Platform:** Windows, Mac, Linux
+*   **Platform:** Windows, Mac, Linux, Android, & IOS
 
 **Note:** This is a development project and may contain unfinished features. Additionally, this is a secondary repository and will not always reflect the current status of the project (I.E. Not all pushes with be reflected here)
