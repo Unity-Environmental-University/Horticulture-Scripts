@@ -11,6 +11,8 @@ namespace _project.Scripts.Card_Core
 
         private void Start()
         {
+            var scene = SceneManager.GetActiveScene();
+            if (scene.name == "Main") Destroy(this);
             deckManager = CardGameMaster.Instance.deckManager;
 
             if (!deckManager && SceneManager.GetActiveScene().name == "CardGame")
@@ -19,7 +21,9 @@ namespace _project.Scripts.Card_Core
             plantController = GetComponent<PlantController>();
 
             var click3D = GetComponentInChildren<Click3D>();
-            if (click3D) click3D.onClick3D.AddListener(ApplyTreatment);
+            
+            // if card is selected this auto applyies that treatment
+           // if (click3D) click3D.onClick3D.AddListener(ApplyTreatment);
         }
 
         /// <summary>
@@ -74,7 +78,6 @@ namespace _project.Scripts.Card_Core
         public void ApplyQueuedTreatments()
         {
             var cardHolders = CardGameMaster.Instance?.cardHolders;
-            var scoreManager = CardGameMaster.Instance?.scoreManager;
 
             if (cardHolders is null || cardHolders.Count is 0)
             {
