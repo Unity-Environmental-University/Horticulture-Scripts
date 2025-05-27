@@ -231,8 +231,8 @@ namespace _project.Scripts.Card_Core
                 var plantClick3D = plant.GetComponent<Click3D>();
 
                 // disable plantClick3D component
-                plantClick3D.isEnabled = false;
-                plantClick3D.enabled = false;
+                // plantClick3D.isEnabled = false;
+                // plantClick3D.enabled = false;
             }
 
             StartCoroutine(UpdateCardHolderRenders());
@@ -249,9 +249,9 @@ namespace _project.Scripts.Card_Core
                 var plantController = location.GetComponentInChildren<PlantController>(true);
                 var cardHolder = location.GetComponentInChildren<PlacedCardHolder>();
 
-                if (cardHolder != null && plantController == null)
+                if (cardHolder && !plantController)
                     cardHolder.ToggleCardHolder(false);
-                else if (cardHolder != null && plantController != null) cardHolder.ToggleCardHolder(true);
+                else if (cardHolder && plantController) cardHolder.ToggleCardHolder(true);
             }
         }
 

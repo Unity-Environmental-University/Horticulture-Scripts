@@ -1,5 +1,4 @@
 using System.Collections;
-using _project.Scripts.Core;
 using Unity.Serialization;
 using UnityEngine;
 using UnityEngine.Events;
@@ -122,12 +121,12 @@ namespace _project.Scripts.Card_Core
             var targetColor = _baseColor;
 
             // Check if this object is a plant by looking for a PlantController
-            var plant = GetComponent<PlantController>();
-            if (plant && plant.CurrentAfflictions is { Count: > 0 })
-            {
-                targetColor = plant.CurrentAfflictions[0].Color;
-                plant.FlagShadersUpdate();
-            }
+            //var plant = GetComponent<PlantController>();
+            // if (plant && plant.CurrentAfflictions is { Count: > 0 })
+            // {
+            //     targetColor = plant.CurrentAfflictions[0].Color;
+            //     plant.FlagShadersUpdate();
+            // }
 
             // Apply the determined color
             _objectRenderer.material.color = targetColor;
