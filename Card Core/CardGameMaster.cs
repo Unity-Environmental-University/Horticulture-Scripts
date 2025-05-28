@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using JetBrains.Annotations;
 using TMPro;
 using UnityEngine;
+using UnityEngine.Rendering;
 using UnityEngine.Serialization;
 
 namespace _project.Scripts.Card_Core
@@ -24,6 +25,7 @@ namespace _project.Scripts.Card_Core
         public DeckManager deckManager;
         public ScoreManager scoreManager;
         public TurnController turnController;
+        public Volume postProcessVolume;
         public bool isInspecting;
 
         [FormerlySerializedAs("scoreText")] [CanBeNull] public TextMeshPro MoneysText;

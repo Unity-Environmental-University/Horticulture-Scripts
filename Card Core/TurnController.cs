@@ -288,7 +288,10 @@ namespace _project.Scripts.Card_Core
         {
             canClickEnd = false;
             currentTurn = 0;
+            var ppVol = CardGameMaster.Instance.postProcessVolume.gameObject;
+            if (ppVol) ppVol.SetActive(false);
             if (debugging) Debug.Log($"Treatment Cost: {_scoreManager.treatmentCost}");
+            
             _deckManager.ClearActionHand();
             _scoreManager.CalculateTreatmentCost();
 

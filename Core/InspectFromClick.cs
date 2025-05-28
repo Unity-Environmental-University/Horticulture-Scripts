@@ -14,12 +14,11 @@ namespace _project.Scripts.Core
         [SerializeField] private GameObject overlayCamera;
         [SerializeField] private Volume postProcessVolume;
         [SerializeField] private float inspectDistance = 1.5f;
-
+        
         private static readonly Dictionary<GameObject, int> OriginalLayers = new();
+        
         private static DepthOfField _depthOfField;
-
         private static GameObject _inspectableObject;
-
         private static GameObject[] _objectCache;
         private static Vector3 _originalPosition;
         private static Quaternion _originalRotation;
@@ -30,7 +29,7 @@ namespace _project.Scripts.Core
             if (!overlayCamera) overlayCamera = playerCamera!.GetComponent<CameraTweaks>().overlayCamera;
 
             if (!postProcessVolume)
-                postProcessVolume = FindFirstObjectByType<Volume>(FindObjectsInactive.Include);
+                postProcessVolume = CardGameMaster.Instance.postProcessVolume;
         }
 
         private void Update()
@@ -51,8 +50,9 @@ namespace _project.Scripts.Core
         {
             _inspectableObject = gameObject;
             CardGameMaster.Instance.isInspecting = true;
-            // Pause and store local rotation and position
-            //Time.timeScale = 0;
+            CardGameMaster.Instance.turnController.canClickEnd = false;
+
+            // Store local rotation and position
             _originalPosition = _inspectableObject.transform.position;
             _originalRotation = _inspectableObject.transform.rotation;
 
@@ -63,7 +63,7 @@ namespace _project.Scripts.Core
             // Center the object's rotation pivot
             var playerCameraTransform = playerCamera.transform;
             var newRotation = Quaternion.LookRotation(playerCameraTransform.forward, playerCameraTransform.up);
-            
+
             // Flip the rotation 180 degrees
             newRotation *= Quaternion.Euler(0, 180, 0);
 
@@ -97,7 +97,6 @@ namespace _project.Scripts.Core
                 // Skip children of the inspected object
                 if (obj.transform.IsChildOf(_inspectableObject.transform)) continue;
 
-
                 // Change layer to VFX -- This is the layer the VFX are rendered on
                 // ignoring layers meant to stay invisible
                 if (obj.layer == LayerMask.NameToLayer("VFX") ||
@@ -115,10 +114,10 @@ namespace _project.Scripts.Core
         {
             // Cleanup
             CardGameMaster.Instance.isInspecting = false;
-            //Time.timeScale = 1;
+            CardGameMaster.Instance.turnController.canClickEnd = true;
             _inspectableObject.transform.position = _originalPosition;
             _inspectableObject.transform.rotation = _originalRotation;
-            
+
             // Reactivate 'Card' Objects
             foreach (var obj in _objectCache) obj.SetActive(true);
 

@@ -1,4 +1,5 @@
 using System.Collections;
+using _project.Scripts.Core;
 using Unity.Serialization;
 using UnityEngine;
 using UnityEngine.Events;
@@ -118,18 +119,13 @@ namespace _project.Scripts.Card_Core
             RefreshState();
             if (!isEnabled) return;
             mouseOver = false;
+
             var targetColor = _baseColor;
+            var plant = GetComponentInParent<PlantController>();
+            if (plant) plant.FlagShadersUpdate();
 
-            // Check if this object is a plant by looking for a PlantController
-            //var plant = GetComponent<PlantController>();
-            // if (plant && plant.CurrentAfflictions is { Count: > 0 })
-            // {
-            //     targetColor = plant.CurrentAfflictions[0].Color;
-            //     plant.FlagShadersUpdate();
-            // }
-
-            // Apply the determined color
             _objectRenderer.material.color = targetColor;
+            _objectRenderer.GetPropertyBlock(_sharedPropertyBlock);
             _sharedPropertyBlock.SetColor(Color1, targetColor);
             _objectRenderer.SetPropertyBlock(_sharedPropertyBlock);
 
@@ -137,6 +133,7 @@ namespace _project.Scripts.Card_Core
             StopAllCoroutines();
             StartCoroutine(AnimateCardBack());
         }
+
 
         private void TryClick(Vector2 screenPosition)
         {
