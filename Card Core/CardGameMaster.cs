@@ -24,6 +24,7 @@ namespace _project.Scripts.Card_Core
         public DeckManager deckManager;
         public ScoreManager scoreManager;
         public TurnController turnController;
+        public bool isInspecting;
 
         [FormerlySerializedAs("scoreText")] [CanBeNull] public TextMeshPro MoneysText;
         [CanBeNull] public TextMeshPro turnText;

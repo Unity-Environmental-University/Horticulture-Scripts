@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using _project.Scripts.Card_Core;
 using _project.Scripts.UI;
 using Unity.VisualScripting;
 using UnityEngine;
@@ -14,15 +15,14 @@ namespace _project.Scripts.Core
         [SerializeField] private Volume postProcessVolume;
         [SerializeField] private float inspectDistance = 1.5f;
 
-        private readonly Dictionary<GameObject, int> _originalLayers = new();
-        private DepthOfField _depthOfField;
+        private static readonly Dictionary<GameObject, int> OriginalLayers = new();
+        private static DepthOfField _depthOfField;
 
-        private GameObject _inspectableObject;
-        private bool _inspecting;
+        private static GameObject _inspectableObject;
 
-        private GameObject[] _objectCache;
-        private Vector3 _originalPosition;
-        private Quaternion _originalRotation;
+        private static GameObject[] _objectCache;
+        private static Vector3 _originalPosition;
+        private static Quaternion _originalRotation;
 
         private void Awake()
         {
@@ -41,7 +41,7 @@ namespace _project.Scripts.Core
 
         public void ToggleInspect()
         {
-            if (!_inspecting)
+            if (!CardGameMaster.Instance.isInspecting)
                 EnterInspectMode();
             else
                 ExitInspectMode();
@@ -50,7 +50,7 @@ namespace _project.Scripts.Core
         private void EnterInspectMode()
         {
             _inspectableObject = gameObject;
-            _inspecting = true;
+            CardGameMaster.Instance.isInspecting = true;
             // Pause and store local rotation and position
             //Time.timeScale = 0;
             _originalPosition = _inspectableObject.transform.position;
@@ -63,6 +63,10 @@ namespace _project.Scripts.Core
             // Center the object's rotation pivot
             var playerCameraTransform = playerCamera.transform;
             var newRotation = Quaternion.LookRotation(playerCameraTransform.forward, playerCameraTransform.up);
+            
+            // Flip the rotation 180 degrees
+            newRotation *= Quaternion.Euler(0, 180, 0);
+
             _inspectableObject.transform.rotation = newRotation;
 
             // Calculate the bound center of the object
@@ -102,7 +106,7 @@ namespace _project.Scripts.Core
                     obj.layer == LayerMask.NameToLayer("DontRender") ||
                     obj.layer == LayerMask.NameToLayer("CardUI"))
                     continue;
-                _originalLayers[obj] = obj.layer;
+                OriginalLayers[obj] = obj.layer;
                 obj.layer = LayerMask.NameToLayer("VFX");
             }
         }
@@ -110,8 +114,8 @@ namespace _project.Scripts.Core
         private void ExitInspectMode()
         {
             // Cleanup
-            _inspecting = false;
-            Time.timeScale = 1;
+            CardGameMaster.Instance.isInspecting = false;
+            //Time.timeScale = 1;
             _inspectableObject.transform.position = _originalPosition;
             _inspectableObject.transform.rotation = _originalRotation;
             
@@ -126,8 +130,8 @@ namespace _project.Scripts.Core
             if (_depthOfField) _depthOfField.active = false;
 
             // **Restore the original layers of all objects**
-            foreach (var kvp in _originalLayers) kvp.Key.layer = kvp.Value; // **Restore to original layer**
-            _originalLayers.Clear();
+            foreach (var kvp in OriginalLayers) kvp.Key.layer = kvp.Value; // **Restore to original layer**
+            OriginalLayers.Clear();
         }
     }
 }
