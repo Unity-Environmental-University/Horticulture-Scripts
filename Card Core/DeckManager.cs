@@ -228,9 +228,9 @@ namespace _project.Scripts.Card_Core
                 plantController.PlantCard = _plantHand[i];
                 if (plantController.priceFlag && plantController.priceFlagText)
                     plantController.priceFlagText.text = "$" + plantController.PlantCard.Value;
-                var plantClick3D = plant.GetComponent<Click3D>();
-
+                
                 // disable plantClick3D component
+                //var plantClick3D = plant.GetComponent<Click3D>();
                 // plantClick3D.isEnabled = false;
                 // plantClick3D.enabled = false;
             }
