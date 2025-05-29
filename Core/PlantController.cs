@@ -39,6 +39,7 @@ namespace _project.Scripts.Core
 
         [SerializeField] private ParticleSystem debuffSystem;
         [SerializeField] private ParticleSystem buffSystem;
+        [SerializeField] private ParticleSystem thripsFX;
 
         [DontSerialize] public PlantCardFunctions plantCardFunctions;
 
@@ -139,8 +140,15 @@ namespace _project.Scripts.Core
         public void RemoveAffliction(PlantAfflictions.IAffliction affliction)
         {
             if (!CurrentAfflictions.Remove(affliction)) return;
-            if (affliction is PlantAfflictions.MildewAffliction)
-                SetMoldIntensity(0);
+            switch (affliction)
+            {
+                case PlantAfflictions.MildewAffliction:
+                    SetMoldIntensity(0);
+                    break;
+                case PlantAfflictions.ThripsAffliction:
+                    if (thripsFX) thripsFX.Stop();
+                    break;
+            }
 
             if(buffSystem) buffSystem.Play();
         }
@@ -151,8 +159,15 @@ namespace _project.Scripts.Core
             var rand = new Random();
             var randomValue = rand.NextDouble() * 0.5f + 0.5f;
             CurrentAfflictions.Add(affliction);
-            if (affliction is PlantAfflictions.MildewAffliction)
-                SetMoldIntensity((float)randomValue);
+            switch (affliction)
+            {
+                case PlantAfflictions.MildewAffliction:
+                    SetMoldIntensity((float)randomValue);
+                    break;
+                case PlantAfflictions.ThripsAffliction:
+                    if (thripsFX) thripsFX.Play();
+                    break;
+            }
 
             if (debuffSystem) debuffSystem.Play();
         }
