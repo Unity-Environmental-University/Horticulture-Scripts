@@ -102,7 +102,11 @@ namespace _project.Scripts.Classes
                 if (treatment.Name is "SoapyWater" or "Panacea") plant.RemoveAffliction(this);
             }
 
-            public void TickDay() { }
+            public void TickDay()
+            {
+                var card = GetCard();
+                card!.Value += -1;
+            }
             public ICard GetCard() { return new MealyBugsCard(); }
         }
 

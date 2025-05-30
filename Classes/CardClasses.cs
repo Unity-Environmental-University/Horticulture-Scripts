@@ -1,7 +1,9 @@
+using System;
 using System.Collections.Generic;
 using _project.Scripts.Core;
 using JetBrains.Annotations;
 using UnityEngine;
+using Random = UnityEngine.Random;
 
 // ReSharper disable UnusedAutoPropertyAccessor.Global
 
@@ -11,7 +13,12 @@ namespace _project.Scripts.Classes
     {
         string Name { get; }
         string Description => null;
-        int? Value => null;
+        int? Value
+        {
+            get => null;
+            set => throw new NotImplementedException();
+        }
+
         PlantAfflictions.IAffliction Affliction => null;
         PlantAfflictions.ITreatment Treatment => null;
         GameObject Prefab => null;
