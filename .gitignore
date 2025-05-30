@@ -4,6 +4,7 @@
 
 # Ignore Git Setup Files
 Git-Setup.bat
+Git-Setup.sh
 
 # Don't Upload files with Keys
 Data/HardwareDataCollector.cs
