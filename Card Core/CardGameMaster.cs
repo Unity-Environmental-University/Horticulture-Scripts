@@ -3,8 +3,8 @@ using System.Collections.Generic;
 using JetBrains.Annotations;
 using TMPro;
 using UnityEngine;
+using UnityEngine.EventSystems;
 using UnityEngine.Rendering;
-using UnityEngine.Serialization;
 
 namespace _project.Scripts.Card_Core
 {
@@ -26,10 +26,12 @@ namespace _project.Scripts.Card_Core
         public ScoreManager scoreManager;
         public TurnController turnController;
         public Volume postProcessVolume;
+        public EventSystem eventSystem;
         public bool isInspecting;
 
-        [FormerlySerializedAs("scoreText")] [CanBeNull] public TextMeshPro MoneysText;
+        [CanBeNull] public TextMeshPro moneysText;
         [CanBeNull] public TextMeshPro turnText;
+        [CanBeNull] public TextMeshPro roundText;
         [CanBeNull] public TextMeshPro treatmentCostText;
         [CanBeNull] public TextMeshPro potentialProfitText;
 

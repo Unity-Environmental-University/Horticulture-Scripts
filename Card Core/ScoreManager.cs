@@ -36,8 +36,9 @@ namespace _project.Scripts.Card_Core
 
         private static void UpdateMoneysText(int modifier = 0)
         {
-            if (CardGameMaster.Instance.MoneysText)
-                CardGameMaster.Instance.MoneysText.text = "Moneys: " + "$" + (Moneys + modifier);
+            if (CardGameMaster.Instance.moneysText)
+                CardGameMaster.Instance.moneysText.text = "Moneys: " + "$" + (Moneys + modifier) 
+                                                          + "/" + CardGameMaster.Instance.turnController.moneyGoal;
         }
 
         private static void UpdateCostText(int totalCost) { TreatmentCostText.text = "Potential Loss: " + totalCost; }
@@ -72,6 +73,8 @@ namespace _project.Scripts.Card_Core
             UpdateProfitText(0);
             return Moneys;
         }
+        
+        public static int GetMoneys(){return Moneys;}
 
         public int CalculateTreatmentCost()
         {

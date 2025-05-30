@@ -4,7 +4,9 @@ using System.Collections.Generic;
 using System.Linq;
 using _project.Scripts.Classes;
 using _project.Scripts.Core;
+using TMPro;
 using UnityEngine;
+using UnityEngine.InputSystem.UI;
 using Random = System.Random;
 
 namespace _project.Scripts.Card_Core
@@ -12,7 +14,10 @@ namespace _project.Scripts.Card_Core
     public class TurnController : MonoBehaviour
     {
         public GameObject lostGameObjects;
+        public GameObject winScreen;
         public int turnCount = 4;
+        public int level;
+        public int moneyGoal;
         public int currentTurn;
         public int currentRound;
         public bool canClickEnd;
@@ -39,6 +44,13 @@ namespace _project.Scripts.Card_Core
 
         private void Start()
         {
+            moneyGoal = level switch
+            {
+                0 => 20,
+                1 => 100,
+                _ => moneyGoal
+            };
+            
             _scoreManager.ResetMoneys();
             StartCoroutine(BeginTurnSequence());
         }
@@ -80,6 +92,8 @@ namespace _project.Scripts.Card_Core
         {
             if (CardGameMaster.Instance.turnText)
                 CardGameMaster.Instance.turnText.text = "Turn: " + currentTurn + "/" + turnCount;
+            if (CardGameMaster.Instance.roundText)
+                CardGameMaster.Instance.roundText.text = "Round: " + currentRound;
         }
 
 
@@ -109,6 +123,13 @@ namespace _project.Scripts.Card_Core
         public void EndTurn()
         {
             if (_deckManager.updatingActionDisplay || !canClickEnd) return;
+            
+            if (ScoreManager.GetMoneys() >= moneyGoal)
+            {
+                currentTurn++;
+                EndLevel();
+                return;
+            }
 
             // If we're ready for a new round, call setup and return
             if (newRoundReady)
@@ -325,6 +346,21 @@ namespace _project.Scripts.Card_Core
             {
                 GameLost();
             }
+        }
+
+        private void EndLevel()
+        {
+            winScreen.gameObject.SetActive(true);
+            CardGameMaster.Instance.eventSystem.GetComponent<InputSystemUIInputModule>().enabled = true;
+            winScreen.gameObject.GetComponentInChildren<TextMeshProUGUI>().text =
+                "Good job! You beat level 1 in " + currentRound + " rounds. That's [excellent! / pretty good / average / " +
+                "... well, it's something. Maybe play it again and see if you can do better!] " +
+                "This game is still in development, so check back in for new levels." +
+                " If you're interested in Integrated Pest Management as a subject," +
+                " or in helping us develop the game further," +
+                " sign up for Unity Environmental University's Integrated Pest Management course. " +
+                "We're inviting students to help make this game as part of their schoolwork." +
+                " Thank you for playing; we hope to see you again soon!";
         }
 
         public void ResetGame()
