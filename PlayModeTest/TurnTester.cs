@@ -53,7 +53,7 @@ namespace _project.Scripts.PlayModeTest
                 plant.RemoveAffliction(this);
             }
 
-            public void TickDay() { }
+            public void TickDay(PlantController plant) { }
         }
 
         // Fake card that carries a treatment.

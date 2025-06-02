@@ -75,7 +75,12 @@ namespace _project.Scripts.Classes
     {
         public PlantType Type => PlantType.Coleus;
         public string Name => "Coleus";
-        public int? Value => 5;
+        private int _value = 5;
+        public int? Value
+        {
+            get => _value;
+            set => _value = value ?? 0;
+        }
         public GameObject Prefab { get; set; }
 
         public ICard Clone() { return new ColeusCard(); }
@@ -85,7 +90,12 @@ namespace _project.Scripts.Classes
     {
         public PlantType Type => PlantType.Chrysanthemum;
         public string Name => "Chrysanthemum";
-        public int? Value => 8;
+        private int _value = 8;
+        public int? Value
+        {
+            get => _value;
+            set => _value = value ?? 0;
+        }
         public GameObject Prefab { get; set; }
 
         public ICard Clone() { return new ChrysanthemumCard(); }
@@ -95,7 +105,12 @@ namespace _project.Scripts.Classes
     {
         public PlantType Type => PlantType.Pepper;
         public string Name => "Pepper";
-        public int? Value => 4;
+        private int _value = 4;
+        public int? Value
+        {
+            get => _value;
+            set => _value = value ?? 0;
+        }
         public GameObject Prefab { get; set; }
 
         public ICard Clone() { return new PepperCard(); }
@@ -105,7 +120,12 @@ namespace _project.Scripts.Classes
     {
         public PlantType Type => PlantType.Cucumber;
         public string Name => "Cucumber";
-        public int? Value => 3;
+        private int _value = 3;
+        public int? Value
+        {
+            get => _value;
+            set => _value = value ?? 0;
+        }
         public GameObject Prefab { get; set; }
 
         public ICard Clone() { return new CucumberCard(); }
