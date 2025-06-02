@@ -46,7 +46,7 @@ namespace _project.Scripts.Card_Core
         {
             moneyGoal = level switch
             {
-                0 => 20,
+                0 => 50,
                 1 => 100,
                 _ => moneyGoal
             };
