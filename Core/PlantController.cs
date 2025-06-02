@@ -60,6 +60,7 @@ namespace _project.Scripts.Core
         private void Start()
         {
             if (!TryGetComponent(out plantCardFunctions)) { }
+            if (priceFlagText && PlantCard != null) priceFlagText.text = "$" + PlantCard.Value;
         }
 
         private void Awake()
@@ -93,9 +94,12 @@ namespace _project.Scripts.Core
             return CurrentAfflictions.Count != 0 ? CurrentAfflictions[0].Color : Color.white;
         }
 
-        public void FlagShadersUpdate()
+        public void FlagShadersUpdate() => _needsShaderUpdate = true;
+
+        public void UpdatePriceFlag(int newValue)
         {
-            _needsShaderUpdate = true;
+            if (priceFlagText) priceFlagText.text = "$" + newValue;
+            CardGameMaster.Instance.scoreManager.CalculatePotentialProfit();
         }
 
         public void SetMoldIntensity(float value)
@@ -184,7 +188,7 @@ namespace _project.Scripts.Core
                 treatment.ApplyTreatment(this);
             }
         
-            CurrentAfflictions.ForEach(a => a.TickDay());
+            CurrentAfflictions.ForEach(a => a.TickDay(this));
             _needsShaderUpdate = true;
         }
 

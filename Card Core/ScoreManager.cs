@@ -104,11 +104,11 @@ namespace _project.Scripts.Card_Core
             cachedPlants = GetPlatsControllers();
 
             var plantValue = cachedPlants
-                .Where(plant => plant.PlantCard.Value != null && plant.CurrentAfflictions.Count <= 0)
+                .Where(plant => plant.PlantCard?.Value != null)
                 .Sum(plant => plant.PlantCard.Value.Value);
-            
-            UpdateProfitText(plantValue);
 
+            UpdateProfitText(plantValue);
+            
             return plantValue;
         }
 

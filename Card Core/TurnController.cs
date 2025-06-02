@@ -153,6 +153,7 @@ namespace _project.Scripts.Card_Core
                 foreach (var controller in plantControllers)
                 {
                     controller.plantCardFunctions.ApplyQueuedTreatments();
+                    controller.ProcessDay();
                     StartCoroutine(PauseRoutine());
                     controller.FlagShadersUpdate();
                 }

@@ -14,7 +14,7 @@ namespace _project.Scripts.Classes
             public Color Color { get; }
             [CanBeNull] public Shader Shader { get; }
             public void TreatWith(ITreatment treatment, PlantController plant);
-            public void TickDay();
+            public void TickDay(PlantController plant);
 
             [CanBeNull]
             public ICard GetCard() { return null; }
@@ -81,11 +81,17 @@ namespace _project.Scripts.Classes
                 if (!_hasAdults && !_hasLarvae) plant.RemoveAffliction(this);
             }
 
-            public void TickDay()
+            public void TickDay(PlantController plant)
             {
                 if (_hasAdults) _hasLarvae = true;
                 else if (_hasLarvae) _hasAdults = true;
+
+                if (!plant.PlantCard.Value.HasValue) return;
+                var newVal = Mathf.Max(0, plant.PlantCard.Value.Value - 1);
+                plant.PlantCard.Value = newVal;
+                plant.UpdatePriceFlag(newVal);
             }
+
 
             public ICard GetCard() { return new ThripsCard(); }
         }
@@ -102,10 +108,12 @@ namespace _project.Scripts.Classes
                 if (treatment.Name is "SoapyWater" or "Panacea") plant.RemoveAffliction(this);
             }
 
-            public void TickDay()
+            public void TickDay(PlantController plant)
             {
-                var card = GetCard();
-                card!.Value += -1;
+                if (!plant.PlantCard.Value.HasValue) return;
+                var newVal = Mathf.Max(0, plant.PlantCard.Value.Value - 1);
+                plant.PlantCard.Value = newVal;
+                plant.UpdatePriceFlag(newVal);
             }
             public ICard GetCard() { return new MealyBugsCard(); }
         }
@@ -122,7 +130,13 @@ namespace _project.Scripts.Classes
                 if (treatment.Name is "Fungicide" or "Panacea") plant.RemoveAffliction(this);
             }
 
-            public void TickDay() { }
+            public void TickDay(PlantController plant)
+            {
+                if (!plant.PlantCard.Value.HasValue) return;
+                var newVal = Mathf.Max(0, plant.PlantCard.Value.Value - 1);
+                plant.PlantCard.Value = newVal;
+                plant.UpdatePriceFlag(newVal);
+            }
             public ICard GetCard() { return new MildewCard(); }
         }
 
@@ -138,7 +152,13 @@ namespace _project.Scripts.Classes
                 if (treatment.Name is "NeemOil" or "Panacea") plant.RemoveAffliction(this);
             }
 
-            public void TickDay() { }
+            public void TickDay(PlantController plant)
+            {
+                if (!plant.PlantCard.Value.HasValue) return;
+                var newVal = Mathf.Max(0, plant.PlantCard.Value.Value - 1);
+                plant.PlantCard.Value = newVal;
+                plant.UpdatePriceFlag(newVal);
+            }
             public ICard GetCard() { return new AphidsCard(); }
         }
 
