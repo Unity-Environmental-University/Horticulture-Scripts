@@ -24,7 +24,6 @@ namespace _project.Scripts.Classes
         {
             string Name { get; }
             string Description { get; }
-            int BeeValue { get; }
 
             public void ApplyTreatment(PlantController plant)
             {

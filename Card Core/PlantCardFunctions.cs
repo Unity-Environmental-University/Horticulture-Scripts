@@ -19,11 +19,6 @@ namespace _project.Scripts.Card_Core
                 Debug.LogError("deckManager not found for plant!");
 
             plantController = GetComponent<PlantController>();
-
-            var click3D = GetComponentInChildren<Click3D>();
-            
-            // if card is selected this auto applyies that treatment
-           // if (click3D) click3D.onClick3D.AddListener(ApplyTreatment);
         }
 
         /// <summary>
@@ -40,6 +35,7 @@ namespace _project.Scripts.Card_Core
         ///     and exits early without applying any treatment. Expected exceptions are handled
         ///     using null checks and warnings.
         /// </remarks>
+        // ReSharper disable once UnusedMember.Local
         private void ApplyTreatment()
         {
             var selectedCard = deckManager.selectedACardClick3D;

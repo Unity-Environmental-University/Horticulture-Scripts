@@ -26,7 +26,6 @@ namespace _project.Scripts.PlayModeTest
         {
             public string Name => "Panacea";
             public string Description => "Cures all afflictions";
-            public int BeeValue => 0;
 
             public void ApplyTreatment(PlantController plant)
             {
@@ -304,7 +303,6 @@ namespace _project.Scripts.PlayModeTest
         {
             public string Name => "Explosive";
             public string Description => "Throws on apply";
-            public int BeeValue => 0;
 
             public void ApplyTreatment(PlantController plant)
             {
@@ -368,7 +366,6 @@ namespace _project.Scripts.PlayModeTest
         {
             public string Name => "SafeClear";
             public string Description => "Removes all afflictions";
-            public int BeeValue => 0;
 
             public void ApplyTreatment(PlantController plant)
             {

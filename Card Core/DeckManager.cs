@@ -138,24 +138,6 @@ namespace _project.Scripts.Card_Core
                 Debug.Log("Shuffled deck order: " + string.Join(", ", deck.ConvertAll(card => card.Name)));
         }
 
-        /// Generates a weighted random integer between the specified minimum and maximum values,
-        /// with a bias towards the minimum value. The bias is achieved by squaring a randomly
-        /// generated floating-point value, which increases the likelihood of selecting values
-        /// closer to the minimum.
-        /// <param name="min">The lower bound (inclusive) of the random number range.</param>
-        /// <param name="max">The upper bound (exclusive) of the random number range.</param>
-        /// <returns>
-        ///     A random integer between the specified minimum and maximum bounds,
-        ///     with a higher probability of being closer to the minimum.
-        /// </returns>
-        private static int MinWeightedRandom(int min, int max)
-        {
-            var t = Random.value; // rand float (between 0.0 - 1.0)
-            t *= t; // Squares the float => closer to 0 (or the minimum)
-            return min + Mathf.FloorToInt(t * (max - min)); // * this value can be 0 *
-        }
-
-
         /// <summary>
         /// Generates a weighted random integer within a specified range.
         /// The weight increases with the round number, favoring higher numbers towards later rounds.
