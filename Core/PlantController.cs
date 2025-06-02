@@ -25,7 +25,6 @@ namespace _project.Scripts.Core
     public class PlantController : MonoBehaviour
     {
         private readonly int _moldIntensityID = Shader.PropertyToID("_Mold_Intensity");
-        private readonly int _color1 = Shader.PropertyToID("_Color");
     
         // ReSharper disable twice NotAccessedField.Local
         [SerializeField] private List<string> cAfflictions = new();
@@ -89,11 +88,6 @@ namespace _project.Scripts.Core
             _needsShaderUpdate = false;
         }
 
-        private Color GetAfflictionColor()
-        {
-            return CurrentAfflictions.Count != 0 ? CurrentAfflictions[0].Color : Color.white;
-        }
-
         public void FlagShadersUpdate() => _needsShaderUpdate = true;
 
         public void UpdatePriceFlag(int newValue)
@@ -111,7 +105,6 @@ namespace _project.Scripts.Core
 
         private void UpdateShaders()
         {
-            var hasMildew = moldIntensity > 0;
             List<Material> mats = new();
             foreach (var renderer1 in _renderers)
             {
@@ -128,8 +121,6 @@ namespace _project.Scripts.Core
                 }
 
                 _sharedPropertyBlock.SetFloat(_moldIntensityID, moldIntensity);
-                // Sets color to debug colors
-               // _sharedPropertyBlock.SetColor(_color1, GetAfflictionColor());
                 renderer1.SetPropertyBlock(_sharedPropertyBlock);
             }
         }

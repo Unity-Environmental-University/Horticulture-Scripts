@@ -43,7 +43,7 @@ namespace _project.Scripts.Card_Core
 
         private static void UpdateCostText(int totalCost) { TreatmentCostText.text = "Potential Loss: " + totalCost; }
         
-        private static void UpdateProfitText(int potProfit) {PotentialProfitText.text = $"Potential Profit: " + potProfit;}
+        private static void UpdateProfitText(int potProfit) {PotentialProfitText.text = "Potential Profit: " + potProfit;}
 
         // ReSharper disable once MemberCanBeMadeStatic.Global
         public int CalculateScore()
@@ -76,7 +76,7 @@ namespace _project.Scripts.Card_Core
         
         public static int GetMoneys(){return Moneys;}
 
-        public int CalculateTreatmentCost()
+        public void CalculateTreatmentCost()
         {
             var afflictionDamage = 0;
 
@@ -91,15 +91,11 @@ namespace _project.Scripts.Card_Core
                         .Where(damage => damage != null).Sum(damage => damage.Value);
             }
 
-            var totalCost = afflictionDamage + treatmentCost;
-
             UpdateCostText(afflictionDamage);
             UpdateMoneysText(treatmentCost);
-
-            return totalCost;
         }
 
-        public int CalculatePotentialProfit()
+        public void CalculatePotentialProfit()
         {
             cachedPlants = GetPlatsControllers();
 
@@ -108,8 +104,6 @@ namespace _project.Scripts.Card_Core
                 .Sum(plant => plant.PlantCard.Value.Value);
 
             UpdateProfitText(plantValue);
-            
-            return plantValue;
         }
 
         private static List<PlantController> GetPlatsControllers()
