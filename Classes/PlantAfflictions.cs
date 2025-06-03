@@ -82,8 +82,8 @@ namespace _project.Scripts.Classes
 
             public void TickDay(PlantController plant)
             {
-                if (_hasAdults) _hasLarvae = true;
-                else if (_hasLarvae) _hasAdults = true;
+                // if (_hasAdults) _hasLarvae = true;
+                // else if (_hasLarvae) _hasAdults = true;
 
                 if (!plant.PlantCard.Value.HasValue) return;
                 var newVal = Mathf.Max(0, plant.PlantCard.Value.Value - 1);

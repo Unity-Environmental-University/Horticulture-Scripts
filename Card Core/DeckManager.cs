@@ -256,6 +256,21 @@ namespace _project.Scripts.Card_Core
             if (debug) Debug.Log("All plants cleared");
         }
 
+        public IEnumerator ClearPlant(PlantController plant)
+        {
+            if (!plant) yield break;
+            
+            plant.deathFX.Play();
+            yield return new WaitForSeconds(plant.deathFX.main.duration + 0.5f);
+            Destroy(plant.gameObject);
+                
+            var location = plantLocations.FirstOrDefault(slot => slot.
+                GetComponentsInChildren<PlantController>(true).Contains(plant));
+                
+            if (location)
+                location.GetComponentInChildren<PlacedCardHolder>()?.ToggleCardHolder(false);
+        }
+
         /// Determines the appropriate prefab GameObject to instantiate for a given card.
         /// This method maps specific card types (e.g., ColeusCard, ChrysanthemumCard) to their
         /// corresponding prefab GameObjects used to represent them visually within the game.
