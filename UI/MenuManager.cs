@@ -1,6 +1,5 @@
 using System.Collections;
 using _project.Scripts.Card_Core;
-using _project.Scripts.Data;
 using TMPro;
 using UnityEngine;
 using UnityEngine.EventSystems;
@@ -28,20 +27,9 @@ namespace _project.Scripts.UI
         {
             if (SceneManager.GetActiveScene().name == "Main") menuCanvas = null;
 
-            if (!versionText) return;
-            var buildInfoText = "";
-            var buildInfoAsset = Resources.Load<TextAsset>("BuildInfo");
+            if (versionText) versionText.text = "v" + Application.version;
 
-            if (buildInfoAsset)
-            {
-                var buildInfo = JsonUtility.FromJson<BuildInfo>(buildInfoAsset.text);
-                buildInfoText = $" (Build {buildInfo.buildNumber})";
-            }
-
-            versionText.text = $"v{Application.version}{buildInfoText}";
-
-
-#if PLATFORM_IOS || PLATFORM_IPHONE || UNITY_ANDROID || UNITY_IOS 
+#if PLATFORM_IOS || PLATFORM_IPHONE || UNITY_ANDROID || UNITY_IOS
             {
                 if (mainStartB) mainStartB.enabled = false;
                 if (buttonsUI) buttonsUI.transform.localScale *= mobileUIScaleMult;
