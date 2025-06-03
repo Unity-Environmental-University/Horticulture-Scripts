@@ -25,17 +25,17 @@ namespace _project.Scripts.Core
     public class PlantController : MonoBehaviour
     {
         private readonly int _moldIntensityID = Shader.PropertyToID("_Mold_Intensity");
-    
+
         // ReSharper disable twice NotAccessedField.Local
         [SerializeField] private List<string> cAfflictions = new();
         [SerializeField] private List<string> cTreatments = new();
         [SerializeField] private List<string> uAfflictions = new();
         [SerializeField] private List<string> uTreatments = new();
-        
+
         [SerializeField] private Shader litShader;
         [SerializeField] private Shader moldShader;
         [SerializeField] [Range(0, 1)] private float moldIntensity;
-        
+
         [SerializeField] private ParticleSystem buffSystem;
         [SerializeField] private ParticleSystem thripsFX;
         [SerializeField] public ParticleSystem debuffSystem;
@@ -47,7 +47,7 @@ namespace _project.Scripts.Core
         [CanBeNull] public TextMeshPro priceFlagText;
         public PlantType type;
         public ICard PlantCard;
-    
+
         private bool _needsShaderUpdate;
         private Renderer[] _renderers;
         private MaterialPropertyBlock _sharedPropertyBlock;
@@ -60,6 +60,7 @@ namespace _project.Scripts.Core
         private void Start()
         {
             if (!TryGetComponent(out plantCardFunctions)) { }
+
             if (priceFlagText && PlantCard != null) priceFlagText.text = "$" + PlantCard.Value;
         }
 
@@ -117,7 +118,7 @@ namespace _project.Scripts.Core
                 renderer1.GetMaterials(mats);
                 foreach (var material in mats)
                 {
-                   // var targetShader = hasMildew ? moldShader : GetShader(renderer1);
+                    // var targetShader = hasMildew ? moldShader : GetShader(renderer1);
                     var targetShader = GetShader(renderer1);
                     if (material.shader != targetShader)
                         material.shader = targetShader;
@@ -131,7 +132,7 @@ namespace _project.Scripts.Core
         private Shader GetShader(Renderer renderer1)
         {
             var afflictions = renderer1.GetComponentInParent<PlantController>().CurrentAfflictions;
-            
+
             return afflictions.Any() ? CurrentAfflictions.FirstOrDefault(a => a.Shader)?.Shader : litShader;
         }
 
@@ -148,7 +149,7 @@ namespace _project.Scripts.Core
                     break;
             }
 
-            if(buffSystem) buffSystem.Play();
+            if (buffSystem) buffSystem.Play();
         }
 
         public void AddAffliction(PlantAfflictions.IAffliction affliction)
@@ -174,14 +175,11 @@ namespace _project.Scripts.Core
         {
             return PriorAfflictions.Any(existing => existing.GetType() == affliction.GetType());
         }
-    
+
         public void ProcessDay()
         {
-            foreach (var treatment in CurrentTreatments)
-            {
-                treatment.ApplyTreatment(this);
-            }
-        
+            foreach (var treatment in CurrentTreatments) treatment.ApplyTreatment(this);
+
             CurrentAfflictions.ForEach(a => a.TickDay(this));
             _needsShaderUpdate = true;
         }
@@ -191,7 +189,7 @@ namespace _project.Scripts.Core
         {
             return CurrentAfflictions.Any(existing => existing.GetType() == affliction.GetType());
         }
-        
+
         private void KillPlant()
         {
             StartCoroutine(CardGameMaster.Instance.deckManager.ClearPlant(this));
