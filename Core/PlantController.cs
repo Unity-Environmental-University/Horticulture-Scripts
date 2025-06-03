@@ -35,10 +35,11 @@ namespace _project.Scripts.Core
         [SerializeField] private Shader litShader;
         [SerializeField] private Shader moldShader;
         [SerializeField] [Range(0, 1)] private float moldIntensity;
-
-        [SerializeField] private ParticleSystem debuffSystem;
+        
         [SerializeField] private ParticleSystem buffSystem;
         [SerializeField] private ParticleSystem thripsFX;
+        [SerializeField] public ParticleSystem debuffSystem;
+        [SerializeField] public ParticleSystem deathFX;
 
         [DontSerialize] public PlantCardFunctions plantCardFunctions;
 
@@ -83,6 +84,8 @@ namespace _project.Scripts.Core
             cTreatments = CurrentTreatments.Select(a => a.Name).ToList();
             uAfflictions = PriorAfflictions.Select(a => a.Name).ToList();
             uTreatments = UsedTreatments.Select(a => a.Name).ToList();
+            if (PlantCard is { Value: <= 0 }) KillPlant();
+
             if (!_needsShaderUpdate) return;
             UpdateShaders();
             _needsShaderUpdate = false;
@@ -187,6 +190,11 @@ namespace _project.Scripts.Core
         public bool HasAffliction(PlantAfflictions.IAffliction affliction)
         {
             return CurrentAfflictions.Any(existing => existing.GetType() == affliction.GetType());
+        }
+        
+        private void KillPlant()
+        {
+            StartCoroutine(CardGameMaster.Instance.deckManager.ClearPlant(this));
         }
     }
 }
