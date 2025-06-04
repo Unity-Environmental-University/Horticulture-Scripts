@@ -18,6 +18,8 @@ namespace _project.Scripts.Classes
 
             [CanBeNull]
             public ICard GetCard() { return null; }
+
+            public IAffliction Clone();
         }
 
         public interface ITreatment
@@ -57,6 +59,8 @@ namespace _project.Scripts.Classes
             public string Description => "";
             public Color Color => Color.black;
             public Shader Shader => Shader.Find($"Shader Graphs/Thrips");
+
+            public IAffliction Clone() { return new ThripsAffliction(); }
 
             public void TreatWith(ITreatment treatment, PlantController plant)
             {
@@ -102,6 +106,8 @@ namespace _project.Scripts.Classes
             public Color Color => Color.red;
             public Shader Shader => Shader.Find($"Shader Graphs/MealyBugs");
 
+            public IAffliction Clone() { return new MealyBugsAffliction(); }
+
             public void TreatWith(ITreatment treatment, PlantController plant)
             {
                 if (treatment.Name is "SoapyWater" or "Panacea") plant.RemoveAffliction(this);
@@ -124,6 +130,8 @@ namespace _project.Scripts.Classes
             public Color Color => Color.white;
             public Shader Shader => Shader.Find($"Shader Graphs/Mold");
 
+            public IAffliction Clone() { return new MildewAffliction(); }
+
             public void TreatWith(ITreatment treatment, PlantController plant)
             {
                 if (treatment.Name is "Fungicide" or "Panacea") plant.RemoveAffliction(this);
@@ -145,6 +153,7 @@ namespace _project.Scripts.Classes
             public string Description => "";
             public Color Color => Color.cyan;
             public Shader Shader => Shader.Find($"Shader Graphs/Aphids");
+            public IAffliction Clone() { return new AphidsAffliction(); }
 
             public void TreatWith(ITreatment treatment, PlantController plant)
             {
