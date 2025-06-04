@@ -139,7 +139,7 @@ namespace _project.Scripts.Classes
     {
         public PlantAfflictions.IAffliction Affliction => new PlantAfflictions.AphidsAffliction();
         public string Name => "Aphids";
-        public int? Value => -4;
+        public int? Value => -2;
 
         public ICard Clone() { return new AphidsCard(); }
     }
@@ -148,7 +148,7 @@ namespace _project.Scripts.Classes
     {
         public PlantAfflictions.IAffliction Affliction => new PlantAfflictions.MealyBugsAffliction();
         public string Name => "Mealy Bugs";
-        public int? Value => -8;
+        public int? Value => -4;
 
         public ICard Clone() { return new MealyBugsCard(); }
     }
@@ -157,7 +157,7 @@ namespace _project.Scripts.Classes
     {
         public PlantAfflictions.IAffliction Affliction => new PlantAfflictions.ThripsAffliction();
         public string Name => "Thrips";
-        public int? Value => -10;
+        public int? Value => -5;
 
         public ICard Clone() { return new ThripsCard(); }
     }
@@ -166,7 +166,7 @@ namespace _project.Scripts.Classes
     {
         public PlantAfflictions.IAffliction Affliction => new PlantAfflictions.MildewAffliction();
         public string Name => "Mildew";
-        public int? Value => -8;
+        public int? Value => -4;
         public ICard Clone() { return new MildewCard(); }
     }
 

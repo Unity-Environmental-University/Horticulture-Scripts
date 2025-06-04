@@ -19,6 +19,7 @@ namespace _project.Scripts.Card_Core
         public int level;
         public int moneyGoal;
         public int currentTurn;
+        public int totalTurns;
         public int currentRound;
         public bool canClickEnd;
         public bool newRoundReady;
@@ -127,6 +128,7 @@ namespace _project.Scripts.Card_Core
             if (ScoreManager.GetMoneys() >= moneyGoal)
             {
                 currentTurn++;
+                totalTurns++;
                 EndLevel();
                 return;
             }
@@ -169,6 +171,7 @@ namespace _project.Scripts.Card_Core
             if (currentTurn < turnCount)
             {
                 currentTurn++;
+                totalTurns++;
                 SpreadAfflictions(plantControllers);
                 _deckManager.DrawActionHand();
             }
@@ -352,9 +355,10 @@ namespace _project.Scripts.Card_Core
         private void EndLevel()
         {
             winScreen.gameObject.SetActive(true);
+            canClickEnd = false;
             CardGameMaster.Instance.eventSystem.GetComponent<InputSystemUIInputModule>().enabled = true;
             winScreen.gameObject.GetComponentInChildren<TextMeshProUGUI>().text =
-                "Good job! You beat level 1 in " + currentRound + " rounds. That's [excellent! / pretty good / average / " +
+                "Good job! You beat level 1 in " + currentRound + " rounds and " + totalTurns + " turns. That's [excellent! / pretty good / average / " +
                 "... well, it's something. Maybe play it again and see if you can do better!] " +
                 "This game is still in development, so check back in for new levels." +
                 " If you're interested in Integrated Pest Management as a subject," +

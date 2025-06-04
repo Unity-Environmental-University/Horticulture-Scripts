@@ -27,8 +27,9 @@ namespace _project.Scripts.Card_Core
         public TurnController turnController;
         public Volume postProcessVolume;
         public EventSystem eventSystem;
+        public GameObject inspectingInfoPanels;
         public bool isInspecting;
-
+        
         [CanBeNull] public TextMeshPro moneysText;
         [CanBeNull] public TextMeshPro turnText;
         [CanBeNull] public TextMeshPro roundText;
