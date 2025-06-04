@@ -263,7 +263,7 @@ namespace _project.Scripts.Card_Core
                         if (!target.UsedTreatments.Any(treatment =>
                                 treatment is PlantAfflictions.Panacea || !target.HasHadAffliction(affliction)))
                         {
-                            target.AddAffliction(affliction);
+                            target.AddAffliction(affliction.Clone());
                             _scoreManager.CalculateTreatmentCost();
                         }
 

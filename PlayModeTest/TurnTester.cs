@@ -46,6 +46,7 @@ namespace _project.Scripts.PlayModeTest
             public string Description => "Just a test";
             public Color Color => Color.gray;
             public Shader Shader => null;
+            public PlantAfflictions.IAffliction Clone() { return new FakeAffliction(); }
 
             public void TreatWith(PlantAfflictions.ITreatment treatment, PlantController plant)
             {
