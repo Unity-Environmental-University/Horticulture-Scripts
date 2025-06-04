@@ -98,5 +98,7 @@ namespace _project.Scripts.UI
         }
 
         public void QuitGame() { Application.Quit(); }
+
+        public void OpenCourseLink() {Application.OpenURL("https://learn.unity.edu/product/biol-330-integrated-pest-management/01tUH000008UtF9YAK");}
     }
 }

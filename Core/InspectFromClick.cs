@@ -51,6 +51,7 @@ namespace _project.Scripts.Core
             _inspectableObject = gameObject;
             CardGameMaster.Instance.isInspecting = true;
             CardGameMaster.Instance.turnController.canClickEnd = false;
+            CardGameMaster.Instance.inspectingInfoPanels.SetActive(true);
 
             // Store local rotation and position
             _originalPosition = _inspectableObject.transform.position;
@@ -115,6 +116,7 @@ namespace _project.Scripts.Core
             // Cleanup
             CardGameMaster.Instance.isInspecting = false;
             CardGameMaster.Instance.turnController.canClickEnd = true;
+            CardGameMaster.Instance.inspectingInfoPanels.SetActive(false);
             _inspectableObject.transform.position = _originalPosition;
             _inspectableObject.transform.rotation = _originalRotation;
 
