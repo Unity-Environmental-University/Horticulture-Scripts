@@ -142,6 +142,8 @@ namespace _project.Scripts.Card_Core
         public void ToggleCardHolder(bool state)
         {
             var buttonRenderer = GetComponentInChildren<MeshRenderer>(true);
+            var click3D = gameObject.GetComponentInChildren<Click3D>(true);
+            click3D.isEnabled = state;
             if (buttonRenderer)
                 buttonRenderer.enabled = state;
         }
