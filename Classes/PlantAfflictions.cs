@@ -110,7 +110,7 @@ namespace _project.Scripts.Classes
 
             public void TreatWith(ITreatment treatment, PlantController plant)
             {
-                if (treatment.Name is "SoapyWater" or "Panacea") plant.RemoveAffliction(this);
+                if (treatment.Name is "SoapyWater" or "Panacea" or "Insecticide") plant.RemoveAffliction(this);
             }
 
             public void TickDay(PlantController plant)
@@ -157,7 +157,7 @@ namespace _project.Scripts.Classes
 
             public void TreatWith(ITreatment treatment, PlantController plant)
             {
-                if (treatment.Name is "NeemOil" or "Panacea") plant.RemoveAffliction(this);
+                if (treatment.Name is "NeemOil" or "Panacea" or "Insecticide") plant.RemoveAffliction(this);
             }
 
             public void TickDay(PlantController plant)
