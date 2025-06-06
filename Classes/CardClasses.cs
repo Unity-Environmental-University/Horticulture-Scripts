@@ -199,7 +199,7 @@ namespace _project.Scripts.Classes
     {
         [CanBeNull] private string _description;
         public PlantAfflictions.ITreatment Treatment => new PlantAfflictions.InsecticideTreatment();
-        public string Name => "Insecticide Basic";
+        public string Name => "Artificial Insecticide Basic";
         public int? Value => -3;
 
         public string Description
