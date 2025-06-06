@@ -34,7 +34,7 @@ namespace _project.Scripts.Card_Core
             UpdateMoneysText();
         }
 
-        private static void UpdateMoneysText(int modifier = 0)
+        public static void UpdateMoneysText(int modifier = 0)
         {
             if (CardGameMaster.Instance.moneysText)
                 CardGameMaster.Instance.moneysText.text = "Moneys: " + "$" + (Moneys + modifier) 
@@ -95,7 +95,7 @@ namespace _project.Scripts.Card_Core
             UpdateMoneysText(treatmentCost);
         }
 
-        public void CalculatePotentialProfit()
+        public int CalculatePotentialProfit()
         {
             cachedPlants = GetPlatsControllers();
 
@@ -104,6 +104,13 @@ namespace _project.Scripts.Card_Core
                 .Sum(plant => plant.PlantCard.Value.Value);
 
             UpdateProfitText(plantValue);
+            return plantValue;
+        }
+
+        public static int SubtractMoneys(int amount)
+        {
+            Moneys -= amount;
+            return Moneys;
         }
 
         private static List<PlantController> GetPlatsControllers()

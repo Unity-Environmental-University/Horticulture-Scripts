@@ -526,6 +526,53 @@ namespace _project.Scripts.Card_Core
             updatingActionDisplay = false;
         }
 
+        public void RedrawCards()
+        {
+            if (updatingActionDisplay) return;
+            
+            // Create a temporary list to avoid modifying _actionHand while iterating
+            var cardsToDiscard = new List<ICard>(_actionHand);
+            foreach (var card in cardsToDiscard)
+            {
+                DiscardActionCard(card, true);
+            }
+
+            _actionHand.Clear();
+
+            // Clear all existing visualized cards in the action card parent
+            foreach (Transform child in actionCardParent)
+            {
+                Destroy(child.gameObject);
+            }
+
+            for (var i = 0; i < cardsDrawnPerTurn; i++)
+            {
+                // Handle a case when the action deck or discard pile is empty
+                if (_actionDeck.Count == 0 && _actionDiscardPile.Count > 0)
+                {
+                    _actionDeck.AddRange(_actionDiscardPile);
+                    _actionDiscardPile.Clear();
+                    ShuffleDeck(_actionDeck);
+                    if (debug) Debug.Log("Recycled discard pile into action deck.");
+                }
+
+                // Ensure we don't try to access an empty action deck
+                if (_actionDeck.Count <= 0) continue;
+
+                var drawnCard = _actionDeck[0];
+                _actionDeck.RemoveAt(0);
+                _actionHand.Add(drawnCard);
+            }
+
+            StartCoroutine(DisplayActionCardsSequence());
+            if (debug) Debug.Log("Action Hand: " + string.Join(", ", _actionHand.ConvertAll(card => card.Name)));
+
+            var potProf = CardGameMaster.Instance.scoreManager.CalculatePotentialProfit();
+            var totMon = ScoreManager.GetMoneys();
+            ScoreManager.SubtractMoneys(3);
+            ScoreManager.UpdateMoneysText();
+        }
+
         #endregion
     }
 }
