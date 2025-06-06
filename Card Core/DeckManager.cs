@@ -69,6 +69,7 @@ namespace _project.Scripts.Card_Core
         public GameObject pepperPrefab;
         public float cardSpacing = 1f;
         public int cardsDrawnPerTurn = 3;
+        public int redrawCost = 3;
         public bool debug = true;
         
         #endregion
@@ -566,10 +567,7 @@ namespace _project.Scripts.Card_Core
 
             StartCoroutine(DisplayActionCardsSequence());
             if (debug) Debug.Log("Action Hand: " + string.Join(", ", _actionHand.ConvertAll(card => card.Name)));
-
-            var potProf = CardGameMaster.Instance.scoreManager.CalculatePotentialProfit();
-            var totMon = ScoreManager.GetMoneys();
-            ScoreManager.SubtractMoneys(3);
+            ScoreManager.SubtractMoneys(redrawCost);
             ScoreManager.UpdateMoneysText();
         }
 
