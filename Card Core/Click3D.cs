@@ -146,8 +146,8 @@ namespace _project.Scripts.Card_Core
         {
             if (!_objectRenderer) return;
 
-            Color targetColor = isEnabled
-                ? (mouseOver ? _hoverColor : _baseColor)
+            var targetColor = isEnabled
+                ? mouseOver ? _hoverColor : _baseColor
                 : _disabledColor;
 
             _objectRenderer.material.color = targetColor;
