@@ -55,6 +55,7 @@ namespace _project.Scripts.Card_Core
             if (GetComponent<CardView>() && !cardView) cardView = GetComponent<CardView>();
 
             _objectRenderer = GetComponentInChildren<Renderer>();
+            _objectRenderer.material = new Material(_objectRenderer.material);
             _baseColor = _objectRenderer.material.color;
             _mainCamera = Camera.main;
             _mouse = Mouse.current;
@@ -144,10 +145,14 @@ namespace _project.Scripts.Card_Core
         public void RefreshState()
         {
             if (!_objectRenderer) return;
-            if (isEnabled)
-                _objectRenderer.material.color = mouseOver ? _hoverColor : _baseColor;
-            else
-                _objectRenderer.material.color = _disabledColor;
+
+            Color targetColor = isEnabled
+                ? (mouseOver ? _hoverColor : _baseColor)
+                : _disabledColor;
+
+            _objectRenderer.material.color = targetColor;
+            _sharedPropertyBlock.SetColor(Color1, targetColor);
+            _objectRenderer.SetPropertyBlock(_sharedPropertyBlock);
         }
 
         public void DisableClick3D() { isEnabled = false; }
