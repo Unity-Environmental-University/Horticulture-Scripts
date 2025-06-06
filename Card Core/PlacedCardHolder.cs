@@ -49,7 +49,7 @@ namespace _project.Scripts.Card_Core
 
             // Set up the CloneCardView
             var cardViewClone = cardClone.GetComponent<CardView>();
-            if (cardViewClone != null)
+            if (cardViewClone)
                 cardViewClone.Setup(_deckManager.SelectedACard);
 
             // Set parent without preserving world values
@@ -72,7 +72,7 @@ namespace _project.Scripts.Card_Core
 
             // Hide the CardButton and the card in Hand
             var buttonRenderer = GetComponentInChildren<MeshRenderer>(true);
-            if (buttonRenderer != null)
+            if (buttonRenderer)
                 buttonRenderer.enabled = false;
             var cardRenderers = selectedCard.GetComponentsInChildren<Renderer>();
             if (cardRenderers == null) return;
@@ -109,7 +109,7 @@ namespace _project.Scripts.Card_Core
                     var renderers = cardView.GetComponentsInChildren<Renderer>(true);
                     foreach (var renderer1 in renderers) renderer1.enabled = true;
                     var click3D = cardView.GetComponent<Click3D>();
-                    if (click3D != null)
+                    if (click3D)
                     {
                         click3D.isEnabled = true;
                         click3D.selected = false;
@@ -131,7 +131,7 @@ namespace _project.Scripts.Card_Core
             PlacedCard = null;
 
             var buttonRenderer = GetComponentInChildren<MeshRenderer>(true);
-            if (buttonRenderer != null)
+            if (buttonRenderer)
                 buttonRenderer.enabled = true;
 
             // Show the parent object renderer again
