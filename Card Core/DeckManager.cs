@@ -9,11 +9,10 @@ using Random = UnityEngine.Random;
 
 namespace _project.Scripts.Card_Core
 {
-    
     public class DeckManager : MonoBehaviour
     {
         #region Prototype Decks
-        
+
         private static readonly List<ICard> PrototypeAfflictionsDeck = new()
         {
             new AphidsCard(),
@@ -42,7 +41,7 @@ namespace _project.Scripts.Card_Core
         #endregion
 
         #region Declare Decks
-        
+
         private readonly List<ICard> _actionDeck = new();
         private readonly List<ICard> _actionDiscardPile = new();
         private static readonly List<ICard> PlantDeck = new();
@@ -53,7 +52,7 @@ namespace _project.Scripts.Card_Core
         #region Class Variables
 
         [DontSerialize] public bool updatingActionDisplay;
-        
+
         private readonly CardHand _afflictionHand = new("Afflictions Hand", AfflictionsDeck, PrototypeAfflictionsDeck);
         private readonly CardHand _plantHand = new("Plants Hand", PlantDeck, PrototypePlantsDeck);
         private readonly List<ICard> _actionHand = new();
@@ -71,7 +70,7 @@ namespace _project.Scripts.Card_Core
         public int cardsDrawnPerTurn = 3;
         public int redrawCost = 3;
         public bool debug = true;
-        
+
         #endregion
 
         #region Initialization
@@ -140,8 +139,8 @@ namespace _project.Scripts.Card_Core
         }
 
         /// <summary>
-        /// Generates a weighted random integer within a specified range.
-        /// The weight increases with the round number, favoring higher numbers towards later rounds.
+        ///     Generates a weighted random integer within a specified range.
+        ///     The weight increases with the round number, favoring higher numbers towards later rounds.
         /// </summary>
         /// <param name="min">The inclusive lower bound of the random range.</param>
         /// <param name="maxExclusive">The exclusive upper bound of the random range.</param>
@@ -152,11 +151,11 @@ namespace _project.Scripts.Card_Core
             var round01 = Mathf.Clamp01((CardGameMaster.Instance.turnController.currentRound - 1f) / 4f);
 
             // Get a random t in 0-1 and build two *opposite* biases ----
-            var r  = Random.value;
+            var r = Random.value;
 
             // lowBias  →   r²   (strongly favours 0)
             // highBias → 1-(1-r)²  (strongly favours 1)
-            var lowBias  = r * r;
+            var lowBias = r * r;
             var highBias = 1f - (1f - r) * (1f - r);
 
             // Blend between those two curves based on how far into the game we are ----
@@ -211,7 +210,7 @@ namespace _project.Scripts.Card_Core
                 plantController.PlantCard = _plantHand[i];
                 if (plantController.priceFlag && plantController.priceFlagText)
                     plantController.priceFlagText.text = "$" + plantController.PlantCard.Value;
-                
+
                 // disable plantClick3D component
                 //var plantClick3D = plant.GetComponent<Click3D>();
                 // plantClick3D.isEnabled = false;
@@ -226,7 +225,7 @@ namespace _project.Scripts.Card_Core
         public IEnumerator UpdateCardHolderRenders()
         {
             yield return null;
-            
+
             foreach (var location in plantLocations)
             {
                 var plantController = location.GetComponentInChildren<PlantController>(true);
@@ -260,14 +259,14 @@ namespace _project.Scripts.Card_Core
         public IEnumerator ClearPlant(PlantController plant)
         {
             if (!plant) yield break;
-            
+
             plant.deathFX.Play();
             yield return new WaitForSeconds(plant.deathFX.main.duration + 0.5f);
             Destroy(plant.gameObject);
-                
-            var location = plantLocations.FirstOrDefault(slot => slot.
-                GetComponentsInChildren<PlantController>(true).Contains(plant));
-                
+
+            var location = plantLocations.FirstOrDefault(slot =>
+                slot.GetComponentsInChildren<PlantController>(true).Contains(plant));
+
             if (location)
                 location.GetComponentInChildren<PlacedCardHolder>()?.ToggleCardHolder(false);
         }
@@ -381,21 +380,15 @@ namespace _project.Scripts.Card_Core
         public void DrawActionHand()
         {
             if (updatingActionDisplay) return;
-            
+
             // Create a temporary list to avoid modifying _actionHand while iterating
             var cardsToDiscard = new List<ICard>(_actionHand);
-            foreach (var card in cardsToDiscard)
-            {
-                DiscardActionCard(card, true);
-            }
+            foreach (var card in cardsToDiscard) DiscardActionCard(card, true);
 
             _actionHand.Clear();
 
             // Clear all existing visualized cards in the action card parent
-            foreach (Transform child in actionCardParent)
-            {
-                Destroy(child.gameObject);
-            }
+            foreach (Transform child in actionCardParent) Destroy(child.gameObject);
 
             for (var i = 0; i < cardsDrawnPerTurn; i++)
             {
@@ -461,13 +454,18 @@ namespace _project.Scripts.Card_Core
         /// Log the state of the action hand, action deck, and discard the pile if debugging is enabled.
         public void ClearActionHand()
         {
-            _actionHand.Clear();
+            /*
+             _actionHand.Clear();
             _actionDeck.Clear();
             _actionDiscardPile.Clear();
 
             foreach (Transform child in actionCardParent) Destroy(child.gameObject);
 
             InitializeActionDeck();
+            */
+            _actionHand.Clear();
+            foreach (Transform child in actionCardParent)
+                Destroy(child.gameObject);
 
             if (debug) Debug.Log("Action Hand: " + string.Join(", ", _actionHand.ConvertAll(card => card.Name)));
             if (debug) Debug.Log("Action Hand: " + string.Join(", ", _actionDeck.ConvertAll(card => card.Name)));
@@ -493,7 +491,6 @@ namespace _project.Scripts.Card_Core
         {
             updatingActionDisplay = true;
 
-            
             var cardsToDisplay = new List<ICard>(_actionHand);
             var totalCards = _actionHand.Count;
             const float totalFanAngle = -30f; // Total fan angle in degrees
@@ -524,27 +521,22 @@ namespace _project.Scripts.Card_Core
 
                 yield return new WaitForSeconds(0.5f);
             }
+
             updatingActionDisplay = false;
         }
 
         public void RedrawCards()
         {
             if (updatingActionDisplay) return;
-            
+
             // Create a temporary list to avoid modifying _actionHand while iterating
             var cardsToDiscard = new List<ICard>(_actionHand);
-            foreach (var card in cardsToDiscard)
-            {
-                DiscardActionCard(card, true);
-            }
+            foreach (var card in cardsToDiscard) DiscardActionCard(card, true);
 
             _actionHand.Clear();
 
             // Clear all existing visualized cards in the action card parent
-            foreach (Transform child in actionCardParent)
-            {
-                Destroy(child.gameObject);
-            }
+            foreach (Transform child in actionCardParent) Destroy(child.gameObject);
 
             for (var i = 0; i < cardsDrawnPerTurn; i++)
             {
