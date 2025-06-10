@@ -32,9 +32,14 @@ namespace _project.Scripts.Card_Core
         private static readonly List<ICard> PrototypeActionDeck = new()
         {
             new NeemOilBasic(),
+            new NeemOilBasic(),
+            new FungicideBasic(),
             new FungicideBasic(),
             new InsecticideBasic(),
+            new InsecticideBasic(),
             new SoapyWaterBasic(),
+            new SoapyWaterBasic(),
+            new Panacea(),
             new Panacea()
         };
 
@@ -67,7 +72,7 @@ namespace _project.Scripts.Card_Core
         public GameObject cucumberPrefab;
         public GameObject pepperPrefab;
         public float cardSpacing = 1f;
-        public int cardsDrawnPerTurn = 3;
+        public int cardsDrawnPerTurn = 4;
         public int redrawCost = 3;
         public bool debug = true;
 
@@ -103,10 +108,9 @@ namespace _project.Scripts.Card_Core
         private void InitializeActionDeck()
         {
             foreach (var card in PrototypeActionDeck)
-            {
-                var duplicates = Random.Range(1, 5);
-                for (var i = 0; i < duplicates; i++) _actionDeck.Add(card.Clone());
-            }
+                //var duplicates = Random.Range(1, 5);
+                //for (var i = 0; i < duplicates; i++) _actionDeck.Add(card.Clone());
+                _actionDeck.Add(card.Clone());
 
             ShuffleDeck(_actionDeck);
             if (debug)
@@ -371,46 +375,69 @@ namespace _project.Scripts.Card_Core
 
         #region Action Card Management
 
-        /// Draws the player's action hand by clearing the current hand, recycling cards
-        /// from the discard pile into the deck if necessary, and then drawing a specified
-        /// number of cards from the action deck. Repositions and visualize the drawn cards
-        /// within the scene using the DisplayActionCardsSequence method.
-        /// The discard pile is shuffled back into the action deck if the deck does not
-        /// contain enough cards to complete the draw, and debug messages are logged if enabled.
+        /// Draws a new action hand by discarding the current hand and drawing the specified number of cards from the action deck.
+        /// If the action deck is empty, it recycles the discard pile into the action deck. The drawn cards are then displayed in sequence.
+        /// Optionally, log the state of the action hand, action deck, and discard pile if debugging is enabled.
         public void DrawActionHand()
         {
             if (updatingActionDisplay) return;
 
-            // Create a temporary list to avoid modifying _actionHand while iterating
+            // Discard current hand cards to discard pile
             var cardsToDiscard = new List<ICard>(_actionHand);
-            foreach (var card in cardsToDiscard) DiscardActionCard(card, true);
+            foreach (var card in cardsToDiscard)
+                DiscardActionCard(card, true);
 
             _actionHand.Clear();
 
-            // Clear all existing visualized cards in the action card parent
-            foreach (Transform child in actionCardParent) Destroy(child.gameObject);
-
-            for (var i = 0; i < cardsDrawnPerTurn; i++)
+            if (_actionHand.Count > cardsDrawnPerTurn)
             {
-                // Handle a case when the action deck or discard pile is empty
+                Debug.LogWarning("Hand overflow detected. Trimming hand.");
+                _actionHand.RemoveRange(cardsDrawnPerTurn, _actionHand.Count - cardsDrawnPerTurn);
+            }
+
+            // Clear all existing visualized cards
+            foreach (Transform child in actionCardParent)
+                Destroy(child.gameObject);
+
+            var cardsNeeded = cardsDrawnPerTurn;
+
+            while (cardsNeeded > 0)
+            {
+                // Recycle discard pile only if deck empty and the discard pile has cards
                 if (_actionDeck.Count == 0 && _actionDiscardPile.Count > 0)
                 {
+                    if (debug)
+                        Debug.Log(
+                            $"Recycling {_actionDiscardPile.Count} cards from discard pile into action deck.");
                     _actionDeck.AddRange(_actionDiscardPile);
                     _actionDiscardPile.Clear();
                     ShuffleDeck(_actionDeck);
                     if (debug) Debug.Log("Recycled discard pile into action deck.");
                 }
 
-                // Ensure we don't try to access an empty action deck
-                if (_actionDeck.Count <= 0) continue;
+                if (_actionDeck.Count == 0)
+                {
+                    if (debug) Debug.Log("No cards left in action deck to draw.");
+                    break; // No more cards to draw
+                }
 
                 var drawnCard = _actionDeck[0];
                 _actionDeck.RemoveAt(0);
                 _actionHand.Add(drawnCard);
+                cardsNeeded--;
             }
 
             StartCoroutine(DisplayActionCardsSequence());
-            if (debug) Debug.Log("Action Hand: " + string.Join(", ", _actionHand.ConvertAll(card => card.Name)));
+
+            if (debug)
+                Debug.Log(
+                    $"Action Hand ({_actionHand.Count}): {string.Join(", ", _actionHand.ConvertAll(card => card.Name))}");
+            if (debug)
+                Debug.Log(
+                    $"Action Deck ({_actionDeck.Count}): {string.Join(", ", _actionDeck.ConvertAll(card => card.Name))}");
+            if (debug)
+                Debug.Log(
+                    $"Discard Pile ({_actionDiscardPile.Count}): {string.Join(", ", _actionDiscardPile.ConvertAll(card => card.Name))}");
         }
 
         /// Discards the specified action card by removing it from the action hand.
@@ -447,31 +474,24 @@ namespace _project.Scripts.Card_Core
             _actionDiscardPile.Add(card);
         }
 
-        /// Clears the action hand, action deck, and discard pile, and resets the action deck for the next sequence.
-        /// This method removes all current action cards from the action hand and discard pile,
-        /// destroys any card GameObjects under the action card parent transform, and reinitializes
-        /// the action deck to its original shuffled state.
-        /// Log the state of the action hand, action deck, and discard the pile if debugging is enabled.
+        /// Clears the action hand, deck, and discard the pile by removing all cards from these lists.
+        /// Additionally, destroys all child objects under the `actionCardParent` transform.
+        /// After clearing, it reinitializes the action deck and logs the operation if debugging is enabled.
         public void ClearActionHand()
         {
-            /*
-             _actionHand.Clear();
-            _actionDeck.Clear();
-            _actionDiscardPile.Clear();
+            var cardsToDiscard = new List<ICard>(_actionHand); // Make a copy
 
-            foreach (Transform child in actionCardParent) Destroy(child.gameObject);
+            foreach (var card in cardsToDiscard)
+                DiscardActionCard(card, true);
 
-            InitializeActionDeck();
-            */
             _actionHand.Clear();
+
             foreach (Transform child in actionCardParent)
                 Destroy(child.gameObject);
 
-            if (debug) Debug.Log("Action Hand: " + string.Join(", ", _actionHand.ConvertAll(card => card.Name)));
-            if (debug) Debug.Log("Action Hand: " + string.Join(", ", _actionDeck.ConvertAll(card => card.Name)));
-            if (debug) Debug.Log("Action Hand: " + string.Join(", ", _actionDiscardPile.ConvertAll(card => card.Name)));
+            if (debug) Debug.Log("Cleared action hand and discarded cards.");
         }
-
+        
         public void AddActionCard(ICard card)
         {
             _actionHand.Add(card);
@@ -529,12 +549,24 @@ namespace _project.Scripts.Card_Core
         {
             if (updatingActionDisplay) return;
 
+            if (CardGameMaster.Instance.cardHolders.Any(holder => holder && holder.HoldingCard))
+            {
+                Debug.LogError("Cards In CardHolder!");
+                return;
+            }
+
             // Create a temporary list to avoid modifying _actionHand while iterating
             var cardsToDiscard = new List<ICard>(_actionHand);
             foreach (var card in cardsToDiscard) DiscardActionCard(card, true);
 
             _actionHand.Clear();
 
+            if (_actionHand.Count > cardsDrawnPerTurn)
+            {
+                Debug.LogWarning("Hand overflow detected. Trimming hand.");
+                _actionHand.RemoveRange(cardsDrawnPerTurn, _actionHand.Count - cardsDrawnPerTurn);
+            }
+            
             // Clear all existing visualized cards in the action card parent
             foreach (Transform child in actionCardParent) Destroy(child.gameObject);
 

@@ -111,7 +111,8 @@ namespace _project.Scripts.Card_Core
         
         private void ClearCardHolder(PlacedCardHolder cardHolder)
         {
-            deckManager.AddActionCard(cardHolder.PlacedCard);
+            //deckManager.AddActionCard(cardHolder.PlacedCard);
+            deckManager.DiscardActionCard(cardHolder.PlacedCard, true);
             Destroy(cardHolder.placedCardClick3D.gameObject);
             cardHolder.placedCardView = null;
             cardHolder.placedCardClick3D = null;
