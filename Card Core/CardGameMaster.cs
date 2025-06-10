@@ -29,6 +29,7 @@ namespace _project.Scripts.Card_Core
         public EventSystem eventSystem;
         public GameObject inspectingInfoPanels;
         public bool isInspecting;
+        public bool debuggingCardClass;
         
         [CanBeNull] public TextMeshPro moneysText;
         [CanBeNull] public TextMeshPro turnText;

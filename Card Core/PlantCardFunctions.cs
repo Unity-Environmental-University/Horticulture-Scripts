@@ -63,8 +63,11 @@ namespace _project.Scripts.Card_Core
 
             if (actionCard.Treatment != null) plantController.UsedTreatments.Add(actionCard.Treatment);
 
-            Debug.Log(
-                $"{actionCard.Name} treatment {actionCard.Treatment?.ToString() ?? "Unknown"} applied to {plantController.name}");
+            //if (plantController.PlantCard.GetType()) ;
+
+            if (CardGameMaster.Instance.debuggingCardClass)
+                Debug.Log(
+                    $"{actionCard.Name} treatment {actionCard.Treatment?.ToString() ?? "Unknown"} applied to {plantController.name}");
 
             deckManager.DiscardActionCard(actionCard, true);
             Destroy(selectedCard.gameObject);
@@ -103,7 +106,8 @@ namespace _project.Scripts.Card_Core
                 actionCard.Treatment.ApplyTreatment(targetPlant);
                 targetPlant.UsedTreatments.Add(actionCard.Treatment);
 
-                Debug.Log($"Applied treatment {actionCard.Treatment} from card {actionCard.Name} to Plant {targetPlant.name}");
+                if (CardGameMaster.Instance.debuggingCardClass) 
+                    Debug.Log($"Applied treatment {actionCard.Treatment} from card {actionCard.Name} to Plant {targetPlant.name}");
 
                 ClearCardHolder(cardHolder);
             }
@@ -111,7 +115,6 @@ namespace _project.Scripts.Card_Core
         
         private void ClearCardHolder(PlacedCardHolder cardHolder)
         {
-            //deckManager.AddActionCard(cardHolder.PlacedCard);
             deckManager.DiscardActionCard(cardHolder.PlacedCard, true);
             Destroy(cardHolder.placedCardClick3D.gameObject);
             cardHolder.placedCardView = null;
