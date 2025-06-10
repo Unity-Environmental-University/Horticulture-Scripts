@@ -377,5 +377,32 @@ namespace _project.Scripts.PlayModeTest
                 }
             }
         }
+        
+        [UnityTest]
+        public IEnumerator ActionDeck_IsConsistentBetweenRounds()
+        {
+            // Reflect _actionDeck
+            var actionDeckField = typeof(DeckManager).GetField("_actionDeck", BindingFlags.NonPublic | BindingFlags.Instance);
+            Assert.IsNotNull(actionDeckField, "_actionDeck field not found");
+
+            // Initialize Deck State
+            var initialDeck = (List<ICard>)actionDeckField.GetValue(_deckManager);
+            var initialDeckNames = initialDeck.ConvertAll(card => card.Name);
+            
+            _turnController.EndTurn();
+            
+            yield return new WaitForSeconds(3f);
+
+            // Get New Deck State
+            var newDeck = (List<ICard>)actionDeckField.GetValue(_deckManager);
+            var newDeckNames = newDeck.ConvertAll(card => card.Name);
+
+            // Assert the deck is the same order and content
+            Assert.AreEqual(initialDeckNames.Count, newDeckNames.Count, "Action deck count changed between rounds");
+            for (var i = 0; i < initialDeckNames.Count; i++)
+            {
+                Assert.AreEqual(initialDeckNames[i], newDeckNames[i], $"Card mismatch at position {i}");
+            }
+        }
     }
 }
