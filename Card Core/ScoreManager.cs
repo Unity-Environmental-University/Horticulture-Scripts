@@ -16,6 +16,7 @@ namespace _project.Scripts.Card_Core
         private List<PlantController> cachedPlants = new();
 
         public int treatmentCost;
+        public bool debugging;
 
         private void Awake()
         {
@@ -61,11 +62,14 @@ namespace _project.Scripts.Card_Core
                         .Where(damage => damage != null).Sum(damage => damage.Value);
             }
 
-            Debug.Log("Plant Value: " + plantValue);
-            Debug.Log("Affliction Damage: " + afflictionDamage);
-            Debug.Log("Treatment Cost: " + treatmentCost);
-            Debug.Log("Current Moneys: " + Moneys);
-            
+            if (debugging)
+            {
+                Debug.Log("Plant Value: " + plantValue);
+                Debug.Log("Affliction Damage: " + afflictionDamage);
+                Debug.Log("Treatment Cost: " + treatmentCost);
+                Debug.Log("Current Moneys: " + Moneys);
+            }
+
             Moneys += plantValue + afflictionDamage + treatmentCost;
 
             UpdateMoneysText();

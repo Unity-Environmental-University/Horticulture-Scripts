@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using _project.Scripts.Card_Core;
 using _project.Scripts.Core;
 using JetBrains.Annotations;
 using UnityEngine;
@@ -190,7 +191,7 @@ namespace _project.Scripts.Classes
         public GameObject Prefab { get; set; }
         public Sprite Sprite { get; set; }
 
-        public void Selected() { Debug.Log("Selected " + Name); }
+        public void Selected() { if (CardGameMaster.Instance.debuggingCardClass) Debug.Log("Selected " + Name); }
 
         public ICard Clone() { return new NeemOilBasic(); }
     }
@@ -211,7 +212,7 @@ namespace _project.Scripts.Classes
         public GameObject Prefab { get; set; }
         public Sprite Sprite { get; set; }
 
-        public void Selected() { Debug.Log("Selected " + Name); }
+        public void Selected() { if (CardGameMaster.Instance.debuggingCardClass) Debug.Log("Selected " + Name); }
 
         public ICard Clone() { return new InsecticideBasic(); }
     }
@@ -232,7 +233,7 @@ namespace _project.Scripts.Classes
         public GameObject Prefab { get; set; }
         public Sprite Sprite { get; set; }
 
-        public void Selected() { Debug.Log("Selected " + Name); }
+        public void Selected() { if (CardGameMaster.Instance.debuggingCardClass) Debug.Log("Selected " + Name); }
 
         public ICard Clone() { return new FungicideBasic(); }
     }
@@ -253,7 +254,7 @@ namespace _project.Scripts.Classes
         public GameObject Prefab { get; set; }
         public Sprite Sprite { get; set; }
 
-        public void Selected() { Debug.Log("Selected " + Name); }
+        public void Selected() { if (CardGameMaster.Instance.debuggingCardClass) Debug.Log("Selected " + Name); }
 
         public ICard Clone() { return new SoapyWaterBasic(); }
     }
@@ -274,7 +275,7 @@ namespace _project.Scripts.Classes
         public GameObject Prefab { get; set; }
         public Sprite Sprite { get; set; }
 
-        public void Selected() { Debug.Log("Selected " + Name); }
+        public void Selected() { if (CardGameMaster.Instance.debuggingCardClass) Debug.Log("Selected " + Name); }
 
         public ICard Clone() { return new Panacea(); }
     }

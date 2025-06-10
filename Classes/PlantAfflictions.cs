@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using _project.Scripts.Card_Core;
 using _project.Scripts.Core;
 using JetBrains.Annotations;
 using UnityEngine;
@@ -44,7 +45,7 @@ namespace _project.Scripts.Classes
                 foreach (var item in afflictions)
                 {
                     item.TreatWith(this, plant);
-                    Debug.Log($"Applied treatment to affliction: {item.Name}");
+                    if (CardGameMaster.Instance.debuggingCardClass) Debug.Log($"Applied treatment to affliction: {item.Name}");
                 }
             }
         }
