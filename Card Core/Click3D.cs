@@ -10,6 +10,8 @@ namespace _project.Scripts.Card_Core
 {
     public class Click3D : MonoBehaviour
     {
+        public static bool click3DGloballyDisabled = false;
+
         private static readonly int Color1 = Shader.PropertyToID("_Color");
         [SerializeField] public UnityEvent onClick3D;
 
@@ -80,7 +82,8 @@ namespace _project.Scripts.Card_Core
         /// such as the active scene and main camera availability before performing any operations.
         private void Update()
         {
-            if (!isEnabled || SceneManager.GetActiveScene().name != "CardGame" || !_mainCamera)
+            if (!isEnabled || SceneManager.GetActiveScene().name != "CardGame" || !_mainCamera 
+                || click3DGloballyDisabled)
                 return;
 
             // Handle touch (mobile)
@@ -100,7 +103,7 @@ namespace _project.Scripts.Card_Core
         private void OnMouseEnter()
         {
             RefreshState();
-            if (!isEnabled) return;
+            if (!isEnabled || click3DGloballyDisabled) return;
             if (!handItem)
             {
                 mouseOver = true;
@@ -118,7 +121,7 @@ namespace _project.Scripts.Card_Core
         private void OnMouseExit()
         {
             RefreshState();
-            if (!isEnabled) return;
+            if (!isEnabled || click3DGloballyDisabled) return;
             mouseOver = false;
 
             var targetColor = _baseColor;
@@ -159,7 +162,7 @@ namespace _project.Scripts.Card_Core
 
         private void OnMouseClick(InputAction.CallbackContext context)
         {
-            if (!isEnabled) return;
+            if (!isEnabled || click3DGloballyDisabled) return;
             if (_mouse == null || !_mainCamera) return;
 
             if (handItem) { }
