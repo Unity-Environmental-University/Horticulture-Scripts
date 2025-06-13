@@ -1,23 +1,27 @@
 using _project.Scripts.Classes;
 using TMPro;
 using UnityEngine;
+using UnityEngine.UI;
 
 namespace _project.Scripts.Card_Core
 {
     public class ShopObject : MonoBehaviour
     {
         [SerializeField] private TextMeshProUGUI titleText;
-        [SerializeField] private TextMeshProUGUI itemCostText;
-        private ICard _card;
-        private ShopManager _shopManager;
+        [SerializeField] private TextMeshProUGUI costText;
+        [SerializeField] private Button buyButton;
 
-        public void Setup(ICard card, ShopManager shopManager)
+        private IShopItem item;
+
+        public void Setup(IShopItem shopItem)
         {
-            _card = card;
-            _shopManager = shopManager;
+            item = shopItem;
 
-            titleText.text = _card.Name;
-            if (card.Value != null) itemCostText.text = "-$" + card.Value.Value;
+            titleText.text = item.DisplayName;
+            costText.text = "-$" + item.Cost;
+
+            buyButton.onClick.RemoveAllListeners();
+            buyButton.onClick.AddListener(() => item.Purchase());
         }
     }
 }
