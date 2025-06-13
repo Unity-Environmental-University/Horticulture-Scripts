@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using _project.Scripts.Classes;
 using UnityEngine;
@@ -18,6 +17,8 @@ namespace _project.Scripts.Card_Core
         public bool isShopOpen;
 
         private DeckManager _deckManager;
+        // ReSharper disable once CollectionNeverQueried.Local
+        private readonly List<IShopItem> currentShopItems = new();
         private List<ICard> availableCards;
 
         private void Start()
@@ -29,6 +30,8 @@ namespace _project.Scripts.Card_Core
         public void OpenShop()
         {
             shopPanel.SetActive(true);
+            Click3D.click3DGloballyDisabled = true;
+            inputModule.enabled = true;
             isShopOpen = true;
         }
 
@@ -44,7 +47,7 @@ namespace _project.Scripts.Card_Core
         {
             ClearShop();
             
-            //TODO Move this to Open
+            //TODO Remove this For Implementation
             Click3D.click3DGloballyDisabled = true;
             inputModule.enabled = true;
             //
@@ -61,25 +64,12 @@ namespace _project.Scripts.Card_Core
             for (var i = 0; i < numberOfCards; i++)
             {
                 var randCard = availableCards[Random.Range(0, availableCards.Count)].Clone();
-                var cardObj = Instantiate(shopItemPrefab, shopItemsParent.transform);
-                var shopItem =
-                    cardObj.GetComponent<ShopObject>() ?? cardObj.AddComponent<ShopObject>();
-                
-                shopItem.Setup(randCard, this);
-            }
-        }
+                var itemLogic = new CardShopItem(randCard, _deckManager);
+                currentShopItems.Add(itemLogic);
 
-        public void PurchaseCard(ICard card)
-        {
-            var cost = Math.Abs(card.Value ?? 0);
-            if (ScoreManager.GetMoneys() >= cost)
-            {
-                _deckManager.AddActionCard(card.Clone());
-                ScoreManager.SubtractMoneys(cost);
-            }
-            else
-            {
-                Debug.LogWarning($"Not enough money for {card.Name}");
+                var cardObj = Instantiate(shopItemPrefab, shopItemsParent.transform);
+                var ui = cardObj.GetComponent<ShopObject>();
+                ui.Setup(itemLogic);
             }
         }
 
@@ -87,6 +77,7 @@ namespace _project.Scripts.Card_Core
         {
             foreach (Transform child in shopItemsParent.transform)
                 Destroy(child.gameObject);
+            currentShopItems.Clear();
         }
     }
 }
