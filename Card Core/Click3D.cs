@@ -10,7 +10,7 @@ namespace _project.Scripts.Card_Core
 {
     public class Click3D : MonoBehaviour
     {
-        public static bool click3DGloballyDisabled = false;
+        public static bool click3DGloballyDisabled;
 
         private static readonly int Color1 = Shader.PropertyToID("_Color");
         [SerializeField] public UnityEvent onClick3D;
@@ -47,8 +47,9 @@ namespace _project.Scripts.Card_Core
 
         private void Start()
         {
-            // Initialize Click3D with a True isEnabled state
+            // Initialize Click3D with a True isEnabled state and ensure global disable is false
             isEnabled = true;
+            click3DGloballyDisabled = false;
 
             // Let's remove this from non-CardGame scenes
             if (SceneManager.GetActiveScene().name != "CardGame") Destroy(this);
