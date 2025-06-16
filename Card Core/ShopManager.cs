@@ -10,16 +10,16 @@ namespace _project.Scripts.Card_Core
     {
         [SerializeField] private GameObject shopItemsParent;
         [SerializeField] private GameObject shopItemPrefab;
-        [SerializeField] private InputSystemUIInputModule  inputModule;
+        [SerializeField] private InputSystemUIInputModule inputModule;
         [SerializeField] private int numberOfCards = 4;
 
         public GameObject shopPanel;
         public bool isShopOpen;
 
-        private DeckManager _deckManager;
         // ReSharper disable once CollectionNeverQueried.Local
         private readonly List<IShopItem> currentShopItems = new();
         private List<ICard> availableCards;
+        private DeckManager _deckManager;
 
         private void Start()
         {
@@ -41,17 +41,15 @@ namespace _project.Scripts.Card_Core
             Click3D.click3DGloballyDisabled = false;
             inputModule.enabled = false;
             isShopOpen = false;
+
+            if (CardGameMaster.Instance.turnController.level == 2)
+                CardGameMaster.Instance.turnController.ShowBetaScreen();
         }
 
         private void GenerateShopInventory()
         {
             ClearShop();
-            
-            //TODO Remove this For Implementation
-            Click3D.click3DGloballyDisabled = true;
-            inputModule.enabled = true;
-            //
-            
+
             availableCards = new List<ICard>
             {
                 new NeemOilBasic(),
@@ -64,10 +62,10 @@ namespace _project.Scripts.Card_Core
             for (var i = 0; i < numberOfCards; i++)
             {
                 var randCard = availableCards[Random.Range(0, availableCards.Count)].Clone();
-                var itemLogic = new CardShopItem(randCard, _deckManager);
+                var cardObj = Instantiate(shopItemPrefab, shopItemsParent.transform);
+                var itemLogic = new CardShopItem(randCard, _deckManager, cardObj);
                 currentShopItems.Add(itemLogic);
 
-                var cardObj = Instantiate(shopItemPrefab, shopItemsParent.transform);
                 var ui = cardObj.GetComponent<ShopObject>();
                 ui.Setup(itemLogic);
             }
@@ -76,8 +74,16 @@ namespace _project.Scripts.Card_Core
         private void ClearShop()
         {
             foreach (Transform child in shopItemsParent.transform)
-                Destroy(child.gameObject);
-            currentShopItems.Clear();
+                RemoveShopItem(child.gameObject);
+        }
+
+        public void RemoveShopItem(GameObject shopItem)
+        {
+            var shopObject = shopItem.GetComponent<ShopObject>();
+            if (!shopObject) return;
+
+            currentShopItems.Remove(shopObject.ShopItem);
+            Destroy(shopItem);
         }
     }
 }
