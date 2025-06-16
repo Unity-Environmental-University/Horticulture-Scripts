@@ -11,17 +11,17 @@ namespace _project.Scripts.Card_Core
         [SerializeField] private TextMeshProUGUI costText;
         [SerializeField] private Button buyButton;
 
-        private IShopItem item;
+        public IShopItem ShopItem { get; private set; }
 
         public void Setup(IShopItem shopItem)
         {
-            item = shopItem;
+            ShopItem = shopItem;
 
-            titleText.text = item.DisplayName;
-            costText.text = "-$" + item.Cost;
+            titleText.text = ShopItem.DisplayName;
+            costText.text = "-$" + ShopItem.Cost;
 
             buyButton.onClick.RemoveAllListeners();
-            buyButton.onClick.AddListener(() => item.Purchase());
+            buyButton.onClick.AddListener(() => ShopItem.Purchase());
         }
     }
 }
