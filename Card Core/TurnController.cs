@@ -25,6 +25,7 @@ namespace _project.Scripts.Card_Core
         public bool newRoundReady;
         public bool debugging;
         public bool betaLeveling;
+        public bool shopQueued;
         private DeckManager _deckManager;
         private ScoreManager _scoreManager;
         private static TurnController Instance { get; set; }
@@ -46,19 +47,24 @@ namespace _project.Scripts.Card_Core
 
         private void Start()
         {
+            UpdateMoneyGoal();
+            
+            _scoreManager.ResetMoneys();
+            StartCoroutine(BeginTurnSequence());
+        }
+
+        private void UpdateMoneyGoal()
+        {
             moneyGoal = level switch
             {
                 0 => 50,
                 1 => 100,
                 _ => moneyGoal
             };
-            
-            _scoreManager.ResetMoneys();
-            StartCoroutine(BeginTurnSequence());
         }
 
         // ReSharper disable Unity.PerformanceAnalysis
-        private IEnumerator BeginTurnSequence()
+        public IEnumerator BeginTurnSequence()
         {
             if (lostGameObjects.activeInHierarchy) lostGameObjects.SetActive(false);
             canClickEnd = false;
@@ -130,6 +136,7 @@ namespace _project.Scripts.Card_Core
             {
                 currentTurn++;
                 totalTurns++;
+                shopQueued = true; // We'll need to maybe find a use for this
                 EndLevel();
                 return;
             }
@@ -355,24 +362,28 @@ namespace _project.Scripts.Card_Core
 
         private void EndLevel()
         {
-            if (betaLeveling)
-            {
-                winScreen.gameObject.SetActive(true);
-                canClickEnd = false;
-                CardGameMaster.Instance.eventSystem.GetComponent<InputSystemUIInputModule>().enabled = true;
-                winScreen.gameObject.GetComponentInChildren<TextMeshProUGUI>().text =
-                    "Good job! You beat level 1 in " + currentRound + " rounds and " + totalTurns +
-                    " turns. That's [excellent! / pretty good / average / " +
-                    "... well, it's something. Maybe play it again and see if you can do better!] " +
-                    "This game is still in development, so check back in for new levels." +
-                    " If you're interested in Integrated Pest Management as a subject," +
-                    " or in helping us develop the game further," +
-                    " sign up for Unity Environmental University's Integrated Pest Management course. " +
-                    "We're inviting students to help make this game as part of their schoolwork." +
-                    " Thank you for playing; we hope to see you again soon!";
-            }
-
+            level++;
+            UpdateMoneyGoal();
+            if (!shopQueued) return;
             CardGameMaster.Instance.shopManager.OpenShop();
+            shopQueued = false;
+        }
+
+        public void ShowBetaScreen()
+        {
+            winScreen.gameObject.SetActive(true);
+            canClickEnd = false;
+            CardGameMaster.Instance.eventSystem.GetComponent<InputSystemUIInputModule>().enabled = true;
+            winScreen.gameObject.GetComponentInChildren<TextMeshProUGUI>().text =
+                "Good job! You beat level 1 in " + currentRound + " rounds and " + totalTurns +
+                " turns. That's [excellent! / pretty good / average / " +
+                "... well, it's something. Maybe play it again and see if you can do better!] " +
+                "This game is still in development, so check back in for new levels." +
+                " If you're interested in Integrated Pest Management as a subject," +
+                " or in helping us develop the game further," +
+                " sign up for Unity Environmental University's Integrated Pest Management course. " +
+                "We're inviting students to help make this game as part of their schoolwork." +
+                " Thank you for playing; we hope to see you again soon!";
         }
 
         public void ResetGame()
