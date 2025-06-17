@@ -24,12 +24,10 @@ namespace _project.Scripts.Card_Core
         public bool canClickEnd;
         public bool newRoundReady;
         public bool debugging;
-        public bool betaLeveling;
         public bool shopQueued;
         private DeckManager _deckManager;
         private ScoreManager _scoreManager;
         private static TurnController Instance { get; set; }
-
 
         private void Awake()
         {
@@ -48,7 +46,6 @@ namespace _project.Scripts.Card_Core
         private void Start()
         {
             UpdateMoneyGoal();
-            
             _scoreManager.ResetMoneys();
             StartCoroutine(BeginTurnSequence());
         }
@@ -64,11 +61,13 @@ namespace _project.Scripts.Card_Core
         }
 
         // ReSharper disable Unity.PerformanceAnalysis
+        // ReSharper disable once MemberCanBePrivate.Global
         public IEnumerator BeginTurnSequence()
         {
             if (lostGameObjects.activeInHierarchy) lostGameObjects.SetActive(false);
             canClickEnd = false;
             currentTurn = 1;
+            if (totalTurns is 0) totalTurns = 1;
             currentRound++;
 
             yield return new WaitForSeconds(2f);
@@ -104,7 +103,6 @@ namespace _project.Scripts.Card_Core
                 CardGameMaster.Instance.roundText.text = "Round: " + currentRound;
         }
 
-
         /// <summary>
         ///     Ends the current turn, applies treatments to plants, checks for affliction spread, and updates game state.
         /// </summary>
@@ -131,7 +129,7 @@ namespace _project.Scripts.Card_Core
         public void EndTurn()
         {
             if (_deckManager.updatingActionDisplay || !canClickEnd) return;
-            
+
             if (ScoreManager.GetMoneys() >= moneyGoal)
             {
                 currentTurn++;
@@ -286,11 +284,7 @@ namespace _project.Scripts.Card_Core
             }
         }
 
-        private static IEnumerator PauseRoutine(float delay = 1f)
-        {
-            yield return new WaitForSeconds(delay);
-        }
-
+        private static IEnumerator PauseRoutine(float delay = 1f) { yield return new WaitForSeconds(delay); }
 
         /// <summary>
         ///     Ends the current round, updates the game state, and prepares for the next round.
@@ -321,10 +315,11 @@ namespace _project.Scripts.Card_Core
         {
             canClickEnd = false;
             currentTurn = 0;
+            totalTurns++;
             var ppVol = CardGameMaster.Instance.postProcessVolume.gameObject;
             if (ppVol) ppVol.SetActive(false);
             if (debugging) Debug.Log($"Treatment Cost: {_scoreManager.treatmentCost}");
-            
+
             _deckManager.ClearActionHand();
             _scoreManager.CalculateTreatmentCost();
 
@@ -375,7 +370,7 @@ namespace _project.Scripts.Card_Core
             canClickEnd = false;
             CardGameMaster.Instance.eventSystem.GetComponent<InputSystemUIInputModule>().enabled = true;
             winScreen.gameObject.GetComponentInChildren<TextMeshProUGUI>().text =
-                "Good job! You beat level 1 in " + currentRound + " rounds and " + totalTurns +
+                "Good job! You beat the first 2 levels in " + currentRound + " rounds and " + totalTurns +
                 " turns. That's [excellent! / pretty good / average / " +
                 "... well, it's something. Maybe play it again and see if you can do better!] " +
                 "This game is still in development, so check back in for new levels." +
@@ -393,9 +388,6 @@ namespace _project.Scripts.Card_Core
             _scoreManager.ResetMoneys();
         }
 
-        private void GameLost()
-        {
-            lostGameObjects.SetActive(true);
-        }
+        private void GameLost() { lostGameObjects.SetActive(true); }
     }
 }
