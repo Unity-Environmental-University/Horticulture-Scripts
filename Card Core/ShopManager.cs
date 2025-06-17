@@ -21,14 +21,11 @@ namespace _project.Scripts.Card_Core
         private List<ICard> availableCards;
         private DeckManager _deckManager;
 
-        private void Start()
-        {
-            _deckManager = CardGameMaster.Instance.deckManager;
-            GenerateShopInventory();
-        }
+        private void Start() { _deckManager = CardGameMaster.Instance.deckManager; }
 
         public void OpenShop()
         {
+            GenerateShopInventory();
             shopPanel.SetActive(true);
             Click3D.click3DGloballyDisabled = true;
             inputModule.enabled = true;

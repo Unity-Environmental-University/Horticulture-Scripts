@@ -32,6 +32,7 @@ namespace _project.Scripts.Card_Core
         public bool isInspecting;
         public bool debuggingCardClass;
         
+        [CanBeNull] public TextMeshProUGUI shopMoneyText;
         [CanBeNull] public TextMeshPro moneysText;
         [CanBeNull] public TextMeshPro turnText;
         [CanBeNull] public TextMeshPro roundText;
