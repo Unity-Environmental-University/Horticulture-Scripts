@@ -10,6 +10,7 @@ namespace _project.Scripts.Card_Core
 {
     public class Click3D : MonoBehaviour
     {
+        private static bool _click3DGloballyInitialized;
         public static bool click3DGloballyDisabled;
 
         private static readonly int Color1 = Shader.PropertyToID("_Color");
@@ -47,9 +48,15 @@ namespace _project.Scripts.Card_Core
 
         private void Start()
         {
-            // Initialize Click3D with a True isEnabled state and ensure global disable is false
+            // Initialize Global Variables
+            if (!_click3DGloballyInitialized)
+            {
+                click3DGloballyDisabled = false;
+                _click3DGloballyInitialized = true;
+            }
+            
+            // Initialize Click3D with a True isEnabled state
             isEnabled = true;
-            click3DGloballyDisabled = false;
 
             // Let's remove this from non-CardGame scenes
             if (SceneManager.GetActiveScene().name != "CardGame") Destroy(this);
@@ -189,6 +196,7 @@ namespace _project.Scripts.Card_Core
         /// </returns>
         private IEnumerator AnimateCard()
         {
+            if (click3DGloballyDisabled) yield return null;
             // Define fixed target values relative to the original state.
             var targetScale = _originalScale * scaleUp;
             var targetPos = _originalPos + new Vector3(0f, popHeight, 0f);
