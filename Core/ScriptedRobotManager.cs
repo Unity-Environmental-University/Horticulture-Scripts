@@ -98,7 +98,7 @@ namespace _project.Scripts.Core
                 // Get the value of the field
                 var value = field.GetValue(this);
 
-                // Check if the value is null or, for Unity objects, if it is missing
+                // Check if the value is null or, for Unity objects if it is missing
                 if (value != null && (value is not Object unityObject || unityObject)) continue;
                 Debug.LogError($"Field '{field.Name}' is null or missing!");
                 return false;
@@ -168,12 +168,12 @@ namespace _project.Scripts.Core
         // ReSharper disable Unity.PerformanceAnalysis
         private IEnumerator StageThreeScript()
         {
-            // Player should open the notebook, Wait for flag to continue
+            // Player should open the notebook, Wait for a flag to continue
             yield return new WaitUntil(() => _flags.Contains(ScriptFlags.Inspected));
             if (debugging) Debug.Log("Inspected Object");
             SetDialogueText(3, 1);
 
-            // Player should open the notebook, Wait for flag to continue
+            // Player should open the notebook, Wait for a flag to continue
             yield return new WaitUntil(() => _flags.Contains(ScriptFlags.OpenedNotebook));
             if (debugging) Debug.Log("Opened Notebook");
             SetDialogueText(4, 1);
@@ -183,7 +183,7 @@ namespace _project.Scripts.Core
             if (debugging) Debug.Log("Picture Taken");
             SetDialogueText(5, 1);
 
-            // Robot will tell the player to open the gallery and take a look
+            // The Robot will tell the player to open the gallery and take a look
             yield return new WaitUntil(() => _flags.Contains(ScriptFlags.OpenedGallery));
             if (debugging) Debug.Log("Opened Gallery");
             SetDialogueText(6, 1);
@@ -198,7 +198,7 @@ namespace _project.Scripts.Core
         {
             robotController.SetNewFocusTarget(player);
             robotController.GoToNewLocation(playerFront.transform.position);
-            // play some audio about the plants
+            // play some audio about the plant
             //yield return new WaitForSeconds(dlg1.length);
             yield return new WaitForSeconds(1);
             //TEMP

@@ -1,4 +1,3 @@
-using System.Collections;
 using _project.Scripts.Card_Core;
 using TMPro;
 using UnityEngine;
@@ -14,7 +13,7 @@ namespace _project.Scripts.UI
         [SerializeField] private TextMeshProUGUI popUpText;
         [SerializeField] private Button closeButton;
 
-        // Testing
+        /*
         private void Start() { StartCoroutine(DelayedStart()); }
 
         private IEnumerator DelayedStart()
@@ -23,7 +22,8 @@ namespace _project.Scripts.UI
             ToggleUiInput();
             Click3D.click3DGloballyDisabled = true;
         }
-
+        */
+        
         private void ActivatePopUpPanel(Image image, string text)
         {
             if (popUpPanel.activeInHierarchy) return;
