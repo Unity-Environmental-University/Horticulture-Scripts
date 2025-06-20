@@ -9,6 +9,8 @@ namespace _project.Scripts.Card_Core
         private DeckManager _deckManager;
         private GameObject cardGoClone;
         public ICard HeldCard { get; private set; }
+        public bool hasPaidForCard;
+        public bool isCardLocked;
 
         private bool HasCard => HeldCard != null;
 
@@ -83,13 +85,18 @@ namespace _project.Scripts.Card_Core
 
             // Update cost
             var scoreManager = CardGameMaster.Instance.scoreManager;
-            if (HeldCard.Value != null)
-                scoreManager.treatmentCost += HeldCard.Value.Value;
+            if (!hasPaidForCard && HeldCard.Value != null)
+            {
+                ScoreManager.SubtractMoneys(Mathf.Abs(HeldCard.Value.Value));
+                hasPaidForCard = true;
+            }
             scoreManager.CalculateTreatmentCost();
+            isCardLocked = true;
         }
 
         private void SelectHeldCard()
         {
+            if (isCardLocked) return;
             var click3D = cardGoClone.GetComponent<Click3D>();
             if (click3D == null) return;
 
@@ -173,6 +180,7 @@ namespace _project.Scripts.Card_Core
         public void ClearHeldCard()
         {
             HeldCard = null;
+            hasPaidForCard = false;
 
             if (cardGoClone)
             {

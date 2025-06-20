@@ -77,7 +77,14 @@ namespace _project.Scripts.Card_Core
             if (cardRenderers == null) return;
             foreach (var renderer1 in cardRenderers) renderer1.enabled = false;
 
-            if (PlacedCard.Value != null) _scoreManager.treatmentCost += PlacedCard.Value.Value;
+            if (PlacedCard?.Value != null)
+            {
+                var retained = FindFirstObjectByType<RetainedCardHolder>(FindObjectsInactive.Include);
+                var isFromRetained = retained && retained.HeldCard == PlacedCard;
+
+                if (!isFromRetained)
+                    _scoreManager.treatmentCost += PlacedCard.Value.Value;
+            }
             _scoreManager.CalculateTreatmentCost();
         }
 
@@ -92,7 +99,7 @@ namespace _project.Scripts.Card_Core
         /// 2. Search for the original card in the player's hand:
         /// - If found, re-enables the card's visual components, and associated click capabilities.
         /// - Marks the card as returned to the hand.
-        /// 3. If the card was not found in the hand, it searches for an available slot in the retained card holder.
+        /// 3. If the card was not found in the hand, it searches for an available slot in the retained cardholder.
         /// 4. If the card is neither returned to the hand nor the retained holder, it destroys the cloned card.
         /// 5. Adjust the treatment cost based on the value of the returned card.
         /// 6. Calculate the updated treatment cost.
@@ -111,7 +118,7 @@ namespace _project.Scripts.Card_Core
             foreach (var cardView in handCards)
             {
                 if (cardView.GetCard() != PlacedCard) continue;
-                // Found the original card in hand, re-enable it
+                // Found the original card in the hand, re-enable it
                 foreach (var renderer1 in cardView.GetComponentsInChildren<Renderer>(true))
                     renderer1.enabled = true;
 
@@ -141,18 +148,23 @@ namespace _project.Scripts.Card_Core
                     }
                     else
                     {
-                        // Card was from retained slot but returned to hand or lost — clean up retained slot
+                        // Card was from retained slot but returned to hand or lost — cleanup retained slot
                         retainedSlot.ClearHeldCard();
                     }
                 }
 
-            // If we didn't return the clone to retained, destroy it
+            // If we didn't return the clone to retain, destroy it
             if (!returnedToRetained && placedCardClick3D) Destroy(placedCardClick3D.gameObject);
 
             // Update cost
             if (PlacedCard?.Value != null)
-                _scoreManager.treatmentCost -= PlacedCard.Value.Value;
-
+            {
+                var retainedSlot1 = FindFirstObjectByType<RetainedCardHolder>(FindObjectsInactive.Include);
+                if (!(retainedSlot1 != null && retainedSlot1.HeldCard == PlacedCard))
+                {
+                    _scoreManager.treatmentCost -= PlacedCard.Value.Value;
+                }
+            }
             _scoreManager.CalculateTreatmentCost();
 
             // Clear this holder's state

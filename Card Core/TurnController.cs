@@ -165,6 +165,9 @@ namespace _project.Scripts.Card_Core
                     StartCoroutine(PauseRoutine());
                     controller.FlagShadersUpdate();
                 }
+
+                var retainedCardHolder = FindFirstObjectByType<RetainedCardHolder>();
+                retainedCardHolder.isCardLocked = false;
             }
 
             // End round early if all plants are free of afflictions
