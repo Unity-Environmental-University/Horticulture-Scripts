@@ -5,50 +5,87 @@ namespace _project.Scripts.Card_Core
 {
     public class RetainedCardHolder : MonoBehaviour
     {
+        [SerializeField] private GameObject cardPrefab;
         private DeckManager _deckManager;
         private GameObject cardGoClone;
         public ICard HeldCard { get; private set; }
 
         private bool HasCard => HeldCard != null;
 
-        private void Start() { _deckManager = CardGameMaster.Instance.deckManager; }
+        private void Start()
+        {
+            _deckManager = CardGameMaster.Instance.deckManager;
+        }
 
         public void HoldSelectedCard()
         {
-            if (HasCard) { SelectHeldCard(); return; }
+            var selectedCard = _deckManager.SelectedACard;
+            var selectedClick3D = _deckManager.selectedACardClick3D;
 
-            // Get the selected ICard and Set the Held Card To It
-            var selectedICard = _deckManager.SelectedACard;
-            HeldCard = selectedICard;
+            if (selectedCard == null || selectedClick3D == null)
+            {
+                if (HasCard)
+                    SelectHeldCard();
+                return;
+            }
 
-            // Get the selected Click3D and Hold it
-            var selectedCard3D = _deckManager.selectedACardClick3D;
-            cardGoClone = Instantiate(selectedCard3D.gameObject, transform);
+            // Check if already holding card
+            if (HasCard && HeldCard != selectedCard)
+                return;
 
-            // Set up the CloneCardView To Visualize the Card
-            var cardViewClone = cardGoClone.GetComponent<CardView>();
-            if (cardViewClone)
-                cardViewClone.Setup(_deckManager.SelectedACard);
+            if (HeldCard == selectedCard)
+            {
+                SelectHeldCard();
+                return;
+            }
 
-            // Set parent without preserving world values
+            // Set the stored data
+            HeldCard = selectedCard;
+
+            cardGoClone = Instantiate(cardPrefab, transform);
+            cardGoClone.name = cardPrefab.name;
+
+            // Setup visuals
+            var cardView = cardGoClone.GetComponent<CardView>();
+            if (cardView)
+                cardView.Setup(HeldCard);
+
+            // Setup interaction logic
+            var click3D = cardGoClone.GetComponent<Click3D>();
+            if (click3D)
+            {
+                click3D.isStoredItem = true;
+                click3D.cardView = cardView;
+                click3D.isEnabled = true;
+                click3D.selected = false;
+                click3D.RefreshState();
+            }
+
+            // Final visual positioning
             cardGoClone.transform.SetParent(transform, false);
-
-            // Snap to the transform exactly (position, rotation, scale)
             cardGoClone.transform.localPosition = Vector3.zero;
             cardGoClone.transform.localRotation = Quaternion.Euler(-90f, 0f, 0f);
             cardGoClone.transform.localScale = Vector3.one * 0.9f;
 
-            // Clear the DeckManager
-            _deckManager.selectedACardClick3D = null;
-            _deckManager.SelectedACard = null;
+            // Hide the original card in the hand
+            foreach (var r in selectedClick3D.GetComponentsInChildren<Renderer>())
+                r.enabled = false;
+            selectedClick3D.isEnabled = false;
 
-            // Hide the CardButton and the card in Hand
+            // Clear selection
+            _deckManager.SelectedACard = null;
+            _deckManager.selectedACardClick3D = null;
+
+            // Hide retained slot button
             var buttonRenderer = GetComponentInChildren<MeshRenderer>(true);
             if (buttonRenderer)
                 buttonRenderer.enabled = false;
-            var cardRenderers = selectedCard3D.GetComponentsInChildren<Renderer>();
-            if (cardRenderers == null) return;
-            foreach (var renderer1 in cardRenderers) renderer1.enabled = false;
+
+            // Update cost
+            var scoreManager = CardGameMaster.Instance.scoreManager;
+            if (HeldCard.Value != null)
+                scoreManager.treatmentCost += HeldCard.Value.Value;
+            scoreManager.CalculateTreatmentCost();
         }
 
         private void SelectHeldCard()
@@ -90,41 +127,47 @@ namespace _project.Scripts.Card_Core
 
         public void ReclaimCard(GameObject returnedCardGo)
         {
-            cardGoClone = returnedCardGo;
-            HeldCard = returnedCardGo.GetComponent<CardView>()?.GetCard();
+            // Safely destroy the old retained visual if it exists
+            if (cardGoClone != null)
+            {
+                Destroy(cardGoClone);
+                cardGoClone = null;
+            }
+
+            // Get the card data from the returned visual
+            var returnedCardView = returnedCardGo.GetComponent<CardView>();
+            HeldCard = returnedCardView?.GetCard();
+
+            if (cardPrefab == null)
+            {
+                Debug.LogWarning("Held card has no valid prefab.");
+                return;
+            }
+
+            // Create a clean visual from prefab
+            cardGoClone = Instantiate(cardPrefab, transform);
+            cardGoClone.name = cardPrefab.name;
+
+            // Setup components
+            var cardView = cardGoClone.GetComponent<CardView>();
+            if (cardView) cardView.Setup(HeldCard);
 
             var click3D = cardGoClone.GetComponent<Click3D>();
-            var cardView = cardGoClone.GetComponent<CardView>();
-
-            if (cardView)
-                cardView.Setup(HeldCard);
-
             if (click3D)
             {
                 click3D.cardView = cardView;
                 click3D.isEnabled = true;
                 click3D.selected = false;
+                click3D.isStoredItem = true;
                 click3D.RefreshState();
             }
-
-            // Activate hierarchy
-            var current = cardGoClone.transform;
-            while (current != null)
-            {
-                current.gameObject.SetActive(true);
-
-                var pr = current.GetComponent<Renderer>();
-                if (pr) pr.enabled = true;
-
-                current = current.parent;
-            }
-
-            foreach (var r in cardGoClone.GetComponentsInChildren<Renderer>(true)) r.enabled = true;
 
             cardGoClone.transform.SetParent(transform, false);
             cardGoClone.transform.localPosition = Vector3.zero;
             cardGoClone.transform.localRotation = Quaternion.Euler(-90f, 0f, 0f);
             cardGoClone.transform.localScale = Vector3.one * 0.9f;
+
+            Destroy(returnedCardGo);
         }
 
         public void ClearHeldCard()

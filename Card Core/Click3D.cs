@@ -19,6 +19,8 @@ namespace _project.Scripts.Card_Core
         [Tooltip("If True: Hovering over a card will pop it up a bit. If False: item will highlight on hover")]
         public bool handItem;
 
+        public bool isStoredItem;
+
         [Tooltip("Default: 0.2 -- How fast the card pops up")]
         public float animTime = 0.2f;
 
