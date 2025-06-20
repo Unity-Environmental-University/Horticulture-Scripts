@@ -31,7 +31,7 @@ namespace _project.Scripts.Core
         [SerializeField] private List<string> cTreatments = new();
         [SerializeField] private List<string> uAfflictions = new();
         [SerializeField] private List<string> uTreatments = new();
-
+        
         [SerializeField] private Shader litShader;
         [SerializeField] private Shader moldShader;
         [SerializeField] [Range(0, 1)] private float moldIntensity;
@@ -45,6 +45,7 @@ namespace _project.Scripts.Core
 
         [CanBeNull] public GameObject priceFlag;
         [CanBeNull] public TextMeshPro priceFlagText;
+        [CanBeNull] public AudioSource audioSource;
         public PlantType type;
         public ICard PlantCard;
 
@@ -60,7 +61,9 @@ namespace _project.Scripts.Core
         private void Start()
         {
             if (!TryGetComponent(out plantCardFunctions)) { }
-
+            
+            audioSource = TryGetComponent(out audioSource) ? audioSource : null;
+            
             if (priceFlagText && PlantCard != null) priceFlagText.text = "$" + PlantCard.Value;
         }
 

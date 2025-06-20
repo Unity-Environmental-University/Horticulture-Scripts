@@ -215,10 +215,10 @@ namespace _project.Scripts.Card_Core
                 if (plantController.priceFlag && plantController.priceFlagText)
                     plantController.priceFlagText.text = "$" + plantController.PlantCard.Value;
 
-                // disable plantClick3D component
-                //var plantClick3D = plant.GetComponent<Click3D>();
-                // plantClick3D.isEnabled = false;
-                // plantClick3D.enabled = false;
+                if (plantController.audioSource == null) continue;
+                plantController.audioSource.resource = CardGameMaster.Instance.soundSystem.plantSpawn;
+                plantController.audioSource.Play();
+                Debug.LogError(plantController.audioSource.resource.name);
             }
 
             StartCoroutine(UpdateCardHolderRenders());
