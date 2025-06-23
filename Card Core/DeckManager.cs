@@ -178,6 +178,10 @@ namespace _project.Scripts.Card_Core
 
         #region Plant Management
 
+        /// Places plants from the PlantDeck into designated locations on the game board.
+        /// This method first clears all existing plants and then randomly draws a specified number of cards from the PlantDeck.
+        /// The drawn cards are then placed sequentially in the available plant locations, with a delay between each placement.
+        /// If there are no plant locations available or if the PlantDeck is empty, this method does nothing.
         public void PlacePlants()
         {
             if (plantLocations == null || plantLocations.Count == 0) return;
