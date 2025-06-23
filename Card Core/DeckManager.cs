@@ -215,10 +215,9 @@ namespace _project.Scripts.Card_Core
                 if (plantController.priceFlag && plantController.priceFlagText)
                     plantController.priceFlagText.text = "$" + plantController.PlantCard.Value;
 
-                if (plantController.audioSource == null) continue;
-                plantController.audioSource.resource = CardGameMaster.Instance.soundSystem.plantSpawn;
+                if (!plantController.audioSource) continue;
+                plantController.audioSource.clip = CardGameMaster.Instance.soundSystem.plantSpawn;
                 plantController.audioSource.Play();
-                Debug.LogError(plantController.audioSource.resource.name);
             }
 
             StartCoroutine(UpdateCardHolderRenders());

@@ -62,7 +62,8 @@ namespace _project.Scripts.Core
         {
             if (!TryGetComponent(out plantCardFunctions)) { }
             
-            audioSource = TryGetComponent(out audioSource) ? audioSource : null;
+            if (!audioSource && TryGetComponent(out AudioSource foundSource))
+                audioSource = foundSource;
             
             if (priceFlagText && PlantCard != null) priceFlagText.text = "$" + PlantCard.Value;
         }
