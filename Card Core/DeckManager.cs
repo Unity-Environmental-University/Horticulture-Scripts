@@ -71,6 +71,7 @@ namespace _project.Scripts.Card_Core
         public GameObject chrysanthemumPrefab;
         public GameObject cucumberPrefab;
         public GameObject pepperPrefab;
+        public AudioSource playerHandAudioSource;
         public float cardSpacing = 1f;
         public int cardsDrawnPerTurn = 4;
         public int redrawCost = 3;
@@ -177,14 +178,6 @@ namespace _project.Scripts.Card_Core
 
         #region Plant Management
 
-        /// Places plant cards at predefined locations within the scene.
-        /// This method clears any existing plant objects, shuffles the plant deck, and
-        /// determines a random number of plant cards to draw and place. Each drawn plant is associated
-        /// with a location and instantiated using its corresponding prefab, which is retrieved according
-        /// to the card type.
-        /// The instantiated plant GameObjects are parented to their respective location transforms, and
-        /// their PlantController components are assigned the corresponding card data.
-        /// Does nothing if no plant locations are set or if the list of plant locations is empty.
         public void PlacePlants()
         {
             if (plantLocations == null || plantLocations.Count == 0) return;
@@ -192,14 +185,18 @@ namespace _project.Scripts.Card_Core
             ClearAllPlants();
             _plantHand.DeckRandomDraw();
             ShuffleDeck(_plantHand.Deck);
-
             _plantHand.Clear();
 
             var max = Mathf.Min(plantLocations.Count, PlantDeck.Count);
-            //var cardsToDraw = Random.Range(1, max + 1);
             var cardsToDraw = RoundWeightedRandom(1, max + 1);
             _plantHand.DrawCards(cardsToDraw);
 
+            StartCoroutine(PlacePlantsSequentially());
+        }
+
+        private IEnumerator PlacePlantsSequentially(float delay = 0.4f)
+        {
+            //delay = CardGameMaster.Instance.soundSystem.plantSpawn.length;
             for (var i = 0; i < _plantHand.Count && i < plantLocations.Count; i++)
             {
                 var prefab = GetPrefabForCard(_plantHand[i]);
@@ -207,17 +204,21 @@ namespace _project.Scripts.Card_Core
 
                 var plantLocation = plantLocations[i];
 
-                // instantiate plant and get some components
+                // Play the sound before placing
+                var clip = CardGameMaster.Instance.soundSystem.plantSpawn;
+                if (clip) AudioSource.PlayClipAtPoint(clip, plantLocation.position);
+
+                // Instantiate and assign
                 var plant = Instantiate(prefab, plantLocation.position, plantLocation.rotation);
                 plant.transform.SetParent(plantLocation);
+
                 var plantController = plant.GetComponent<PlantController>();
                 plantController.PlantCard = _plantHand[i];
+
                 if (plantController.priceFlag && plantController.priceFlagText)
                     plantController.priceFlagText.text = "$" + plantController.PlantCard.Value;
 
-                if (!plantController.audioSource) continue;
-                plantController.audioSource.clip = CardGameMaster.Instance.soundSystem.plantSpawn;
-                plantController.audioSource.Play();
+                yield return new WaitForSeconds(delay);
             }
 
             StartCoroutine(UpdateCardHolderRenders());
@@ -538,9 +539,13 @@ namespace _project.Scripts.Card_Core
                 cardObj.transform.localPosition = new Vector3(xOffset, 0f, 0f);
                 cardObj.transform.localRotation = Quaternion.Euler(0, 0, angleOffset);
 
+                playerHandAudioSource.resource = CardGameMaster.Instance.soundSystem.placeCard;
+                playerHandAudioSource.Play();
+
                 yield return new WaitForSeconds(0.5f);
             }
 
+            playerHandAudioSource.resource = null;
             updatingActionDisplay = false;
         }
 
