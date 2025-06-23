@@ -153,7 +153,18 @@ namespace _project.Scripts.Core
                     break;
             }
 
-            if (buffSystem) buffSystem.Play();
+            // if (buffSystem) buffSystem.Play();
+            // if (audioSource)
+            // {
+            //     audioSource.resource = CardGameMaster.Instance.soundSystem.plantHeal;
+            //     audioSource.Play();
+            // }
+            CardGameMaster.Instance.turnController.QueuePlantEffect(
+                this,
+                particle: buffSystem,
+                sound: CardGameMaster.Instance.soundSystem.plantHeal,
+                delay: 0.3f
+                );
         }
 
         public void AddAffliction(PlantAfflictions.IAffliction affliction)
