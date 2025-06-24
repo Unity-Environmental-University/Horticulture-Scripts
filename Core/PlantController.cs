@@ -152,14 +152,8 @@ namespace _project.Scripts.Core
                     if (thripsFX) thripsFX.Stop();
                     break;
             }
-
-            // if (buffSystem) buffSystem.Play();
-            // if (audioSource)
-            // {
-            //     audioSource.resource = CardGameMaster.Instance.soundSystem.plantHeal;
-            //     audioSource.Play();
-            // }
-            CardGameMaster.Instance.turnController.QueuePlantEffect(
+            
+            TurnController.QueuePlantEffect(
                 this,
                 particle: buffSystem,
                 sound: CardGameMaster.Instance.soundSystem.plantHeal,
@@ -182,8 +176,13 @@ namespace _project.Scripts.Core
                     if (thripsFX) thripsFX.Play();
                     break;
             }
-
-            if (debuffSystem) debuffSystem.Play();
+            
+            if (debuffSystem) 
+                TurnController.QueuePlantEffect(
+                    plant: this,
+                    particle: debuffSystem,
+                    sound: CardGameMaster.Instance.soundSystem.plantDeath,
+                    delay: 0.3f);
         }
 
         public bool HasHadAffliction(PlantAfflictions.IAffliction affliction)
