@@ -38,6 +38,7 @@ namespace _project.Scripts.Card_Core
         [CanBeNull] public TextMeshPro moneysText;
         [CanBeNull] public TextMeshPro turnText;
         [CanBeNull] public TextMeshPro roundText;
+        [CanBeNull] public TextMeshPro levelText;
         [CanBeNull] public TextMeshPro treatmentCostText;
         [CanBeNull] public TextMeshPro potentialProfitText;
 

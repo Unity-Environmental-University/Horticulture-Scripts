@@ -23,7 +23,7 @@ namespace _project.Scripts.Classes
         PlantAfflictions.IAffliction Affliction => null;
         PlantAfflictions.ITreatment Treatment => null;
         GameObject Prefab => null;
-        Sprite Sprite => null;
+        Material Material => null;
         ICard Clone();
 
         void Selected() { }
@@ -189,7 +189,7 @@ namespace _project.Scripts.Classes
         }
 
         public GameObject Prefab { get; set; }
-        public Sprite Sprite { get; set; }
+        public Material Material => Resources.Load<Material>($"Materials/Cards/NeemOil");
 
         public void Selected() { if (CardGameMaster.Instance.debuggingCardClass) Debug.Log("Selected " + Name); }
 
@@ -210,7 +210,7 @@ namespace _project.Scripts.Classes
         }
 
         public GameObject Prefab { get; set; }
-        public Sprite Sprite { get; set; }
+        public Material Material => Resources.Load<Material>($"Materials/Cards/SyntheticInsecticide");
 
         public void Selected() { if (CardGameMaster.Instance.debuggingCardClass) Debug.Log("Selected " + Name); }
 
@@ -231,7 +231,7 @@ namespace _project.Scripts.Classes
         }
 
         public GameObject Prefab { get; set; }
-        public Sprite Sprite { get; set; }
+        public Material Material => Resources.Load<Material>($"Materials/Cards/Fungicide");
 
         public void Selected() { if (CardGameMaster.Instance.debuggingCardClass) Debug.Log("Selected " + Name); }
 
@@ -252,7 +252,7 @@ namespace _project.Scripts.Classes
         }
 
         public GameObject Prefab { get; set; }
-        public Sprite Sprite { get; set; }
+        public Material Material => Resources.Load<Material>($"Materials/Cards/SoapyWater");
 
         public void Selected() { if (CardGameMaster.Instance.debuggingCardClass) Debug.Log("Selected " + Name); }
 
@@ -273,7 +273,7 @@ namespace _project.Scripts.Classes
         }
 
         public GameObject Prefab { get; set; }
-        public Sprite Sprite { get; set; }
+        public Material Material => Resources.Load<Material>($"Materials/Cards/Panacea");
 
         public void Selected() { if (CardGameMaster.Instance.debuggingCardClass) Debug.Log("Selected " + Name); }
 
