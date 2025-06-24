@@ -12,6 +12,7 @@ namespace _project.Scripts.Card_Core
         public TextMeshPro titleText;
         public TextMeshPro descriptionText;
         public TextMeshPro treatmentCostText;
+        public Material cardMaterial;
 
         private void Start() => _deckManager = CardGameMaster.Instance.deckManager;
         
@@ -20,6 +21,8 @@ namespace _project.Scripts.Card_Core
         public void Setup(ICard card)
         {
             titleText.text = card.Name;
+            cardMaterial = card.Material;
+            this.gameObject.GetComponent<Renderer>().material = cardMaterial;
             descriptionText.text = card.Description;
             if (card.Value != null) treatmentCostText.text = "$ " + card.Value;
             _originalCard = card;

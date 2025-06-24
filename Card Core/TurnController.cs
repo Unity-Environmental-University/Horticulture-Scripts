@@ -104,6 +104,8 @@ namespace _project.Scripts.Card_Core
                 CardGameMaster.Instance.turnText.text = "Turn: " + currentTurn + "/" + turnCount;
             if (CardGameMaster.Instance.roundText)
                 CardGameMaster.Instance.roundText.text = "Round: " + currentRound;
+            if (CardGameMaster.Instance.levelText)
+                CardGameMaster.Instance.levelText.text = "Level: " + (level + 1);
         }
 
         /// <summary>
@@ -169,6 +171,7 @@ namespace _project.Scripts.Card_Core
                     controller.FlagShadersUpdate();
                 }
 
+                TryPlayQueuedEffects();
                 var retainedCardHolder = FindFirstObjectByType<RetainedCardHolder>();
                 retainedCardHolder.isCardLocked = false;
             }
@@ -420,7 +423,7 @@ namespace _project.Scripts.Card_Core
             CardGameMaster.Instance.eventSystem.GetComponent<InputSystemUIInputModule>().enabled = true;
             winScreen.gameObject.GetComponentInChildren<TextMeshProUGUI>().text =
                 "Good job! You beat the first 2 levels in " + currentRound + " rounds and " + totalTurns +
-                " turns. That's [excellent! / pretty good / average / " +
+                " turns. That's [excellent!  / pretty good / average / " +
                 "... well, it's something. Maybe play it again and see if you can do better!] " +
                 "This game is still in development, so check back in for new levels." +
                 " If you're interested in Integrated Pest Management as a subject," +
