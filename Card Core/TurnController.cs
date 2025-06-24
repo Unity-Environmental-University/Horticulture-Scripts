@@ -6,7 +6,6 @@ using _project.Scripts.Classes;
 using _project.Scripts.Core;
 using TMPro;
 using UnityEngine;
-using UnityEngine.Audio;
 using UnityEngine.InputSystem.UI;
 using Random = System.Random;
 
@@ -370,7 +369,7 @@ namespace _project.Scripts.Card_Core
             shopQueued = false;
         }
 
-        public void QueuePlantEffect(PlantController plant, ParticleSystem particle = null, AudioResource sound = null,
+        public void QueuePlantEffect(PlantController plant, ParticleSystem particle = null, AudioClip sound = null,
             float delay = 0.3f)
         {
             PlantEffectQueue.Enqueue(new PlantEffectRequest(plant, particle, sound, delay));
@@ -388,8 +387,8 @@ namespace _project.Scripts.Card_Core
 
                     if (request.Sound && request.Plant.audioSource)
                     {
-                        request.Plant.audioSource.resource = request.Sound;
-                        request.Plant.audioSource.Play();
+                        //request.Plant.audioSource.resource = request.Sound;
+                        request.Plant.audioSource.PlayOneShot(request.Sound);
                     }
                 }
 

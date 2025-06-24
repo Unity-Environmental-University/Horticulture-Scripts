@@ -172,6 +172,9 @@ namespace _project.Scripts.Card_Core
             placedCardClick3D = null;
             PlacedCard = null;
 
+            var playerAudio = CardGameMaster.Instance.playerHandAudioSource;
+            playerAudio.PlayOneShot(CardGameMaster.Instance.soundSystem.unplaceCard);
+
             var buttonRenderer = GetComponentInChildren<MeshRenderer>(true);
             if (buttonRenderer) buttonRenderer.enabled = true;
 

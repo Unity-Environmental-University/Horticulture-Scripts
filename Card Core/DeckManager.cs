@@ -71,7 +71,6 @@ namespace _project.Scripts.Card_Core
         public GameObject chrysanthemumPrefab;
         public GameObject cucumberPrefab;
         public GameObject pepperPrefab;
-        public AudioSource playerHandAudioSource;
         public float cardSpacing = 1f;
         public int cardsDrawnPerTurn = 4;
         public int redrawCost = 3;
@@ -542,14 +541,13 @@ namespace _project.Scripts.Card_Core
                 // Set the local position and rotation.
                 cardObj.transform.localPosition = new Vector3(xOffset, 0f, 0f);
                 cardObj.transform.localRotation = Quaternion.Euler(0, 0, angleOffset);
-
-                playerHandAudioSource.resource = CardGameMaster.Instance.soundSystem.placeCard;
-                playerHandAudioSource.Play();
+                
+                var playerAudio = CardGameMaster.Instance.playerHandAudioSource;
+                playerAudio.PlayOneShot(CardGameMaster.Instance.soundSystem.placeCard);
 
                 yield return new WaitForSeconds(0.5f);
             }
-
-            playerHandAudioSource.resource = null;
+            
             updatingActionDisplay = false;
         }
 
