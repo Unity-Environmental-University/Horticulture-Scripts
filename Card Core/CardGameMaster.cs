@@ -27,6 +27,7 @@ namespace _project.Scripts.Card_Core
         public TurnController turnController;
         public ShopManager shopManager;
         public SoundSystemMaster soundSystem;
+        public AudioSource playerHandAudioSource;
         public Volume postProcessVolume;
         public EventSystem eventSystem;
         public GameObject inspectingInfoPanels;
