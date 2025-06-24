@@ -86,6 +86,7 @@ namespace _project.Scripts.Card_Core
             try
             {
                 _deckManager.DrawAfflictions();
+                TryPlayQueuedEffects();
                 _deckManager.DrawActionHand();
             }
             catch (Exception e)
@@ -324,6 +325,8 @@ namespace _project.Scripts.Card_Core
             var ppVol = CardGameMaster.Instance.postProcessVolume.gameObject;
             if (ppVol) ppVol.SetActive(false);
             if (debugging) Debug.Log($"Treatment Cost: {_scoreManager.treatmentCost}");
+            
+            TryPlayQueuedEffects();
 
             _deckManager.ClearActionHand();
             _scoreManager.CalculateTreatmentCost();
@@ -369,11 +372,16 @@ namespace _project.Scripts.Card_Core
             shopQueued = false;
         }
 
-        public void QueuePlantEffect(PlantController plant, ParticleSystem particle = null, AudioClip sound = null,
+        public static void QueuePlantEffect(PlantController plant, ParticleSystem particle = null, AudioClip sound = null,
             float delay = 0.3f)
         {
             PlantEffectQueue.Enqueue(new PlantEffectRequest(plant, particle, sound, delay));
-            plantEffectCoroutine ??= StartCoroutine(PlayQueuedPlantEffects());
+        }
+
+        private void TryPlayQueuedEffects()
+        {
+            if (plantEffectCoroutine == null && PlantEffectQueue.Count > 0)
+                plantEffectCoroutine = StartCoroutine(PlayQueuedPlantEffects());
         }
 
         private IEnumerator PlayQueuedPlantEffects()
@@ -387,7 +395,14 @@ namespace _project.Scripts.Card_Core
 
                     if (request.Sound && request.Plant.audioSource)
                     {
-                        //request.Plant.audioSource.resource = request.Sound;
+                        if (request.Sound && request.Plant.audioSource)
+                        {
+                            request.Plant.audioSource.pitch = 1f;
+                            request.Plant.audioSource.volume = 1f;
+                            request.Plant.audioSource.spatialBlend = 0f;
+                            request.Plant.audioSource.PlayOneShot(request.Sound);
+                        }
+
                         request.Plant.audioSource.PlayOneShot(request.Sound);
                     }
                 }

@@ -380,7 +380,7 @@ namespace _project.Scripts.Card_Core
 
         /// Draws a new action hand by discarding the current hand and drawing the specified number of cards from the action deck.
         /// If the action deck is empty, it recycles the discard pile into the action deck. The drawn cards are then displayed in sequence.
-        /// Optionally, log the state of the action hand, action deck, and discard pile if debugging is enabled.
+        /// Optionally, log the state of the action hand, action deck, and discard the pile if debugging is enabled.
         public void DrawActionHand()
         {
             if (updatingActionDisplay) return;
@@ -406,7 +406,7 @@ namespace _project.Scripts.Card_Core
 
             while (cardsNeeded > 0)
             {
-                // Recycle discard pile only if deck empty and the discard pile has cards
+                // Recycle the discard pile only if deck empty and the discard pile has cards
                 if (_actionDeck.Count == 0 && _actionDiscardPile.Count > 0)
                 {
                     if (debug)
