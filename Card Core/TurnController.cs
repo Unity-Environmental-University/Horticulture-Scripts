@@ -12,7 +12,7 @@ using Random = System.Random;
 
 namespace _project.Scripts.Card_Core
 {
-    public abstract class TurnController : MonoBehaviour
+    public class TurnController : MonoBehaviour
     {
         public GameObject lostGameObjects;
         public GameObject winScreen;
