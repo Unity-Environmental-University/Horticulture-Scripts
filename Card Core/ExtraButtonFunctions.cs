@@ -12,8 +12,8 @@ namespace _project.Scripts.Card_Core
         private TextMeshPro _buttonText;
         private Camera _camera;
         
-        public bool isApplyButton = false;
-        public bool isRedrawButton = false;
+        public bool isApplyButton;
+        public bool isRedrawButton;
 
         private void Awake() { _click3D = GetComponent<Click3D>(); }
 
