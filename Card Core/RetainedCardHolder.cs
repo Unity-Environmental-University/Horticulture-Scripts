@@ -56,7 +56,6 @@ namespace _project.Scripts.Card_Core
             var click3D = cardGoClone.GetComponent<Click3D>();
             if (click3D)
             {
-                click3D.isStoredItem = true;
                 click3D.cardView = cardView;
                 click3D.isEnabled = true;
                 click3D.selected = false;
@@ -165,7 +164,6 @@ namespace _project.Scripts.Card_Core
                 click3D.cardView = cardView;
                 click3D.isEnabled = true;
                 click3D.selected = false;
-                click3D.isStoredItem = true;
                 click3D.RefreshState();
             }
 

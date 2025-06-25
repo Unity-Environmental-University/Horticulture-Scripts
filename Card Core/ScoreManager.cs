@@ -101,7 +101,7 @@ namespace _project.Scripts.Card_Core
             UpdateMoneysText(treatmentCost);
         }
 
-        public int CalculatePotentialProfit()
+        public void CalculatePotentialProfit()
         {
             cachedPlants = GetPlatsControllers();
 
@@ -110,14 +110,12 @@ namespace _project.Scripts.Card_Core
                 .Sum(plant => plant.PlantCard.Value.Value);
 
             UpdateProfitText(plantValue);
-            return plantValue;
         }
 
-        public static int SubtractMoneys(int amount)
+        public static void SubtractMoneys(int amount)
         {
             Moneys -= amount;
             UpdateMoneysText();
-            return Moneys;
         }
 
         private static List<PlantController> GetPlatsControllers()
