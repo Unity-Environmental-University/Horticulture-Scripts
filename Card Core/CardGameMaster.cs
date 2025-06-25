@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using _project.Scripts.Audio;
 using JetBrains.Annotations;
 using TMPro;
 using UnityEngine;
@@ -9,13 +10,14 @@ using UnityEngine.Rendering;
 namespace _project.Scripts.Card_Core
 {
     /// <summary>
-    ///     Represents the core manager of the card game, responsible for integrating key components such as deck management,
-    ///     scoring, and turn control. This class acts as the central hub for game operations.
+    /// Represents the primary controller for managing the card game's overall functionality,
+    /// including integration with deck, score, turn, and other essential systems.
     /// </summary>
     /// <remarks>
-    ///     The <c>CardGameMaster</c> is attached to a Unity GameObject and requires <c>DeckManager</c>, <c>ScoreManager</c>,
-    ///     and <c>TurnController</c> components. It also maintains a singleton instance for centralized access across the
-    ///     game.
+    /// The <c>CardGameMaster</c> class ensures seamless communication between core components such as
+    /// <c>DeckManager</c>, <c>ScoreManager</c>, and <c>TurnController</c>. It is designed to manage singleton
+    /// behavior, providing centralized access throughout the game's lifecycle. This class interacts with
+    /// mission-critical elements, including UI updates, audio playback, and game state control.
     /// </remarks>
     [RequireComponent(typeof(DeckManager))]
     [RequireComponent(typeof(ScoreManager))]

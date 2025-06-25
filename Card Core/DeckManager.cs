@@ -219,7 +219,7 @@ namespace _project.Scripts.Card_Core
                 plantController.PlantCard = _plantHand[i];
 
                 if (plantController.priceFlag && plantController.priceFlagText)
-                    plantController.priceFlagText.text = "$" + plantController.PlantCard.Value;
+                    plantController.priceFlagText!.text = "$" + plantController.PlantCard.Value;
 
                 yield return new WaitForSeconds(delay);
             }
@@ -275,7 +275,7 @@ namespace _project.Scripts.Card_Core
                 slot.GetComponentsInChildren<PlantController>(true).Contains(plant));
 
             if (location)
-                location.GetComponentInChildren<PlacedCardHolder>()?.ToggleCardHolder(false);
+                location!.GetComponentInChildren<PlacedCardHolder>()?.ToggleCardHolder(false);
         }
 
         /// Determines the appropriate prefab GameObject to instantiate for a given card.

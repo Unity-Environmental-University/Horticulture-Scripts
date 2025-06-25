@@ -1,6 +1,6 @@
 using UnityEngine;
 
-namespace _project.Scripts.Card_Core
+namespace _project.Scripts.Audio
 {
     public class SoundSystemMaster : MonoBehaviour
     {

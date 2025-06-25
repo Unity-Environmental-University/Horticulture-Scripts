@@ -63,8 +63,6 @@ namespace _project.Scripts.Card_Core
 
             if (actionCard.Treatment != null) plantController.UsedTreatments.Add(actionCard.Treatment);
 
-            //if (plantController.PlantCard.GetType()) ;
-
             if (CardGameMaster.Instance.debuggingCardClass)
                 Debug.Log(
                     $"{actionCard.Name} treatment {actionCard.Treatment?.ToString() ?? "Unknown"} applied to {plantController.name}");

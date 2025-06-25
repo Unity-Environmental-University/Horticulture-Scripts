@@ -19,24 +19,17 @@ namespace _project.Scripts.Card_Core
         }
 
         /// <summary>
-        ///     Handles the selection of a card and attaches it to the cardholder, effectively "placing" the card.
-        ///     If a card is already placed, it will be returned to its original position before placing the selected one.
+        /// Takes the currently selected card from the deck and places it into the cardholder.
         /// </summary>
         /// <remarks>
-        ///     This method:
-        ///     1. Checks if a card is currently being held:
-        ///     - If yes, the existing card is returned to its original position.
-        ///     2. Verify if a card is selected on the deck. If no card is selected, the method exits without action.
-        ///     3. Clones the selected card and its associated components, then places it in the cardholder:
-        ///     - The cloned card is configured to replace the selected card.
-        ///     - Its transform properties (position, rotation, scale) are updated for proper appearance.
-        ///     4. Updates internal references to track the new "placed" card.
-        ///     5. Hides the associated 3D click capability and visual appearance of the original card in the deck.
+        /// If a card is already being held by the cardholder, it is returned before the new card is taken.
+        /// This method ensures the proper management of card interactions, such as cloning the selected card,
+        /// setting up its view, and positioning it within the holder. Additionally, it hides the original card
+        /// and updates relevant scoring data, including treatment costs.
         /// </remarks>
         public void TakeSelectedCard()
         {
             if (HoldingCard) GiveBackCard();
-            //if (HoldingCard) return;
             if (_deckManager.selectedACardClick3D is null || _deckManager.SelectedACard is null) return;
 
             var selectedCard = _deckManager.selectedACardClick3D;
@@ -89,22 +82,14 @@ namespace _project.Scripts.Card_Core
         }
 
         /// <summary>
-        /// Handles the process of returning a placed card to its original position or the retained cardholder.
-        /// If the card is currently held, it will be returned either to the player's hand or to the retained cardholder,
-        /// depending on where the original card was located. If neither location is found, the cloned card will be destroyed.
+        /// Returns the currently held card from the cardholder to its appropriate location.
         /// </summary>
         /// <remarks>
-        /// This method:
-        /// 1. Checks if a card is currently being held. If not, it exits without action.
-        /// 2. Search for the original card in the player's hand:
-        /// - If found, re-enables the card's visual components, and associated click capabilities.
-        /// - Marks the card as returned to the hand.
-        /// 3. If the card was not found in the hand, it searches for an available slot in the retained cardholder.
-        /// 4. If the card is neither returned to the hand nor the retained holder, it destroys the cloned card.
-        /// 5. Adjust the treatment cost based on the value of the returned card.
-        /// 6. Calculate the updated treatment cost.
-        /// 7. Clear the state of this holder, nullifying references to the placed card and its components.
-        /// 8. Re-enables the visual components of the button and parent renderer associated with this holder.
+        /// This method ensures proper restoration of the held card by either returning it to the player's hand or
+        /// moving it back to the retained cardholder, if applicable. If the card cannot be returned to either,
+        /// its clone is destroyed. The method also updates the game state by recalculating treatment costs, clearing
+        /// this holder's state, and enabling the visibility of the necessary UI elements. Additionally, it plays an
+        /// audio cue to signify the card's removal from the holder.
         /// </remarks>
         private void GiveBackCard()
         {
@@ -113,7 +98,7 @@ namespace _project.Scripts.Card_Core
             var returnedToHand = false;
             var returnedToRetained = false;
 
-            // Check for returning to original hand
+            // Check for returning to the original hand
             var handCards = _deckManager.actionCardParent.GetComponentsInChildren<CardView>(true);
             foreach (var cardView in handCards)
             {
@@ -148,7 +133,7 @@ namespace _project.Scripts.Card_Core
                     }
                     else
                     {
-                        // Card was from retained slot but returned to hand or lost — cleanup retained slot
+                        // Card was from the retained slot but returned to hand or lost — cleanup retained slot
                         retainedSlot.ClearHeldCard();
                     }
                 }

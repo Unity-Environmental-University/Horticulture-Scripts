@@ -38,10 +38,10 @@ namespace _project.Scripts.Card_Core
         public static void UpdateMoneysText(int modifier = 0)
         {
             if (CardGameMaster.Instance.moneysText)
-                CardGameMaster.Instance.moneysText.text = "Moneys: " + "$" + (Moneys + modifier) 
+                CardGameMaster.Instance.moneysText!.text = "Moneys: " + "$" + (Moneys + modifier) 
                                                           + "/" + CardGameMaster.Instance.turnController.moneyGoal;
             if (CardGameMaster.Instance.shopMoneyText)
-                CardGameMaster.Instance.shopMoneyText.text = "Moneys: " + "$" + (Moneys + modifier);
+                CardGameMaster.Instance.shopMoneyText!.text = "Moneys: " + "$" + (Moneys + modifier);
         }
 
         private static void UpdateCostText(int totalCost) { TreatmentCostText.text = "Potential Loss: " + totalCost; }
