@@ -22,7 +22,7 @@ namespace _project.Scripts.Card_Core
         {
             titleText.text = card.Name;
             cardMaterial = card.Material;
-            this.gameObject.GetComponent<Renderer>().material = cardMaterial;
+            gameObject.GetComponent<Renderer>().material = cardMaterial;
             descriptionText.text = card.Description;
             if (card.Value != null) treatmentCostText.text = "$ " + card.Value;
             _originalCard = card;

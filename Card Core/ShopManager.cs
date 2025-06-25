@@ -14,7 +14,6 @@ namespace _project.Scripts.Card_Core
         [SerializeField] private int numberOfCards = 4;
 
         public GameObject shopPanel;
-        public bool isShopOpen;
 
         // ReSharper disable once CollectionNeverQueried.Local
         private readonly List<IShopItem> currentShopItems = new();
@@ -29,7 +28,6 @@ namespace _project.Scripts.Card_Core
             shopPanel.SetActive(true);
             Click3D.click3DGloballyDisabled = true;
             inputModule.enabled = true;
-            isShopOpen = true;
         }
 
         public void CloseShop()
@@ -37,7 +35,6 @@ namespace _project.Scripts.Card_Core
             shopPanel.SetActive(false);
             Click3D.click3DGloballyDisabled = false;
             inputModule.enabled = false;
-            isShopOpen = false;
 
             if (CardGameMaster.Instance.turnController.level == 2)
                 CardGameMaster.Instance.turnController.ShowBetaScreen();

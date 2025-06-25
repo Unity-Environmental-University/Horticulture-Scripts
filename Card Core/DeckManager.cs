@@ -236,11 +236,13 @@ namespace _project.Scripts.Card_Core
             foreach (var location in plantLocations)
             {
                 var plantController = location.GetComponentInChildren<PlantController>(true);
-                var cardHolder = location.GetComponentInChildren<PlacedCardHolder>();
+                var cardHolders = location.GetComponentsInChildren<PlacedCardHolder>(true);
 
-                if (cardHolder && !plantController)
-                    cardHolder.ToggleCardHolder(false);
-                else if (cardHolder && plantController) cardHolder.ToggleCardHolder(true);
+                foreach (var cardHolder in cardHolders)
+                {
+                    if (cardHolder)
+                        cardHolder.ToggleCardHolder(plantController != null);
+                }
             }
         }
 
@@ -255,8 +257,9 @@ namespace _project.Scripts.Card_Core
                          .SelectMany(children => children)) Destroy(child.gameObject);
 
             // hide all cardholders
-            foreach (var location in plantLocations)
-                location.GetComponentInChildren<PlacedCardHolder>()?.ToggleCardHolder(false);
+            foreach (var holder in plantLocations
+                         .Select(location => location.GetComponentsInChildren<PlacedCardHolder>(true))
+                         .SelectMany(cardHolders => cardHolders)) holder.ToggleCardHolder(false);
 
             _plantHand.DeckRandomDraw();
 
@@ -274,8 +277,10 @@ namespace _project.Scripts.Card_Core
             var location = plantLocations.FirstOrDefault(slot =>
                 slot.GetComponentsInChildren<PlantController>(true).Contains(plant));
 
-            if (location)
-                location!.GetComponentInChildren<PlacedCardHolder>()?.ToggleCardHolder(false);
+            if (!location) yield break;
+            var cardHolders = location.GetComponentsInChildren<PlacedCardHolder>(true);
+            foreach (var holder in cardHolders)
+                holder.ToggleCardHolder(false);
         }
 
         /// Determines the appropriate prefab GameObject to instantiate for a given card.

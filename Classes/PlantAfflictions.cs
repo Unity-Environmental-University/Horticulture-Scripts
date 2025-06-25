@@ -4,6 +4,8 @@ using _project.Scripts.Core;
 using JetBrains.Annotations;
 using UnityEngine;
 
+// ReSharper disable UnusedMember.Global
+
 namespace _project.Scripts.Classes
 {
     public class PlantAfflictions : MonoBehaviour

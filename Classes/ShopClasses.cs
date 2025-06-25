@@ -6,6 +6,7 @@ namespace _project.Scripts.Classes
 {
     public interface IShopItem
     {
+        // ReSharper disable once UnusedMemberInSuper.Global
         public ICard Card { get; }
         public string DisplayName { get; }
         public int Cost { get; }
