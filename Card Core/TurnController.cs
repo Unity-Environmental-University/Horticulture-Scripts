@@ -101,11 +101,11 @@ namespace _project.Scripts.Card_Core
         private void Update()
         {
             if (CardGameMaster.Instance.turnText)
-                CardGameMaster.Instance.turnText.text = "Turn: " + currentTurn + "/" + turnCount;
+                CardGameMaster.Instance.turnText!.text = "Turn: " + currentTurn + "/" + turnCount;
             if (CardGameMaster.Instance.roundText)
-                CardGameMaster.Instance.roundText.text = "Round: " + currentRound;
+                CardGameMaster.Instance.roundText!.text = "Round: " + currentRound;
             if (CardGameMaster.Instance.levelText)
-                CardGameMaster.Instance.levelText.text = "Level: " + (level + 1);
+                CardGameMaster.Instance.levelText!.text = "Level: " + (level + 1);
         }
 
         /// <summary>
