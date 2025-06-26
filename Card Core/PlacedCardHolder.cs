@@ -12,6 +12,8 @@ namespace _project.Scripts.Card_Core
         public ICard PlacedCard;
         public bool HoldingCard => placedCardClick3D;
 
+        private static CardGameMaster Cgm => CardGameMaster.Instance;
+
         private void Start()
         {
             _deckManager = CardGameMaster.Instance.deckManager;
@@ -35,6 +37,7 @@ namespace _project.Scripts.Card_Core
             var selectedCard = _deckManager.selectedACardClick3D;
 
             selectedCard.DisableClick3D();
+            Cgm.playerHandAudioSource.PlayOneShot(Cgm.soundSystem.placeCard);
 
             // Clone the card and all its components
             var cardClone = Instantiate(selectedCard.gameObject, transform);
@@ -133,7 +136,7 @@ namespace _project.Scripts.Card_Core
                     }
                     else
                     {
-                        // Card was from the retained slot but returned to hand or lost — cleanup retained slot
+                        // The Card was from the retained slot but returned to hand or lost — cleanup retained slot
                         retainedSlot.ClearHeldCard();
                     }
                 }
