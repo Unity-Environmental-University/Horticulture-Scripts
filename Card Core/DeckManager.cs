@@ -548,7 +548,7 @@ namespace _project.Scripts.Card_Core
                 cardObj.transform.localRotation = Quaternion.Euler(0, 0, angleOffset);
                 
                 var playerAudio = CardGameMaster.Instance.playerHandAudioSource;
-                playerAudio.PlayOneShot(CardGameMaster.Instance.soundSystem.placeCard);
+                playerAudio.PlayOneShot(CardGameMaster.Instance.soundSystem.drawCard);
 
                 yield return new WaitForSeconds(0.5f);
             }

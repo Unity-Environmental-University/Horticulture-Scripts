@@ -12,6 +12,7 @@ namespace _project.Scripts.Audio
 
         [Header("Card Sounds")]
         public AudioClip selectCard;
+        public AudioClip drawCard;
         public AudioClip placeCard;
         public AudioClip unplaceCard;
         public AudioClip shuffleCard;
