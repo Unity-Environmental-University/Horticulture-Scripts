@@ -21,13 +21,13 @@ namespace _project.Scripts.Card_Core
         }
 
         /// <summary>
-        /// Takes the currently selected card from the deck and places it into the cardholder.
+        ///     Takes the currently selected card from the deck and places it into the cardholder.
         /// </summary>
         /// <remarks>
-        /// If a card is already being held by the cardholder, it is returned before the new card is taken.
-        /// This method ensures the proper management of card interactions, such as cloning the selected card,
-        /// setting up its view, and positioning it within the holder. Additionally, it hides the original card
-        /// and updates relevant scoring data, including treatment costs.
+        ///     If a card is already being held by the cardholder, it is returned before the new card is taken.
+        ///     This method ensures the proper management of card interactions, such as cloning the selected card,
+        ///     setting up its view, and positioning it within the holder. Additionally, it hides the original card
+        ///     and updates relevant scoring data, including treatment costs.
         /// </remarks>
         public void TakeSelectedCard()
         {
@@ -81,18 +81,19 @@ namespace _project.Scripts.Card_Core
                 if (!isFromRetained)
                     _scoreManager.treatmentCost += PlacedCard.Value.Value;
             }
+
             _scoreManager.CalculateTreatmentCost();
         }
 
         /// <summary>
-        /// Returns the currently held card from the cardholder to its appropriate location.
+        ///     Returns the currently held card from the cardholder to its appropriate location.
         /// </summary>
         /// <remarks>
-        /// This method ensures proper restoration of the held card by either returning it to the player's hand or
-        /// moving it back to the retained cardholder, if applicable. If the card cannot be returned to either,
-        /// its clone is destroyed. The method also updates the game state by recalculating treatment costs, clearing
-        /// this holder's state, and enabling the visibility of the necessary UI elements. Additionally, it plays an
-        /// audio cue to signify the card's removal from the holder.
+        ///     This method ensures proper restoration of the held card by either returning it to the player's hand or
+        ///     moving it back to the retained cardholder, if applicable. If the card cannot be returned to either,
+        ///     its clone is destroyed. The method also updates the game state by recalculating treatment costs, clearing
+        ///     this holder's state, and enabling the visibility of the necessary UI elements. Additionally, it plays an
+        ///     audio cue to signify the card's removal from the holder.
         /// </remarks>
         private void GiveBackCard()
         {
@@ -149,10 +150,9 @@ namespace _project.Scripts.Card_Core
             {
                 var retainedSlot1 = FindFirstObjectByType<RetainedCardHolder>(FindObjectsInactive.Include);
                 if (!(retainedSlot1 != null && retainedSlot1.HeldCard == PlacedCard))
-                {
                     _scoreManager.treatmentCost -= PlacedCard.Value.Value;
-                }
             }
+
             _scoreManager.CalculateTreatmentCost();
 
             // Clear this holder's state
