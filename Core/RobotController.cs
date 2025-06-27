@@ -9,6 +9,7 @@ namespace _project.Scripts.Core
         public Transform robotTransform;
         public GameObject currentLookTarget;
         public NavMeshAgent agent;
+        public Animator animator;
     
         private void Update()
         {
