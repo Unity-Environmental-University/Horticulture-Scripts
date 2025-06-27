@@ -2,7 +2,7 @@ using UnityEngine;
 
 namespace _project.Scripts.Core
 {
-    public class MaineScene : MonoBehaviour
+    public class MainScene : MonoBehaviour
     {
         [SerializeField] private float startingAudioLevel;
 
