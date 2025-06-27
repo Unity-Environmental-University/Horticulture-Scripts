@@ -181,7 +181,7 @@ namespace _project.Scripts.Core
                 TurnController.QueuePlantEffect(
                     plant: this,
                     particle: debuffSystem,
-                    sound: CardGameMaster.Instance.soundSystem.plantDeath,
+                    sound: CardGameMaster.Instance.soundSystem.GetInsectSound(affliction),
                     delay: 0.3f);
         }
 
