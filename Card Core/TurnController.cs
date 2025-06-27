@@ -394,18 +394,14 @@ namespace _project.Scripts.Card_Core
                 var request = PlantEffectQueue.Dequeue();
                 if (request.Plant)
                 {
-                    if (request.Particle) request.Particle.Play();
+                    if (request.Particle)
+                        request.Particle.Play();
 
                     if (request.Sound && request.Plant.audioSource)
                     {
-                        if (request.Sound && request.Plant.audioSource)
-                        {
-                            request.Plant.audioSource.pitch = 1f;
-                            request.Plant.audioSource.volume = 1f;
-                            request.Plant.audioSource.spatialBlend = 0f;
-                            request.Plant.audioSource.PlayOneShot(request.Sound);
-                        }
-
+                        request.Plant.audioSource.pitch = 1f;
+                        request.Plant.audioSource.volume = 1f;
+                        request.Plant.audioSource.spatialBlend = 0f;
                         request.Plant.audioSource.PlayOneShot(request.Sound);
                     }
                 }
