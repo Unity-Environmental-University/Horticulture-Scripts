@@ -1,3 +1,4 @@
+using _project.Scripts.Classes;
 using UnityEngine;
 
 namespace _project.Scripts.Audio
@@ -22,5 +23,16 @@ namespace _project.Scripts.Audio
         public AudioClip aphidsAfflicted;
         public AudioClip mealyBugsAfflicted;
         public AudioClip mildewAfflicted;
+
+        public AudioClip GetInsectSound(PlantAfflictions.IAffliction affliction)
+        {
+            return affliction switch
+            {
+                PlantAfflictions.AphidsAffliction => aphidsAfflicted,
+                PlantAfflictions.ThripsAffliction => thripsAfflicted,
+                PlantAfflictions.MealyBugsAffliction => mealyBugsAfflicted,
+                _ => null
+            };
+        }
     }
 }
