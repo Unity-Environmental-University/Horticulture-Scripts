@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Reflection;
+using _project.Scripts.Audio;
 using _project.Scripts.Card_Core;
 using _project.Scripts.Classes;
 using NUnit.Framework;
@@ -14,10 +15,14 @@ namespace _project.Scripts.PlayModeTest
     public class DeckManagerTests
     {
         private GameObject _actionParentGo;
-        private GameObject _deckManagerGo;
+        private GameObject _cardGameMasterGo;
 
         private DeckManager deckManager;
+        private ScoreManager _scoreManager;
+        private TurnController _turnController;
         private GameObject fakePrefab;
+        private GameObject _lostObjectsGo;
+        private GameObject _winScreenGo;
         
         // Fake implementation of ICard for testing.
         private class FakeCard : ICard
@@ -40,9 +45,35 @@ namespace _project.Scripts.PlayModeTest
         [SetUp]
         public void Setup()
         {
-            // Create the DeckManager test setup.
-            _deckManagerGo = new GameObject("DeckManagerTestObject");
-            deckManager = _deckManagerGo.AddComponent<DeckManager>();
+            // Build a minimal CardGameMaster hierarchy.
+            _cardGameMasterGo = new GameObject("CardGameMaster");
+            _cardGameMasterGo.SetActive(false);
+
+            deckManager = _cardGameMasterGo.AddComponent<DeckManager>();
+            _scoreManager = _cardGameMasterGo.AddComponent<ScoreManager>();
+            _turnController = _cardGameMasterGo.AddComponent<TurnController>();
+            var cardGameMaster = _cardGameMasterGo.AddComponent<CardGameMaster>();
+            var soundSystem = _cardGameMasterGo.AddComponent<SoundSystemMaster>();
+            var audioSource = _cardGameMasterGo.AddComponent<AudioSource>();
+            _cardGameMasterGo.AddComponent<AudioListener>();
+
+            // Minimal objects required by TurnController
+            _lostObjectsGo = new GameObject("LostObjects");
+            _winScreenGo = new GameObject("WinScreen");
+            _turnController.lostGameObjects = _lostObjectsGo;
+            _turnController.winScreen = _winScreenGo;
+
+            // Wire dependencies for CardGameMaster.
+            cardGameMaster.deckManager = deckManager;
+            cardGameMaster.scoreManager = _scoreManager;
+            cardGameMaster.turnController = _turnController;
+            cardGameMaster.soundSystem = soundSystem;
+            cardGameMaster.playerHandAudioSource = audioSource;
+
+            // Expose singleton instance via reflection.
+            typeof(CardGameMaster)
+                .GetProperty("Instance", BindingFlags.Static | BindingFlags.NonPublic | BindingFlags.Public)
+                ?.SetValue(null, cardGameMaster);
 
             // Set up a fake parent for action cards.
             _actionParentGo = new GameObject("ActionCardParent");
@@ -53,16 +84,20 @@ namespace _project.Scripts.PlayModeTest
             fakePrefab.AddComponent<CardViewFake>();
             deckManager.cardPrefab = fakePrefab;
 
-            // Allow Unity to run initial setup code.
+            _cardGameMasterGo.SetActive(true);
+
+            // Allow Unity to run initial setup code silently.
             LogAssert.ignoreFailingMessages = true;
         }
 
         [TearDown]
         public void TearDown()
         {
-            Object.Destroy(_deckManagerGo);
+            Object.Destroy(_cardGameMasterGo);
             Object.Destroy(_actionParentGo);
             Object.Destroy(fakePrefab);
+            Object.Destroy(_lostObjectsGo);
+            Object.Destroy(_winScreenGo);
         }
 
         #region Regular DrawActionHand Test
