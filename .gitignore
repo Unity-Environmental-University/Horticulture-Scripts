@@ -9,6 +9,7 @@ Git-Setup.sh
 # Don't Upload files with Keys
 Data/HardwareDataCollector.cs
 Data/UnityServicesInitializer.cs
+Data/PrivateData.cs
 
 # Un-Needed Files
 Scripts.asmdef
