@@ -7,7 +7,6 @@ namespace _project.Scripts.Cinematics
     public class RobotCardGameSequencer : MonoBehaviour
     {
         [SerializeField] private RobotController robotController;
-        [SerializeField] private RobotVoiceController voiceController;
         [SerializeField] private GameObject player;
         [SerializeField] private GameObject frontOfPlayer;
         public bool scriptingEnabled;

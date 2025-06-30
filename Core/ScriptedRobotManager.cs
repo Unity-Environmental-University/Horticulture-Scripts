@@ -3,7 +3,6 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-using _project.Scripts.Audio;
 using _project.Scripts.Handlers;
 using _project.Scripts.UI;
 using TMPro;
@@ -33,7 +32,6 @@ namespace _project.Scripts.Core
         [Header("Controllers and Manager")] 
         [SerializeField] private NotebookController notebookController;
         [SerializeField] private RobotController robotController;
-        [SerializeField] private RobotAudioManager audioManager;
         [SerializeField] private ScriptedSpread scriptedSpread;
         [SerializeField] private InteractWithRobot robotInteract;
         [SerializeField] private FPSController fpsController;
@@ -135,7 +133,7 @@ namespace _project.Scripts.Core
             yield return new WaitForSeconds(5f);
             robotController.SetNewFocusTarget(player);
             robotController.GoToNewLocation(playerFront.transform.position);
-            audioManager.PlayAudio(dlg1);
+            //audioManager.PlayAudio(dlg1);
 
             // Wait for the dlg to play, then move on
             // yield return new WaitForSeconds(dlg1.length + 0.5f);
