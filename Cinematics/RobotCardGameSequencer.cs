@@ -2,7 +2,7 @@ using System.Collections;
 using _project.Scripts.Core;
 using UnityEngine;
 
-namespace _project.Scripts.Card_Core
+namespace _project.Scripts.Cinematics
 {
     public class RobotCardGameSequencer : MonoBehaviour
     {
@@ -22,8 +22,6 @@ namespace _project.Scripts.Card_Core
             robotController.GoToNewLocation(frontOfPlayer.transform.position);
 
             yield return new WaitUntil(robotController.HasReachedDestination);
-            StartCoroutine(voiceController.PlayIntroAudio());
-            yield return new WaitForSeconds(3);
 
             robotController.animator.SetBool($"isGesturing", true);
 
