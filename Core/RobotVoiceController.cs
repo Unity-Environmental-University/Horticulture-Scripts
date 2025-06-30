@@ -23,12 +23,6 @@ namespace _project.Scripts.Core
             robotAudioSource.PlayOneShot(clip);
         }
 
-        public IEnumerator PlayIntroAudio()
-        {
-            PlayAudio(introAudio);
-            yield return new WaitForSeconds(introAudio.length);
-        }
-
         public IEnumerator PlayFailAudio()
         {
             PlayAudio(introAudio);
