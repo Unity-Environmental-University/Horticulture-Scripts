@@ -95,7 +95,11 @@ namespace _project.Scripts.Core
             {
                 var fetcher = CardGameMaster.Instance.inspectingInfoPanels.GetComponentInChildren<SiteDataFetcher>();
                 if (fetcher != null)
+                {
                     fetcher.SetPlant(plantController.type);
+                    if (plantController.CurrentAfflictions.Any())
+                        fetcher.SetAffliction(plantController.CurrentAfflictions.First());
+                }
             }
 
             // Find all objects except the inspected object and its children
