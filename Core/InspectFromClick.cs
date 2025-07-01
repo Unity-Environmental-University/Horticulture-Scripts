@@ -1,5 +1,7 @@
 using System.Collections.Generic;
+using System.Linq;
 using _project.Scripts.Card_Core;
+using _project.Scripts.Data;
 using _project.Scripts.UI;
 using Unity.VisualScripting;
 using UnityEngine;
@@ -88,7 +90,13 @@ namespace _project.Scripts.Core
             // if (_depthOfField) _depthOfField = null;
             if (_depthOfField) _depthOfField.active = true;
 
-            _inspectableObject.GetComponentInChildren<PlantController>();
+            var plantController = _inspectableObject.GetComponentInChildren<PlantController>();
+            if (plantController != null)
+            {
+                var fetcher = CardGameMaster.Instance.inspectingInfoPanels.GetComponentInChildren<SiteDataFetcher>();
+                if (fetcher != null)
+                    fetcher.SetPlant(plantController.type);
+            }
 
             // Find all objects except the inspected object and its children
             foreach (var obj in FindObjectsByType<GameObject>(FindObjectsInactive.Include, FindObjectsSortMode.None))
@@ -130,8 +138,11 @@ namespace _project.Scripts.Core
             if (overlayCamera.activeSelf) overlayCamera.SetActive(false);
             if (_depthOfField) _depthOfField.active = false;
 
-            // **Restore the original layers of all objects**
-            foreach (var kvp in OriginalLayers) kvp.Key.layer = kvp.Value; // **Restore to original layer**
+            // Restore the original layers of all objects, skipping any that have been destroyed
+            foreach (var kvp in OriginalLayers.Where(kvp => kvp.Key != null))
+            {
+                kvp.Key.layer = kvp.Value;
+            }
             OriginalLayers.Clear();
         }
     }
