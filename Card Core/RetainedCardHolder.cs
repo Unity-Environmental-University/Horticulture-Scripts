@@ -21,6 +21,7 @@ namespace _project.Scripts.Card_Core
 
         public void HoldSelectedCard()
         {
+            var cgm = CardGameMaster.Instance;
             var selectedCard = _deckManager.SelectedACard;
             var selectedClick3D = _deckManager.selectedACardClick3D;
 
@@ -61,12 +62,15 @@ namespace _project.Scripts.Card_Core
                 click3D.selected = false;
                 click3D.RefreshState();
             }
+            
+            //Play Place Sound
+            cgm.playerHandAudioSource.PlayOneShot(cgm.soundSystem.placeCard);
 
             // Final visual positioning
             cardGoClone.transform.SetParent(transform, false);
             cardGoClone.transform.localPosition = Vector3.zero;
             cardGoClone.transform.localRotation = Quaternion.Euler(-90f, 0f, 0f);
-            cardGoClone.transform.localScale = Vector3.one * 0.9f;
+            cardGoClone.transform.localScale = Vector3.one * 0.8f;
 
             // Hide the original card in the hand
             foreach (var r in selectedClick3D.GetComponentsInChildren<Renderer>())
@@ -83,7 +87,7 @@ namespace _project.Scripts.Card_Core
                 buttonRenderer.enabled = false;
 
             // Update cost
-            var scoreManager = CardGameMaster.Instance.scoreManager;
+            var scoreManager = cgm.scoreManager;
             if (!hasPaidForCard && HeldCard.Value != null)
             {
                 ScoreManager.SubtractMoneys(Mathf.Abs(HeldCard.Value.Value));

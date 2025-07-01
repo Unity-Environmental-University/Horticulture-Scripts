@@ -25,10 +25,15 @@ namespace _project.Scripts.Card_Core
         public bool newRoundReady;
         public bool debugging;
         public bool shopQueued;
+
+        public Func<bool> ReadyToPlay;
+        private static readonly Queue<PlantEffectRequest> PlantEffectQueue = new(); 
         private DeckManager _deckManager;
         private ScoreManager _scoreManager;
-        private static readonly Queue<PlantEffectRequest> PlantEffectQueue = new(); 
         private Coroutine plantEffectCoroutine;
+
+        public TurnController(Func<bool> readyToPlay) => ReadyToPlay = readyToPlay;
+
         private static TurnController Instance { get; set; }
 
         private void Awake()
@@ -66,6 +71,8 @@ namespace _project.Scripts.Card_Core
         // ReSharper disable once MemberCanBePrivate.Global
         public IEnumerator BeginTurnSequence()
         {
+            yield return new WaitForEndOfFrame();
+            yield return new WaitUntil(ReadyToPlay);
             if (lostGameObjects.activeInHierarchy) lostGameObjects.SetActive(false);
             canClickEnd = false;
             currentTurn = 1;
