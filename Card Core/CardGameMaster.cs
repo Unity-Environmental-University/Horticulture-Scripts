@@ -24,6 +24,9 @@ namespace _project.Scripts.Card_Core
     [RequireComponent(typeof(TurnController))]
     public class CardGameMaster : MonoBehaviour
     {
+        public bool isInspecting;
+        public bool isSequencingEnabled;
+        public bool debuggingCardClass;
         public DeckManager deckManager;
         public ScoreManager scoreManager;
         public TurnController turnController;
@@ -33,8 +36,6 @@ namespace _project.Scripts.Card_Core
         public Volume postProcessVolume;
         public EventSystem eventSystem;
         public GameObject inspectingInfoPanels;
-        public bool isInspecting;
-        public bool debuggingCardClass;
         
         [CanBeNull] public TextMeshProUGUI shopMoneyText;
         [CanBeNull] public TextMeshPro moneysText;
