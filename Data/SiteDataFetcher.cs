@@ -1,4 +1,5 @@
 using System.Collections;
+using System.Text.RegularExpressions;
 using _project.Scripts.Classes;
 using _project.Scripts.Core;
 using TMPro;
@@ -24,7 +25,7 @@ namespace _project.Scripts.Data
 
         public void SetPlant(PlantType plantTypeEnum)
         {
-            plantType = plantTypeEnum.ToString();
+            plantType = plantTypeEnum.ToString().Replace(" ", "-");
             StartCoroutine(GetPlantText(URL));
         }
 
@@ -48,13 +49,14 @@ namespace _project.Scripts.Data
         /// </summary>
         private IEnumerator GetPlantText(string webURL)
         {
-            using var www = UnityWebRequest.Get(webURL + plantType + ".txt");
+            var fileKey = UnityWebRequest.EscapeURL(plantType);
+            using var www = UnityWebRequest.Get(webURL + fileKey + ".txt");
             yield return www.SendWebRequest();
 
             if (www.result is UnityWebRequest.Result.ProtocolError or UnityWebRequest.Result.ConnectionError)
             {
                 Debug.LogError(www.error);
-                Debug.LogError(webURL + plantType + ".txt");
+                Debug.LogError(webURL + fileKey + ".txt");
                 if (plantSummary) plantSummary.text = "Error Finding Plant Text";
             }
             else if (plantSummary)
@@ -68,13 +70,16 @@ namespace _project.Scripts.Data
         /// </summary>
         private IEnumerator GetAfflictionText(string webURL)
         {
-            using var www = UnityWebRequest.Get(webURL + affliction + ".txt");
+            var baseName = affliction.Replace(" ", string.Empty);
+            var hyphenName = Regex.Replace(baseName, "(?<!^)([A-Z])", "-$1");
+            var fileKey = UnityWebRequest.EscapeURL(hyphenName);
+            using var www = UnityWebRequest.Get(webURL + fileKey + ".txt");
             yield return www.SendWebRequest();
 
             if (www.result is UnityWebRequest.Result.ProtocolError or UnityWebRequest.Result.ConnectionError)
             {
                 Debug.LogError(www.error);
-                Debug.LogError(webURL + affliction + ".txt");
+                Debug.LogError(webURL + fileKey + ".txt");
                 if (afflictionSummary) afflictionSummary.text = "Error Finding Affliction Text";
             }
             else if (afflictionSummary)
