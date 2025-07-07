@@ -54,7 +54,8 @@ namespace _project.Scripts.Card_Core
         {
             UpdateMoneyGoal();
             _scoreManager.ResetMoneys();
-            StartCoroutine(BeginTurnSequence());
+            if (ReadyToPlay != null)
+                StartCoroutine(BeginTurnSequence());
         }
 
         private void UpdateMoneyGoal()
@@ -72,7 +73,8 @@ namespace _project.Scripts.Card_Core
         public IEnumerator BeginTurnSequence()
         {
             yield return new WaitForEndOfFrame();
-            yield return new WaitUntil(ReadyToPlay);
+            if (ReadyToPlay != null)
+                yield return new WaitUntil(ReadyToPlay);
             if (lostGameObjects.activeInHierarchy) lostGameObjects.SetActive(false);
             canClickEnd = false;
             currentTurn = 1;
