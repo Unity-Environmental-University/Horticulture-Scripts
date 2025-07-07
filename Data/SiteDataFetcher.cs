@@ -17,7 +17,9 @@ namespace _project.Scripts.Data
 
         private void Awake()
         {
-            StartCoroutine(GetPlantText(URL));
+            // Skip initial fetch when no plant type has been set (avoids 404 on empty selection)
+            if (!string.IsNullOrEmpty(plantType))
+                StartCoroutine(GetPlantText(URL));
         }
 
         public void SetPlant(PlantType plantTypeEnum)

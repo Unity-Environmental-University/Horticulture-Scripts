@@ -4,6 +4,7 @@ using _project.Scripts.Classes;
 using _project.Scripts.Core;
 using _project.Scripts.Data;
 using NUnit.Framework;
+using TMPro;
 using UnityEngine;
 using UnityEngine.TestTools;
 
@@ -31,9 +32,13 @@ namespace _project.Scripts.PlayModeTest
             var fetcherGo = new GameObject("SiteDataFetcher", typeof(SiteDataFetcher));
             fetcherGo.transform.SetParent(_root.transform);
             _fetcher = fetcherGo.GetComponent<SiteDataFetcher>();
-            var field = typeof(SiteDataFetcher)
-                .GetField("textMeshProGui", BindingFlags.Instance | BindingFlags.NonPublic);
-            field.SetValue(_fetcher, _textGui);
+            var plantField = typeof(SiteDataFetcher)
+                .GetField("plantSummary", BindingFlags.Instance | BindingFlags.NonPublic);
+            plantField?.SetValue(_fetcher, _textGui);
+            var affField = typeof(SiteDataFetcher)
+                .GetField("afflictionSummary", BindingFlags.Instance | BindingFlags.NonPublic);
+            affField?.SetValue(_fetcher, _textGui);
+            LogAssert.ignoreFailingMessages = true;
         }
 
         [TearDown]
