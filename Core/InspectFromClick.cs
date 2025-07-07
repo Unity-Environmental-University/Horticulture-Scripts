@@ -97,8 +97,7 @@ namespace _project.Scripts.Core
                 if (fetcher != null)
                 {
                     fetcher.SetPlant(plantController.type);
-                    if (plantController.CurrentAfflictions.Any())
-                        fetcher.SetAffliction(plantController.CurrentAfflictions.First());
+                    fetcher.SetAffliction(plantController.CurrentAfflictions.FirstOrDefault());
                 }
             }
 
