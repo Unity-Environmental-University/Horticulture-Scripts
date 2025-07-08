@@ -7,6 +7,7 @@ namespace _project.Scripts.Data
 {
     public class UserQualitySettings : MonoBehaviour
     {
+        private const string QualityLevelPrefKey = "QualityLevel";
         public UIDocument uiDocument;
 
         [SerializeField] private MenuManager menuManager;
@@ -22,7 +23,7 @@ namespace _project.Scripts.Data
         private VisualElement _rootElement;
         private UIDocument _settingsUIDocument;
         private Slider _volumeSlider;
-        
+
         private void OnEnable()
         {
             // Get the root VisualElement from the UIDocument
@@ -40,14 +41,14 @@ namespace _project.Scripts.Data
             _displayModeDropdown = _rootElement.Q<DropdownField>("DisplayModeDropDown");
 
             // Register a callback for the done button to set the quality and hide the settings document
-            _doneButton.clicked += () => { menuManager.CloseSettingsMenu(); };
+            _doneButton.clicked += OnDoneButtonClicked;
 
             // Check to see if it's all there
-            if (_qualityRadioButtonGroup == null) Debug.LogError("No RadioButton Group found");
-            if (_doneButton == null) Debug.LogError("No Button found");
-            if (_volumeSlider == null) Debug.LogError("No Button found");
-            if (_resolutionDropdown == null) Debug.LogError("No Resolution dropdown found");
-            if (_displayModeDropdown == null) Debug.LogError("No DisplayMode dropdown found");
+            if (_qualityRadioButtonGroup == null) Debug.LogError("No RadioButtonGroup found");
+            if (_doneButton == null) Debug.LogError("No DoneButton found");
+            if (_volumeSlider == null) Debug.LogError("No VolumeSlider found");
+            if (_resolutionDropdown == null) Debug.LogError("No ResolutionDropdown found");
+            if (_displayModeDropdown == null) Debug.LogError("No DisplayModeDropdown found");
 
             var radioButtons = new (string Name, object Value)[]
             {
@@ -61,7 +62,8 @@ namespace _project.Scripts.Data
                     Debug.LogError($"{rb.Name} was not found");
 
             // Load saved quality preference (if any)
-            var savedQuality = PlayerPrefs.GetInt("QualityLevel", -1);
+            // ReSharper disable once UnusedVariable
+            var savedQuality = PlayerPrefs.GetInt(QualityLevelPrefKey, -1);
 
 #if PLATFORM_IOS || PLATFORM_IPHONE || UNITY_ANDROID || UNITY_IOS
             {
@@ -97,7 +99,7 @@ namespace _project.Scripts.Data
                     _displayModeDropdown.value = currentMode;
                 else if (_displayModeDropdown.choices.Count > 0)
                     _displayModeDropdown.value = _displayModeDropdown.choices[0];
-                _displayModeDropdown.RegisterValueChangedCallback(evt => SetDisplayMode(evt.newValue));
+                _displayModeDropdown.RegisterValueChangedCallback(OnDisplayModeChanged);
             }
 
             // Initialize resolution dropdown to current screen size and register callback
@@ -108,7 +110,7 @@ namespace _project.Scripts.Data
                     _resolutionDropdown.value = currentRes;
                 else if (_resolutionDropdown.choices.Count > 0)
                     _resolutionDropdown.value = _resolutionDropdown.choices[0];
-                _resolutionDropdown.RegisterValueChangedCallback(evt => SetResolution(evt.newValue));
+                _resolutionDropdown.RegisterValueChangedCallback(OnResolutionChanged);
             }
 
             // Set the initially checked RadioButton based on the current quality level
@@ -124,14 +126,23 @@ namespace _project.Scripts.Data
 
 
             // Register a callback to handle changes in the selected quality level
-            _qualityRadioButtonGroup.RegisterValueChangedCallback(evt => SetQuality(evt.newValue));
+            _qualityRadioButtonGroup.RegisterValueChangedCallback(OnQualityChanged);
 
             if (_volumeSlider == null) return;
             {
                 _volumeSlider.value = AudioListener.volume;
 
-                _volumeSlider.RegisterValueChangedCallback(evt => SetVolume(evt.newValue));
+                _volumeSlider.RegisterValueChangedCallback(OnVolumeChanged);
             }
+        }
+
+        private void OnDisable()
+        {
+            _doneButton.clicked -= OnDoneButtonClicked;
+            _displayModeDropdown?.UnregisterValueChangedCallback(OnDisplayModeChanged);
+            _resolutionDropdown?.UnregisterValueChangedCallback(OnResolutionChanged);
+            _qualityRadioButtonGroup?.UnregisterValueChangedCallback(OnQualityChanged);
+            _volumeSlider?.UnregisterValueChangedCallback(OnVolumeChanged);
         }
 
         private static void SetVolume(float newVolume)
@@ -184,7 +195,7 @@ namespace _project.Scripts.Data
             if (qualityIndex >= 0)
             {
                 QualitySettings.SetQualityLevel(qualityIndex);
-                PlayerPrefs.SetInt("QualityLevel", qualityIndex);
+                PlayerPrefs.SetInt(QualityLevelPrefKey, qualityIndex);
                 PlayerPrefs.Save();
                 Debug.Log($"Quality level set to {qualityIndex} {QualitySettings.names[qualityIndex]}");
             }
@@ -192,6 +203,31 @@ namespace _project.Scripts.Data
             {
                 Debug.LogError($"Unrecognized quality button: {selectedName}");
             }
+        }
+
+        private void OnDoneButtonClicked()
+        {
+            menuManager.CloseSettingsMenu();
+        }
+
+        private static void OnDisplayModeChanged(ChangeEvent<string> evt)
+        {
+            SetDisplayMode(evt.newValue);
+        }
+
+        private static void OnResolutionChanged(ChangeEvent<string> evt)
+        {
+            SetResolution(evt.newValue);
+        }
+
+        private void OnQualityChanged(ChangeEvent<int> evt)
+        {
+            SetQuality(evt.newValue);
+        }
+
+        private static void OnVolumeChanged(ChangeEvent<float> evt)
+        {
+            SetVolume(evt.newValue);
         }
     }
 }

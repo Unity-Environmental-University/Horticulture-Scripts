@@ -11,7 +11,7 @@ namespace _project.Scripts.UI
         {
             // Get the Camera
             cam = GetComponent<Camera>();
-            if (!overlayCamera) overlayCamera = GameObject.FindWithTag("noPostCamera");
+            if (!overlayCamera) overlayCamera = GameObject.FindWithTag($"noPostCamera");
 
             if (Application.isMobilePlatform)
                 cam.fieldOfView =
