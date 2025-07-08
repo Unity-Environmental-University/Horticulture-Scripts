@@ -11,15 +11,20 @@ namespace _project.Scripts.UI
         {
             // Get the Camera
             cam = GetComponent<Camera>();
-            if (!overlayCamera) overlayCamera = GameObject.FindWithTag($"noPostCamera");
+            if (!overlayCamera) overlayCamera = GameObject.FindWithTag("noPostCamera");
 
-            // If iPadOS, then let's adjust the view to be better.
-            if (SystemInfo.deviceModel.Contains("iPad"))
+            if (Application.isMobilePlatform)
+                cam.fieldOfView =
+                    68; // Catch-all for Android devices to adjust the camera FOV to fit in all UI elements
+            if (SystemInfo.deviceModel
+                .Contains("iPad")) // If iPadOS, we adjust the camera FOV to fit in all UI elements
             {
                 cam.fieldOfView = 95;
                 transform.rotation = Quaternion.Euler(13f, -180f, 0f);
             }
-            else if (SystemInfo.deviceModel.Contains("iPhone"))
+            else if
+                (SystemInfo.deviceModel
+                 .Contains("iPhone")) // If iPhone//iOS, we adjust the camera FOV to fit in all UI elements
             {
                 cam.fieldOfView = 68;
             }
