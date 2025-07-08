@@ -21,7 +21,7 @@ namespace _project.Scripts.Data
         private VisualElement _rootElement;
         private UIDocument _settingsUIDocument;
         private Slider _volumeSlider;
-
+        
         private void OnEnable()
         {
             // Get the root VisualElement from the UIDocument
@@ -59,10 +59,18 @@ namespace _project.Scripts.Data
                 if (rb.Value == null)
                     Debug.LogError($"{rb.Name} was not found");
 
-            // if not mobile platform, hide the mobile button option
-            _mobileQualityRadioButton.style.display =
-                !Application.isMobilePlatform ? DisplayStyle.None : DisplayStyle.Flex;
-
+#if PLATFORM_IOS || PLATFORM_IPHONE || UNITY_ANDROID || UNITY_IOS
+            {
+                if (_mobileQualityRadioButton != null) _mobileQualityRadioButton.style.display = DisplayStyle.Flex;
+                _mobileQualityRadioButton?.SetValueWithoutNotify(true);
+                if (_resolutionDropdown != null) _resolutionDropdown.style.display = DisplayStyle.None;
+                if (_displayModeDropdown != null) _displayModeDropdown.style.display = DisplayStyle.None;
+            }
+#else
+            {
+                _mobileQualityRadioButton.style.display = DisplayStyle.None;
+            }
+#endif
 
             // Initialize display mode dropdown to current fullscreen mode and register callback
             if (_displayModeDropdown != null)
