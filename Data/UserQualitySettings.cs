@@ -61,10 +61,15 @@ namespace _project.Scripts.Data
 
 #if PLATFORM_IOS || PLATFORM_IPHONE || UNITY_ANDROID || UNITY_IOS
             {
+                // Adjust UI to reflect the platform
                 if (_mobileQualityRadioButton != null) _mobileQualityRadioButton.style.display = DisplayStyle.Flex;
-                _mobileQualityRadioButton?.SetValueWithoutNotify(true);
                 if (_resolutionDropdown != null) _resolutionDropdown.style.display = DisplayStyle.None;
                 if (_displayModeDropdown != null) _displayModeDropdown.style.display = DisplayStyle.None;
+                
+                // If we're on mobile, set Mobile quality
+                const int mobileLevelIndex = 4;
+                SetQuality(mobileLevelIndex);
+                if (_qualityRadioButtonGroup != null) _qualityRadioButtonGroup.value = mobileLevelIndex;
             }
 #else
             {
