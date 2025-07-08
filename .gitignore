@@ -13,3 +13,4 @@ Data/PrivateData.cs
 
 # Un-Needed Files
 Scripts.asmdef
+/package.json
