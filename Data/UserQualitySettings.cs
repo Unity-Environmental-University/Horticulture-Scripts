@@ -9,6 +9,7 @@ namespace _project.Scripts.Data
         public UIDocument uiDocument;
 
         [SerializeField] private MenuManager menuManager;
+        private DropdownField _displayModeDropdown;
 
         private Button _doneButton;
         private RadioButton _highQualityRadioButton;
@@ -16,6 +17,7 @@ namespace _project.Scripts.Data
         private RadioButton _mediumQualityRadioButton;
         private RadioButton _mobileQualityRadioButton;
         private RadioButtonGroup _qualityRadioButtonGroup;
+        private DropdownField _resolutionDropdown;
         private VisualElement _rootElement;
         private UIDocument _settingsUIDocument;
         private Slider _volumeSlider;
@@ -33,18 +35,18 @@ namespace _project.Scripts.Data
             _highQualityRadioButton = _qualityRadioButtonGroup.Q<RadioButton>("HighQualityRadioButton");
             _doneButton = _rootElement.Q<Button>("DoneButton");
             _volumeSlider = _rootElement.Q<Slider>("VolumeSlider");
+            _resolutionDropdown = _rootElement.Q<DropdownField>("ResolutionDropDown");
+            _displayModeDropdown = _rootElement.Q<DropdownField>("DisplayModeDropDown");
 
             // Register a callback for the done button to set the quality and hide the settings document
-            _doneButton.clicked += () =>
-            {
-                //SetQuality(_qualityRadioButtonGroup.value);
-                menuManager.CloseSettingsMenu();
-            };
+            _doneButton.clicked += () => { menuManager.CloseSettingsMenu(); };
 
             // Check to see if it's all there
             if (_qualityRadioButtonGroup == null) Debug.LogError("No RadioButton Group found");
             if (_doneButton == null) Debug.LogError("No Button found");
             if (_volumeSlider == null) Debug.LogError("No Button found");
+            if (_resolutionDropdown == null) Debug.LogError("No Resolution dropdown found");
+            if (_displayModeDropdown == null) Debug.LogError("No DisplayMode dropdown found");
 
             var radioButtons = new (string Name, object Value)[]
             {
@@ -61,6 +63,33 @@ namespace _project.Scripts.Data
             _mobileQualityRadioButton.style.display =
                 !Application.isMobilePlatform ? DisplayStyle.None : DisplayStyle.Flex;
 
+
+            // Initialize display mode dropdown to current fullscreen mode and register callback
+            if (_displayModeDropdown != null)
+            {
+                var currentMode = Screen.fullScreenMode switch
+                {
+                    FullScreenMode.FullScreenWindow => "Windowed FullScreen",
+                    FullScreenMode.ExclusiveFullScreen => "FullScreen Exclusive",
+                    _ => "Windowed"
+                };
+                if (_displayModeDropdown.choices.Contains(currentMode))
+                    _displayModeDropdown.value = currentMode;
+                else if (_displayModeDropdown.choices.Count > 0)
+                    _displayModeDropdown.value = _displayModeDropdown.choices[0];
+                _displayModeDropdown.RegisterValueChangedCallback(evt => SetDisplayMode(evt.newValue));
+            }
+
+            // Initialize resolution dropdown to current screen size and register callback
+            if (_resolutionDropdown != null)
+            {
+                var currentRes = $"{Screen.width}x{Screen.height}";
+                if (_resolutionDropdown.choices.Contains(currentRes))
+                    _resolutionDropdown.value = currentRes;
+                else if (_resolutionDropdown.choices.Count > 0)
+                    _resolutionDropdown.value = _resolutionDropdown.choices[0];
+                _resolutionDropdown.RegisterValueChangedCallback(evt => SetResolution(evt.newValue));
+            }
 
             // Set the initially checked RadioButton based on the current quality level
             if (_qualityRadioButtonGroup == null) return;
@@ -81,6 +110,33 @@ namespace _project.Scripts.Data
         {
             AudioListener.volume = newVolume;
             Debug.Log($"Volume set to {newVolume}");
+        }
+
+        // Method to change screen resolution when the dropdown value changes
+        private static void SetResolution(string resolution)
+        {
+            var parts = resolution.Split('x');
+            if (parts.Length != 2 || !int.TryParse(parts[0], out var w) || !int.TryParse(parts[1], out var h))
+            {
+                Debug.LogError($"Invalid resolution format: {resolution}");
+                return;
+            }
+
+            Screen.SetResolution(w, h, Screen.fullScreen);
+            Debug.Log($"Resolution set to {w}x{h}");
+        }
+
+        // Method to change display mode when the dropdown value changes
+        private static void SetDisplayMode(string displayMode)
+        {
+            var mode = displayMode switch
+            {
+                "Windowed FullScreen" => FullScreenMode.FullScreenWindow,
+                "FullScreen Exclusive" => FullScreenMode.ExclusiveFullScreen,
+                _ => FullScreenMode.Windowed
+            };
+            Screen.fullScreenMode = mode;
+            Debug.Log($"Display mode set to {displayMode}");
         }
 
         // Method to change the quality setting when a new RadioButton is selected
