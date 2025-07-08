@@ -1,3 +1,4 @@
+using System;
 using _project.Scripts.UI;
 using UnityEngine;
 using UnityEngine.UIElements;
@@ -59,17 +60,23 @@ namespace _project.Scripts.Data
                 if (rb.Value == null)
                     Debug.LogError($"{rb.Name} was not found");
 
+            // Load saved quality preference (if any)
+            var savedQuality = PlayerPrefs.GetInt("QualityLevel", -1);
+
 #if PLATFORM_IOS || PLATFORM_IPHONE || UNITY_ANDROID || UNITY_IOS
             {
                 // Adjust UI to reflect the platform
                 if (_mobileQualityRadioButton != null) _mobileQualityRadioButton.style.display = DisplayStyle.Flex;
+                if (_highQualityRadioButton != null) _highQualityRadioButton.style.display = DisplayStyle.None;
                 if (_resolutionDropdown != null) _resolutionDropdown.style.display = DisplayStyle.None;
                 if (_displayModeDropdown != null) _displayModeDropdown.style.display = DisplayStyle.None;
                 
-                // If we're on mobile, set Mobile quality
-                const int mobileLevelIndex = 4;
-                SetQuality(mobileLevelIndex);
-                if (_qualityRadioButtonGroup != null) _qualityRadioButtonGroup.value = mobileLevelIndex;
+                // If no saved preference, set default to Mobile quality
+                var mobileQualityIndex = Array.IndexOf(QualitySettings.names, "Mobile");
+                if (mobileQualityIndex < 0)
+                    mobileQualityIndex = QualitySettings.names.Length - 1;
+                if (savedQuality < 0)
+                    SetQuality(mobileQualityIndex);
             }
 #else
             {
@@ -106,7 +113,15 @@ namespace _project.Scripts.Data
 
             // Set the initially checked RadioButton based on the current quality level
             if (_qualityRadioButtonGroup == null) return;
-            _qualityRadioButtonGroup.value = QualitySettings.GetQualityLevel();
+            _qualityRadioButtonGroup.value = QualitySettings.names[QualitySettings.GetQualityLevel()] switch
+            {
+                "High" => _qualityRadioButtonGroup.IndexOf(_highQualityRadioButton),
+                "Medium" => _qualityRadioButtonGroup.IndexOf(_mediumQualityRadioButton),
+                "Low" => _qualityRadioButtonGroup.IndexOf(_lowQualityRadioButton),
+                "Mobile" => _qualityRadioButtonGroup.IndexOf(_mobileQualityRadioButton),
+                _ => 0
+            };
+
 
             // Register a callback to handle changes in the selected quality level
             _qualityRadioButtonGroup.RegisterValueChangedCallback(evt => SetQuality(evt.newValue));
@@ -153,11 +168,30 @@ namespace _project.Scripts.Data
         }
 
         // Method to change the quality setting when a new RadioButton is selected
-        private static void SetQuality(int newQualityLevel)
+        private void SetQuality(int radioIndex)
         {
-            QualitySettings.SetQualityLevel(newQualityLevel);
-            Debug.Log($"Quality level set to {newQualityLevel}" + " " +
-                      QualitySettings.names[QualitySettings.GetQualityLevel()]);
+            var selectedName = _qualityRadioButtonGroup[radioIndex].name;
+
+            var qualityIndex = selectedName switch
+            {
+                "HighQualityRadioButton" => Array.IndexOf(QualitySettings.names, "High"),
+                "MediumQualityRadioButton" => Array.IndexOf(QualitySettings.names, "Medium"),
+                "LowQualityRadioButton" => Array.IndexOf(QualitySettings.names, "Low"),
+                "MobileQualityRadioButton" => Array.IndexOf(QualitySettings.names, "Mobile"),
+                _ => -1
+            };
+
+            if (qualityIndex >= 0)
+            {
+                QualitySettings.SetQualityLevel(qualityIndex);
+                PlayerPrefs.SetInt("QualityLevel", qualityIndex);
+                PlayerPrefs.Save();
+                Debug.Log($"Quality level set to {qualityIndex} {QualitySettings.names[qualityIndex]}");
+            }
+            else
+            {
+                Debug.LogError($"Unrecognized quality button: {selectedName}");
+            }
         }
     }
 }
