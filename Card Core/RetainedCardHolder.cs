@@ -125,6 +125,8 @@ namespace _project.Scripts.Card_Core
 
                 _deckManager.SelectedACard = HeldCard;
                 _deckManager.selectedACardClick3D = click3D;
+                CardGameMaster.Instance.playerHandAudioSource.PlayOneShot(
+                    CardGameMaster.Instance.soundSystem.selectCard);
             }
         }
 
