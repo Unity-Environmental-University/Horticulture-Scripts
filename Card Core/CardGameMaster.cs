@@ -24,19 +24,27 @@ namespace _project.Scripts.Card_Core
     [RequireComponent(typeof(TurnController))]
     public class CardGameMaster : MonoBehaviour
     {
-        public bool isInspecting;
+        [Header("FOR DEBUGGING ONLY")]
+        [Tooltip("Turning this off skips Most Story elements. ONLY SET THIS TO FALSE DURING DEVELOPMENT")]
         public bool isSequencingEnabled;
+        [Space (20)]
+        public bool isInspecting;
         public bool debuggingCardClass;
+        [Header("Major Game Components")]
         public DeckManager deckManager;
         public ScoreManager scoreManager;
         public TurnController turnController;
         public ShopManager shopManager;
         public SoundSystemMaster soundSystem;
         public AudioSource playerHandAudioSource;
+        [Space(5)]
+        [Header("Objects")]
         public Volume postProcessVolume;
         public EventSystem eventSystem;
         public GameObject inspectingInfoPanels;
         
+        [Space(5)]
+        [Header("Text Items")]
         [CanBeNull] public TextMeshProUGUI shopMoneyText;
         [CanBeNull] public TextMeshPro moneysText;
         [CanBeNull] public TextMeshPro turnText;
@@ -45,6 +53,7 @@ namespace _project.Scripts.Card_Core
         [CanBeNull] public TextMeshPro treatmentCostText;
         [CanBeNull] public TextMeshPro potentialProfitText;
 
+        [Header("Object Arrays/Lists")]
         public List<PlacedCardHolder> cardHolders;
         public static CardGameMaster Instance { get; private set; }
 
@@ -78,7 +87,13 @@ namespace _project.Scripts.Card_Core
 
             Instance = this;
         }
+#if !UNITY_EDITOR 
 
+        private void Start()
+        {
+            isSequencingEnabled = true;
+        }
+#endif
         /// <summary>
         ///     Destroys the GameObject this script is attached to at runtime.
         ///     This action removes the instance of CardGameMaster from the scene,
