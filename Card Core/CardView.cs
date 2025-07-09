@@ -53,6 +53,8 @@ namespace _project.Scripts.Card_Core
             _deckManager.SelectedACard = _originalCard;
             _originalCard.Selected();
             clickedCard.selected = true;
+            CardGameMaster.Instance.playerHandAudioSource.PlayOneShot(
+                CardGameMaster.Instance.soundSystem.selectCard);
         }
     }
 }
