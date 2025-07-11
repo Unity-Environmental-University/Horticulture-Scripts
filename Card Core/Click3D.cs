@@ -199,7 +199,7 @@ namespace _project.Scripts.Card_Core
         /// </returns>
         private IEnumerator AnimateCard()
         {
-            if (click3DGloballyDisabled || isRetainedItem) yield return null;
+            if (click3DGloballyDisabled) yield return null;
             // Define fixed target values relative to the original state.
             var targetScale = _originalScale * scaleUp;
             var targetPos = _originalPos + new Vector3(0f, popHeight, 0f);
