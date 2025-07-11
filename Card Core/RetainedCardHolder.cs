@@ -13,11 +13,13 @@ namespace _project.Scripts.Card_Core
         public ICard HeldCard { get; private set; }
         public bool hasPaidForCard;
         public bool isCardLocked;
+        private MeshRenderer _buttonRenderer;
 
         private bool HasCard => HeldCard != null;
 
         private void Start()
         {
+            _buttonRenderer = GetComponentInChildren<MeshRenderer>(true);
             _deckManager = CardGameMaster.Instance.deckManager;
         }
 
@@ -62,8 +64,7 @@ namespace _project.Scripts.Card_Core
                 click3D.cardView = cardView;
                 click3D.isEnabled = true;
                 click3D.selected = false;
-                // disable pop-up/resize on hover for retained cards
-                //click3D.isRetainedItem = true;
+                click3D.isRetainedItem = true;
                 click3D.RefreshState();
             }
             
@@ -206,9 +207,8 @@ namespace _project.Scripts.Card_Core
                 cardGoClone = null;
             }
 
-            var buttonRenderer = GetComponentInChildren<MeshRenderer>(true);
-            if (buttonRenderer)
-                buttonRenderer.enabled = true;
+            if (_buttonRenderer)
+                _buttonRenderer.enabled = true;
         }
     }
 }

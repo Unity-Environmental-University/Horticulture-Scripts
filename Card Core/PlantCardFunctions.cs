@@ -86,6 +86,8 @@ namespace _project.Scripts.Card_Core
             {
                 if (!cardHolder || !cardHolder.HoldingCard) continue;
 
+                var retainedSlot = FindFirstObjectByType<RetainedCardHolder>(FindObjectsInactive.Include);
+                
                 var cardView = cardHolder.placedCardView;
                 if (!cardView) continue;
 
@@ -107,6 +109,7 @@ namespace _project.Scripts.Card_Core
                 if (CardGameMaster.Instance.debuggingCardClass) 
                     Debug.Log($"Applied treatment {actionCard.Treatment} from card {actionCard.Name} to Plant {targetPlant.name}");
 
+                if (cardHolder.placedCardClick3D.isRetainedItem) retainedSlot.ClearHeldCard();
                 ClearCardHolder(cardHolder);
             }
         }
