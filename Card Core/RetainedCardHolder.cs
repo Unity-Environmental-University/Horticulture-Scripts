@@ -62,6 +62,8 @@ namespace _project.Scripts.Card_Core
                 click3D.cardView = cardView;
                 click3D.isEnabled = true;
                 click3D.selected = false;
+                // disable pop-up/resize on hover for retained cards
+                //click3D.isRetainedItem = true;
                 click3D.RefreshState();
             }
             
@@ -180,6 +182,8 @@ namespace _project.Scripts.Card_Core
                 click3D.cardView = cardView;
                 click3D.isEnabled = true;
                 click3D.selected = false;
+                // disable pop-up/resize on hover for retained cards
+                click3D.handItem = false;
                 click3D.RefreshState();
             }
 

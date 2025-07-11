@@ -1,6 +1,7 @@
 using System.Collections;
 using _project.Scripts.Core;
 using Unity.Serialization;
+using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.InputSystem;
@@ -18,6 +19,8 @@ namespace _project.Scripts.Card_Core
 
         [Tooltip("If True: Hovering over a card will pop it up a bit. If False: item will highlight on hover")]
         public bool handItem;
+        
+        [DoNotSerialize] public bool isRetainedItem;
 
         [Tooltip("Default: 0.2 -- How fast the card pops up")]
         public float animTime = 0.2f;
@@ -120,7 +123,7 @@ namespace _project.Scripts.Card_Core
                 _objectRenderer.SetPropertyBlock(_sharedPropertyBlock);
                 return;
             }
-
+            
             // Animate pop-up and scale-up
             StopAllCoroutines();
             StartCoroutine(AnimateCard());
@@ -196,7 +199,7 @@ namespace _project.Scripts.Card_Core
         /// </returns>
         private IEnumerator AnimateCard()
         {
-            if (click3DGloballyDisabled) yield return null;
+            if (click3DGloballyDisabled || isRetainedItem) yield return null;
             // Define fixed target values relative to the original state.
             var targetScale = _originalScale * scaleUp;
             var targetPos = _originalPos + new Vector3(0f, popHeight, 0f);
