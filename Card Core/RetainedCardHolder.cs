@@ -1,4 +1,6 @@
+using System.Collections;
 using _project.Scripts.Classes;
+using DG.Tweening;
 using UnityEngine;
 
 namespace _project.Scripts.Card_Core
@@ -127,7 +129,15 @@ namespace _project.Scripts.Card_Core
                 _deckManager.selectedACardClick3D = click3D;
                 CardGameMaster.Instance.playerHandAudioSource.PlayOneShot(
                     CardGameMaster.Instance.soundSystem.selectCard);
+
+                StartCoroutine(AnimateCard());
             }
+        }
+
+        private IEnumerator AnimateCard(float animationDuration = 0.2f)
+        {
+            cardGoClone.transform.DOScale(Vector3.one, animationDuration);
+            yield return new WaitForSeconds(animationDuration);
         }
 
         private void ShowCard()
