@@ -4,7 +4,7 @@ using _project.Scripts.Audio;
 using JetBrains.Annotations;
 using TMPro;
 using UnityEngine;
-using UnityEngine.EventSystems;
+using UnityEngine.InputSystem.UI;
 using UnityEngine.Rendering;
 
 namespace _project.Scripts.Card_Core
@@ -40,7 +40,7 @@ namespace _project.Scripts.Card_Core
         [Space(5)]
         [Header("Objects")]
         public Volume postProcessVolume;
-        public EventSystem eventSystem;
+        public InputSystemUIInputModule uiInputModule;
         public GameObject inspectingInfoPanels;
         
         [Space(5)]

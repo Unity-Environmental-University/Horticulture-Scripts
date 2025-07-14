@@ -1,7 +1,6 @@
 using _project.Scripts.Card_Core;
 using TMPro;
 using UnityEngine;
-using UnityEngine.InputSystem.UI;
 using UnityEngine.UI;
 
 namespace _project.Scripts.UI
@@ -60,8 +59,7 @@ namespace _project.Scripts.UI
         // ReSharper disable once MemberCanBeMadeStatic.Local
         private void ToggleUiInput()
         {
-            var inputModule = CardGameMaster.Instance.eventSystem.GetComponent<InputSystemUIInputModule>();
-            inputModule.enabled = !inputModule.enabled;
+            CardGameMaster.Instance.uiInputModule.enabled = !CardGameMaster.Instance.uiInputModule.enabled;
         }
 
         public void ShowTutorialOne()
