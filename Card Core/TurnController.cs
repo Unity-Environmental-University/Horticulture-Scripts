@@ -18,6 +18,7 @@ namespace _project.Scripts.Card_Core
         public int level;
         public int moneyGoal;
         public int currentTurn;
+        public int currentTutorialTurn;
         public int totalTurns;
         public int currentRound;
         public bool canClickEnd;
@@ -83,7 +84,7 @@ namespace _project.Scripts.Card_Core
             yield return new WaitForSeconds(2f);
             try
             {
-                if (level == 0 && CardGameMaster.Instance.isSequencingEnabled) _deckManager.PlaceTutorialPlants();
+                if (level == 0 && CardGameMaster.Instance.isSequencingEnabled){ _deckManager.PlaceTutorialPlants();}
                 else _deckManager.PlacePlants();
             }
             catch (Exception e)
@@ -169,6 +170,8 @@ namespace _project.Scripts.Card_Core
                 StartCoroutine(BeginTurnSequence());
                 return;
             }
+            
+            if (level is 0) currentTutorialTurn++;
 
             // Get an array of plant controllers
             var plantControllers = _deckManager.plantLocations

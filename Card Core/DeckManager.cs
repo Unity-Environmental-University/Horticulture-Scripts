@@ -46,13 +46,16 @@ namespace _project.Scripts.Card_Core
         private static readonly List<ICard> TutorialActionDeck = new()
         {
             new NeemOilBasic(),
-            new NeemOilBasic(),
             new FungicideBasic(),
-            new FungicideBasic(),
-            new InsecticideBasic(),
             new InsecticideBasic(),
             new SoapyWaterBasic(),
-            new SoapyWaterBasic()
+            new Panacea(),
+            
+            new NeemOilBasic(),
+            new FungicideBasic(),
+            new InsecticideBasic(),
+            new SoapyWaterBasic(),
+            new Panacea(),
         };
         
         private static readonly List<ICard> TutorialPlantDeck = new()
@@ -332,12 +335,33 @@ namespace _project.Scripts.Card_Core
             if (plantLocations == null || plantLocations.Count == 0) return;
 
             ClearAllPlants();
-            // _plantHand.DeckRandomDraw();
-            // ShuffleDeck(_plantHand.Deck);
-            
+            Debug.Log("tut turn" + CardGameMaster.Instance.turnController.currentTutorialTurn);
+            switch (CardGameMaster.Instance.turnController.currentTutorialTurn)
+            {
+                case 0:
+                    // just coleus
+                    break;
+                case 1:
+                    TutorialPlantDeck.Add(new ChrysanthemumCard());
+                    break;
+                case 2:
+                    TutorialPlantDeck.Add(new CucumberCard());
+                    TutorialAfflictionDeck.Add(new MealyBugsCard());
+                    break;
+                case 3:
+                    TutorialPlantDeck.Add(new PepperCard());
+                    TutorialAfflictionDeck.Add(new MildewCard());
+                    break;
+                case 4:
+                    TutorialAfflictionDeck.Add(new ThripsCard());
+                    break;
+            }
             _plantHand.Clear();
             foreach (var card in TutorialPlantDeck)
                 _plantHand.Add(card);
+            
+            Debug.Log("PlantHand: " + string.Join(", ", _plantHand.ConvertAll(card => card.Name)));
+            Debug.Log("TUT PLANT HAND: " + string.Join(", ", TutorialPlantDeck.ConvertAll(card => card.Name)));
             StartCoroutine(PlacePlantsSequentially());
         }
 
@@ -356,8 +380,7 @@ namespace _project.Scripts.Card_Core
         public void DrawTutorialActionHand()
         {
             if (updatingActionDisplay) return;
-
-            // Populate the action hand with the tutorial action deck (unshuffled)
+            
             _actionHand.Clear();
 
             for (var i = 0; i < cardsDrawnPerTurn; i++)
