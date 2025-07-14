@@ -84,7 +84,8 @@ namespace _project.Scripts.Card_Core
             yield return new WaitForSeconds(2f);
             try
             {
-                _deckManager.PlacePlants();
+                if (level == 0 && CardGameMaster.Instance.isSequencingEnabled) _deckManager.PlaceTutorialPlants();
+                else _deckManager.PlacePlants();
             }
             catch (Exception e)
             {
@@ -94,9 +95,18 @@ namespace _project.Scripts.Card_Core
             yield return new WaitForSeconds(1f);
             try
             {
-                _deckManager.DrawAfflictions();
-                TryPlayQueuedEffects();
-                _deckManager.DrawActionHand();
+                if (level == 0  && CardGameMaster.Instance.isSequencingEnabled)
+                {
+                    _deckManager.DrawTutorialAfflictions();
+                    TryPlayQueuedEffects();
+                    _deckManager.DrawTutorialActionHand();
+                }
+                else
+                {
+                    _deckManager.DrawAfflictions();
+                    TryPlayQueuedEffects();
+                    _deckManager.DrawActionHand();
+                }
             }
             catch (Exception e)
             {

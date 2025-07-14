@@ -43,6 +43,28 @@ namespace _project.Scripts.Card_Core
             new Panacea()
         };
 
+        private static readonly List<ICard> TutorialActionDeck = new()
+        {
+            new NeemOilBasic(),
+            new NeemOilBasic(),
+            new FungicideBasic(),
+            new FungicideBasic(),
+            new InsecticideBasic(),
+            new InsecticideBasic(),
+            new SoapyWaterBasic(),
+            new SoapyWaterBasic()
+        };
+        
+        private static readonly List<ICard> TutorialPlantDeck = new()
+        {
+            new ColeusCard()
+        };
+
+        private static readonly List<ICard> TutorialAfflictionDeck = new()
+        {
+            new AphidsCard()
+        };
+
         #endregion
 
         #region Declare Decks
@@ -300,6 +322,99 @@ namespace _project.Scripts.Card_Core
                 _ => null
             };
         }
+
+        #endregion
+
+        #region Tutorial
+
+        public void PlaceTutorialPlants()
+        {
+            if (plantLocations == null || plantLocations.Count == 0) return;
+
+            ClearAllPlants();
+            // _plantHand.DeckRandomDraw();
+            // ShuffleDeck(_plantHand.Deck);
+            
+            _plantHand.Clear();
+            foreach (var card in TutorialPlantDeck)
+                _plantHand.Add(card);
+            StartCoroutine(PlacePlantsSequentially());
+        }
+
+        public void DrawTutorialAfflictions()
+        {
+            _afflictionHand.Clear();
+            foreach (var card in TutorialAfflictionDeck)
+                _afflictionHand.Add(card);
+
+            if (debug)
+                Debug.Log("Afflictions Drawn: " + string.Join(", ", _afflictionHand.ConvertAll(card => card.Name)));
+            ApplyAfflictionDeck();
+            CardGameMaster.Instance.scoreManager.CalculateTreatmentCost();
+        }
+        
+        public void DrawTutorialActionHand()
+        {
+            if (updatingActionDisplay) return;
+
+            // Discard current hand cards to discard pile
+            var cardsToDiscard = new List<ICard>(_actionHand);
+            foreach (var card in cardsToDiscard)
+                DiscardActionCard(card, true);
+
+            _actionHand.Clear();
+
+            if (_actionHand.Count > cardsDrawnPerTurn)
+            {
+                Debug.LogWarning("Hand overflow detected. Trimming hand.");
+                _actionHand.RemoveRange(cardsDrawnPerTurn, _actionHand.Count - cardsDrawnPerTurn);
+            }
+
+            // Clear all existing visualized cards
+            foreach (Transform child in actionCardParent)
+                Destroy(child.gameObject);
+
+            var cardsNeeded = cardsDrawnPerTurn;
+
+            while (cardsNeeded > 0)
+            {
+                // Recycle the discard pile only if deck empty and the discard pile has cards
+                if (_actionDeck.Count == 0 && _actionDiscardPile.Count > 0)
+                {
+                    if (debug)
+                        Debug.Log(
+                            $"Recycling {_actionDiscardPile.Count} cards from discard pile into action deck.");
+                    _actionDeck.AddRange(_actionDiscardPile);
+                    _actionDiscardPile.Clear();
+                    ShuffleDeck(_actionDeck);
+                    if (debug) Debug.Log("Recycled discard pile into action deck.");
+                }
+
+                if (_actionDeck.Count == 0)
+                {
+                    if (debug) Debug.Log("No cards left in action deck to draw.");
+                    break; // No more cards to draw
+                }
+
+                var drawnCard = _actionDeck[0];
+                _actionDeck.RemoveAt(0);
+                _actionHand.Add(drawnCard);
+                cardsNeeded--;
+            }
+
+            StartCoroutine(DisplayActionCardsSequence());
+
+            if (debug)
+                Debug.Log(
+                    $"Action Hand ({_actionHand.Count}): {string.Join(", ", _actionHand.ConvertAll(card => card.Name))}");
+            if (debug)
+                Debug.Log(
+                    $"Action Deck ({_actionDeck.Count}): {string.Join(", ", _actionDeck.ConvertAll(card => card.Name))}");
+            if (debug)
+                Debug.Log(
+                    $"Discard Pile ({_actionDiscardPile.Count}): {string.Join(", ", _actionDiscardPile.ConvertAll(card => card.Name))}");
+        }
+        
 
         #endregion
 
