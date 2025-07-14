@@ -55,7 +55,7 @@ namespace _project.Scripts.Card_Core
             new FungicideBasic(),
             new InsecticideBasic(),
             new SoapyWaterBasic(),
-            new Panacea(),
+            new Panacea()
         };
         
         private static readonly List<ICard> TutorialPlantDeck = new()
