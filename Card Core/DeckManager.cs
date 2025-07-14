@@ -357,62 +357,22 @@ namespace _project.Scripts.Card_Core
         {
             if (updatingActionDisplay) return;
 
-            // Discard current hand cards to discard pile
-            var cardsToDiscard = new List<ICard>(_actionHand);
-            foreach (var card in cardsToDiscard)
-                DiscardActionCard(card, true);
-
+            // Populate the action hand with the tutorial action deck (unshuffled)
             _actionHand.Clear();
 
-            if (_actionHand.Count > cardsDrawnPerTurn)
+            for (var i = 0; i < cardsDrawnPerTurn; i++)
             {
-                Debug.LogWarning("Hand overflow detected. Trimming hand.");
-                _actionHand.RemoveRange(cardsDrawnPerTurn, _actionHand.Count - cardsDrawnPerTurn);
+                _actionHand.Add(TutorialActionDeck[i % TutorialActionDeck.Count]);
             }
 
             // Clear all existing visualized cards
             foreach (Transform child in actionCardParent)
                 Destroy(child.gameObject);
 
-            var cardsNeeded = cardsDrawnPerTurn;
-
-            while (cardsNeeded > 0)
-            {
-                // Recycle the discard pile only if deck empty and the discard pile has cards
-                if (_actionDeck.Count == 0 && _actionDiscardPile.Count > 0)
-                {
-                    if (debug)
-                        Debug.Log(
-                            $"Recycling {_actionDiscardPile.Count} cards from discard pile into action deck.");
-                    _actionDeck.AddRange(_actionDiscardPile);
-                    _actionDiscardPile.Clear();
-                    ShuffleDeck(_actionDeck);
-                    if (debug) Debug.Log("Recycled discard pile into action deck.");
-                }
-
-                if (_actionDeck.Count == 0)
-                {
-                    if (debug) Debug.Log("No cards left in action deck to draw.");
-                    break; // No more cards to draw
-                }
-
-                var drawnCard = _actionDeck[0];
-                _actionDeck.RemoveAt(0);
-                _actionHand.Add(drawnCard);
-                cardsNeeded--;
-            }
-
             StartCoroutine(DisplayActionCardsSequence());
 
             if (debug)
-                Debug.Log(
-                    $"Action Hand ({_actionHand.Count}): {string.Join(", ", _actionHand.ConvertAll(card => card.Name))}");
-            if (debug)
-                Debug.Log(
-                    $"Action Deck ({_actionDeck.Count}): {string.Join(", ", _actionDeck.ConvertAll(card => card.Name))}");
-            if (debug)
-                Debug.Log(
-                    $"Discard Pile ({_actionDiscardPile.Count}): {string.Join(", ", _actionDiscardPile.ConvertAll(card => card.Name))}");
+                Debug.Log($"Tutorial Action Hand: {string.Join(", ", _actionHand.ConvertAll(card => card.Name))}");
         }
         
 
