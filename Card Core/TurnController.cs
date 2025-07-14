@@ -6,7 +6,6 @@ using _project.Scripts.Classes;
 using _project.Scripts.Core;
 using TMPro;
 using UnityEngine;
-using UnityEngine.InputSystem.UI;
 using Random = System.Random;
 
 namespace _project.Scripts.Card_Core
@@ -435,7 +434,7 @@ namespace _project.Scripts.Card_Core
         {
             winScreen.gameObject.SetActive(true);
             canClickEnd = false;
-            CardGameMaster.Instance.eventSystem.GetComponent<InputSystemUIInputModule>().enabled = true;
+            CardGameMaster.Instance.uiInputModule.enabled = true;
             winScreen.gameObject.GetComponentInChildren<TextMeshProUGUI>().text =
                 "Good job! You beat the first 2 levels in " + currentRound + " rounds and " + totalTurns +
                 " turns. That's [excellent!  / pretty good / average / " +

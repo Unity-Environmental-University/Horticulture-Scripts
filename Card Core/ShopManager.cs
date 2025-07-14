@@ -1,7 +1,6 @@
 using System.Collections.Generic;
 using _project.Scripts.Classes;
 using UnityEngine;
-using UnityEngine.InputSystem.UI;
 using Random = UnityEngine.Random;
 
 namespace _project.Scripts.Card_Core
@@ -10,7 +9,6 @@ namespace _project.Scripts.Card_Core
     {
         [SerializeField] private GameObject shopItemsParent;
         [SerializeField] private GameObject shopItemPrefab;
-        [SerializeField] private InputSystemUIInputModule inputModule;
         [SerializeField] private int numberOfCards = 4;
 
         public GameObject shopPanel;
@@ -27,14 +25,14 @@ namespace _project.Scripts.Card_Core
             GenerateShopInventory();
             shopPanel.SetActive(true);
             Click3D.click3DGloballyDisabled = true;
-            inputModule.enabled = true;
+            CardGameMaster.Instance.uiInputModule.enabled = true;
         }
 
         public void CloseShop()
         {
             shopPanel.SetActive(false);
             Click3D.click3DGloballyDisabled = false;
-            inputModule.enabled = false;
+            CardGameMaster.Instance.uiInputModule.enabled = false;
 
             if (CardGameMaster.Instance.turnController.level == 2)
                 CardGameMaster.Instance.turnController.ShowBetaScreen();
