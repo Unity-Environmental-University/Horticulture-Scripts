@@ -20,5 +20,12 @@ namespace _project.Scripts.Cinematics
             if (CardGameMaster.Instance.isSequencingEnabled)
                 director.Play();
         }
+
+        public void SkipScene()
+        {
+            if (director.state != PlayState.Playing) return;
+            director.Stop();
+            Debug.Log("Cutscene Skipped!");
+        }
     }
 }
