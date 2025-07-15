@@ -19,6 +19,7 @@ namespace _project.Scripts.Card_Core
         public int moneyGoal;
         public int currentTurn;
         public int currentTutorialTurn;
+        public int tutorialTurnCount = 6;
         public int totalTurns;
         public int currentRound;
         public bool canClickEnd;
@@ -52,6 +53,14 @@ namespace _project.Scripts.Card_Core
 
         private void Start()
         {
+            // Ensure tutorialTurnCount is set; default to 6 if unset in Inspector
+            if (tutorialTurnCount <= 0)
+            {
+                tutorialTurnCount = 6;
+                Debug.Log($"[TurnController] tutorialTurnCount not set; defaulting to {tutorialTurnCount}");
+            }
+            // Reset tutorial counter at the start of a new game session
+            currentTutorialTurn = 0;
             UpdateMoneyGoal();
             _scoreManager.ResetMoneys();
             if (ReadyToPlay != null)
@@ -82,10 +91,20 @@ namespace _project.Scripts.Card_Core
             currentRound++;
 
             yield return new WaitForSeconds(2f);
+            // DEBUG: tutorial flow status
+            Debug.Log($"[TurnController] BeginTurnSequence: level={level}, isSequencingEnabled={CardGameMaster.Instance.isSequencingEnabled}, currentTutorialTurn={currentTutorialTurn}, tutorialTurnCount={tutorialTurnCount}");
             try
             {
-                if (level == 0 && CardGameMaster.Instance.isSequencingEnabled){ _deckManager.PlaceTutorialPlants();}
-                else _deckManager.PlacePlants();
+                if (level == 0 && CardGameMaster.Instance.isSequencingEnabled && currentTutorialTurn < tutorialTurnCount)
+                {
+                    Debug.Log($"[TurnController] Tutorial: PlaceTutorialPlants (turn {currentTutorialTurn + 1}/{tutorialTurnCount})");
+                    _deckManager.PlaceTutorialPlants();
+                }
+                else
+                {
+                    Debug.Log("[TurnController] Regular: PlacePlants");
+                    _deckManager.PlacePlants();
+                }
             }
             catch (Exception e)
             {
@@ -93,16 +112,19 @@ namespace _project.Scripts.Card_Core
             }
 
             yield return new WaitForSeconds(1f);
+            // DEBUG: tutorial draw status
             try
             {
-                if (level == 0  && CardGameMaster.Instance.isSequencingEnabled)
+                if (level == 0 && CardGameMaster.Instance.isSequencingEnabled && currentTutorialTurn < tutorialTurnCount)
                 {
+                    Debug.Log($"[TurnController] Tutorial: DrawTutorialAfflictions/Action (turn {currentTutorialTurn + 1}/{tutorialTurnCount})");
                     _deckManager.DrawTutorialAfflictions();
                     TryPlayQueuedEffects();
                     _deckManager.DrawTutorialActionHand();
                 }
                 else
                 {
+                    Debug.Log("[TurnController] Regular: DrawAfflictions/Action");
                     _deckManager.DrawAfflictions();
                     TryPlayQueuedEffects();
                     _deckManager.DrawActionHand();
@@ -171,7 +193,8 @@ namespace _project.Scripts.Card_Core
                 return;
             }
             
-            if (level is 0) currentTutorialTurn++;
+            if (level is 0 && currentTutorialTurn < tutorialTurnCount)
+                currentTutorialTurn++;
 
             // Get an array of plant controllers
             var plantControllers = _deckManager.plantLocations
@@ -452,6 +475,8 @@ namespace _project.Scripts.Card_Core
 
         public void ResetGame()
         {
+            // Reset tutorial progress when restarting the game
+            currentTutorialTurn = 0;
             currentRound = 0;
             StartCoroutine(BeginTurnSequence());
             _scoreManager.ResetMoneys();
