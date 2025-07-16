@@ -7,6 +7,10 @@ namespace _project.Scripts.Cinematics
     public class CinematicDirector : MonoBehaviour
     {
         public static PlayableDirector director;
+        public PlayableAsset introTimeline;
+        public PlayableAsset aphidsTimeline;
+        
+        private CardGameMaster gameMaster;
 
         private void Awake()
         {
@@ -17,8 +21,9 @@ namespace _project.Scripts.Cinematics
 
         private void Start()
         {
-            if (CardGameMaster.Instance.isSequencingEnabled)
-                director.Play();
+            gameMaster = CardGameMaster.Instance;
+            if (gameMaster.isSequencingEnabled)
+                PlayScene(introTimeline);
         }
 
         public void SkipScene()
@@ -26,6 +31,12 @@ namespace _project.Scripts.Cinematics
             if (director.state != PlayState.Playing) return;
             director.Stop();
             Debug.Log("Cutscene Skipped!");
+        }
+        
+        public static void PlayScene(PlayableAsset timeline)
+        {
+            director.playableAsset = timeline;
+            director.Play();
         }
     }
 }

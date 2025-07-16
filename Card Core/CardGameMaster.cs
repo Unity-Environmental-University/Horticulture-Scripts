@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using _project.Scripts.Audio;
+using _project.Scripts.Cinematics;
 using JetBrains.Annotations;
 using TMPro;
 using UnityEngine;
@@ -36,6 +37,7 @@ namespace _project.Scripts.Card_Core
         public TurnController turnController;
         public ShopManager shopManager;
         public SoundSystemMaster soundSystem;
+        public CinematicDirector cinematicDirector;
         public AudioSource playerHandAudioSource;
         public AudioSource robotAudioSource;
         [Space(5)]
