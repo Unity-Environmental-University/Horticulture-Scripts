@@ -333,13 +333,14 @@ namespace _project.Scripts.Card_Core
         public void PlaceTutorialPlants()
         {
             if (plantLocations == null || plantLocations.Count == 0) return;
+            var cgm = CardGameMaster.Instance;
 
             ClearAllPlants();
-            Debug.Log("tut turn" + CardGameMaster.Instance.turnController.currentTutorialTurn);
-            switch (CardGameMaster.Instance.turnController.currentTutorialTurn)
+            Debug.Log("tut turn" + cgm.turnController.currentTutorialTurn);
+            switch (cgm.turnController.currentTutorialTurn)
             {
                 case 0:
-                    // just coleus
+                    cgm.playerHandAudioSource.PlayOneShot(cgm.soundSystem.florabotNarrationAphids);
                     break;
                 case 1:
                     TutorialPlantDeck.Add(new ChrysanthemumCard());
