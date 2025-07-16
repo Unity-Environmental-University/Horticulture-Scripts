@@ -37,6 +37,7 @@ namespace _project.Scripts.Card_Core
         public ShopManager shopManager;
         public SoundSystemMaster soundSystem;
         public AudioSource playerHandAudioSource;
+        public AudioSource robotAudioSource;
         [Space(5)]
         [Header("Objects")]
         public Volume postProcessVolume;

@@ -340,7 +340,7 @@ namespace _project.Scripts.Card_Core
             switch (cgm.turnController.currentTutorialTurn)
             {
                 case 0:
-                    cgm.playerHandAudioSource.PlayOneShot(cgm.soundSystem.florabotNarrationAphids);
+                    cgm.robotAudioSource.PlayOneShot(cgm.soundSystem.florabotNarrationAphids);
                     break;
                 case 1:
                     TutorialPlantDeck.Add(new ChrysanthemumCard());
