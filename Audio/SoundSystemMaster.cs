@@ -23,6 +23,9 @@ namespace _project.Scripts.Audio
         public AudioClip aphidsAfflicted;
         public AudioClip mealyBugsAfflicted;
         public AudioClip mildewAfflicted;
+        
+        [Header("Narration Clips")]
+        public AudioClip florabotNarrationAphids;
 
         public AudioClip GetInsectSound(PlantAfflictions.IAffliction affliction)
         {
