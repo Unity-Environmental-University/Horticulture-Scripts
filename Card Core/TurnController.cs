@@ -83,7 +83,7 @@ namespace _project.Scripts.Card_Core
             currentRound++;
 
             yield return new WaitForSeconds(2f);
-            
+
             // If we just finished the last tutorial turn, give a brief pause before regular game
             if (level == 0 && CardGameMaster.Instance.isSequencingEnabled && currentTutorialTurn >= TutorialTurnCount)
             {
@@ -91,11 +91,15 @@ namespace _project.Scripts.Card_Core
                 yield return new WaitForSeconds(2f);
                 _scoreManager.ResetMoneys();
             }
+
             try
             {
-                if (level == 0 && CardGameMaster.Instance.isSequencingEnabled && currentTutorialTurn < TutorialTurnCount)
+                if (level == 0 && CardGameMaster.Instance.isSequencingEnabled &&
+                    currentTutorialTurn < TutorialTurnCount)
                 {
-                    if (debugging) Debug.Log($"[TurnController] Tutorial: PlaceTutorialPlants (turn {currentTutorialTurn + 1}/{TutorialTurnCount})");
+                    if (debugging)
+                        Debug.Log(
+                            $"[TurnController] Tutorial: PlaceTutorialPlants (turn {currentTutorialTurn + 1}/{TutorialTurnCount})");
                     _deckManager.PlaceTutorialPlants();
                 }
                 else
@@ -110,12 +114,15 @@ namespace _project.Scripts.Card_Core
             }
 
             yield return new WaitForSeconds(1f);
-            
+
             try
             {
-                if (level == 0 && CardGameMaster.Instance.isSequencingEnabled && currentTutorialTurn < TutorialTurnCount)
+                if (level == 0 && CardGameMaster.Instance.isSequencingEnabled &&
+                    currentTutorialTurn < TutorialTurnCount)
                 {
-                    if (debugging) Debug.Log($"[TurnController] Tutorial: DrawTutorialAfflictions/Action (turn {currentTutorialTurn + 1}/{TutorialTurnCount})");
+                    if (debugging)
+                        Debug.Log(
+                            $"[TurnController] Tutorial: DrawTutorialAfflictions/Action (turn {currentTutorialTurn + 1}/{TutorialTurnCount})");
                     _deckManager.DrawTutorialAfflictions();
                     TryPlayQueuedEffects();
                     _deckManager.DrawTutorialActionHand();
