@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using _project.Scripts.Cinematics;
 using _project.Scripts.Classes;
 using _project.Scripts.Core;
 using Unity.Serialization;
@@ -340,7 +341,8 @@ namespace _project.Scripts.Card_Core
             switch (cgm.turnController.currentTutorialTurn)
             {
                 case 0:
-                    cgm.robotAudioSource.PlayOneShot(cgm.soundSystem.florabotNarrationAphids);
+                   // cgm.robotAudioSource.PlayOneShot(cgm.soundSystem.florabotNarrationAphids);
+                    CinematicDirector.PlayScene(cgm.cinematicDirector.aphidsTimeline);
                     break;
                 case 1:
                     TutorialPlantDeck.Add(new ChrysanthemumCard());
