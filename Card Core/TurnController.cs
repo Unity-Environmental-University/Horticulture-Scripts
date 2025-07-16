@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using _project.Scripts.Cinematics;
 using _project.Scripts.Classes;
 using _project.Scripts.Core;
 using TMPro;
@@ -115,30 +116,31 @@ namespace _project.Scripts.Card_Core
 
             yield return new WaitForSeconds(1f);
 
-            try
+            if (level == 0 && CardGameMaster.Instance.isSequencingEnabled &&
+                currentTutorialTurn < TutorialTurnCount)
             {
-                if (level == 0 && CardGameMaster.Instance.isSequencingEnabled &&
-                    currentTutorialTurn < TutorialTurnCount)
+                if (debugging)
+                    Debug.Log(
+                        $"[TurnController] Tutorial: DrawTutorialAfflictions/Action (turn {currentTutorialTurn + 1}/{TutorialTurnCount})");
+                _deckManager.DrawTutorialAfflictions();
+                TryPlayQueuedEffects();
+                // Play aphids cinematic after plants placed, before drawing action hand
+                if (currentTutorialTurn == 0)
                 {
-                    if (debugging)
-                        Debug.Log(
-                            $"[TurnController] Tutorial: DrawTutorialAfflictions/Action (turn {currentTutorialTurn + 1}/{TutorialTurnCount})");
-                    _deckManager.DrawTutorialAfflictions();
-                    TryPlayQueuedEffects();
-                    _deckManager.DrawTutorialActionHand();
+                    CinematicDirector.PlayScene(CardGameMaster.Instance.cinematicDirector.aphidsTimeline);
+                    yield return new WaitUntil(ReadyToPlay);
                 }
-                else
-                {
-                    if (debugging) Debug.Log("[TurnController] Regular: DrawAfflictions/Action");
-                    _deckManager.DrawAfflictions();
-                    TryPlayQueuedEffects();
-                    _deckManager.DrawActionHand();
-                }
+
+                _deckManager.DrawTutorialActionHand();
             }
-            catch (Exception e)
+            else
             {
-                throw new Exception(e.Message);
+                if (debugging) Debug.Log("[TurnController] Regular: DrawAfflictions/Action");
+                _deckManager.DrawAfflictions();
+                TryPlayQueuedEffects();
+                _deckManager.DrawActionHand();
             }
+
 
             yield return new WaitForSeconds(.5f);
             canClickEnd = true;
