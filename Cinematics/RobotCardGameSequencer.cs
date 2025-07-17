@@ -12,6 +12,7 @@ namespace _project.Scripts.Cinematics
         [SerializeField] private GameObject player;
         [SerializeField] private GameObject frontOfPlayer;
         [SerializeField] private Animation uiAnimator;
+        [SerializeField] private GameObject robotCameraObj;
 
         private void Start() => StartCoroutine(BeginCardGameSequence());
 
@@ -28,20 +29,17 @@ namespace _project.Scripts.Cinematics
             var clipName = uiAnimator.clip.name;
             uiAnimator[clipName].speed = 0;
             
-            robotController.currentLookTarget = player;
+            robotController.currentLookTarget = robotCameraObj;
             robotController.GoToNewLocation(frontOfPlayer.transform.position);
 
             yield return new WaitUntil(robotController.HasReachedDestination);
-
-            //robotController.animator.SetBool($"isGesturing", true);
-            //yield return new WaitForSeconds(robotController.animator.GetCurrentAnimatorStateInfo(0).length);
-            //robotController.animator.SetBool($"isGesturing", false);
             
             // Wait until the Timeline has concluded, then resume the UI Pop-in animation
             var turnController = CardGameMaster.Instance.turnController;
             yield return new WaitUntil(turnController.ReadyToPlay =
                 () => CinematicDirector.director.state != PlayState.Playing);
             uiAnimator[clipName].speed = 1;
+            robotController.currentLookTarget = player;
         }
     }
 }
