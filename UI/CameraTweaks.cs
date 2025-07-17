@@ -19,8 +19,8 @@ namespace _project.Scripts.UI
             if (SystemInfo.deviceModel
                 .Contains("iPad")) // If iPadOS, we adjust the camera FOV to fit in all UI elements
             {
-                cam.fieldOfView = 95;
-                transform.rotation = Quaternion.Euler(13f, -180f, 0f);
+                // cam.fieldOfView = 50;
+                // transform.rotation = Quaternion.Euler(13f, -180f, 0f);
             }
             else if
                 (SystemInfo.deviceModel
