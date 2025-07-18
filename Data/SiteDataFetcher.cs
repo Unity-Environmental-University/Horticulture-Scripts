@@ -1,4 +1,5 @@
 using System.Collections;
+using System.IO;
 using System.Text.RegularExpressions;
 using _project.Scripts.Classes;
 using _project.Scripts.Core;
@@ -8,6 +9,10 @@ using UnityEngine.Networking;
 
 namespace _project.Scripts.Data
 {
+    /// <summary>
+    /// Fetches plant and affliction description texts from a remote source,
+    /// caches them locally, and falls back to local cache or packaged assets when offline.
+    /// </summary>
     public class SiteDataFetcher : MonoBehaviour
     {
         private const string URL = PrivateData.RawGithubContent;
@@ -50,21 +55,58 @@ namespace _project.Scripts.Data
         private IEnumerator GetPlantText(string webURL)
         {
             var fileKey = UnityWebRequest.EscapeURL(plantType);
-            using var www = UnityWebRequest.Get(webURL + fileKey + ".txt");
+            var remoteUrl = webURL + fileKey + ".txt";
+            using var www = UnityWebRequest.Get(remoteUrl);
             yield return www.SendWebRequest();
 
             if (www.result is UnityWebRequest.Result.ProtocolError or UnityWebRequest.Result.ConnectionError)
             {
-                Debug.LogError(www.error);
-                Debug.LogError(webURL + fileKey + ".txt");
-                if (plantSummary) plantSummary.text = "Error Finding Plant Text";
+                Debug.LogWarning($"Remote plant text fetch failed: {www.error} [{remoteUrl}]");
+                // try persistent local copy
+                var localPath = Path.Combine(Application.persistentDataPath, fileKey + ".txt");
+                if (File.Exists(localPath))
+                {
+                    var url = "file://" + localPath;
+                    using var localReq = UnityWebRequest.Get(url);
+                    yield return localReq.SendWebRequest();
+                    if (localReq.result == UnityWebRequest.Result.Success)
+                    {
+                        plantSummary.text = localReq.downloadHandler.text;
+                        yield break;
+                    }
+                }
+                // try packaged fallback in StreamingAssets
+                var streamingPath = Path.Combine(Application.streamingAssetsPath, fileKey + ".txt");
+                using var streamReq = UnityWebRequest.Get("file://" + streamingPath);
+                yield return streamReq.SendWebRequest();
+                if (streamReq.result == UnityWebRequest.Result.Success)
+                {
+                    plantSummary.text = streamReq.downloadHandler.text;
+                }
+                else if (plantSummary)
+                {
+                    Debug.LogError($"Plant text not found locally: {streamingPath}");
+                    plantSummary.text = "Error Finding Plant Text";
+                }
             }
             else if (plantSummary)
             {
-                plantSummary.text = www.downloadHandler.text;
+                // remote succeeded: update UI and cache locally
+                var text = www.downloadHandler.text;
+                plantSummary.text = text;
+                try
+                {
+                    var localPath = Path.Combine(Application.persistentDataPath, fileKey + ".txt");
+                    File.WriteAllText(localPath, text);
+                }
+                catch (IOException ioe)
+                {
+                    Debug.LogWarning($"Failed to write plant text to local cache: {ioe.Message}");
+                }
             }
         }
 
+        // ReSharper disable Unity.PerformanceAnalysis
         /// <summary>
         ///     Coroutine to fetch affliction description text from the server.
         /// </summary>
@@ -73,18 +115,54 @@ namespace _project.Scripts.Data
             var baseName = affliction.Replace(" ", string.Empty);
             var hyphenName = Regex.Replace(baseName, "(?<!^)([A-Z])", "-$1");
             var fileKey = UnityWebRequest.EscapeURL(hyphenName);
-            using var www = UnityWebRequest.Get(webURL + fileKey + ".txt");
+            var remoteUrl = webURL + fileKey + ".txt";
+            using var www = UnityWebRequest.Get(remoteUrl);
             yield return www.SendWebRequest();
 
             if (www.result is UnityWebRequest.Result.ProtocolError or UnityWebRequest.Result.ConnectionError)
             {
-                Debug.LogError(www.error);
-                Debug.LogError(webURL + fileKey + ".txt");
-                if (afflictionSummary) afflictionSummary.text = "Error Finding Affliction Text";
+                Debug.LogWarning($"Remote affliction text fetch failed: {www.error} [{remoteUrl}]");
+                // try persistent local copy
+                var localPath = Path.Combine(Application.persistentDataPath, fileKey + ".txt");
+                if (File.Exists(localPath))
+                {
+                    var url = "file://" + localPath;
+                    using var localReq = UnityWebRequest.Get(url);
+                    yield return localReq.SendWebRequest();
+                    if (localReq.result == UnityWebRequest.Result.Success)
+                    {
+                        afflictionSummary.text = localReq.downloadHandler.text;
+                        yield break;
+                    }
+                }
+                // try packaged fallback in StreamingAssets
+                var streamingPath = Path.Combine(Application.streamingAssetsPath, fileKey + ".txt");
+                using var streamReq = UnityWebRequest.Get("file://" + streamingPath);
+                yield return streamReq.SendWebRequest();
+                if (streamReq.result == UnityWebRequest.Result.Success)
+                {
+                    afflictionSummary.text = streamReq.downloadHandler.text;
+                }
+                else if (afflictionSummary)
+                {
+                    Debug.LogError($"Affliction text not found locally: {streamingPath}");
+                    afflictionSummary.text = "Error Finding Affliction Text";
+                }
             }
             else if (afflictionSummary)
             {
-                afflictionSummary.text = www.downloadHandler.text;
+                // remote succeeded: update UI and cache locally
+                var text = www.downloadHandler.text;
+                afflictionSummary.text = text;
+                try
+                {
+                    var localPath = Path.Combine(Application.persistentDataPath, fileKey + ".txt");
+                    File.WriteAllText(localPath, text);
+                }
+                catch (IOException ioe)
+                {
+                    Debug.LogWarning($"Failed to write affliction text to local cache: {ioe.Message}");
+                }
             }
         }
     }
