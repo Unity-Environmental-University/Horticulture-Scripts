@@ -86,7 +86,7 @@ namespace _project.Scripts.Card_Core
             yield return new WaitForSeconds(2f);
 
             // If we just finished the last tutorial turn, give a brief pause before regular game
-            if (level == 0 && CardGameMaster.Instance.isSequencingEnabled && currentTutorialTurn >= TutorialTurnCount)
+            if (level == 0 && CardGameMaster.IsSequencingEnabled && currentTutorialTurn >= TutorialTurnCount)
             {
                 if (debugging) Debug.Log("[TurnController] Tutorial complete! Transitioning to the regular game...");
                 yield return new WaitForSeconds(2f);
@@ -95,7 +95,7 @@ namespace _project.Scripts.Card_Core
 
             try
             {
-                if (level == 0 && CardGameMaster.Instance.isSequencingEnabled &&
+                if (level == 0 && CardGameMaster.IsSequencingEnabled &&
                     currentTutorialTurn < TutorialTurnCount)
                 {
                     if (debugging)
@@ -116,7 +116,7 @@ namespace _project.Scripts.Card_Core
 
             yield return new WaitForSeconds(1f);
 
-            if (level == 0 && CardGameMaster.Instance.isSequencingEnabled &&
+            if (level == 0 && CardGameMaster.IsSequencingEnabled &&
                 currentTutorialTurn < TutorialTurnCount)
             {
                 if (debugging)
@@ -184,7 +184,7 @@ namespace _project.Scripts.Card_Core
             if (_deckManager.updatingActionDisplay || !canClickEnd) return;
 
             // During tutorial steps, money goal cannot end the level
-            if (!(level == 0 && CardGameMaster.Instance.isSequencingEnabled && currentTutorialTurn < TutorialTurnCount)
+            if (!(level == 0 && CardGameMaster.IsSequencingEnabled && currentTutorialTurn < TutorialTurnCount)
                 && ScoreManager.GetMoneys() >= moneyGoal)
             {
                 currentTurn++;

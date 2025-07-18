@@ -18,7 +18,7 @@ namespace _project.Scripts.Cinematics
 
         private IEnumerator BeginCardGameSequence()
         {
-            if (!CardGameMaster.Instance.isSequencingEnabled)
+            if (!CardGameMaster.IsSequencingEnabled)
             {
                 uiAnimator.Play();
                 yield break;

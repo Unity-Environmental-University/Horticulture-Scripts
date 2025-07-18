@@ -1,5 +1,6 @@
 using System.Collections;
 using _project.Scripts.Card_Core;
+using JetBrains.Annotations;
 using TMPro;
 using UnityEngine;
 using UnityEngine.EventSystems;
@@ -17,17 +18,32 @@ namespace _project.Scripts.UI
         public Button mainStartB;
         public bool isPaused;
         public float mobileUIScaleMult;
-
+        
         private AsyncOperation _preloadOperation;
 
+        [CanBeNull] public Toggle tutorialToggle;
         [SerializeField] private GameObject crosshair;
         [SerializeField] private GameObject menuCanvas;
 
-        public void Start()
+        private void Awake()
+        {
+            // Only initialize tutorial preference on first run; preserve user setting thereafter
+            if (!PlayerPrefs.HasKey("Tutorial"))
+            {
+                ToggleTutorial();
+            }
+        }
+
+        private void Start()
         {
             if (SceneManager.GetActiveScene().name == "Main") menuCanvas = null;
 
             if (versionText) versionText.text = "v" + Application.version;
+
+            if (PlayerPrefs.HasKey("Tutorial") && tutorialToggle != null)
+            {
+                tutorialToggle.isOn = PlayerPrefs.GetInt("Tutorial", 0) == 1;
+            }
 
 #if PLATFORM_IOS || PLATFORM_IPHONE || UNITY_ANDROID || UNITY_IOS
             {
@@ -81,6 +97,13 @@ namespace _project.Scripts.UI
                 EventSystem.current.SetSelectedGameObject(null);
                 // this prevents a button still being selected upon re-opening the pause menu
             }
+        }
+
+        public void ToggleTutorial()
+        {
+            if (!tutorialToggle) return;
+            PlayerPrefs.SetInt("Tutorial", tutorialToggle.isOn ? 1 : 0);
+            PlayerPrefs.Save();
         }
 
         public void OpenSettings()
