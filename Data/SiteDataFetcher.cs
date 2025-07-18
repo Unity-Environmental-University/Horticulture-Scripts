@@ -1,6 +1,7 @@
-using System.Collections;
+using System;
 using System.IO;
 using System.Text.RegularExpressions;
+using System.Threading.Tasks;
 using _project.Scripts.Classes;
 using _project.Scripts.Core;
 using TMPro;
@@ -10,14 +11,14 @@ using UnityEngine.Networking;
 namespace _project.Scripts.Data
 {
     /// <summary>
-    /// Fetches plant and affliction description texts from a remote source,
-    /// caches them locally, and falls back to local cache or packaged assets when offline.
+    ///     Fetches plant and affliction description texts from a remote source,
+    ///     caches them locally, and falls back to local cache or packaged assets when offline.
     /// </summary>
     public class SiteDataFetcher : MonoBehaviour
     {
-        private const string URL = PrivateData.RawGithubContent;
         [SerializeField] private TextMeshProUGUI plantSummary;
         [SerializeField] private TextMeshProUGUI afflictionSummary;
+        private const string URL = PrivateData.RawGithubContent;
         private string affliction;
         private string plantType;
 
@@ -25,79 +26,101 @@ namespace _project.Scripts.Data
         {
             // Skip initial fetch when no plant type has been set (avoids 404 on empty selection)
             if (!string.IsNullOrEmpty(plantType))
-                StartCoroutine(GetPlantText(URL));
+                _ = GetPlantTextAsync(URL);
         }
 
-        public void SetPlant(PlantType plantTypeEnum)
+        public async void SetPlant(PlantType plantTypeEnum)
         {
-            plantType = plantTypeEnum.ToString().Replace(" ", "-");
-            StartCoroutine(GetPlantText(URL));
+            try
+            {
+                plantType = plantTypeEnum.ToString().Replace(" ", "-");
+                await GetPlantTextAsync(URL);
+            }
+            catch (Exception e)
+            {
+                Debug.LogException(e);
+            }
         }
 
         /// <summary>
         ///     Fetch and display description text for a plant affliction.
         /// </summary>
-        public void SetAffliction(PlantAfflictions.IAffliction afflictionObj)
+        public async void SetAffliction(PlantAfflictions.IAffliction afflictionObj)
         {
-            if (afflictionObj == null)
+            try
             {
-                affliction = null;
-                if (afflictionSummary) afflictionSummary.text = string.Empty;
-                return;
+                if (afflictionObj == null)
+                {
+                    affliction = null;
+                    if (afflictionSummary) afflictionSummary.text = string.Empty;
+                    return;
+                }
+
+                affliction = afflictionObj.Name;
+                await GetAfflictionTextAsync(URL);
             }
-            affliction = afflictionObj.Name;
-            StartCoroutine(GetAfflictionText(URL));
+            catch (Exception e)
+            {
+                Debug.LogException(e);
+            }
         }
 
         /// <summary>
         ///     Coroutine to fetch plant description text from the server.
         /// </summary>
-        private IEnumerator GetPlantText(string webURL)
+        private async Task GetPlantTextAsync(string webURL)
         {
             var fileKey = UnityWebRequest.EscapeURL(plantType);
+            // If a packaged text asset exists in Resources/Descriptions, use it first
+            var plantResource = Resources.Load<TextAsset>($"Descriptions/{fileKey}");
+            if (plantResource != null)
+            {
+                Debug.LogWarning($"Loaded plant text from Resources: Descriptions/{fileKey}.txt");
+                if (plantSummary) plantSummary.text = plantResource.text;
+                return;
+            }
+            var cacheDir = Path.Combine(Application.persistentDataPath, "Descriptions");
+            var localCache = Path.Combine(cacheDir, fileKey + ".txt");
             var remoteUrl = webURL + fileKey + ".txt";
             using var www = UnityWebRequest.Get(remoteUrl);
-            yield return www.SendWebRequest();
+            await www.SendWebRequest();
 
             if (www.result is UnityWebRequest.Result.ProtocolError or UnityWebRequest.Result.ConnectionError)
             {
-                Debug.LogWarning($"Remote plant text fetch failed: {www.error} [{remoteUrl}]");
-                // try persistent local copy
-                var localPath = Path.Combine(Application.persistentDataPath, fileKey + ".txt");
-                if (File.Exists(localPath))
+                //Debug.LogWarning($"Remote plant text fetch failed: {www.error} [{remoteUrl}]");
+                // Try persistent cache
+                if (File.Exists(localCache))
                 {
-                    var url = "file://" + localPath;
-                    using var localReq = UnityWebRequest.Get(url);
-                    yield return localReq.SendWebRequest();
-                    if (localReq.result == UnityWebRequest.Result.Success)
-                    {
-                        plantSummary.text = localReq.downloadHandler.text;
-                        yield break;
-                    }
+                    Debug.LogWarning($"Loaded plant text from persistent cache: {localCache}");
+                    if (plantSummary) plantSummary.text = await File.ReadAllTextAsync(localCache);
+                    return;
                 }
-                // try packaged fallback in StreamingAssets
-                var streamingPath = Path.Combine(Application.streamingAssetsPath, fileKey + ".txt");
-                using var streamReq = UnityWebRequest.Get("file://" + streamingPath);
-                yield return streamReq.SendWebRequest();
-                if (streamReq.result == UnityWebRequest.Result.Success)
+
+                // Try packaged fallback
+                var streamingFile = Path.Combine(Application.streamingAssetsPath, fileKey + ".txt");
+                if (File.Exists(streamingFile))
                 {
-                    plantSummary.text = streamReq.downloadHandler.text;
+                    Debug.LogWarning($"Loaded plant text from StreamingAssets: {streamingFile}");
+                    if (plantSummary) plantSummary.text = await File.ReadAllTextAsync(streamingFile);
+                    return;
                 }
-                else if (plantSummary)
+
+                if (plantSummary)
                 {
-                    Debug.LogError($"Plant text not found locally: {streamingPath}");
+                    Debug.LogError($"Plant text not found locally: {streamingFile}");
                     plantSummary.text = "Error Finding Plant Text";
                 }
             }
-            else if (plantSummary)
+            else
             {
-                // remote succeeded: update UI and cache locally
+                Debug.LogWarning($"Loaded plant text from remote: {remoteUrl}");
+                // Remotely succeeded: update UI and cache locally
                 var text = www.downloadHandler.text;
-                plantSummary.text = text;
+                if (plantSummary) plantSummary.text = text;
                 try
                 {
-                    var localPath = Path.Combine(Application.persistentDataPath, fileKey + ".txt");
-                    File.WriteAllText(localPath, text);
+                    Directory.CreateDirectory(cacheDir);
+                    await File.WriteAllTextAsync(localCache, text);
                 }
                 catch (IOException ioe)
                 {
@@ -106,58 +129,64 @@ namespace _project.Scripts.Data
             }
         }
 
-        // ReSharper disable Unity.PerformanceAnalysis
         /// <summary>
         ///     Coroutine to fetch affliction description text from the server.
         /// </summary>
-        private IEnumerator GetAfflictionText(string webURL)
+        private async Task GetAfflictionTextAsync(string webURL)
         {
             var baseName = affliction.Replace(" ", string.Empty);
             var hyphenName = Regex.Replace(baseName, "(?<!^)([A-Z])", "-$1");
             var fileKey = UnityWebRequest.EscapeURL(hyphenName);
+            // If a packaged text asset exists in Resources/Descriptions, use it first
+            var affResource = Resources.Load<TextAsset>($"Descriptions/{fileKey}");
+            if (affResource != null)
+            {
+                Debug.LogWarning($"Loaded affliction text from Resources: Descriptions/{fileKey}.txt");
+                if (afflictionSummary) afflictionSummary.text = affResource.text;
+                return;
+            }
+            var cacheDir = Path.Combine(Application.persistentDataPath, "Descriptions");
+            var localCache = Path.Combine(cacheDir, fileKey + ".txt");
             var remoteUrl = webURL + fileKey + ".txt";
             using var www = UnityWebRequest.Get(remoteUrl);
-            yield return www.SendWebRequest();
+            await www.SendWebRequest();
 
             if (www.result is UnityWebRequest.Result.ProtocolError or UnityWebRequest.Result.ConnectionError)
             {
                 Debug.LogWarning($"Remote affliction text fetch failed: {www.error} [{remoteUrl}]");
-                // try persistent local copy
-                var localPath = Path.Combine(Application.persistentDataPath, fileKey + ".txt");
-                if (File.Exists(localPath))
+                // Try persistent cache
+                if (File.Exists(localCache))
                 {
-                    var url = "file://" + localPath;
-                    using var localReq = UnityWebRequest.Get(url);
-                    yield return localReq.SendWebRequest();
-                    if (localReq.result == UnityWebRequest.Result.Success)
-                    {
-                        afflictionSummary.text = localReq.downloadHandler.text;
-                        yield break;
-                    }
+                    Debug.LogWarning($"Loaded affliction text from persistent cache: {localCache}");
+                    if (afflictionSummary) afflictionSummary.text = await File.ReadAllTextAsync(localCache);
+                    return;
                 }
-                // try packaged fallback in StreamingAssets
-                var streamingPath = Path.Combine(Application.streamingAssetsPath, fileKey + ".txt");
-                using var streamReq = UnityWebRequest.Get("file://" + streamingPath);
-                yield return streamReq.SendWebRequest();
-                if (streamReq.result == UnityWebRequest.Result.Success)
+
+                // Try packaged fallback
+                var streamingFile = Path.Combine(Application.streamingAssetsPath, fileKey + ".txt");
+                if (File.Exists(streamingFile))
                 {
-                    afflictionSummary.text = streamReq.downloadHandler.text;
+                    Debug.LogWarning($"Loaded affliction text from StreamingAssets: {streamingFile}");
+                    if (afflictionSummary) afflictionSummary.text = await File.ReadAllTextAsync(streamingFile);
+                    return;
                 }
-                else if (afflictionSummary)
+
+                if (afflictionSummary)
                 {
-                    Debug.LogError($"Affliction text not found locally: {streamingPath}");
+                    Debug.LogError($"Affliction text not found locally: {streamingFile}");
                     afflictionSummary.text = "Error Finding Affliction Text";
                 }
             }
-            else if (afflictionSummary)
+            else
             {
-                // remote succeeded: update UI and cache locally
+                Debug.LogWarning($"Loaded affliction text from remote: {remoteUrl}");
+                // Remotely succeeded: update UI and cache locally
                 var text = www.downloadHandler.text;
-                afflictionSummary.text = text;
+                if (afflictionSummary) afflictionSummary.text = text;
                 try
                 {
-                    var localPath = Path.Combine(Application.persistentDataPath, fileKey + ".txt");
-                    File.WriteAllText(localPath, text);
+                    Directory.CreateDirectory(cacheDir);
+                    await File.WriteAllTextAsync(localCache, text);
                 }
                 catch (IOException ioe)
                 {
