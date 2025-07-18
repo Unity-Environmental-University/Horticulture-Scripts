@@ -27,8 +27,12 @@ namespace _project.Scripts.Card_Core
     {
         [Header("FOR DEBUGGING ONLY")]
         [Tooltip("Turning this off skips Most Story elements. ONLY SET THIS TO FALSE DURING DEVELOPMENT")]
-        public static bool IsSequencingEnabled => PlayerPrefs.GetInt("Tutorial", 1) == 1;
-        
+        public static bool IsSequencingEnabled
+        {
+            get => PlayerPrefs.GetInt("Tutorial", 1) == 1;
+            private set => PlayerPrefs.SetInt("Tutorial", value ? 1 : 0);
+        }
+
         [Space (20)]
         public bool isInspecting;
         public bool debuggingCardClass;
@@ -97,7 +101,7 @@ namespace _project.Scripts.Card_Core
 
         private void Start()
         {
-            isSequencingEnabled = true;
+            IsSequencingEnabled = true;
         }
 #endif
         /// <summary>
