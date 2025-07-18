@@ -9,8 +9,6 @@ namespace _project.Scripts.Cinematics
         public static PlayableDirector director;
         public PlayableAsset introTimeline;
         public PlayableAsset aphidsTimeline;
-        
-        private CardGameMaster gameMaster;
 
         private void Awake()
         {
@@ -21,8 +19,7 @@ namespace _project.Scripts.Cinematics
 
         private void Start()
         {
-            gameMaster = CardGameMaster.Instance;
-            if (gameMaster.isSequencingEnabled)
+            if (CardGameMaster.IsSequencingEnabled)
                 PlayScene(introTimeline);
         }
 
