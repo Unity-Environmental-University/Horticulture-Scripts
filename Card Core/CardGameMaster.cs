@@ -28,9 +28,11 @@ namespace _project.Scripts.Card_Core
         [Header("FOR DEBUGGING ONLY")]
         [Tooltip("Turning this off skips Most Story elements. ONLY SET THIS TO FALSE DURING DEVELOPMENT")]
         public static bool IsSequencingEnabled => PlayerPrefs.GetInt("Tutorial", 1) == 1;
+        
         [Space (20)]
         public bool isInspecting;
         public bool debuggingCardClass;
+        
         [Header("Major Game Components")]
         public DeckManager deckManager;
         public ScoreManager scoreManager;
@@ -40,6 +42,7 @@ namespace _project.Scripts.Card_Core
         public CinematicDirector cinematicDirector;
         public AudioSource playerHandAudioSource;
         public AudioSource robotAudioSource;
+        
         [Space(5)]
         [Header("Objects")]
         public Volume postProcessVolume;
@@ -80,8 +83,8 @@ namespace _project.Scripts.Card_Core
             }
 
             // Double Check Controllers
-            if (!scoreManager || !deckManager || !turnController)
-                throw new Exception("Must assign score/deck/turn manager");
+            if (!scoreManager || !deckManager || !turnController || !cinematicDirector || !soundSystem)
+                throw new Exception("Crucial Component Missing!");
 
             // Find all CardHolders
             cardHolders =

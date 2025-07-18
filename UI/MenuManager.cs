@@ -25,14 +25,7 @@ namespace _project.Scripts.UI
         [SerializeField] private GameObject crosshair;
         [SerializeField] private GameObject menuCanvas;
 
-        private void Awake()
-        {
-            // Only initialize tutorial preference on first run; preserve user setting thereafter
-            if (!PlayerPrefs.HasKey("Tutorial"))
-            {
-                ToggleTutorial();
-            }
-        }
+        private void Awake() { if (!PlayerPrefs.HasKey("Tutorial")) ToggleTutorial(); }
 
         private void Start()
         {
@@ -95,7 +88,6 @@ namespace _project.Scripts.UI
                 Cursor.lockState = CursorLockMode.Locked;
                 Cursor.visible = false;
                 EventSystem.current.SetSelectedGameObject(null);
-                // this prevents a button still being selected upon re-opening the pause menu
             }
         }
 
@@ -122,6 +114,7 @@ namespace _project.Scripts.UI
 
         public void QuitGame() { Application.Quit(); }
 
-        public void OpenCourseLink() {Application.OpenURL("https://learn.unity.edu/product/biol-330-integrated-pest-management/01tUH000008UtF9YAK");}
+        public void OpenCourseLink() {Application.
+            OpenURL("https://learn.unity.edu/product/biol-330-integrated-pest-management/01tUH000008UtF9YAK");}
     }
 }
