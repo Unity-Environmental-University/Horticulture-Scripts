@@ -5,6 +5,7 @@ using System.Reflection;
 using System.Text.RegularExpressions;
 using _project.Scripts.Audio;
 using _project.Scripts.Card_Core;
+using _project.Scripts.Cinematics;
 using _project.Scripts.Classes;
 using _project.Scripts.Core;
 using NUnit.Framework;
@@ -138,6 +139,7 @@ namespace _project.Scripts.PlayModeTest
             var soundSystem = _cardGameMasterGo.AddComponent<SoundSystemMaster>();
             var audioSource = _cardGameMasterGo.AddComponent<AudioSource>();
             _cardGameMasterGo.AddComponent<AudioListener>();
+            var cinematicDirector = _cardGameMasterGo.AddComponent<CinematicDirector>();
 
             // Minimal objects required by TurnController
             _lostObjectsGo = new GameObject("LostObjects");
@@ -158,9 +160,11 @@ namespace _project.Scripts.PlayModeTest
 
             // Use reflection to set the private static Instance property.
             typeof(CardGameMaster)
-                .GetProperty("Instance", BindingFlags.Static | BindingFlags.NonPublic)
+                .GetProperty("Instance", BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic)
                 ?.SetValue(null, cardGameMaster);
 
+            // Allow Unity to run initial setup code silently.
+            LogAssert.ignoreFailingMessages = true;
             // Activate the GameObject so that Awake is called.
             _cardGameMasterGo.SetActive(true);
             yield return null; // Wait a frame so Awake runs.
