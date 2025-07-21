@@ -8,6 +8,8 @@ using UnityEngine;
 using UnityEngine.InputSystem.UI;
 using UnityEngine.Rendering;
 
+// ReSharper disable UnusedMember.Global
+
 namespace _project.Scripts.Card_Core
 {
     /// <summary>
