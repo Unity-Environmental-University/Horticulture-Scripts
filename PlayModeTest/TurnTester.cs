@@ -139,6 +139,7 @@ namespace _project.Scripts.PlayModeTest
             var soundSystem = _cardGameMasterGo.AddComponent<SoundSystemMaster>();
             var audioSource = _cardGameMasterGo.AddComponent<AudioSource>();
             _cardGameMasterGo.AddComponent<AudioListener>();
+            // ReSharper disable once UnusedVariable
             var cinematicDirector = _cardGameMasterGo.AddComponent<CinematicDirector>();
 
             // Minimal objects required by TurnController

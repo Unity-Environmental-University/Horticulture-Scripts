@@ -50,7 +50,6 @@ namespace _project.Scripts.Core
         private GameObject _lastSelectedPlant;
         private GameObject _robotStartPosition;
 
-        public AudioClip dlg1;
         public GameObject dialogBox;
         public GameObject playerStartPosition;
         public GameObject doomedPlant;

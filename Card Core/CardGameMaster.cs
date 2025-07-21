@@ -30,6 +30,7 @@ namespace _project.Scripts.Card_Core
         public static bool IsSequencingEnabled
         {
             get => PlayerPrefs.GetInt("Tutorial", 1) == 1;
+            // ReSharper disable once UnusedMember.Local
             private set => PlayerPrefs.SetInt("Tutorial", value ? 1 : 0);
         }
 
