@@ -11,17 +11,6 @@ namespace _project.Scripts.UI
         [SerializeField] private Image displayedImage;
         [SerializeField] private TextMeshProUGUI popUpText;
         [SerializeField] private Button closeButton;
-
-        /*
-        private void Start() { StartCoroutine(DelayedStart()); }
-
-        private IEnumerator DelayedStart()
-        {
-            yield return new WaitForSeconds(1f);
-            ToggleUiInput();
-            Click3D.click3DGloballyDisabled = true;
-        }
-        */
         
         private void ActivatePopUpPanel(Image image, string text)
         {
@@ -60,12 +49,6 @@ namespace _project.Scripts.UI
         private void ToggleUiInput()
         {
             CardGameMaster.Instance.uiInputModule.enabled = !CardGameMaster.Instance.uiInputModule.enabled;
-        }
-
-        public void ShowTutorialOne()
-        {
-            const string popText = "Some Words Here";
-            ActivatePopUpPanel(null, popText);
         }
     }
 }

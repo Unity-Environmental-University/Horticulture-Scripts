@@ -7,6 +7,8 @@ using UnityEngine.EventSystems;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
+// ReSharper disable UnusedMember.Global
+
 namespace _project.Scripts.UI
 {
     public class MenuManager : MonoBehaviour
