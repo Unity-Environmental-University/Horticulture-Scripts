@@ -2,6 +2,7 @@ using _project.Scripts.Card_Core;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
+// ReSharper disable UnusedMember.Local
 
 namespace _project.Scripts.UI
 {
