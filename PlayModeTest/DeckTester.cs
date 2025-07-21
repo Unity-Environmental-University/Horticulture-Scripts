@@ -84,10 +84,9 @@ namespace _project.Scripts.PlayModeTest
             fakePrefab.AddComponent<CardViewFake>();
             deckManager.cardPrefab = fakePrefab;
 
-            _cardGameMasterGo.SetActive(true);
-
             // Allow Unity to run initial setup code silently.
             LogAssert.ignoreFailingMessages = true;
+            _cardGameMasterGo.SetActive(true);
         }
 
         [TearDown]
