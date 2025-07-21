@@ -29,7 +29,7 @@ namespace _project.Scripts.Cinematics
             director.Stop();
             Debug.Log("Cutscene Skipped!");
         }
-        
+
         public static void PlayScene(PlayableAsset timeline)
         {
             director.playableAsset = timeline;

@@ -10,7 +10,6 @@ namespace _project.Scripts.Classes
         public ICard Card { get; }
         public string DisplayName { get; }
         public int Cost { get; }
-        
         public void Purchase();
     }
     

@@ -1,6 +1,8 @@
 using _project.Scripts.Classes;
 using UnityEngine;
 
+// ReSharper disable UnusedMember.Global
+
 namespace _project.Scripts.Audio
 {
     public class SoundSystemMaster : MonoBehaviour
