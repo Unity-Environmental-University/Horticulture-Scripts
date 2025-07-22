@@ -43,7 +43,7 @@ namespace _project.Scripts.Card_Core
             new Panacea()
         };
 
-        private static readonly List<ICard> TutorialActionDeck = new()
+        private readonly List<ICard> _tutorialActionDeck = new()
         {
             new NeemOilBasic(),
             new FungicideBasic(),
@@ -58,12 +58,12 @@ namespace _project.Scripts.Card_Core
             new Panacea()
         };
         
-        private static readonly List<ICard> TutorialPlantDeck = new()
+        private readonly List<ICard> _tutorialPlantDeck = new()
         {
             new ColeusCard()
         };
 
-        private static readonly List<ICard> TutorialAfflictionDeck = new()
+        private readonly List<ICard> _tutorialAfflictionDeck = new()
         {
             new AphidsCard()
         };
@@ -342,33 +342,33 @@ namespace _project.Scripts.Card_Core
                 case 0:
                     break;
                 case 1:
-                    TutorialPlantDeck.Add(new ChrysanthemumCard());
+                    _tutorialPlantDeck.Add(new ChrysanthemumCard());
                     break;
                 case 2:
-                    TutorialPlantDeck.Add(new CucumberCard());
-                    TutorialAfflictionDeck.Add(new MealyBugsCard());
+                    _tutorialPlantDeck.Add(new CucumberCard());
+                    _tutorialAfflictionDeck.Add(new MealyBugsCard());
                     break;
                 case 3:
-                    TutorialPlantDeck.Add(new PepperCard());
-                    TutorialAfflictionDeck.Add(new MildewCard());
+                    _tutorialPlantDeck.Add(new PepperCard());
+                    _tutorialAfflictionDeck.Add(new MildewCard());
                     break;
                 case 4:
-                    TutorialAfflictionDeck.Add(new ThripsCard());
+                    _tutorialAfflictionDeck.Add(new ThripsCard());
                     break;
             }
             _plantHand.Clear();
-            foreach (var card in TutorialPlantDeck)
+            foreach (var card in _tutorialPlantDeck)
                 _plantHand.Add(card);
             
             Debug.Log("PlantHand: " + string.Join(", ", _plantHand.ConvertAll(card => card.Name)));
-            Debug.Log("TUT PLANT HAND: " + string.Join(", ", TutorialPlantDeck.ConvertAll(card => card.Name)));
+            Debug.Log("TUT PLANT HAND: " + string.Join(", ", _tutorialPlantDeck.ConvertAll(card => card.Name)));
             yield return StartCoroutine(PlacePlantsSequentially());
         }
 
         public void DrawTutorialAfflictions()
         {
             _afflictionHand.Clear();
-            foreach (var card in TutorialAfflictionDeck)
+            foreach (var card in _tutorialAfflictionDeck)
                 _afflictionHand.Add(card);
 
             if (debug)
@@ -385,7 +385,7 @@ namespace _project.Scripts.Card_Core
 
             for (var i = 0; i < cardsDrawnPerTurn; i++)
             {
-                _actionHand.Add(TutorialActionDeck[i % TutorialActionDeck.Count]);
+                _actionHand.Add(_tutorialActionDeck[i % _tutorialActionDeck.Count]);
             }
 
             // Clear all existing visualized cards
