@@ -197,9 +197,6 @@ namespace _project.Scripts.Card_Core
                 StartCoroutine(BeginTurnSequence());
                 return;
             }
-            
-            if (level is 0 && currentTutorialTurn < TutorialTurnCount)
-                currentTutorialTurn++;
 
             // Get an array of plant controllers
             var plantControllers = _deckManager.plantLocations
@@ -228,7 +225,7 @@ namespace _project.Scripts.Card_Core
             // End round early if all plants are free of afflictions
             if (plantControllers.All(controller => !controller.CurrentAfflictions.Any()))
             {
-                StartCoroutine(EndRound());
+                StartCoroutine(EndRound(advanceTutorial: true));
                 return;
             }
 
@@ -369,7 +366,7 @@ namespace _project.Scripts.Card_Core
         ///     Thrown if `deckManager`, `plantLocations`, or any dependencies (e.g., `PlantController` or `PlantCardFunctions`)
         ///     are not properly initialized.
         /// </exception>
-        private IEnumerator EndRound(float delayTime = 2f)
+        private IEnumerator EndRound(float delayTime = 2f, bool advanceTutorial = false)
         {
             canClickEnd = false;
             currentTurn = 0;
@@ -406,6 +403,10 @@ namespace _project.Scripts.Card_Core
 
             if (score > 0)
             {
+                if (advanceTutorial && level == 0 && CardGameMaster.IsSequencingEnabled &&
+                    currentTutorialTurn < TutorialTurnCount)
+                    currentTutorialTurn++;
+                
                 newRoundReady = true;
                 canClickEnd = true;
             }
