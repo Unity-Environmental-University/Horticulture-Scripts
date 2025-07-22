@@ -369,7 +369,7 @@ namespace _project.Scripts.Card_Core
         {
             _afflictionHand.Clear();
             foreach (var card in _tutorialAfflictionDeck)
-                _afflictionHand.Add(card);
+                _afflictionHand.Add(card.Clone());
 
             if (debug)
                 Debug.Log("Afflictions Drawn: " + string.Join(", ", _afflictionHand.ConvertAll(card => card.Name)));
@@ -385,7 +385,7 @@ namespace _project.Scripts.Card_Core
 
             for (var i = 0; i < cardsDrawnPerTurn; i++)
             {
-                _actionHand.Add(_tutorialActionDeck[i % _tutorialActionDeck.Count]);
+                _actionHand.Add(_tutorialActionDeck[i % _tutorialActionDeck.Count].Clone());
             }
 
             // Clear all existing visualized cards
