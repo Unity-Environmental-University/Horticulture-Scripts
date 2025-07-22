@@ -8,8 +8,6 @@ using UnityEngine;
 using UnityEngine.InputSystem.UI;
 using UnityEngine.Rendering;
 
-// ReSharper disable UnusedMember.Global
-
 namespace _project.Scripts.Card_Core
 {
     /// <summary>
@@ -29,12 +27,7 @@ namespace _project.Scripts.Card_Core
     {
         [Header("FOR DEBUGGING ONLY")]
         [Tooltip("Turning this off skips Most Story elements. ONLY SET THIS TO FALSE DURING DEVELOPMENT")]
-        public static bool IsSequencingEnabled
-        {
-            get => PlayerPrefs.GetInt("Tutorial", 1) == 1;
-            // ReSharper disable once UnusedMember.Local
-            private set => PlayerPrefs.SetInt("Tutorial", value ? 1 : 0);
-        }
+        public static bool IsSequencingEnabled => PlayerPrefs.GetInt("Tutorial", 1) == 1;
 
         [Space (20)]
         public bool isInspecting;
@@ -48,6 +41,7 @@ namespace _project.Scripts.Card_Core
         public SoundSystemMaster soundSystem;
         public CinematicDirector cinematicDirector;
         public AudioSource playerHandAudioSource;
+        // ReSharper disable once UnusedMember.Global
         public AudioSource robotAudioSource;
         
         [Space(5)]
@@ -100,13 +94,7 @@ namespace _project.Scripts.Card_Core
 
             Instance = this;
         }
-#if !UNITY_EDITOR 
-
-        private void Start()
-        {
-            IsSequencingEnabled = true;
-        }
-#endif
+        
         /// <summary>
         ///     Destroys the GameObject this script is attached to at runtime.
         ///     This action removes the instance of CardGameMaster from the scene,
