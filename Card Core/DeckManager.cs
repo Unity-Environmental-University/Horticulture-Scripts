@@ -358,7 +358,7 @@ namespace _project.Scripts.Card_Core
             }
             _plantHand.Clear();
             foreach (var card in _tutorialPlantDeck)
-                _plantHand.Add(card);
+                _plantHand.Add(card.Clone());
             
             Debug.Log("PlantHand: " + string.Join(", ", _plantHand.ConvertAll(card => card.Name)));
             Debug.Log("TUT PLANT HAND: " + string.Join(", ", _tutorialPlantDeck.ConvertAll(card => card.Name)));
