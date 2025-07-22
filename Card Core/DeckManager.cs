@@ -206,9 +206,9 @@ namespace _project.Scripts.Card_Core
         /// This method first clears all existing plants and then randomly draws a specified number of cards from the PlantDeck.
         /// The drawn cards are then placed sequentially in the available plant locations, with a delay between each placement.
         /// If there are no plant locations available or if the PlantDeck is empty, this method does nothing.
-        public void PlacePlants()
+        public IEnumerator PlacePlants()
         {
-            if (plantLocations == null || plantLocations.Count == 0) return;
+            if (plantLocations == null || plantLocations.Count == 0) yield break;
 
             ClearAllPlants();
             _plantHand.DeckRandomDraw();
@@ -219,7 +219,7 @@ namespace _project.Scripts.Card_Core
             var cardsToDraw = RoundWeightedRandom(1, max + 1);
             _plantHand.DrawCards(cardsToDraw);
 
-            StartCoroutine(PlacePlantsSequentially());
+            yield return StartCoroutine(PlacePlantsSequentially());
         }
 
         private IEnumerator PlacePlantsSequentially(float delay = 0.4f)
@@ -330,9 +330,9 @@ namespace _project.Scripts.Card_Core
 
         #region Tutorial
 
-        public void PlaceTutorialPlants()
+        public IEnumerator PlaceTutorialPlants()
         {
-            if (plantLocations == null || plantLocations.Count == 0) return;
+            if (plantLocations == null || plantLocations.Count == 0) yield break;
             var cgm = CardGameMaster.Instance;
 
             ClearAllPlants();
@@ -362,7 +362,7 @@ namespace _project.Scripts.Card_Core
             
             Debug.Log("PlantHand: " + string.Join(", ", _plantHand.ConvertAll(card => card.Name)));
             Debug.Log("TUT PLANT HAND: " + string.Join(", ", TutorialPlantDeck.ConvertAll(card => card.Name)));
-            StartCoroutine(PlacePlantsSequentially());
+            yield return StartCoroutine(PlacePlantsSequentially());
         }
 
         public void DrawTutorialAfflictions()

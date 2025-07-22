@@ -92,29 +92,22 @@ namespace _project.Scripts.Card_Core
                 yield return new WaitForSeconds(2f);
                 _scoreManager.ResetMoneys();
             }
-
-            try
+            
+            if (level == 0 && CardGameMaster.IsSequencingEnabled &&
+                currentTutorialTurn < TutorialTurnCount)
             {
-                if (level == 0 && CardGameMaster.IsSequencingEnabled &&
-                    currentTutorialTurn < TutorialTurnCount)
-                {
-                    if (debugging)
-                        Debug.Log(
-                            $"[TurnController] Tutorial: PlaceTutorialPlants (turn {currentTutorialTurn + 1}/{TutorialTurnCount})");
-                    _deckManager.PlaceTutorialPlants();
-                }
-                else
-                {
-                    if (debugging) Debug.Log("[TurnController] Regular: PlacePlants");
-                    _deckManager.PlacePlants();
-                }
+                if (debugging)
+                    Debug.Log(
+                        $"[TurnController] Tutorial: PlaceTutorialPlants (turn {currentTutorialTurn + 1}/{TutorialTurnCount})");
+                moneyGoal = 500;
+                yield return StartCoroutine(_deckManager.PlaceTutorialPlants());
             }
-            catch (Exception e)
+            else
             {
-                throw new Exception(e.Message);
+                if (debugging) Debug.Log("[TurnController] Regular: PlacePlants");
+                UpdateMoneyGoal();
+                yield return StartCoroutine(_deckManager.PlacePlants());
             }
-
-            yield return new WaitForSeconds(1f);
 
             if (level == 0 && CardGameMaster.IsSequencingEnabled &&
                 currentTutorialTurn < TutorialTurnCount)
