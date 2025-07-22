@@ -33,6 +33,7 @@ namespace _project.Scripts.Card_Core
         private ScoreManager _scoreManager;
         private Coroutine plantEffectCoroutine;
         private const int TutorialTurnCount = 5;
+        private bool _tutorialCompleted;
 
         public TurnController(Func<bool> readyToPlay) => ReadyToPlay = readyToPlay;
 
@@ -86,11 +87,13 @@ namespace _project.Scripts.Card_Core
             yield return new WaitForSeconds(2f);
 
             // If we just finished the last tutorial turn, give a brief pause before regular game
-            if (level == 0 && CardGameMaster.IsSequencingEnabled && currentTutorialTurn >= TutorialTurnCount)
+            if (level == 0 && CardGameMaster.IsSequencingEnabled && currentTutorialTurn >= TutorialTurnCount && !_tutorialCompleted)
             {
-                if (debugging) Debug.Log("[TurnController] Tutorial complete! Transitioning to the regular game...");
+                if (debugging)
+                    Debug.Log("[TurnController] Tutorial complete! Transitioning to the regular game...");
                 yield return new WaitForSeconds(2f);
                 _scoreManager.ResetMoneys();
+                _tutorialCompleted = true;
             }
             
             if (level == 0 && CardGameMaster.IsSequencingEnabled &&
@@ -480,6 +483,7 @@ namespace _project.Scripts.Card_Core
             // Reset tutorial progress when restarting the game
             currentTutorialTurn = 0;
             currentRound = 0;
+            _tutorialCompleted = false;
             StartCoroutine(BeginTurnSequence());
             _scoreManager.ResetMoneys();
         }
