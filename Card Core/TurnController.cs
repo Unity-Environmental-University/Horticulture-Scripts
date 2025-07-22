@@ -324,8 +324,8 @@ namespace _project.Scripts.Card_Core
                         if (target.HasAffliction(affliction)) continue;
 
                         // Don't spread to something that's been given the Panacea
-                        if (!target.UsedTreatments.Any(treatment =>
-                                treatment is PlantAfflictions.Panacea || !target.HasHadAffliction(affliction)))
+                        if (!target.UsedTreatments.Any(t => t is PlantAfflictions.Panacea)
+                            && !target.HasHadAffliction(affliction))
                         {
                             target.AddAffliction(affliction.Clone());
                             _scoreManager.CalculateTreatmentCost();
