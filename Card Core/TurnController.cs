@@ -93,6 +93,7 @@ namespace _project.Scripts.Card_Core
                     Debug.Log("[TurnController] Tutorial complete! Transitioning to the regular game...");
                 yield return new WaitForSeconds(2f);
                 _scoreManager.ResetMoneys();
+                currentRound = 1;
                 _tutorialCompleted = true;
             }
             
