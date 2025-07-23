@@ -9,6 +9,7 @@ namespace _project.Scripts.Cinematics
         public static PlayableDirector director;
         public PlayableAsset introTimeline;
         public PlayableAsset aphidsTimeline;
+        public PlayableAsset postAphidsTimeline;
 
         private void Awake()
         {
