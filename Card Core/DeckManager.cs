@@ -389,8 +389,7 @@ namespace _project.Scripts.Card_Core
             }
 
             // Clear all existing visualized cards
-            foreach (Transform child in actionCardParent)
-                Destroy(child.gameObject);
+            ClearActionCardVisuals();
 
             StartCoroutine(DisplayActionCardsSequence());
 
@@ -502,8 +501,7 @@ namespace _project.Scripts.Card_Core
             }
 
             // Clear all existing visualized cards
-            foreach (Transform child in actionCardParent)
-                Destroy(child.gameObject);
+            ClearActionCardVisuals();
 
             var cardsNeeded = cardsDrawnPerTurn;
 
@@ -592,8 +590,7 @@ namespace _project.Scripts.Card_Core
 
             _actionHand.Clear();
 
-            foreach (Transform child in actionCardParent)
-                Destroy(child.gameObject);
+            ClearActionCardVisuals();
 
             if (debug) Debug.Log("Cleared action hand and discarded cards.");
         }
@@ -677,7 +674,7 @@ namespace _project.Scripts.Card_Core
             }
             
             // Clear all existing visualized cards in the action card parent
-            foreach (Transform child in actionCardParent) Destroy(child.gameObject);
+            ClearActionCardVisuals();
 
             for (var i = 0; i < cardsDrawnPerTurn; i++)
             {
@@ -702,6 +699,15 @@ namespace _project.Scripts.Card_Core
             if (debug) Debug.Log("Action Hand: " + string.Join(", ", _actionHand.ConvertAll(card => card.Name)));
             ScoreManager.SubtractMoneys(redrawCost);
             ScoreManager.UpdateMoneysText();
+        }
+
+        /// <summary>
+        /// Destroys all GameObjects under actionCardParent.
+        /// </summary>
+        private void ClearActionCardVisuals()
+        {
+            foreach (Transform child in actionCardParent)
+                Destroy(child.gameObject);
         }
 
         #endregion
