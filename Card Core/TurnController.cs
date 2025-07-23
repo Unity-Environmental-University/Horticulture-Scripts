@@ -34,6 +34,7 @@ namespace _project.Scripts.Card_Core
         private Coroutine plantEffectCoroutine;
         private const int TutorialTurnCount = 5;
         private bool _tutorialCompleted;
+        private const int TutorialMoneyGoal = 500;
 
         public TurnController(Func<bool> readyToPlay) => ReadyToPlay = readyToPlay;
 
@@ -91,6 +92,7 @@ namespace _project.Scripts.Card_Core
             {
                 if (debugging)
                     Debug.Log("[TurnController] Tutorial complete! Transitioning to the regular game...");
+                CardGameMaster.Instance.popUpController.ActivatePopUpPanel(null, "Tutorial Complete! Press Continue to proceed to the regular game...");
                 yield return new WaitForSeconds(2f);
                 _scoreManager.ResetMoneys();
                 currentRound = 1;
@@ -103,7 +105,7 @@ namespace _project.Scripts.Card_Core
                 if (debugging)
                     Debug.Log(
                         $"[TurnController] Tutorial: PlaceTutorialPlants (turn {currentTutorialTurn + 1}/{TutorialTurnCount})");
-                moneyGoal = 500;
+                moneyGoal = TutorialMoneyGoal;
                 yield return StartCoroutine(_deckManager.PlaceTutorialPlants());
             }
             else
