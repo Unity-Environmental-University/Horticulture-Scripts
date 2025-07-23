@@ -1,7 +1,9 @@
 using _project.Scripts.Card_Core;
+using JetBrains.Annotations;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
+
 // ReSharper disable UnusedMember.Local
 
 namespace _project.Scripts.UI
@@ -13,27 +15,22 @@ namespace _project.Scripts.UI
         [SerializeField] private TextMeshProUGUI popUpText;
         [SerializeField] private Button closeButton;
         
-        private void ActivatePopUpPanel(Image image, string text)
+        public void ActivatePopUpPanel([CanBeNull] Image image, string text)
         {
             if (popUpPanel.activeInHierarchy) return;
 
+            Time.timeScale = 0;
             Click3D.click3DGloballyDisabled = true;
             popUpPanel.SetActive(true);
             ToggleUiInput();
 
-            if (image != null && text != null)
-            {
-                displayedImage.sprite = image.sprite;
-                popUpText.text = text;
-            }
-            else
-            {
-                popUpText.text = "PLEASE PASS IN A STRING";
-            }
+            if (image != null) displayedImage.sprite = image.sprite;
+            popUpText.text = text;
         }
 
         public void ClosePopUpPanel()
         {
+            Time.timeScale = 1;
             popUpPanel.SetActive(false);
             ClearPanelElements();
             ToggleUiInput();
@@ -47,9 +44,6 @@ namespace _project.Scripts.UI
         }
 
         // ReSharper disable once MemberCanBeMadeStatic.Local
-        private void ToggleUiInput()
-        {
-            CardGameMaster.Instance.uiInputModule.enabled = !CardGameMaster.Instance.uiInputModule.enabled;
-        }
+        private void ToggleUiInput() { CardGameMaster.Instance.uiInputModule.enabled = !CardGameMaster.Instance.uiInputModule.enabled; }
     }
 }
