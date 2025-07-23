@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using _project.Scripts.Audio;
 using _project.Scripts.Cinematics;
+using _project.Scripts.UI;
 using JetBrains.Annotations;
 using TMPro;
 using UnityEngine;
@@ -40,6 +41,7 @@ namespace _project.Scripts.Card_Core
         public ShopManager shopManager;
         public SoundSystemMaster soundSystem;
         public CinematicDirector cinematicDirector;
+        public PopUpController popUpController;
         public AudioSource playerHandAudioSource;
         // ReSharper disable once UnusedMember.Global
         public AudioSource robotAudioSource;
