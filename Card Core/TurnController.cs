@@ -226,7 +226,8 @@ namespace _project.Scripts.Card_Core
             }
 
             // End round early if all plants are free of afflictions
-            if (plantControllers.All(controller => !controller.CurrentAfflictions.Any()))
+            if (plantControllers.All(controller => controller.PlantCard is { Value: <= 0 } ||
+                                                   !controller.CurrentAfflictions.Any()))
             {
                 StartCoroutine(EndRound(advanceTutorial: true));
                 return;
