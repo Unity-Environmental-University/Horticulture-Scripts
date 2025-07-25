@@ -2,11 +2,13 @@ using System;
 using System.IO;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using _project.Scripts.Card_Core;
 using _project.Scripts.Classes;
 using _project.Scripts.Core;
 using TMPro;
 using UnityEngine;
 using UnityEngine.Networking;
+using UnityEngine.UI;
 
 namespace _project.Scripts.Data
 {
@@ -18,6 +20,9 @@ namespace _project.Scripts.Data
     {
         [SerializeField] private TextMeshProUGUI plantSummary;
         [SerializeField] private TextMeshProUGUI afflictionSummary;
+        [SerializeField] private GameObject userInterface;
+        [SerializeField] private GameObject uiSignage;
+        [SerializeField] private Button exitInspectMode;
         private const string URL = PrivateData.RawGithubContent;
         private string affliction;
         private string plantType;
@@ -28,6 +33,24 @@ namespace _project.Scripts.Data
             if (!string.IsNullOrEmpty(plantType))
                 _ = GetPlantTextAsync(URL);
         }
+
+        private void OnEnable()
+        {
+            userInterface.SetActive(false);
+            uiSignage.SetActive(false);
+            exitInspectMode.onClick.AddListener(() => CardGameMaster.Instance.inspectedObj.ToggleInspect());
+            ToggleUiInput();
+        }
+
+        private void OnDisable()
+        {
+            userInterface.SetActive(true);
+            uiSignage.SetActive(true);
+            exitInspectMode.onClick.RemoveAllListeners();
+            ToggleUiInput();
+        }
+        
+        private static void ToggleUiInput() { CardGameMaster.Instance.uiInputModule.enabled = !CardGameMaster.Instance.uiInputModule.enabled; }
 
         public async void SetPlant(PlantType plantTypeEnum)
         {
