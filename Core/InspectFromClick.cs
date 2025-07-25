@@ -42,6 +42,7 @@ namespace _project.Scripts.Core
 
         public void ToggleInspect()
         {
+            if (CardGameMaster.Instance.deckManager.updatingActionDisplay) return;
             if (!CardGameMaster.Instance.isInspecting)
                 EnterInspectMode();
             else
@@ -52,10 +53,10 @@ namespace _project.Scripts.Core
         {
             _inspectableObject = gameObject;
             CardGameMaster.Instance.isInspecting = true;
+            CardGameMaster.Instance.inspectedObj = this;
             CardGameMaster.Instance.turnController.canClickEnd = false;
             CardGameMaster.Instance.inspectingInfoPanels.SetActive(true);
-
-            // Store local rotation and position
+            
             _originalPosition = _inspectableObject.transform.position;
             _originalRotation = _inspectableObject.transform.rotation;
 
@@ -79,6 +80,7 @@ namespace _project.Scripts.Core
                 var boundsCenter = localRenderer.bounds.center;
                 // Move the object so its center is at the camera's forward distance
                 var newPosition = playerCameraTransform.position + playerCameraTransform.forward * inspectDistance;
+                newPosition.x -= 0.5f; // shift the obj to the right to make room for text
                 var offset = newPosition - boundsCenter;
                 _inspectableObject.transform.position += offset;
             }
@@ -126,6 +128,7 @@ namespace _project.Scripts.Core
         {
             // Cleanup
             CardGameMaster.Instance.isInspecting = false;
+            CardGameMaster.Instance.inspectedObj = null;
             CardGameMaster.Instance.turnController.canClickEnd = true;
             CardGameMaster.Instance.inspectingInfoPanels.SetActive(false);
             _inspectableObject.transform.position = _originalPosition;

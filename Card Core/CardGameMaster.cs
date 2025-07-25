@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using _project.Scripts.Audio;
 using _project.Scripts.Cinematics;
+using _project.Scripts.Core;
 using _project.Scripts.UI;
 using JetBrains.Annotations;
 using TMPro;
@@ -64,6 +65,10 @@ namespace _project.Scripts.Card_Core
 
         [Header("Object Arrays/Lists")]
         public List<PlacedCardHolder> cardHolders;
+        
+        [Header("Non-Static Objects")]
+        public InspectFromClick inspectedObj;
+        
         public static CardGameMaster Instance { get; private set; }
 
         /// <summary>
