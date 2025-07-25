@@ -18,12 +18,12 @@ namespace _project.Scripts.Data
     /// </summary>
     public class SiteDataFetcher : MonoBehaviour
     {
+        private const string URL = PrivateData.RawGithubContent;
         [SerializeField] private TextMeshProUGUI plantSummary;
         [SerializeField] private TextMeshProUGUI afflictionSummary;
         [SerializeField] private GameObject userInterface;
         [SerializeField] private GameObject uiSignage;
         [SerializeField] private Button exitInspectMode;
-        private const string URL = PrivateData.RawGithubContent;
         private string affliction;
         private string plantType;
 
@@ -36,21 +36,37 @@ namespace _project.Scripts.Data
 
         private void OnEnable()
         {
-            userInterface.SetActive(false);
-            uiSignage.SetActive(false);
-            exitInspectMode.onClick.AddListener(() => CardGameMaster.Instance.inspectedObj.ToggleInspect());
+            if (userInterface != null)
+                userInterface.SetActive(false);
+            if (uiSignage != null)
+                uiSignage.SetActive(false);
+            if (exitInspectMode != null)
+                exitInspectMode.onClick.AddListener(() =>
+                {
+                    var master = CardGameMaster.Instance;
+                    if (master?.inspectedObj != null)
+                        master.inspectedObj.ToggleInspect();
+                });
             ToggleUiInput();
         }
 
         private void OnDisable()
         {
-            userInterface.SetActive(true);
-            uiSignage.SetActive(true);
-            exitInspectMode.onClick.RemoveAllListeners();
+            if (userInterface != null)
+                userInterface.SetActive(true);
+            if (uiSignage != null)
+                uiSignage.SetActive(true);
+            if (exitInspectMode != null)
+                exitInspectMode.onClick.RemoveAllListeners();
             ToggleUiInput();
         }
-        
-        private static void ToggleUiInput() { CardGameMaster.Instance.uiInputModule.enabled = !CardGameMaster.Instance.uiInputModule.enabled; }
+
+        private static void ToggleUiInput()
+        {
+            var module = CardGameMaster.Instance?.uiInputModule;
+            if (module != null)
+                module.enabled = !module.enabled;
+        }
 
         public async void SetPlant(PlantType plantTypeEnum)
         {
@@ -102,6 +118,7 @@ namespace _project.Scripts.Data
                 if (plantSummary) plantSummary.text = plantResource.text;
                 return;
             }
+
             var cacheDir = Path.Combine(Application.persistentDataPath, "Descriptions");
             var localCache = Path.Combine(cacheDir, fileKey + ".txt");
             var remoteUrl = webURL + fileKey + ".txt";
@@ -168,6 +185,7 @@ namespace _project.Scripts.Data
                 if (afflictionSummary) afflictionSummary.text = affResource.text;
                 return;
             }
+
             var cacheDir = Path.Combine(Application.persistentDataPath, "Descriptions");
             var localCache = Path.Combine(cacheDir, fileKey + ".txt");
             var remoteUrl = webURL + fileKey + ".txt";
