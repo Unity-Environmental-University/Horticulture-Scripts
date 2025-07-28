@@ -205,6 +205,20 @@ namespace _project.Scripts.Classes
             public int BeeValue => 0;
         }
 
+        public class SpinosadTreatment : ITreatment
+        {
+            public string Name => "Spinosad";
+            public string Description => "Effective against: Thrips, Mites, Gnats";
+            public int BeeValue => -2;
+        }
+
+        public class ImidaclopridTreatment : ITreatment
+        {
+            public string Name => "Imidacloprid";
+            public string Description => "Removes Mildew"; // TODO Get exact list
+            public int BeeValue => -5; //TODO Get Bee Value
+        }
+
         public class Panacea : ITreatment
         {
             public string Name => "Panacea";
