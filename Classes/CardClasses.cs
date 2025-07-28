@@ -171,6 +171,22 @@ namespace _project.Scripts.Classes
         public ICard Clone() { return new MildewCard(); }
     }
 
+    public class SpiderMitesCard : ICard
+    {
+        public PlantAfflictions.IAffliction Affliction => new PlantAfflictions.SpiderMitesAffliction();
+        public string Name => "Spider Mites";
+        public int? Value => -3;
+        public ICard Clone() { return new SpiderMitesCard(); }
+    }
+
+    public class FungusGnatsCard : ICard
+    {
+        public PlantAfflictions.IAffliction Affliction => new PlantAfflictions.FungusGnatsAffliction();
+        public string Name => "Fungus Gnats";
+        public int? Value => -2;
+        public ICard Clone() { return new FungusGnatsCard(); }
+    }
+
     #endregion
 
     #region Action Cards

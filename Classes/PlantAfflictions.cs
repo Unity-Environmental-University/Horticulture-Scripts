@@ -113,7 +113,7 @@ namespace _project.Scripts.Classes
 
             public void TreatWith(ITreatment treatment, PlantController plant)
             {
-                if (treatment.Name is "SoapyWater" or "Panacea" or "Insecticide") plant.RemoveAffliction(this);
+                if (treatment is SoapyWaterTreatment or Panacea or InsecticideTreatment) plant.RemoveAffliction(this);
             }
 
             public void TickDay(PlantController plant)
@@ -137,7 +137,7 @@ namespace _project.Scripts.Classes
 
             public void TreatWith(ITreatment treatment, PlantController plant)
             {
-                if (treatment.Name is "Fungicide" or "Panacea") plant.RemoveAffliction(this);
+                if (treatment is FungicideTreatment or Panacea) plant.RemoveAffliction(this);
             }
 
             public void TickDay(PlantController plant)
@@ -160,7 +160,7 @@ namespace _project.Scripts.Classes
 
             public void TreatWith(ITreatment treatment, PlantController plant)
             {
-                if (treatment.Name is "NeemOil" or "Panacea" or "Insecticide") plant.RemoveAffliction(this);
+                if (treatment is HorticulturalOilTreatment or Panacea or InsecticideTreatment) plant.RemoveAffliction(this);
             }
 
             public void TickDay(PlantController plant)
@@ -171,6 +171,55 @@ namespace _project.Scripts.Classes
                 plant.UpdatePriceFlag(newVal);
             }
             public ICard GetCard() { return new AphidsCard(); }
+        }
+        
+        public class SpiderMitesAffliction : IAffliction
+        {
+            public string Name => "Spider Mites";
+            public string Description => "";
+            public Color Color => Color.orange;
+            public Shader Shader => null; //Shader.Find($"Shader Graphs/SpiderMites");
+            public IAffliction Clone() { return new SpiderMitesAffliction(); }
+
+            //TODO Verify treatments
+            public void TreatWith(ITreatment treatment, PlantController plant)
+            {
+                if (treatment is HorticulturalOilTreatment or Panacea or InsecticideTreatment) plant.RemoveAffliction(this);
+            }
+
+            public void TickDay(PlantController plant)
+            {
+                if (!plant.PlantCard.Value.HasValue) return;
+                var newVal = Mathf.Max(0, plant.PlantCard.Value.Value - 1);
+                plant.PlantCard.Value = newVal;
+                plant.UpdatePriceFlag(newVal);
+            }
+            public ICard GetCard() { return new SpiderMitesCard(); }
+        }
+        
+        public class FungusGnatsAffliction : IAffliction
+        {
+            public string Name => "Fungus Gnats";
+            public string Description => "";
+            public Color Color => Color.deepPink;
+            public Shader Shader => null; //Shader.Find($"Shader Graphs/FungusGnats");
+
+            public IAffliction Clone() { return new FungusGnatsAffliction(); }
+            
+            //TODO Verify treatments
+            public void TreatWith(ITreatment treatment, PlantController plant)
+            {
+                if (treatment is HorticulturalOilTreatment or Panacea or InsecticideTreatment) plant.RemoveAffliction(this);
+            }
+
+            public void TickDay(PlantController plant)
+            {
+                if (!plant.PlantCard.Value.HasValue) return;
+                var newVal = Mathf.Max(0, plant.PlantCard.Value.Value - 1);
+                plant.PlantCard.Value = newVal;
+                plant.UpdatePriceFlag(newVal);
+            }
+            public ICard GetCard() { return new FungusGnatsCard(); }
         }
 
         #endregion
