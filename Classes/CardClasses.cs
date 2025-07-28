@@ -258,6 +258,48 @@ namespace _project.Scripts.Classes
 
         public ICard Clone() { return new SoapyWaterBasic(); }
     }
+    
+    public class Spinosad : ICard
+    {
+        [CanBeNull] private string _description;
+        public PlantAfflictions.ITreatment Treatment => new PlantAfflictions.SpinosadTreatment();
+        public string Name => "Spinosad";
+        public int? Value => -3; //TODO Check on this cost
+
+        public string Description
+        {
+            set => _description = value;
+            get => _description ?? Treatment.Description;
+        }
+
+        public GameObject Prefab { get; set; }
+        public Material Material => Resources.Load<Material>($"Materials/Cards/Spinosad");
+
+        public void Selected() { if (CardGameMaster.Instance.debuggingCardClass) Debug.Log("Selected " + Name); }
+
+        public ICard Clone() { return new Spinosad(); }
+    }
+
+    public class Imidacloprid : ICard
+    {
+        [CanBeNull] private string _description;
+        public PlantAfflictions.ITreatment Treatment => new PlantAfflictions.ImidaclopridTreatment();
+        public string Name => "Imidacloprid";
+        public int? Value => -1; //TODO Get Cost
+        
+        public string Description
+        {
+            set => _description = value;
+            get => _description ?? Treatment.Description;
+        }
+
+        public GameObject Prefab { get; set; }
+        public Material Material => Resources.Load<Material>($"Materials/Cards/Imidacloprid");
+
+        public void Selected() { if (CardGameMaster.Instance.debuggingCardClass) Debug.Log("Selected " + Name); }
+
+        public ICard Clone() { return new Imidacloprid(); }
+    }
 
     public class Panacea : ICard
     {
