@@ -44,7 +44,7 @@ namespace _project.Scripts.Card_Core
 
             availableCards = new List<ICard>
             {
-                new NeemOilBasic(),
+                new HorticulturalOilBasic(),
                 new SoapyWaterBasic(),
                 new FungicideBasic(),
                 new InsecticideBasic(),

@@ -7,7 +7,7 @@ namespace _project.Scripts.Handlers
     {
         public void ToggleNeemOil(ScriptedCollider spreader)
         {
-            spreader.ToggleRole(SpreaderRole.NeemOil);
+            spreader.ToggleRole(SpreaderRole.HorticulturalOil);
         }
 
         public void ToggleFungicide(ScriptedCollider spreader)
