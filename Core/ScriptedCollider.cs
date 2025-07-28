@@ -16,7 +16,7 @@ namespace _project.Scripts.Core
         MealyBug = 1 << 1,     // 2
         Mold = 1 << 2,         // 4
         Thrips = 1 << 3,       // 8
-        NeemOil = 1 << 4,      // 16
+        HorticulturalOil = 1 << 4,      // 16
         Fungicide = 1 << 5,    // 32
         Insecticide = 1 << 6,  // 64
         SoapyWater = 1 << 7    // 128
@@ -110,14 +110,6 @@ namespace _project.Scripts.Core
             _previousRoles = roles;
         }
 
-        /*public void RemoveRole(SpreaderRole role)
-        {
-            roles &= ~role;
-            if (roles == _previousRoles) return;
-            ProcessPlants();
-            _previousRoles = roles;
-        }*/
-
         public void ToggleRole(SpreaderRole role)
         {
             roles ^= role;
@@ -138,7 +130,7 @@ namespace _project.Scripts.Core
                 SpreaderRole.MealyBug => (new PlantAfflictions.MealyBugsAffliction(), null),
                 SpreaderRole.Mold => (new PlantAfflictions.MildewAffliction(), null),
 
-                SpreaderRole.NeemOil => (null, new PlantAfflictions.NeemOilTreatment()),
+                SpreaderRole.HorticulturalOil => (null, new PlantAfflictions.HorticulturalOilTreatment()),
                 SpreaderRole.Fungicide => (null, new PlantAfflictions.FungicideTreatment()),
                 SpreaderRole.Insecticide => (null, new PlantAfflictions.InsecticideTreatment()),
                 SpreaderRole.SoapyWater => (null, new PlantAfflictions.SoapyWaterTreatment()),

@@ -177,7 +177,7 @@ namespace _project.Scripts.Classes
 
         #region ITreatments
 
-        public class NeemOilTreatment : ITreatment
+        public class HorticulturalOilTreatment : ITreatment
         {
             public string Name => "NeemOil";
             public string Description => "Removes Aphids & Thrips";

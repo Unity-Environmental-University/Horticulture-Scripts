@@ -175,11 +175,11 @@ namespace _project.Scripts.Classes
 
     #region Action Cards
 
-    public class NeemOilBasic : ICard
+    public class HorticulturalOilBasic : ICard
     {
         [CanBeNull] private string _description;
-        public PlantAfflictions.ITreatment Treatment => new PlantAfflictions.NeemOilTreatment();
-        public string Name => "Neem Oil Basic";
+        public PlantAfflictions.ITreatment Treatment => new PlantAfflictions.HorticulturalOilTreatment();
+        public string Name => "Horticultural Oil Basic";
         public int? Value => -1;
 
         public string Description
@@ -193,7 +193,7 @@ namespace _project.Scripts.Classes
 
         public void Selected() { if (CardGameMaster.Instance.debuggingCardClass) Debug.Log("Selected " + Name); }
 
-        public ICard Clone() { return new NeemOilBasic(); }
+        public ICard Clone() { return new HorticulturalOilBasic(); }
     }
 
     public class InsecticideBasic : ICard

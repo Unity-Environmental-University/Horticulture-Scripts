@@ -31,8 +31,8 @@ namespace _project.Scripts.Card_Core
 
         private static readonly List<ICard> PrototypeActionDeck = new()
         {
-            new NeemOilBasic(),
-            new NeemOilBasic(),
+            new HorticulturalOilBasic(),
+            new HorticulturalOilBasic(),
             new FungicideBasic(),
             new FungicideBasic(),
             new InsecticideBasic(),
@@ -45,13 +45,13 @@ namespace _project.Scripts.Card_Core
 
         private readonly List<ICard> _tutorialActionDeck = new()
         {
-            new NeemOilBasic(),
+            new HorticulturalOilBasic(),
             new FungicideBasic(),
             new InsecticideBasic(),
             new SoapyWaterBasic(),
             new Panacea(),
             
-            new NeemOilBasic(),
+            new HorticulturalOilBasic(),
             new FungicideBasic(),
             new InsecticideBasic(),
             new SoapyWaterBasic(),
