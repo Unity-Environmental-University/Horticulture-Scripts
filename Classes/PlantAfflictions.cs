@@ -228,7 +228,7 @@ namespace _project.Scripts.Classes
 
         public class HorticulturalOilTreatment : ITreatment
         {
-            public string Name => "NeemOil";
+            public string Name => "Horticultural Oil";
             public string Description => "Removes Aphids & Thrips";
             public int BeeValue => -1;
         }
