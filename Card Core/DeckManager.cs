@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using _project.Scripts.Classes;
 using _project.Scripts.Core;
+using _project.Scripts.GameState;
 using Unity.Serialization;
 using UnityEngine;
 using Random = UnityEngine.Random;
@@ -198,6 +199,31 @@ namespace _project.Scripts.Card_Core
             return Mathf.Clamp(result, min, maxExclusive - 1);
         }
 
+        public List<ICard> GetActionDeck() => new List<ICard>(_actionDeck);
+        public List<ICard> GetDiscardPile() => new List<ICard>(_actionDiscardPile);
+        public List<ICard> GetActionHand() => new List<ICard>(_actionHand);
+
+        public void RestoreActionDeck(List<CardData> cards)
+        {
+            _actionDeck.Clear();
+            foreach (var card in cards)
+                _actionDeck.Add(card.CardType.Clone());
+        }
+        
+        public void RestoreDiscardPile(List<CardData> cards)
+        {
+            _actionDeck.Clear();
+            foreach (var card in cards)
+                _actionDiscardPile.Add(card.CardType.Clone());
+        }
+        
+        public void RestoreActionHand(List<CardData> cards)
+        {
+            _actionDeck.Clear();
+            foreach (var card in cards)
+                _actionHand.Add(card.CardType.Clone());
+        }
+        
         #endregion
 
         #region Plant Management

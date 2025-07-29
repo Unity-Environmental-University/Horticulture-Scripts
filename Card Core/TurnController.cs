@@ -6,6 +6,7 @@ using _project.Scripts.Cinematics;
 using _project.Scripts.Classes;
 using _project.Scripts.Core;
 using TMPro;
+using Unity.Serialization;
 using UnityEngine;
 using Random = System.Random;
 
@@ -26,6 +27,7 @@ namespace _project.Scripts.Card_Core
         public bool newRoundReady;
         public bool debugging;
         public bool shopQueued;
+        [DontSerialize] public bool tutorialCompleted;
 
         public Func<bool> ReadyToPlay;
         private static readonly Queue<PlantEffectRequest> PlantEffectQueue = new(); 
@@ -33,7 +35,6 @@ namespace _project.Scripts.Card_Core
         private ScoreManager _scoreManager;
         private Coroutine plantEffectCoroutine;
         private const int TutorialTurnCount = 5;
-        private bool _tutorialCompleted;
         private const int TutorialMoneyGoal = 500;
 
         public TurnController(Func<bool> readyToPlay) => ReadyToPlay = readyToPlay;
@@ -88,7 +89,7 @@ namespace _project.Scripts.Card_Core
             yield return new WaitForSeconds(2f);
 
             // If we just finished the last tutorial turn, give a brief pause before regular game
-            if (level == 0 && CardGameMaster.IsSequencingEnabled && currentTutorialTurn >= TutorialTurnCount && !_tutorialCompleted)
+            if (level == 0 && CardGameMaster.IsSequencingEnabled && currentTutorialTurn >= TutorialTurnCount && !tutorialCompleted)
             {
                 if (debugging)
                     Debug.Log("[TurnController] Tutorial complete! Transitioning to the regular game...");
@@ -96,7 +97,7 @@ namespace _project.Scripts.Card_Core
                 yield return new WaitForSeconds(2f);
                 _scoreManager.ResetMoneys();
                 currentRound = 1;
-                _tutorialCompleted = true;
+                tutorialCompleted = true;
             }
             
             if (level == 0 && CardGameMaster.IsSequencingEnabled &&
@@ -488,7 +489,7 @@ namespace _project.Scripts.Card_Core
             // Reset tutorial progress when restarting the game
             currentTutorialTurn = 0;
             currentRound = 0;
-            _tutorialCompleted = false;
+            tutorialCompleted = false;
             StartCoroutine(BeginTurnSequence());
             _scoreManager.ResetMoneys();
         }
