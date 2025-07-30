@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using _project.Scripts.Audio;
 using _project.Scripts.Cinematics;
 using _project.Scripts.Core;
+using _project.Scripts.GameState;
 using _project.Scripts.UI;
 using JetBrains.Annotations;
 using TMPro;
@@ -101,6 +102,10 @@ namespace _project.Scripts.Card_Core
 
             Instance = this;
         }
+
+        public void Save() => GameStateManager.SaveGame();
+        public void Load() => GameStateManager.LoadGame();
+        
         
         /// <summary>
         ///     Destroys the GameObject this script is attached to at runtime.

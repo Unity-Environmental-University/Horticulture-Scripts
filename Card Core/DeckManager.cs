@@ -207,21 +207,28 @@ namespace _project.Scripts.Card_Core
         {
             _actionDeck.Clear();
             foreach (var card in cards)
-                _actionDeck.Add(card.CardType.Clone());
+            {
+                // Reconstruct each card from serialized data
+                _actionDeck.Add(GameStateManager.DeserializeCard(card));
+            }
         }
         
         public void RestoreDiscardPile(List<CardData> cards)
         {
-            _actionDeck.Clear();
+            _actionDiscardPile.Clear();
             foreach (var card in cards)
-                _actionDiscardPile.Add(card.CardType.Clone());
+            {
+                _actionDiscardPile.Add(GameStateManager.DeserializeCard(card));
+            }
         }
         
         public void RestoreActionHand(List<CardData> cards)
         {
-            _actionDeck.Clear();
+            _actionHand.Clear();
             foreach (var card in cards)
-                _actionHand.Add(card.CardType.Clone());
+            {
+                _actionHand.Add(GameStateManager.DeserializeCard(card));
+            }
         }
         
         #endregion
@@ -391,6 +398,85 @@ namespace _project.Scripts.Card_Core
             yield return StartCoroutine(PlacePlantsSequentially());
         }
 
+        /// <summary>
+        /// Restores and places plants from saved game state sequentially, preserving transforms and afflictions.
+        /// </summary>
+        public IEnumerator RestorePlantsSequentially(List<PlantData> plantDataList, float delay = 0.4f)
+        {
+            if (plantDataList == null || plantDataList.Count == 0) yield break;
+
+            ClearAllPlants();
+            foreach (var pd in plantDataList.OrderBy(pd => pd.locationIndex))
+            {
+                // Reconstruct card and prefab
+                var cardProto = GameStateManager.DeserializeCard(pd.plantCard);
+                var prefab = GetPrefabForCard(cardProto);
+                if (!prefab) continue;
+
+                var location = plantLocations[pd.locationIndex];
+                // Play spawn sound
+                var clip = CardGameMaster.Instance.soundSystem.plantSpawn;
+                if (clip) AudioSource.PlayClipAtPoint(clip, location.position);
+
+                // Instantiate and set parent
+                var plantObj = Instantiate(prefab, location.position, location.rotation);
+                plantObj.transform.SetParent(location);
+
+                // Restore plant controller state
+                var plant = plantObj.GetComponent<PlantController>();
+                plant.PlantCard = cardProto;
+                if (plant.priceFlag && plant.priceFlagText)
+                    plant.priceFlagText.text = "$" + plant.PlantCard.Value;
+
+                if (pd.priorAfflictions != null)
+                    foreach (var affliction in pd.priorAfflictions)
+                    {
+                        var aff = (PlantAfflictions.IAffliction)affliction;
+                        plant.AddAffliction(aff);
+                    }
+
+                if (pd.currentAfflictions != null)
+                    foreach (var aff in pd.currentAfflictions)
+                        plant.AddAffliction(GetAfflictionFromString(aff));
+                if (pd.usedTreatments != null)
+                    foreach (var tr in pd.usedTreatments)
+                        plant.UsedTreatments.Add(GetTreatmentFromString(tr));
+                if (pd.currentTreatments != null)
+                    foreach (var tr in pd.currentTreatments)
+                        plant.CurrentTreatments.Add(GetTreatmentFromString(tr));
+                plant.SetMoldIntensity(pd.moldIntensity);
+
+                yield return new WaitForSeconds(delay);
+            }
+
+            StartCoroutine(UpdateCardHolderRenders());
+            CardGameMaster.Instance.scoreManager.CalculatePotentialProfit();
+        }
+
+        private PlantAfflictions.IAffliction GetAfflictionFromString(string afSting)
+        {
+            return afSting switch
+            {
+                "Aphids" => new PlantAfflictions.AphidsAffliction(),
+                "MealyBugs" => new PlantAfflictions.MealyBugsAffliction(),
+                "Mildew"  => new PlantAfflictions.MildewAffliction(),
+                "Thips" => new PlantAfflictions.ThripsAffliction(),
+                _ => null,
+            };
+        }
+        
+        private PlantAfflictions.ITreatment GetTreatmentFromString(string trSting)
+        {
+            return trSting switch
+            {
+                "Horticultural Oil" => new PlantAfflictions.HorticulturalOilTreatment(),
+                "Insecticide" => new PlantAfflictions.InsecticideTreatment(),
+                "SoapyWater"  => new PlantAfflictions.SoapyWaterTreatment(),
+                "Panacea" => new PlantAfflictions.Panacea(),
+                _ => null,
+            };
+        }
+
         public void DrawTutorialAfflictions()
         {
             _afflictionHand.Clear();
@@ -478,7 +564,7 @@ namespace _project.Scripts.Card_Core
                 availablePlants.RemoveAt(randomIndex);
 
                 var card = _afflictionHand[i];
-                var affliction = card.Affliction;
+                PlantAfflictions.IAffliction affliction = card.Affliction;
                 if (affliction != null)
                 {
                     // Check if the plant already has the affliction, Skip if it does.
