@@ -34,7 +34,7 @@ namespace _project.Scripts.Core
         
         [SerializeField] private Shader litShader;
         [SerializeField] private Shader moldShader;
-        [SerializeField] [Range(0, 1)] private float moldIntensity;
+        [Range(0, 1)] public float moldIntensity;
 
         [SerializeField] private ParticleSystem buffSystem;
         [SerializeField] private ParticleSystem thripsFX;
@@ -48,6 +48,7 @@ namespace _project.Scripts.Core
         [CanBeNull] public AudioSource audioSource;
         public PlantType type;
         public ICard PlantCard;
+        public GameObject prefab;
 
         private bool _needsShaderUpdate;
         private Renderer[] _renderers;
@@ -55,7 +56,7 @@ namespace _project.Scripts.Core
 
         public List<PlantAfflictions.IAffliction> CurrentAfflictions { get; } = new();
         public List<PlantAfflictions.ITreatment> CurrentTreatments { get; } = new();
-        private List<PlantAfflictions.IAffliction> PriorAfflictions { get; } = new();
+        public List<PlantAfflictions.IAffliction> PriorAfflictions { get; } = new();
         public List<PlantAfflictions.ITreatment> UsedTreatments { get; } = new();
 
         private void Start()
@@ -94,6 +95,11 @@ namespace _project.Scripts.Core
             if (!_needsShaderUpdate) return;
             UpdateShaders();
             _needsShaderUpdate = false;
+        }
+
+        public void SetTypePrefab(PlantType type)
+        {
+            
         }
 
         public void FlagShadersUpdate() => _needsShaderUpdate = true;
