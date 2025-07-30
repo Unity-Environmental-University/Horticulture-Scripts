@@ -100,11 +100,11 @@ namespace _project.Scripts.GameState
             dm.RestoreDiscardPile(data.deckData.discardPile);
             dm.RestoreActionHand(data.deckData.actionHand);
             
-            // Remove Existing Plants? //TODO REVIEW
-            dm.ClearAllPlants();
-
-            foreach (var plantData in data.plants)
-                DeserializePlant(plantData, dm);
+            // Restore Plants
+            //dm.ClearAllPlants();
+            CardGameMaster.Instance.StartCoroutine(
+                CardGameMaster.Instance.deckManager.RestorePlantsSequentially(data.plants)
+            );
             
             // Restore Retained Card
             var retained = Object.FindFirstObjectByType<RetainedCardHolder>();
@@ -115,7 +115,7 @@ namespace _project.Scripts.GameState
         {
             return new CardData
             {
-                CardType = card,
+                cardTypeName = card.GetType().Name,
                 Value = card.Value
             };
         }
@@ -126,17 +126,17 @@ namespace _project.Scripts.GameState
             for (var i = 0; i < dm.plantLocations.Count; i++)
             {
                 var plant = dm.plantLocations[i].GetComponentInChildren<PlantController>();
-                if (plant == null) continue;
+                if (!plant) continue;
 
                 list.Add(new PlantData
                 { 
                     plantType= plant.type,
                     plantCard = SerializeCard(plant.PlantCard),
                     locationIndex = i,
-                    CurrentAfflictions = plant.CurrentAfflictions,
-                    PriorAfflictions = plant.PriorAfflictions,
-                    UsedTreatments = plant.UsedTreatments,
-                    CurrentTreatments = plant.CurrentTreatments,
+                    currentAfflictions = plant.CurrentAfflictions,
+                    priorAfflictions = plant.PriorAfflictions,
+                    usedTreatments = plant.UsedTreatments,
+                    currentTreatments = plant.CurrentTreatments,
                     moldIntensity = plant.moldIntensity
                 });
             }
@@ -146,34 +146,49 @@ namespace _project.Scripts.GameState
         private static void DeserializePlant(PlantData data, DeckManager dm)
         {
             var location = dm.plantLocations[data.locationIndex];
-            var prefab = dm.GetPrefabForCard(data.plantCard.CardType);
+            // Reconstruct plant card to lookup its prefab
+            var cardProto = DeserializeCard(data.plantCard);
+            var prefab = dm.GetPrefabForCard(cardProto);
+            if (prefab == null)
+                throw new Exception($"Could not find prefab for plant card type '{cardProto.GetType().Name}'");
             var plantObj = Object.Instantiate(prefab, location.position, location.rotation, location);
             
             var plant = plantObj.GetComponent<PlantController>();
+            if (plant == null)
+                throw new Exception($"PlantController component missing on instantiated plant prefab '{prefab.name}'");
+            // Restore the plant card and any saved state
             plant.PlantCard = DeserializeCard(data.plantCard);
-
-            foreach (var aff in data.CurrentAfflictions)
-                plant.AddAffliction((aff));
-            
-            foreach (var treat in data.UsedTreatments)
-                plant.UsedTreatments.Add(treat);
-            
+            if (data.currentAfflictions != null)
+                foreach (var aff in data.currentAfflictions)
+                    plant.AddAffliction(aff);
+            if (data.usedTreatments != null)
+                foreach (var treat in data.usedTreatments)
+                    plant.UsedTreatments.Add(treat);
             plant.SetMoldIntensity(data.moldIntensity);
         }
 
-        private static ICard DeserializeCard(CardData data)
+        /// <summary>
+        /// Reconstructs a card instance from serialized data using its type name.
+        /// </summary>
+        public static ICard DeserializeCard(CardData data)
         {
             try
             {
-                var clone = data.CardType.Clone();
+                var typeName = data.cardTypeName;
+                var cardType = AppDomain.CurrentDomain.GetAssemblies()
+                    .SelectMany(a => a.GetTypes())
+                    .FirstOrDefault(t => t.Name == typeName && typeof(ICard).IsAssignableFrom(t));
+                if (cardType == null)
+                    throw new Exception($"Unknown card type: {typeName}");
+                if (!(Activator.CreateInstance(cardType) is ICard clone))
+                    throw new Exception($"Could not create card instance for type: {typeName}");
                 if (data.Value.HasValue)
                     clone.Value = data.Value.Value;
-
                 return clone;
             }
             catch (Exception e)
             {
-                throw new Exception($"Could not deserialize card type {data.CardType}", e);
+                throw new Exception($"Could not deserialize card type {data.cardTypeName}", e);
             }
         }
         

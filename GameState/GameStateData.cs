@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using _project.Scripts.Classes;
 using _project.Scripts.Core;
 
 namespace _project.Scripts.GameState
@@ -12,7 +11,6 @@ namespace _project.Scripts.GameState
         public ScoreData scoreData;
         public DeckData deckData;
         public List<PlantData> plants;
-        // Data for the card retained between rounds
         public RetainedCardData retainedCard;
     }
 
@@ -44,10 +42,10 @@ namespace _project.Scripts.GameState
         public List<CardData> actionDeck;
         public List<CardData> discardPile;
         public List<CardData> actionHand;
-        // Affliction decks and hands
+        
         public List<CardData> afflictionDeck;
         public List<CardData> afflictionHand;
-        // Plant decks and hands
+        
         public List<CardData> plantDeck;
         public List<CardData> plantHand;
     }
@@ -59,27 +57,22 @@ namespace _project.Scripts.GameState
         public CardData plantCard;
         public int locationIndex;
         
-        public List<PlantAfflictions.IAffliction> CurrentAfflictions;
-        public List<PlantAfflictions.IAffliction> PriorAfflictions;
+        public List<string> currentAfflictions;
+        public List<string> priorAfflictions;
         
-        public List<PlantAfflictions.ITreatment> CurrentTreatments;
-        public List<PlantAfflictions.ITreatment> UsedTreatments;
+        public List<string> currentTreatments;
+        public List<string> usedTreatments;
 
         public float moldIntensity;
-        public bool hasThripsFx;
-        public bool hasDebuffFx;
     }
 
     [Serializable]
     public class CardData
     {
-        public ICard CardType;
+        public string cardTypeName;
         public int? Value;
     }
-
-    /// <summary>
-    /// Data for a card retained between rounds.
-    /// </summary>
+    
     [Serializable]
     public class RetainedCardData
     {
