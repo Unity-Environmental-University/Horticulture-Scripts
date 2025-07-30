@@ -10,7 +10,7 @@ namespace _project.Scripts.Card_Core
         [SerializeField] private GameObject cardPrefab;
         private DeckManager _deckManager;
         private GameObject cardGoClone;
-        public ICard HeldCard { get; private set; }
+        public ICard HeldCard { get; set; }
         public bool hasPaidForCard;
         public bool isCardLocked;
         private MeshRenderer _buttonRenderer;

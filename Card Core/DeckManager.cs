@@ -340,7 +340,7 @@ namespace _project.Scripts.Card_Core
         /// If the card type does not have a defined prefab, it returns null.
         /// <param name="card">The card of type ICard for which the prefab needs to be retrieved.</param>
         /// <returns>The GameObject prefab corresponding to the provided card, or null if none is defined.</returns>
-        private GameObject GetPrefabForCard(ICard card)
+        public GameObject GetPrefabForCard(ICard card)
         {
             return card switch
             {

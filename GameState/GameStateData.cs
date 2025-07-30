@@ -59,11 +59,11 @@ namespace _project.Scripts.GameState
         public CardData plantCard;
         public int locationIndex;
         
-        public List<string> currentAfflictions;
-        public List<string> priorAfflictions;
+        public List<PlantAfflictions.IAffliction> CurrentAfflictions;
+        public List<PlantAfflictions.IAffliction> PriorAfflictions;
         
-        public List<string> currentTreatments;
-        public List<string> usedTreatments;
+        public List<PlantAfflictions.ITreatment> CurrentTreatments;
+        public List<PlantAfflictions.ITreatment> UsedTreatments;
 
         public float moldIntensity;
         public bool hasThripsFx;

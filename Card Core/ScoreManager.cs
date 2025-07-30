@@ -44,6 +44,12 @@ namespace _project.Scripts.Card_Core
                 CardGameMaster.Instance.shopMoneyText!.text = "Moneys: " + "$" + (Moneys + modifier);
         }
 
+        public static void SetScore(int newScore)
+        {
+            Moneys = newScore;
+            UpdateMoneysText();
+        } 
+
         private static void UpdateCostText(int totalCost) { TreatmentCostText.text = "Potential Loss: " + totalCost; }
         
         private static void UpdateProfitText(int potProfit) {PotentialProfitText.text = "Potential Profit: " + potProfit;}
