@@ -857,6 +857,17 @@ namespace _project.Scripts.Card_Core
                 Destroy(child.gameObject);
         }
 
+        /// <summary>
+        /// Refreshes the action hand display to match the current _actionHand list.
+        /// Clears existing visuals and plays the display sequence for all cards.
+        /// </summary>
+        public void RefreshActionHandDisplay()
+        {
+            if (updatingActionDisplay) return;
+            ClearActionCardVisuals();
+            StartCoroutine(DisplayActionCardsSequence());
+        }
+
         #endregion
     }
 }
