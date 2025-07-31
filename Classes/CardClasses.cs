@@ -275,7 +275,7 @@ namespace _project.Scripts.Classes
         public ICard Clone() { return new SoapyWaterBasic(); }
     }
     
-    public class Spinosad : ICard
+    public class SpinosadTreatment : ICard
     {
         [CanBeNull] private string _description;
         public PlantAfflictions.ITreatment Treatment => new PlantAfflictions.SpinosadTreatment();
@@ -293,10 +293,10 @@ namespace _project.Scripts.Classes
 
         public void Selected() { if (CardGameMaster.Instance.debuggingCardClass) Debug.Log("Selected " + Name); }
 
-        public ICard Clone() { return new Spinosad(); }
+        public ICard Clone() { return new SpinosadTreatment(); }
     }
 
-    public class Imidacloprid : ICard
+    public class ImidaclopridTreatment : ICard
     {
         [CanBeNull] private string _description;
         public PlantAfflictions.ITreatment Treatment => new PlantAfflictions.ImidaclopridTreatment();
@@ -314,7 +314,7 @@ namespace _project.Scripts.Classes
 
         public void Selected() { if (CardGameMaster.Instance.debuggingCardClass) Debug.Log("Selected " + Name); }
 
-        public ICard Clone() { return new Imidacloprid(); }
+        public ICard Clone() { return new ImidaclopridTreatment(); }
     }
 
     public class Panacea : ICard

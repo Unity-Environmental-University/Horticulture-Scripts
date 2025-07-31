@@ -73,7 +73,7 @@ namespace _project.Scripts.Classes
                         _hasAdults = false;
                         //Debug.LogError("HadAdults: " + _hasAdults + "HasLarvae " + _hasLarvae);
                         break;
-                    case "NeemOil":
+                    case "Horticultural Oil":
                         _hasLarvae = false;
                         //Debug.LogError("HadAdults: " + _hasAdults + "HasLarvae " + _hasLarvae);
                         break;
@@ -89,9 +89,6 @@ namespace _project.Scripts.Classes
 
             public void TickDay(PlantController plant)
             {
-                // if (_hasAdults) _hasLarvae = true;
-                // else if (_hasLarvae) _hasAdults = true;
-
                 if (!plant.PlantCard.Value.HasValue) return;
                 var newVal = Mathf.Max(0, plant.PlantCard.Value.Value - 1);
                 plant.PlantCard.Value = newVal;
@@ -113,7 +110,8 @@ namespace _project.Scripts.Classes
 
             public void TreatWith(ITreatment treatment, PlantController plant)
             {
-                if (treatment is SoapyWaterTreatment or Panacea or InsecticideTreatment) plant.RemoveAffliction(this);
+                if (treatment is SoapyWaterTreatment or InsecticideTreatment or ImidaclopridTreatment or Panacea)
+                    plant.RemoveAffliction(this);
             }
 
             public void TickDay(PlantController plant)
@@ -160,7 +158,8 @@ namespace _project.Scripts.Classes
 
             public void TreatWith(ITreatment treatment, PlantController plant)
             {
-                if (treatment is HorticulturalOilTreatment or Panacea or InsecticideTreatment) plant.RemoveAffliction(this);
+                if (treatment is HorticulturalOilTreatment or ImidaclopridTreatment or SpinosadTreatment
+                    or InsecticideTreatment or Panacea) plant.RemoveAffliction(this);
             }
 
             public void TickDay(PlantController plant)
@@ -180,11 +179,10 @@ namespace _project.Scripts.Classes
             public Color Color => Color.orange;
             public Shader Shader => null; //Shader.Find($"Shader Graphs/SpiderMites");
             public IAffliction Clone() { return new SpiderMitesAffliction(); }
-
-            //TODO Verify treatments
+            
             public void TreatWith(ITreatment treatment, PlantController plant)
             {
-                if (treatment is HorticulturalOilTreatment or Panacea or InsecticideTreatment) plant.RemoveAffliction(this);
+                if (treatment is HorticulturalOilTreatment or Panacea) plant.RemoveAffliction(this);
             }
 
             public void TickDay(PlantController plant)
@@ -206,10 +204,9 @@ namespace _project.Scripts.Classes
 
             public IAffliction Clone() { return new FungusGnatsAffliction(); }
             
-            //TODO Verify treatments
             public void TreatWith(ITreatment treatment, PlantController plant)
             {
-                if (treatment is HorticulturalOilTreatment or Panacea or InsecticideTreatment) plant.RemoveAffliction(this);
+                if (treatment is ImidaclopridTreatment or SpinosadTreatment or Panacea) plant.RemoveAffliction(this);
             }
 
             public void TickDay(PlantController plant)
