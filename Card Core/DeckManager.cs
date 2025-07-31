@@ -59,10 +59,7 @@ namespace _project.Scripts.Card_Core
             new Panacea()
         };
         
-        private readonly List<ICard> _tutorialPlantDeck = new()
-        {
-            new ColeusCard()
-        };
+        private readonly List<ICard> _tutorialPlantDeck = new();
 
         private readonly List<ICard> _tutorialAfflictionDeck = new()
         {
@@ -373,19 +370,52 @@ namespace _project.Scripts.Card_Core
             switch (cgm.turnController.currentTutorialTurn)
             {
                 case 0:
+                    _tutorialPlantDeck.Clear();
+                    _tutorialAfflictionDeck.Clear();
+                    
+                    _tutorialPlantDeck.Add(new ColeusCard());
+                    
+                    _tutorialAfflictionDeck.Add(new AphidsCard());
                     break;
                 case 1:
+                    _tutorialPlantDeck.Clear();
+                    _tutorialAfflictionDeck.Clear();
+                    
+                    _tutorialPlantDeck.Add(new ColeusCard());
                     _tutorialPlantDeck.Add(new ChrysanthemumCard());
+                    
+                    _tutorialAfflictionDeck.Add(new AphidsCard());
                     break;
                 case 2:
+                    _tutorialPlantDeck.Clear();
+                    _tutorialAfflictionDeck.Clear();
+                    
+                    _tutorialPlantDeck.Add(new ColeusCard());
+                    _tutorialPlantDeck.Add(new ChrysanthemumCard());
                     _tutorialPlantDeck.Add(new CucumberCard());
+                    
+                    _tutorialAfflictionDeck.Add(new AphidsCard());
                     _tutorialAfflictionDeck.Add(new MealyBugsCard());
                     break;
                 case 3:
+                    _tutorialPlantDeck.Clear();
+                    _tutorialAfflictionDeck.Clear();
+                    
+                    _tutorialPlantDeck.Add(new ColeusCard());
+                    _tutorialPlantDeck.Add(new ChrysanthemumCard());
+                    _tutorialPlantDeck.Add(new CucumberCard());
                     _tutorialPlantDeck.Add(new PepperCard());
+                    
+                    _tutorialAfflictionDeck.Add(new AphidsCard());
+                    _tutorialAfflictionDeck.Add(new MealyBugsCard());
                     _tutorialAfflictionDeck.Add(new MildewCard());
                     break;
                 case 4:
+                    _tutorialAfflictionDeck.Clear();
+                    
+                    _tutorialAfflictionDeck.Add(new AphidsCard());
+                    _tutorialAfflictionDeck.Add(new MealyBugsCard());
+                    _tutorialAfflictionDeck.Add(new MildewCard());
                     _tutorialAfflictionDeck.Add(new ThripsCard());
                     break;
             }
@@ -405,6 +435,7 @@ namespace _project.Scripts.Card_Core
         {
             if (plantDataList == null || plantDataList.Count == 0) yield break;
 
+            _plantHand.Clear();
             ClearAllPlants();
             foreach (var pd in plantDataList.OrderBy(pd => pd.locationIndex))
             {
@@ -427,13 +458,6 @@ namespace _project.Scripts.Card_Core
                 plant.PlantCard = cardProto;
                 if (plant.priceFlag && plant.priceFlagText)
                     plant.priceFlagText.text = "$" + plant.PlantCard.Value;
-
-                // if (pd.priorAfflictions != null)
-                //     foreach (var affliction in pd.priorAfflictions)
-                //     {
-                //         var aff = (PlantAfflictions.IAffliction)affliction;
-                //         plant.AddAffliction(aff);
-                //     }
                 
                 if (pd.priorAfflictions != null)
                     foreach (var affliction in pd.priorAfflictions)
