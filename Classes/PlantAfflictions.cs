@@ -255,13 +255,13 @@ namespace _project.Scripts.Classes
         {
             public string Name => "Spinosad";
             public string Description => "Effective against: Thrips, Mites, Gnats";
-            public int BeeValue => -2;
+            public int BeeValue => -2; //TODO Get Bee Value
         }
 
         public class ImidaclopridTreatment : ITreatment
         {
             public string Name => "Imidacloprid";
-            public string Description => "Removes Mildew"; // TODO Get exact list
+            public string Description => "Insecticide, systemic, neonicotinoid, effective, broad-spectrum.";
             public int BeeValue => -5; //TODO Get Bee Value
         }
 
