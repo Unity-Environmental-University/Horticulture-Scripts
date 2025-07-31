@@ -133,10 +133,10 @@ namespace _project.Scripts.GameState
                     plantType= plant.type,
                     plantCard = SerializeCard(plant.PlantCard),
                     locationIndex = i,
-                    currentAfflictions = plant.CurrentAfflictions,
-                    priorAfflictions = plant.PriorAfflictions,
-                    usedTreatments = plant.UsedTreatments,
-                    currentTreatments = plant.CurrentTreatments,
+                    currentAfflictions = plant.cAfflictions,
+                    priorAfflictions = plant.pAfflictions,
+                    usedTreatments = plant.uTreatments,
+                    currentTreatments = plant.cTreatments,
                     moldIntensity = plant.moldIntensity
                 });
             }
@@ -160,10 +160,10 @@ namespace _project.Scripts.GameState
             plant.PlantCard = DeserializeCard(data.plantCard);
             if (data.currentAfflictions != null)
                 foreach (var aff in data.currentAfflictions)
-                    plant.AddAffliction(aff);
+                    plant.AddAffliction(DeckManager.GetAfflictionFromString(aff));
             if (data.usedTreatments != null)
                 foreach (var treat in data.usedTreatments)
-                    plant.UsedTreatments.Add(treat);
+                    plant.UsedTreatments.Add(DeckManager.GetTreatmentFromString(treat));
             plant.SetMoldIntensity(data.moldIntensity);
         }
 
@@ -180,7 +180,7 @@ namespace _project.Scripts.GameState
                     .FirstOrDefault(t => t.Name == typeName && typeof(ICard).IsAssignableFrom(t));
                 if (cardType == null)
                     throw new Exception($"Unknown card type: {typeName}");
-                if (!(Activator.CreateInstance(cardType) is ICard clone))
+                if (Activator.CreateInstance(cardType) is not ICard clone)
                     throw new Exception($"Could not create card instance for type: {typeName}");
                 if (data.Value.HasValue)
                     clone.Value = data.Value.Value;
