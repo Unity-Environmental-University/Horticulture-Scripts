@@ -25,12 +25,6 @@ namespace _project.Scripts.Core
     public class PlantController : MonoBehaviour
     {
         private readonly int _moldIntensityID = Shader.PropertyToID("_Mold_Intensity");
-
-        // ReSharper disable twice NotAccessedField.Local
-        [SerializeField] private List<string> cAfflictions = new();
-        [SerializeField] private List<string> cTreatments = new();
-        [SerializeField] private List<string> uAfflictions = new();
-        [SerializeField] private List<string> uTreatments = new();
         
         [SerializeField] private Shader litShader;
         [SerializeField] private Shader moldShader;
@@ -38,9 +32,14 @@ namespace _project.Scripts.Core
 
         [SerializeField] private ParticleSystem buffSystem;
         [SerializeField] private ParticleSystem thripsFX;
+        
+        [SerializeField] public List<string> cAfflictions = new();
+        [SerializeField] public List<string> cTreatments = new();
+        [SerializeField] public List<string> pAfflictions = new();
+        [SerializeField] public List<string> uTreatments = new();
         [SerializeField] public ParticleSystem debuffSystem;
         [SerializeField] public ParticleSystem deathFX;
-
+        
         [DontSerialize] public PlantCardFunctions plantCardFunctions;
 
         [CanBeNull] public GameObject priceFlag;
@@ -88,7 +87,7 @@ namespace _project.Scripts.Core
         {
             cAfflictions = CurrentAfflictions.Select(a => a.Name).ToList();
             cTreatments = CurrentTreatments.Select(a => a.Name).ToList();
-            uAfflictions = PriorAfflictions.Select(a => a.Name).ToList();
+            pAfflictions = PriorAfflictions.Select(a => a.Name).ToList();
             uTreatments = UsedTreatments.Select(a => a.Name).ToList();
             if (PlantCard is { Value: <= 0 }) KillPlant();
 

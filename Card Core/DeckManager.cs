@@ -428,11 +428,17 @@ namespace _project.Scripts.Card_Core
                 if (plant.priceFlag && plant.priceFlagText)
                     plant.priceFlagText.text = "$" + plant.PlantCard.Value;
 
+                // if (pd.priorAfflictions != null)
+                //     foreach (var affliction in pd.priorAfflictions)
+                //     {
+                //         var aff = (PlantAfflictions.IAffliction)affliction;
+                //         plant.AddAffliction(aff);
+                //     }
+                
                 if (pd.priorAfflictions != null)
                     foreach (var affliction in pd.priorAfflictions)
                     {
-                        var aff = (PlantAfflictions.IAffliction)affliction;
-                        plant.AddAffliction(aff);
+                        plant.AddAffliction(GetAfflictionFromString(affliction));
                     }
 
                 if (pd.currentAfflictions != null)
@@ -453,27 +459,32 @@ namespace _project.Scripts.Card_Core
             CardGameMaster.Instance.scoreManager.CalculatePotentialProfit();
         }
 
-        private PlantAfflictions.IAffliction GetAfflictionFromString(string afSting)
+        public static PlantAfflictions.IAffliction GetAfflictionFromString(string afSting)
         {
             return afSting switch
             {
                 "Aphids" => new PlantAfflictions.AphidsAffliction(),
                 "MealyBugs" => new PlantAfflictions.MealyBugsAffliction(),
                 "Mildew"  => new PlantAfflictions.MildewAffliction(),
-                "Thips" => new PlantAfflictions.ThripsAffliction(),
+                "Thrips" => new PlantAfflictions.ThripsAffliction(),
+                "Spider Mites" => new PlantAfflictions.SpiderMitesAffliction(),
+                "Fungus Gnats" => new PlantAfflictions.FungusGnatsAffliction(),
                 _ => null,
             };
         }
         
-        private PlantAfflictions.ITreatment GetTreatmentFromString(string trSting)
+        public static PlantAfflictions.ITreatment GetTreatmentFromString(string trSting)
         {
             return trSting switch
             {
                 "Horticultural Oil" => new PlantAfflictions.HorticulturalOilTreatment(),
+                "Fungicide" => new PlantAfflictions.FungicideTreatment(),
                 "Insecticide" => new PlantAfflictions.InsecticideTreatment(),
-                "SoapyWater"  => new PlantAfflictions.SoapyWaterTreatment(),
+                "SoapyWater" => new PlantAfflictions.SoapyWaterTreatment(),
+                "Spinosad" => new PlantAfflictions.SpinosadTreatment(),
+                "Imidacloprid" => new PlantAfflictions.ImidaclopridTreatment(),
                 "Panacea" => new PlantAfflictions.Panacea(),
-                _ => null,
+                _ => null
             };
         }
 
