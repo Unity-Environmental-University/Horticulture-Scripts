@@ -344,7 +344,7 @@ namespace _project.Scripts.Card_Core
         /// If the card type does not have a defined prefab, it returns null.
         /// <param name="card">The card of type ICard for which the prefab needs to be retrieved.</param>
         /// <returns>The GameObject prefab corresponding to the provided card, or null if none is defined.</returns>
-        public GameObject GetPrefabForCard(ICard card)
+        private GameObject GetPrefabForCard(ICard card)
         {
             return card switch
             {
@@ -459,15 +459,25 @@ namespace _project.Scripts.Card_Core
                 if (plant.priceFlag && plant.priceFlagText)
                     plant.priceFlagText.text = "$" + plant.PlantCard.Value;
                 
+                // Restore history without queueing or duplicating afflictions
+                plant.PriorAfflictions.Clear();
                 if (pd.priorAfflictions != null)
-                    foreach (var affliction in pd.priorAfflictions)
+                {
+                    foreach (var aff in pd.priorAfflictions.Select(GetAfflictionFromString).Where(aff => aff != null))
                     {
-                        plant.AddAffliction(GetAfflictionFromString(affliction));
+                        plant.PriorAfflictions.Add(aff);
                     }
+                }
 
+                // Restore current afflictions (effects suppressed during load)
+                plant.CurrentAfflictions.Clear();
                 if (pd.currentAfflictions != null)
-                    foreach (var aff in pd.currentAfflictions)
-                        plant.AddAffliction(GetAfflictionFromString(aff));
+                {
+                    foreach (var aff in pd.currentAfflictions.Select(GetAfflictionFromString).Where(aff => aff != null))
+                    {
+                        plant.AddAffliction(aff);
+                    }
+                }
                 if (pd.usedTreatments != null)
                     foreach (var tr in pd.usedTreatments)
                         plant.UsedTreatments.Add(GetTreatmentFromString(tr));
