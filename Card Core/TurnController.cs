@@ -467,6 +467,18 @@ namespace _project.Scripts.Card_Core
             plantEffectCoroutine = null;
         }
 
+        public void ClearEffectQueue()
+        {
+            while (PlantEffectQueue.Count > 0)
+            {
+                var request = PlantEffectQueue.Dequeue();
+                if (request.Particle)
+                    request.Particle.Stop();
+            }
+
+            plantEffectCoroutine = null;
+        }
+
         public void ShowBetaScreen()
         {
             winScreen.gameObject.SetActive(true);

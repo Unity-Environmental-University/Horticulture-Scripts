@@ -109,6 +109,9 @@ namespace _project.Scripts.GameState
             // Restore Retained Card
             var retained = Object.FindFirstObjectByType<RetainedCardHolder>();
             if (retained && retained.HeldCard != null) retained.HeldCard = DeserializeCard(data.retainedCard.card);
+            
+            // Clear EffectQueue
+            tc.ClearEffectQueue();
         }
 
         private static CardData SerializeCard(ICard card)
@@ -141,30 +144,6 @@ namespace _project.Scripts.GameState
                 });
             }
             return list;
-        }
-
-        private static void DeserializePlant(PlantData data, DeckManager dm)
-        {
-            var location = dm.plantLocations[data.locationIndex];
-            // Reconstruct plant card to lookup its prefab
-            var cardProto = DeserializeCard(data.plantCard);
-            var prefab = dm.GetPrefabForCard(cardProto);
-            if (prefab == null)
-                throw new Exception($"Could not find prefab for plant card type '{cardProto.GetType().Name}'");
-            var plantObj = Object.Instantiate(prefab, location.position, location.rotation, location);
-            
-            var plant = plantObj.GetComponent<PlantController>();
-            if (plant == null)
-                throw new Exception($"PlantController component missing on instantiated plant prefab '{prefab.name}'");
-            // Restore the plant card and any saved state
-            plant.PlantCard = DeserializeCard(data.plantCard);
-            if (data.currentAfflictions != null)
-                foreach (var aff in data.currentAfflictions)
-                    plant.AddAffliction(DeckManager.GetAfflictionFromString(aff));
-            if (data.usedTreatments != null)
-                foreach (var treat in data.usedTreatments)
-                    plant.UsedTreatments.Add(DeckManager.GetTreatmentFromString(treat));
-            plant.SetMoldIntensity(data.moldIntensity);
         }
 
         /// <summary>
