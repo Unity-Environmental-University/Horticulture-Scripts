@@ -280,7 +280,7 @@ namespace _project.Scripts.Classes
         [CanBeNull] private string _description;
         public PlantAfflictions.ITreatment Treatment => new PlantAfflictions.SpinosadTreatment();
         public string Name => "Spinosad";
-        public int? Value => -3; //TODO Check on this cost
+        public int? Value => -4;
 
         public string Description
         {
@@ -301,7 +301,7 @@ namespace _project.Scripts.Classes
         [CanBeNull] private string _description;
         public PlantAfflictions.ITreatment Treatment => new PlantAfflictions.ImidaclopridTreatment();
         public string Name => "Imidacloprid";
-        public int? Value => -1; //TODO Get Cost
+        public int? Value => -2;
         
         public string Description
         {
