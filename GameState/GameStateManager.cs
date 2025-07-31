@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using _project.Scripts.Card_Core;
@@ -101,16 +102,19 @@ namespace _project.Scripts.GameState
             dm.RestoreActionHand(data.deckData.actionHand);
             dm.RefreshActionHandDisplay();
             
-            // Restore Plants
-            CardGameMaster.Instance.StartCoroutine(
-                CardGameMaster.Instance.deckManager.RestorePlantsSequentially(data.plants)
-            );
-            
+            // Clear any pending plant effects, then restore plants and clear effects again when done
+            tc.ClearEffectQueue();
+            CardGameMaster.Instance.StartCoroutine(RestorePlantsAndClearEffects(data.plants, tc));
+
             // Restore Retained Card
             var retained = Object.FindFirstObjectByType<RetainedCardHolder>();
-            if (retained && retained.HeldCard != null) retained.HeldCard = DeserializeCard(data.retainedCard.card);
-            
-            // Clear EffectQueue
+            if (retained && retained.HeldCard != null)
+                retained.HeldCard = DeserializeCard(data.retainedCard.card);
+        }
+        
+        private static IEnumerator RestorePlantsAndClearEffects(List<PlantData> plantData, TurnController tc)
+        {
+            yield return CardGameMaster.Instance.deckManager.RestorePlantsSequentially(plantData);
             tc.ClearEffectQueue();
         }
 
