@@ -99,9 +99,9 @@ namespace _project.Scripts.GameState
             dm.RestoreActionDeck(data.deckData.actionDeck);
             dm.RestoreDiscardPile(data.deckData.discardPile);
             dm.RestoreActionHand(data.deckData.actionHand);
+            dm.RefreshActionHandDisplay();
             
             // Restore Plants
-            //dm.ClearAllPlants();
             CardGameMaster.Instance.StartCoroutine(
                 CardGameMaster.Instance.deckManager.RestorePlantsSequentially(data.plants)
             );
