@@ -12,6 +12,8 @@ namespace _project.Scripts.GameState
 {
     public static class GameStateManager
     {
+        public static bool SuppressQueuedEffects { get; private set; }
+        
         public static void SaveGame()
         {
             var data = new GameStateData();
@@ -102,8 +104,8 @@ namespace _project.Scripts.GameState
             dm.RestoreActionHand(data.deckData.actionHand);
             dm.RefreshActionHandDisplay();
             
-            // Clear any pending plant effects, then restore plants and clear effects again when done
-            tc.ClearEffectQueue();
+            // Suppress any plant effects during restore and clear the queue when done
+            SuppressQueuedEffects = true;
             CardGameMaster.Instance.StartCoroutine(RestorePlantsAndClearEffects(data.plants, tc));
 
             // Restore Retained Card
@@ -116,6 +118,7 @@ namespace _project.Scripts.GameState
         {
             yield return CardGameMaster.Instance.deckManager.RestorePlantsSequentially(plantData);
             tc.ClearEffectQueue();
+            SuppressQueuedEffects = false;
         }
 
         private static CardData SerializeCard(ICard card)

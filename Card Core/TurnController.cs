@@ -5,6 +5,7 @@ using System.Linq;
 using _project.Scripts.Cinematics;
 using _project.Scripts.Classes;
 using _project.Scripts.Core;
+using _project.Scripts.GameState;
 using TMPro;
 using Unity.Serialization;
 using UnityEngine;
@@ -433,6 +434,8 @@ namespace _project.Scripts.Card_Core
         public static void QueuePlantEffect(PlantController plant, ParticleSystem particle = null, AudioClip sound = null,
             float delay = 0.3f)
         {
+            if (GameStateManager.SuppressQueuedEffects)
+                return;
             PlantEffectQueue.Enqueue(new PlantEffectRequest(plant, particle, sound, delay));
         }
 
