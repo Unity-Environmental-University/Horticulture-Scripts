@@ -95,7 +95,7 @@ namespace _project.Scripts.Core
                 // Get the value of the field
                 var value = field.GetValue(this);
 
-                // Check if the value is null or, for Unity objects if it is missing
+                // Check if the value is null or for Unity objects if it is missing
                 if (value != null && (value is not Object unityObject || unityObject)) continue;
                 Debug.LogError($"Field '{field.Name}' is null or missing!");
                 return false;
@@ -175,7 +175,7 @@ namespace _project.Scripts.Core
             if (debugging) Debug.Log("Opened Notebook");
             SetDialogueText(4, 1);
 
-            // Robot will say something like that's cool now lets take a picture
+            // Robot will say something like that's cool, now let's take a picture
             yield return new WaitUntil(() => _flags.Contains(ScriptFlags.TookPicture));
             if (debugging) Debug.Log("Picture Taken");
             SetDialogueText(5, 1);

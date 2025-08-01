@@ -58,7 +58,7 @@ namespace _project.Scripts.Card_Core
 
             _click3D.isEnabled = nowEnabled;
 
-            // If re-enabled this frame, and mouse is currently over the button, set hover
+            // If re-enabled this frame, and the mouse is currently over the button, set hover
             if (!wasEnabled && nowEnabled)
             {
                 if (_camera)

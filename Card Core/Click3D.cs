@@ -89,7 +89,7 @@ namespace _project.Scripts.Card_Core
         /// It specifically handles touch inputs (e.g., from mobile devices) to detect screen taps.
         /// When a touch input is detected, its position is processed to determine if the object
         /// corresponding to this component was clicked, triggering the `onClick3D` event in such cases.
-        /// The update process also ensures proper behavior by verifying necessary conditions
+        /// The update process also ensures proper behavior by verifying the necessary conditions
         /// such as the active scene and main camera availability before performing any operations.
         private void Update()
         {

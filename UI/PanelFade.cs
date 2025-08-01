@@ -31,7 +31,7 @@ namespace _project.Scripts.UI
                 yield return null;
             }
         
-            //This is the full black space, we invoke an event to be set here
+            //This is the full black space; we invoke an event to be set here
             OnScreenOff?.Invoke();
 
             yield return new WaitForSeconds(fadeHoldTime);

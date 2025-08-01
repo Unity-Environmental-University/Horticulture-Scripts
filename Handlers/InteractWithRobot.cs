@@ -60,7 +60,7 @@ namespace _project.Scripts.Handlers
             interactHUD.SetActive(false);
             robotManager.SetDialogueText(interactDialogue, 1);
             robotManager.OpenDialogueBox();
-            StartCoroutine(TemporaryCloseDelayCoroutine()); // replace with dialogue audio timing.
+            StartCoroutine(TemporaryCloseDelayCoroutine()); // replace it with dialogue audio timing.
         }
 
         private IEnumerator TemporaryCloseDelayCoroutine()

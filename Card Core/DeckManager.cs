@@ -469,7 +469,7 @@ namespace _project.Scripts.Card_Core
                     }
                 }
 
-                // Restore current afflictions (effects suppressed during load)
+                // Restore current afflictions (effects suppressed during the load process)
                 plant.CurrentAfflictions.Clear();
                 if (pd.currentAfflictions != null)
                 {
@@ -493,7 +493,7 @@ namespace _project.Scripts.Card_Core
             CardGameMaster.Instance.scoreManager.CalculatePotentialProfit();
         }
 
-        public static PlantAfflictions.IAffliction GetAfflictionFromString(string afSting)
+        private static PlantAfflictions.IAffliction GetAfflictionFromString(string afSting)
         {
             return afSting switch
             {
@@ -506,8 +506,8 @@ namespace _project.Scripts.Card_Core
                 _ => null,
             };
         }
-        
-        public static PlantAfflictions.ITreatment GetTreatmentFromString(string trSting)
+
+        private static PlantAfflictions.ITreatment GetTreatmentFromString(string trSting)
         {
             return trSting switch
             {

@@ -1,12 +1,14 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using _project.Scripts.Core;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
+using Debug = UnityEngine.Debug;
 
 namespace _project.Scripts.UI
 {
@@ -109,7 +111,6 @@ namespace _project.Scripts.UI
 
         private void Awake()
         {
-            // SelectMany Not sure how much better this is than 3 nested foreach loops
             _allImages = fieldNotesPages
                 .SelectMany(page => page.days)
                 .SelectMany(day => day.AllImages());
@@ -303,11 +304,11 @@ namespace _project.Scripts.UI
             // ReSharper disable once Unity.PerformanceCriticalCodeInvocation
             if (File.Exists(path) && debugging) Debug.Log($"File found on retry: {path}");
             else
-                // File still not found after retries
+                // If the File is still not found after retries
                 // ReSharper disable once Unity.PerformanceCriticalCodeInvocation
                 Debug.LogError($"Image file not found after retries: {path}");
 
-            // Reset the current image field after attaching image
+            // Reset the current image field after attaching the image
             _currentImageField = null;
         }
 
@@ -357,7 +358,7 @@ namespace _project.Scripts.UI
             if (File.Exists(filePath))
             {
 #if UNITY_EDITOR_OSX || UNITY_STANDALONE_OSX
-            System.Diagnostics.Process.Start("open", $"\"{filePath}\"");
+            Process.Start("open", $"\"{filePath}\"");
 #else
                 Application.OpenURL($"file://{filePath}");
 #endif

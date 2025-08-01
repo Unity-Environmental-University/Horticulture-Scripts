@@ -1,5 +1,5 @@
 /*
- 1. Usage - Attach this to the Player Character
+ 1. Usage - Attach this to Player Character
  2. Create the Layers for "InspectableObject" and "Large-Inspect"
  3. Attach your Player Controller script to the 'controller' param
  4. Attach all respective components to the script in the inspector
@@ -170,7 +170,7 @@ namespace _project.Scripts.Core
                 );
             }
 
-            // if Player is holding right mouse button, move along x/y-axis
+            // if the Player is holding the right mouse button, move along x/y-axis
             if (_rightClickAction.IsInProgress())
             {
                 var mouseX = Input.GetAxis("Mouse X");
@@ -269,7 +269,7 @@ namespace _project.Scripts.Core
             _originalPosition = _inspectableObject.transform.position;
             _originalRotation = _inspectableObject.transform.rotation;
 
-            // Unlock and reveal cursor
+            // Unlock and reveal the cursor
             Cursor.lockState = CursorLockMode.None;
             controller.mouseCaptured = true;
 
@@ -338,7 +338,7 @@ namespace _project.Scripts.Core
             inspectImage.SetActive(false);
             inspectImageTwo.SetActive(false);
 
-            // re-lock and re-hide cursor
+            // re-lock and re-hide the cursor
             Cursor.lockState = CursorLockMode.Locked;
 
             controller.mouseCaptured = false;
@@ -354,7 +354,7 @@ namespace _project.Scripts.Core
             if (_depthOfField) _depthOfField.active = false;
 
             // **Restore the original layers of all objects**
-            foreach (var kvp in _originalLayers) kvp.Key.layer = kvp.Value; // **Restore to original layer**
+            foreach (var kvp in _originalLayers) kvp.Key.layer = kvp.Value; // **Restore to the original layer **
             _originalLayers.Clear();
         }
 
@@ -364,7 +364,8 @@ namespace _project.Scripts.Core
         {
             try
             {
-                //highlight only when player is looking at the object and remove highlight when player is not looking at the object
+                // highlight only when the player is looking at the object
+                // remove highlight when the player is not looking at the object
                 if (_isCheckingForHighlight)
                 {
                     if (IsLookingAtLayer("InspectableObject") && IsCloseEnoughToInspect())
@@ -406,7 +407,7 @@ namespace _project.Scripts.Core
                 objectRenderer.sharedMaterial.color = color * highlightIntensity;
             }
 
-            // Recursively change color of all child objects
+            // Recursively change the color of all child objects
             foreach (Transform child in obj.transform) HighlightObject(child.gameObject, color);
         }
 

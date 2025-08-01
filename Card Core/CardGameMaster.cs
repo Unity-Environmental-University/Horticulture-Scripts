@@ -26,6 +26,7 @@ namespace _project.Scripts.Card_Core
     [RequireComponent(typeof(DeckManager))]
     [RequireComponent(typeof(ScoreManager))]
     [RequireComponent(typeof(TurnController))]
+    
     public class CardGameMaster : MonoBehaviour
     {
         [Header("FOR DEBUGGING ONLY")]

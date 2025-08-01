@@ -195,7 +195,7 @@ namespace _project.Scripts.Data
             if (www.result is UnityWebRequest.Result.ProtocolError or UnityWebRequest.Result.ConnectionError)
             {
                 Debug.LogWarning($"Remote affliction text fetch failed: {www.error} [{remoteUrl}]");
-                // Try persistent cache
+                // Try the persistent cache
                 if (File.Exists(localCache))
                 {
                     Debug.LogWarning($"Loaded affliction text from persistent cache: {localCache}");

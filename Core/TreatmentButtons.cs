@@ -1,3 +1,4 @@
+using System;
 using _project.Scripts.UI;
 using UnityEngine;
 
@@ -13,7 +14,7 @@ namespace _project.Scripts.Core
 
         public void SetTreatment(string treatmentName)
         {
-            if (System.Enum.TryParse(treatmentName, out SpreaderRole treatment))
+            if (Enum.TryParse(treatmentName, out SpreaderRole treatment))
             {
                 _currentTreatment = treatment;
             }
@@ -34,7 +35,7 @@ namespace _project.Scripts.Core
         {
             if (_currentTreatment == SpreaderRole.None) return;
             table.AddTreatment(_currentTreatment, _currentIcon);
-            ClearTreatment(); // Optionally clear cursor after applying
+            ClearTreatment();
         }
     }
 }

@@ -165,7 +165,7 @@ namespace _project.Scripts.Data
             Debug.Log($"Resolution set to {w}x{h}");
         }
 
-        // Method to change display mode when the dropdown value changes
+        // Method to change the display mode when the dropdown value changes
         private static void SetDisplayMode(string displayMode)
         {
             var mode = displayMode switch
