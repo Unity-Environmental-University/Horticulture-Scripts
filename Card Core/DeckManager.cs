@@ -735,6 +735,11 @@ namespace _project.Scripts.Card_Core
             _actionDiscardPile.Add(card);
         }
 
+        public void AddCardToHand(ICard card)
+        {
+            _actionHand.Add(card);
+        }
+
         /// Clears the action hand, deck, and discard the pile by removing all cards from these lists.
         /// Additionally, destroys all child objects under the `actionCardParent` transform.
         /// After clearing, it reinitializes the action deck and logs the operation if debugging is enabled.

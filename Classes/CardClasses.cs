@@ -24,9 +24,12 @@ namespace _project.Scripts.Classes
         PlantAfflictions.ITreatment Treatment => null;
         GameObject Prefab => null;
         Material Material => null;
+        List<ISticker> Stickers { get; }
         ICard Clone();
 
         void Selected() { }
+
+        void ApplySticker(ISticker sticker) { Stickers.Add(sticker); }
     }
 
     #region Decks
@@ -84,6 +87,7 @@ namespace _project.Scripts.Classes
         }
         public GameObject Prefab { get; set; }
 
+        public List<ISticker> Stickers => new();
         public ICard Clone() { return new ColeusCard(); }
     }
 
@@ -98,6 +102,7 @@ namespace _project.Scripts.Classes
             set => _value = value ?? 0;
         }
         public GameObject Prefab { get; set; }
+        public List<ISticker> Stickers => new();
 
         public ICard Clone() { return new ChrysanthemumCard(); }
     }
@@ -113,6 +118,7 @@ namespace _project.Scripts.Classes
             set => _value = value ?? 0;
         }
         public GameObject Prefab { get; set; }
+        public List<ISticker> Stickers => new();
 
         public ICard Clone() { return new PepperCard(); }
     }
@@ -128,6 +134,7 @@ namespace _project.Scripts.Classes
             set => _value = value ?? 0;
         }
         public GameObject Prefab { get; set; }
+        public List<ISticker> Stickers => new();
 
         public ICard Clone() { return new CucumberCard(); }
     }
@@ -141,6 +148,7 @@ namespace _project.Scripts.Classes
         public PlantAfflictions.IAffliction Affliction => new PlantAfflictions.AphidsAffliction();
         public string Name => "Aphids";
         public int? Value => -2;
+        public List<ISticker> Stickers => new();
 
         public ICard Clone() { return new AphidsCard(); }
     }
@@ -150,6 +158,7 @@ namespace _project.Scripts.Classes
         public PlantAfflictions.IAffliction Affliction => new PlantAfflictions.MealyBugsAffliction();
         public string Name => "Mealy Bugs";
         public int? Value => -4;
+        public List<ISticker> Stickers => new();
 
         public ICard Clone() { return new MealyBugsCard(); }
     }
@@ -159,6 +168,7 @@ namespace _project.Scripts.Classes
         public PlantAfflictions.IAffliction Affliction => new PlantAfflictions.ThripsAffliction();
         public string Name => "Thrips";
         public int? Value => -5;
+        public List<ISticker> Stickers => new();
 
         public ICard Clone() { return new ThripsCard(); }
     }
@@ -168,6 +178,7 @@ namespace _project.Scripts.Classes
         public PlantAfflictions.IAffliction Affliction => new PlantAfflictions.MildewAffliction();
         public string Name => "Mildew";
         public int? Value => -4;
+        public List<ISticker> Stickers => new();
         public ICard Clone() { return new MildewCard(); }
     }
 
@@ -176,6 +187,7 @@ namespace _project.Scripts.Classes
         public PlantAfflictions.IAffliction Affliction => new PlantAfflictions.SpiderMitesAffliction();
         public string Name => "Spider Mites";
         public int? Value => -3;
+        public List<ISticker> Stickers => new();
         public ICard Clone() { return new SpiderMitesCard(); }
     }
 
@@ -184,6 +196,7 @@ namespace _project.Scripts.Classes
         public PlantAfflictions.IAffliction Affliction => new PlantAfflictions.FungusGnatsAffliction();
         public string Name => "Fungus Gnats";
         public int? Value => -2;
+        public List<ISticker> Stickers => new();
         public ICard Clone() { return new FungusGnatsCard(); }
     }
 
@@ -197,6 +210,7 @@ namespace _project.Scripts.Classes
         public PlantAfflictions.ITreatment Treatment => new PlantAfflictions.HorticulturalOilTreatment();
         public string Name => "Horticultural Oil Basic";
         public int? Value => -1;
+        public List<ISticker> Stickers => new();
 
         public string Description
         {
@@ -218,6 +232,7 @@ namespace _project.Scripts.Classes
         public PlantAfflictions.ITreatment Treatment => new PlantAfflictions.InsecticideTreatment();
         public string Name => "Synthetic Insecticide Basic";
         public int? Value => -3;
+        public List<ISticker> Stickers => new();
 
         public string Description
         {
@@ -239,6 +254,7 @@ namespace _project.Scripts.Classes
         public PlantAfflictions.ITreatment Treatment => new PlantAfflictions.FungicideTreatment();
         public string Name => "Fungicide Basic";
         public int? Value => -2;
+        public List<ISticker> Stickers => new();
 
         public string Description
         {
@@ -259,6 +275,7 @@ namespace _project.Scripts.Classes
         [CanBeNull] private string _description;
         public PlantAfflictions.ITreatment Treatment => new PlantAfflictions.SoapyWaterTreatment();
         public string Name => "Soapy Water Basic";
+        public List<ISticker> Stickers => new();
         public int? Value => -1;
 
         public string Description
@@ -281,6 +298,7 @@ namespace _project.Scripts.Classes
         public PlantAfflictions.ITreatment Treatment => new PlantAfflictions.SpinosadTreatment();
         public string Name => "Spinosad";
         public int? Value => -4;
+        public List<ISticker> Stickers => new();
 
         public string Description
         {
@@ -302,6 +320,7 @@ namespace _project.Scripts.Classes
         public PlantAfflictions.ITreatment Treatment => new PlantAfflictions.ImidaclopridTreatment();
         public string Name => "Imidacloprid";
         public int? Value => -2;
+        public List<ISticker> Stickers => new();
         
         public string Description
         {
@@ -323,6 +342,7 @@ namespace _project.Scripts.Classes
         public PlantAfflictions.ITreatment Treatment => new PlantAfflictions.Panacea();
         public string Name => "Panacea";
         public int? Value => -5;
+        public List<ISticker> Stickers => new();
 
         public string Description
         {
