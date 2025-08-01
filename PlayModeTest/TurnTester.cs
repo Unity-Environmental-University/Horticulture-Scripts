@@ -73,6 +73,7 @@ namespace _project.Scripts.PlayModeTest
             public string Name { get; }
             public PlantAfflictions.ITreatment Treatment { get; }
             public string Description => "Test card";
+            public List<ISticker> Stickers { get; }
             public ICard Clone() => new FakeCard(Name, Treatment);
         }
 

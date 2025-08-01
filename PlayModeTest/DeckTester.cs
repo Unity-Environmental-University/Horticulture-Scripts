@@ -34,6 +34,8 @@ namespace _project.Scripts.PlayModeTest
 
             public string Name { get; }
 
+            public List<ISticker> Stickers { get; } = new();
+
             public ICard Clone()
             {
                 return new FakeCard(Name);
@@ -70,7 +72,7 @@ namespace _project.Scripts.PlayModeTest
             cardGameMaster.soundSystem = soundSystem;
             cardGameMaster.playerHandAudioSource = audioSource;
 
-            // Expose singleton instance via reflection.
+            // Expose a singleton instance via reflection.
             typeof(CardGameMaster)
                 .GetProperty("Instance", BindingFlags.Static | BindingFlags.NonPublic | BindingFlags.Public)
                 ?.SetValue(null, cardGameMaster);
@@ -182,7 +184,7 @@ namespace _project.Scripts.PlayModeTest
         [UnityTest]
         public IEnumerator TestEmptyDiscardPile()
         {
-            // Clear both action deck and discard pile.
+            // Clear both action decks and discard the pile.
             var actionDeckField =
                 typeof(DeckManager).GetField("_actionDeck", BindingFlags.NonPublic | BindingFlags.Instance);
             var actionDeck = actionDeckField.GetValue(deckManager) as List<ICard>;
