@@ -21,16 +21,6 @@ namespace _project.Scripts.Core
             UpdateColliders();
         }
 
-        /*public void RemoveTreatment(SpreaderRole treatment)
-        {
-            var index = GetTreatmentIndex(treatment);
-            if (index < 0) return;
-            _treatments.Remove(treatment);
-            _treatmentIcons.RemoveAt(index);
-            UpdateUI();
-            UpdateColliders();
-        }*/
-
         public void RemoveAllTreatments()
         {
             _treatments.Clear();

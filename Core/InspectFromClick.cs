@@ -60,7 +60,7 @@ namespace _project.Scripts.Core
             _originalPosition = _inspectableObject.transform.position;
             _originalRotation = _inspectableObject.transform.rotation;
 
-            // Deactivate game objects with tag 'Card'
+            // Deactivate game objects with the tag 'Card'
             _objectCache = GameObject.FindGameObjectsWithTag("Card");
             foreach (var obj in _objectCache) obj.SetActive(false);
 

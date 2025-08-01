@@ -89,7 +89,7 @@ namespace _project.Scripts.Card_Core
 
             yield return new WaitForSeconds(2f);
 
-            // If we just finished the last tutorial turn, give a brief pause before regular game
+            // If we just finished the last tutorial turn, give a brief pause before the regular game
             if (level == 0 && CardGameMaster.IsSequencingEnabled && currentTutorialTurn >= TutorialTurnCount && !tutorialCompleted)
             {
                 if (debugging)

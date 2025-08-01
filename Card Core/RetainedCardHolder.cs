@@ -36,7 +36,7 @@ namespace _project.Scripts.Card_Core
                 return;
             }
 
-            // Check if already holding card
+            // Check if already holding the card
             if (HasCard && HeldCard != selectedCard)
                 return;
 
@@ -86,7 +86,7 @@ namespace _project.Scripts.Card_Core
             _deckManager.SelectedACard = null;
             _deckManager.selectedACardClick3D = null;
 
-            // Hide retained slot button
+            // Hide the retained slot button
             var buttonRenderer = GetComponentInChildren<MeshRenderer>(true);
             if (buttonRenderer)
                 buttonRenderer.enabled = false;

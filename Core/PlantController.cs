@@ -96,11 +96,6 @@ namespace _project.Scripts.Core
             _needsShaderUpdate = false;
         }
 
-        public void SetTypePrefab(PlantType type)
-        {
-            
-        }
-
         public void FlagShadersUpdate() => _needsShaderUpdate = true;
 
         public void UpdatePriceFlag(int newValue)

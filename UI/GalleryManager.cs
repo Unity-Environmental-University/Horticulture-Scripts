@@ -138,7 +138,7 @@ namespace _project.Scripts.UI
 
                     loadedCount++;
 
-                    // Check time budget for this frame and batch limit
+                    // Check the time budget for this frame and batch limit
                     if (loadedCount < batchLimit &&
                         !(Time.realtimeSinceStartup - startTime >= TimeBudgetPerFrame)) continue;
                     startTime = Time.realtimeSinceStartup;
@@ -167,7 +167,7 @@ namespace _project.Scripts.UI
             }
             else if (File.Exists(thumbnailPath))
             {
-                // Load the thumbnail directly from disk
+                // Load the thumbnail directly from the disk
                 var bytes = File.ReadAllBytes(thumbnailPath);
                 var texture = new Texture2D(2, 2);
                 texture.LoadImage(bytes);
