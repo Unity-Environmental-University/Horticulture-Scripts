@@ -96,7 +96,6 @@ namespace _project.Scripts.Card_Core
         public StickerView SelectedSticker { get; private set; }
         public Click3D selectedACardClick3D;
         public ICard SelectedACard;
-        public Click3D selectedStickerClick3D;
         public GameObject stickerTarget;
         public GameObject cardPrefab;
         public GameObject coleusPrefab;
@@ -242,6 +241,7 @@ namespace _project.Scripts.Card_Core
 
     private void InitializeStickerDeck()
     {
+        if (stickerDefinitions == null || stickerPackParent == null) return;
         foreach (var def in stickerDefinitions)
         {
             _playerStickers.Add(def);
