@@ -13,6 +13,8 @@ namespace _project.Scripts.Card_Core
         public TextMeshPro descriptionText;
         public TextMeshPro treatmentCostText;
         public Material cardMaterial;
+        [Tooltip("Where sticker visuals will be parented on this card")]
+        public Transform stickerHolder;
 
         private void Start() => _deckManager = CardGameMaster.Instance.deckManager;
         
@@ -30,6 +32,21 @@ namespace _project.Scripts.Card_Core
 
         public void CardClicked(Click3D clickedCard)
         {
+            // if a sticker is being dragged, drop it here instead of selecting the card
+            var dm = CardGameMaster.Instance.deckManager;
+            var drag = dm.SelectedSticker;
+            if (drag != null)
+            {
+                dm.TryDropStickerOn(_originalCard, drag);
+                // visually attach sticker prefab onto this card
+                if (stickerHolder && drag.definition?.Prefab)
+                {
+                    dm.stickerTarget = stickerHolder.gameObject;
+                    Instantiate(drag.definition.Prefab, stickerHolder, false);
+                    drag.definition.Apply();
+                }
+                return;
+            }
             // if the clicked card is already selected, unselect it
             if (_deckManager.selectedACardClick3D == clickedCard)
             {
