@@ -51,20 +51,18 @@ namespace _project.Scripts.Card_Core
             new InsecticideBasic(),
             new SoapyWaterBasic(),
             new Panacea(),
-            
+
             new HorticulturalOilBasic(),
             new FungicideBasic(),
             new InsecticideBasic(),
             new SoapyWaterBasic(),
             new Panacea()
         };
-        
+
         private readonly List<ICard> _tutorialPlantDeck = new();
 
-        private readonly List<ICard> _tutorialAfflictionDeck = new()
-        {
-            new AphidsCard()
-        };
+        private readonly List<ICard> _tutorialAfflictionDeck = new();
+
 
         #endregion
 
@@ -72,6 +70,7 @@ namespace _project.Scripts.Card_Core
 
         private readonly List<ICard> _actionDeck = new();
         private readonly List<ICard> _actionDiscardPile = new();
+        private readonly List<ISticker> _playerStickers = new();
         private static readonly List<ICard> PlantDeck = new();
         private static readonly List<ICard> AfflictionsDeck = new();
 
@@ -87,8 +86,13 @@ namespace _project.Scripts.Card_Core
         private static DeckManager Instance { get; set; }
         public List<Transform> plantLocations;
         public Transform actionCardParent;
+        public Transform stickerPackParent;
+        [Tooltip("Author your sticker assets here")]
+        public List<StickerDefinition> stickerDefinitions;
         public Click3D selectedACardClick3D;
         public ICard SelectedACard;
+        public ISticker SelectedSticker;
+        public Click3D selectedStickerClick3D;
         public GameObject cardPrefab;
         public GameObject coleusPrefab;
         public GameObject chrysanthemumPrefab;
@@ -117,6 +121,7 @@ namespace _project.Scripts.Card_Core
         private void Start()
         {
             InitializeActionDeck();
+            InitializeStickerDeck(); //Temp
             _plantHand.DeckRandomDraw();
             _afflictionHand.DeckRandomDraw();
             if (debug) Debug.Log("Initial Deck Order: " + string.Join(", ", PlantDeck.ConvertAll(card => card.Name)));
@@ -131,8 +136,6 @@ namespace _project.Scripts.Card_Core
         private void InitializeActionDeck()
         {
             foreach (var card in PrototypeActionDeck)
-                //var duplicates = Random.Range(1, 5);
-                //for (var i = 0; i < duplicates; i++) _actionDeck.Add(card.Clone());
                 _actionDeck.Add(card.Clone());
 
             ShuffleDeck(_actionDeck);
@@ -228,6 +231,19 @@ namespace _project.Scripts.Card_Core
             }
         }
         
+        #endregion
+        
+        #region Stickers
+
+    private void InitializeStickerDeck()
+    {
+        foreach (var def in stickerDefinitions)
+        {
+            _playerStickers.Add(def);
+            Instantiate(def.Prefab, stickerPackParent.position, stickerPackParent.rotation);
+        }
+    }
+
         #endregion
 
         #region Plant Management
