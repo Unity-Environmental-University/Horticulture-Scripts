@@ -8,10 +8,10 @@ namespace _project.Scripts.Classes
     {
         public override void Apply()
         {
-            // Example: add a cloned card to hand and peel this sticker
-            if (CardGameMaster.Instance?.deckManager == null) return;
-            // Assuming the last applied card is passed in context; adapt as needed
-            var targetCard = CardGameMaster.Instance.deckManager.SelectedACard;
+            var dm = CardGameMaster.Instance?.deckManager;
+            if (dm == null) return;
+            var targetCard = dm.stickerTarget.GetComponentInParent<ICard>();
+            Debug.LogError(targetCard);
             if (targetCard == null) return;
             targetCard.ApplySticker(this);
             CardGameMaster.Instance.deckManager.AddCardToHand(targetCard.Clone());

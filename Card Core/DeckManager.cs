@@ -89,10 +89,15 @@ namespace _project.Scripts.Card_Core
         public Transform stickerPackParent;
         [Tooltip("Author your sticker assets here")]
         public List<StickerDefinition> stickerDefinitions;
+        
+        /// <summary>
+        /// Currently selected sticker (click to apply on next card click).
+        /// </summary>
+        public StickerView SelectedSticker { get; private set; }
         public Click3D selectedACardClick3D;
         public ICard SelectedACard;
-        public ISticker SelectedSticker;
         public Click3D selectedStickerClick3D;
+        public GameObject stickerTarget;
         public GameObject cardPrefab;
         public GameObject coleusPrefab;
         public GameObject chrysanthemumPrefab;
@@ -240,9 +245,45 @@ namespace _project.Scripts.Card_Core
         foreach (var def in stickerDefinitions)
         {
             _playerStickers.Add(def);
-            Instantiate(def.Prefab, stickerPackParent.position, stickerPackParent.rotation);
+            var go = Instantiate(def.Prefab,
+                                 stickerPackParent.position,
+                                 stickerPackParent.rotation,
+                                 stickerPackParent);
+            // Attach StickerView so we can click and drag
+            var view = go.AddComponent<StickerView>();
+            view.definition = def;
         }
     }
+
+        #endregion
+
+        #region Sticker Drag & Drop
+
+    /// <summary>
+    /// Selects a sticker so it can be applied to the next clicked card.
+    /// </summary>
+        public void SelectSticker(StickerView sticker)
+        {
+            // un-highlight previous
+            if (SelectedSticker != null)
+                SelectedSticker.GetComponent<Click3D>().selected = false;
+            SelectedSticker = sticker;
+            // highlight selection
+            sticker.GetComponent<Click3D>().selected = true;
+    }
+
+    /// <summary>
+    /// Applies the selected sticker to the given card if it matches, then clears selection.
+    /// </summary>
+        public void TryDropStickerOn(ICard card, StickerView sticker)
+        {
+            if (SelectedSticker != sticker) return;
+            card.ApplySticker(sticker.definition);
+            sticker.definition.RunEffect();
+            // remove the sticker from the tray
+            Destroy(sticker.gameObject);
+            SelectedSticker = null;
+        }
 
         #endregion
 
