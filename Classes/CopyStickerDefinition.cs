@@ -10,12 +10,13 @@ namespace _project.Scripts.Classes
         {
             var dm = CardGameMaster.Instance?.deckManager;
             if (dm == null) return;
-            var targetCard = dm.stickerTarget.GetComponentInParent<ICard>();
-            Debug.LogError(targetCard);
+            var cardView = dm.stickerTarget.GetComponentInParent<CardView>();
+            if (cardView == null) return;
+            var targetCard = cardView.GetCard();
+            //Debug.LogError(targetCard);
             if (targetCard == null) return;
             targetCard.ApplySticker(this);
-            CardGameMaster.Instance.deckManager.AddCardToHand(targetCard.Clone());
-            //Peel(targetCard);
+            dm.AddCardToHand(targetCard.Clone());
         }
 
         public override void Peel(ICard card)
