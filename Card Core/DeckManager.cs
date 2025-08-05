@@ -97,7 +97,6 @@ namespace _project.Scripts.Card_Core
         public StickerView SelectedSticker { get; private set; }
         public Click3D selectedACardClick3D;
         public ICard SelectedACard;
-        public GameObject stickerTarget;
         public GameObject cardPrefab;
         public GameObject coleusPrefab;
         public GameObject chrysanthemumPrefab;

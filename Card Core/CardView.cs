@@ -38,12 +38,10 @@ namespace _project.Scripts.Card_Core
             if (drag != null)
             {
                 dm.TryDropStickerOn(_originalCard, drag);
-                // visually attach sticker prefab onto this card
+                // visually attach the sticker prefab onto this card
                 if (stickerHolder && drag.definition?.Prefab)
                 {
-                    dm.stickerTarget = stickerHolder.gameObject;
                     Instantiate(drag.definition.Prefab, stickerHolder, false);
-                    drag.definition.Apply();
                 }
                 return;
             }
