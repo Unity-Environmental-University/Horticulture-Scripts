@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using _project.Scripts.Card_Core;
 using _project.Scripts.Core;
+using _project.Scripts.Stickers;
 using JetBrains.Annotations;
 using UnityEngine;
 using Random = UnityEngine.Random;

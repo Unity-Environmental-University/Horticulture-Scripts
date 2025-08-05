@@ -8,6 +8,7 @@ using _project.Scripts.Card_Core;
 using _project.Scripts.Cinematics;
 using _project.Scripts.Classes;
 using _project.Scripts.Core;
+using _project.Scripts.Stickers;
 using NUnit.Framework;
 using UnityEngine;
 using UnityEngine.TestTools;
