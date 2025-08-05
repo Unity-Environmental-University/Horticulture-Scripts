@@ -13,6 +13,7 @@ namespace _project.Scripts.Stickers
         {
             _click3d = GetComponent<Click3D>();
             _click3d.handItem = true;
+            _click3d.isSticker = true;
             _click3d.onClick3D.AddListener(OnStickerClicked);
         }
 
