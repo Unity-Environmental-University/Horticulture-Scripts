@@ -42,6 +42,9 @@ namespace _project.Scripts.Card_Core
                 if (stickerHolder && drag.definition?.Prefab)
                 {
                     Instantiate(drag.definition.Prefab, stickerHolder, false);
+                    // update displayed cost/value after sticker effect
+                    if (treatmentCostText)
+                        treatmentCostText.text = "$ " + (_originalCard.Value ?? 0);
                 }
                 return;
             }
