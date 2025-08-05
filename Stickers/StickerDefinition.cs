@@ -1,4 +1,3 @@
-using _project.Scripts.Card_Core;
 using _project.Scripts.Classes;
 using UnityEngine;
 
@@ -16,16 +15,12 @@ namespace _project.Scripts.Stickers
         public GameObject prefab;
         public Material material;
 
-        [Header("Behavior")]
-        [Tooltip("If true, applying this sticker will also add a copy of the card to hand.")]
-        public bool copyOnApply;
-
         [Header("Data")]
         public int value;
 
-        public string Name => stickerName;
-        public string Description => description;
-        public int? Value
+        public virtual string Name => stickerName;
+        public virtual string Description => description;
+        public virtual int? Value
         {
             get => value;
             set => this.value = value ?? 0;
@@ -43,8 +38,6 @@ namespace _project.Scripts.Stickers
         public virtual void Apply(ICard card)
         {
             card.ApplySticker(this);
-            if (copyOnApply)
-                CardGameMaster.Instance.deckManager.AddCardToHand(card.Clone());
         }
         public virtual void Peel(ICard card){ }
     }
