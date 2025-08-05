@@ -31,6 +31,7 @@ namespace _project.Scripts.Classes
         void Selected() { }
 
         void ApplySticker(ISticker sticker) { Stickers.Add(sticker); }
+        void ModifyValue(int delta) { }
     }
 
     #region Decks
@@ -90,6 +91,7 @@ namespace _project.Scripts.Classes
 
         public List<ISticker> Stickers => new();
         public ICard Clone() { return new ColeusCard(); }
+        public void ModifyValue(int delta) => Value = (Value ?? 0) + delta;
     }
 
     public class ChrysanthemumCard : ICard
@@ -106,6 +108,7 @@ namespace _project.Scripts.Classes
         public List<ISticker> Stickers => new();
 
         public ICard Clone() { return new ChrysanthemumCard(); }
+        public void ModifyValue(int delta) => Value = (Value ?? 0) + delta;
     }
 
     public class PepperCard : ICard
@@ -122,6 +125,7 @@ namespace _project.Scripts.Classes
         public List<ISticker> Stickers => new();
 
         public ICard Clone() { return new PepperCard(); }
+        public void ModifyValue(int delta) => Value = (Value ?? 0) + delta;
     }
 
     public class CucumberCard : ICard
@@ -138,6 +142,7 @@ namespace _project.Scripts.Classes
         public List<ISticker> Stickers => new();
 
         public ICard Clone() { return new CucumberCard(); }
+        public void ModifyValue(int delta) => Value = (Value ?? 0) + delta;
     }
 
     #endregion
@@ -210,7 +215,12 @@ namespace _project.Scripts.Classes
         [CanBeNull] private string _description;
         public PlantAfflictions.ITreatment Treatment => new PlantAfflictions.HorticulturalOilTreatment();
         public string Name => "Horticultural Oil Basic";
-        public int? Value => -1;
+        private int _value = -1;
+        public int? Value
+        {
+            get => _value;
+            set => _value = value ?? 0;
+        }
         public List<ISticker> Stickers => new();
 
         public string Description
@@ -223,7 +233,7 @@ namespace _project.Scripts.Classes
         public Material Material => Resources.Load<Material>($"Materials/Cards/NeemOil");
 
         public void Selected() { if (CardGameMaster.Instance.debuggingCardClass) Debug.Log("Selected " + Name); }
-
+        public void ModifyValue(int delta) => _value += delta;
         public ICard Clone() { return new HorticulturalOilBasic(); }
     }
 
@@ -232,7 +242,12 @@ namespace _project.Scripts.Classes
         [CanBeNull] private string _description;
         public PlantAfflictions.ITreatment Treatment => new PlantAfflictions.InsecticideTreatment();
         public string Name => "Synthetic Insecticide Basic";
-        public int? Value => -3;
+        private int _value = -3;
+        public int? Value
+        {
+            get => _value;
+            set => _value = value ?? 0;
+        }
         public List<ISticker> Stickers => new();
 
         public string Description
@@ -245,7 +260,7 @@ namespace _project.Scripts.Classes
         public Material Material => Resources.Load<Material>($"Materials/Cards/SyntheticInsecticide");
 
         public void Selected() { if (CardGameMaster.Instance.debuggingCardClass) Debug.Log("Selected " + Name); }
-
+        public void ModifyValue(int delta) => _value += delta;
         public ICard Clone() { return new InsecticideBasic(); }
     }
 
@@ -254,7 +269,13 @@ namespace _project.Scripts.Classes
         [CanBeNull] private string _description;
         public PlantAfflictions.ITreatment Treatment => new PlantAfflictions.FungicideTreatment();
         public string Name => "Fungicide Basic";
-        public int? Value => -2;
+        private int _value = -2;
+        public int? Value
+        {
+            get => _value;
+            set => _value = value ?? 0;
+        }
+
         public List<ISticker> Stickers => new();
 
         public string Description
@@ -267,7 +288,7 @@ namespace _project.Scripts.Classes
         public Material Material => Resources.Load<Material>($"Materials/Cards/Fungicide");
 
         public void Selected() { if (CardGameMaster.Instance.debuggingCardClass) Debug.Log("Selected " + Name); }
-
+        public void ModifyValue(int delta) => _value += delta;
         public ICard Clone() { return new FungicideBasic(); }
     }
 
@@ -277,7 +298,12 @@ namespace _project.Scripts.Classes
         public PlantAfflictions.ITreatment Treatment => new PlantAfflictions.SoapyWaterTreatment();
         public string Name => "Soapy Water Basic";
         public List<ISticker> Stickers => new();
-        public int? Value => -1;
+        private int _value = -1;
+        public int? Value
+        {
+            get => _value;
+            set => _value = value ?? 0;
+        }
 
         public string Description
         {
@@ -289,7 +315,7 @@ namespace _project.Scripts.Classes
         public Material Material => Resources.Load<Material>($"Materials/Cards/SoapyWater");
 
         public void Selected() { if (CardGameMaster.Instance.debuggingCardClass) Debug.Log("Selected " + Name); }
-
+        public void ModifyValue(int delta) => _value += delta;
         public ICard Clone() { return new SoapyWaterBasic(); }
     }
     
@@ -298,7 +324,12 @@ namespace _project.Scripts.Classes
         [CanBeNull] private string _description;
         public PlantAfflictions.ITreatment Treatment => new PlantAfflictions.SpinosadTreatment();
         public string Name => "Spinosad";
-        public int? Value => -4;
+        private int _value = -4;
+        public int? Value
+        {
+            get => _value;
+            set => _value = value ?? 0;
+        }
         public List<ISticker> Stickers => new();
 
         public string Description
@@ -311,7 +342,7 @@ namespace _project.Scripts.Classes
         public Material Material => Resources.Load<Material>($"Materials/Cards/Spinosad");
 
         public void Selected() { if (CardGameMaster.Instance.debuggingCardClass) Debug.Log("Selected " + Name); }
-
+        public void ModifyValue(int delta) => _value += delta;
         public ICard Clone() { return new SpinosadTreatment(); }
     }
 
@@ -320,7 +351,12 @@ namespace _project.Scripts.Classes
         [CanBeNull] private string _description;
         public PlantAfflictions.ITreatment Treatment => new PlantAfflictions.ImidaclopridTreatment();
         public string Name => "Imidacloprid";
-        public int? Value => -2;
+        private int _value = -2;
+        public int? Value
+        {
+            get => _value;
+            set => _value = value ?? 0;
+        }
         public List<ISticker> Stickers => new();
         
         public string Description
@@ -333,7 +369,7 @@ namespace _project.Scripts.Classes
         public Material Material => Resources.Load<Material>($"Materials/Cards/Imidacloprid");
 
         public void Selected() { if (CardGameMaster.Instance.debuggingCardClass) Debug.Log("Selected " + Name); }
-
+        public void ModifyValue(int delta) => _value += delta;
         public ICard Clone() { return new ImidaclopridTreatment(); }
     }
 
@@ -342,7 +378,12 @@ namespace _project.Scripts.Classes
         [CanBeNull] private string _description;
         public PlantAfflictions.ITreatment Treatment => new PlantAfflictions.Panacea();
         public string Name => "Panacea";
-        public int? Value => -5;
+        private int _value = -5;
+        public int? Value
+        {
+            get => _value;
+            set => _value = value ?? 0;
+        }
         public List<ISticker> Stickers => new();
 
         public string Description
@@ -355,7 +396,7 @@ namespace _project.Scripts.Classes
         public Material Material => Resources.Load<Material>($"Materials/Cards/Panacea");
 
         public void Selected() { if (CardGameMaster.Instance.debuggingCardClass) Debug.Log("Selected " + Name); }
-
+        public void ModifyValue(int delta) => _value += delta;
         public ICard Clone() { return new Panacea(); }
     }
 
