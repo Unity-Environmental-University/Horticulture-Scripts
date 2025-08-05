@@ -1,7 +1,7 @@
 using _project.Scripts.Card_Core;
 using UnityEngine;
 
-namespace _project.Scripts.Classes
+namespace _project.Scripts.Stickers
 {
     [RequireComponent(typeof(Click3D))]
     public class StickerView : MonoBehaviour

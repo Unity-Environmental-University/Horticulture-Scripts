@@ -4,6 +4,7 @@ using System.Linq;
 using _project.Scripts.Classes;
 using _project.Scripts.Core;
 using _project.Scripts.GameState;
+using _project.Scripts.Stickers;
 using Unity.Serialization;
 using UnityEngine;
 using Random = UnityEngine.Random;
@@ -278,8 +279,7 @@ namespace _project.Scripts.Card_Core
         public void TryDropStickerOn(ICard card, StickerView sticker)
         {
             if (SelectedSticker != sticker) return;
-            card.ApplySticker(sticker.definition);
-            sticker.definition.RunEffect();
+            sticker.definition.Apply(card);
             // remove the sticker from the tray
             Destroy(sticker.gameObject);
             SelectedSticker = null;

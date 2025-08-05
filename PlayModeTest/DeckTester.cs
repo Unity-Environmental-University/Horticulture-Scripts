@@ -4,6 +4,7 @@ using System.Reflection;
 using _project.Scripts.Audio;
 using _project.Scripts.Card_Core;
 using _project.Scripts.Classes;
+using _project.Scripts.Stickers;
 using NUnit.Framework;
 using UnityEngine;
 using UnityEngine.TestTools;
