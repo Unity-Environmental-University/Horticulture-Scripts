@@ -41,7 +41,9 @@ namespace _project.Scripts.Card_Core
                 // visually attach the sticker prefab onto this card
                 if (stickerHolder && drag.definition?.Prefab)
                 {
-                    Instantiate(drag.definition.Prefab, stickerHolder, false);
+                    var stickerInstance = Instantiate(drag.definition!.Prefab, stickerHolder, false);
+                    // disable click interactions on the applied sticker visual
+                    stickerInstance.GetComponent<Click3D>().enabled = false;
                     // update displayed cost/value after sticker effect
                     if (treatmentCostText)
                         treatmentCostText.text = "$ " + (_originalCard.Value ?? 0);
