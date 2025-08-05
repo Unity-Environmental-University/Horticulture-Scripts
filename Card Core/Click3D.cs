@@ -133,8 +133,7 @@ namespace _project.Scripts.Card_Core
 
             if (isSticker)
             {
-                var currentScale = transform.localScale;
-                var targetScale = currentScale * stickerScaleUp;
+                var targetScale = _originalScale * stickerScaleUp;
                 transform.DOScale(targetScale, animTime);
                 return;
             }
@@ -163,9 +162,8 @@ namespace _project.Scripts.Card_Core
             
             if (isSticker)
             {
-                var currentScale = transform.localScale;
-                var targetScale = currentScale / stickerScaleUp;
-                transform.DOScale(targetScale, animTime);
+                if (selected) return;
+                transform.DOScale(_originalScale, animTime);
                 return;
             }
             

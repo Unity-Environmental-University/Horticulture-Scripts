@@ -264,13 +264,22 @@ namespace _project.Scripts.Card_Core
     /// </summary>
         public void SelectSticker(StickerView sticker)
         {
-            // un-highlight previous
+            // Toggle off if clicking the already selected sticker
+            if (SelectedSticker == sticker)
+            {
+                sticker.GetComponent<Click3D>().selected = false;
+                SelectedSticker = null;
+                return;
+            }
+
+            // un-highlight previous selection if any
             if (SelectedSticker != null)
                 SelectedSticker.GetComponent<Click3D>().selected = false;
+
             SelectedSticker = sticker;
-            // highlight selection
+            // highlight new selection
             sticker.GetComponent<Click3D>().selected = true;
-    }
+        }
 
     /// <summary>
     /// Applies the selected sticker to the given card if it matches, then clears selection.
