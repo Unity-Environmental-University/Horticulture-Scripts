@@ -1,5 +1,6 @@
 using System.Collections;
 using _project.Scripts.Core;
+using DG.Tweening;
 using Unity.Serialization;
 using Unity.VisualScripting;
 using UnityEngine;
@@ -20,6 +21,9 @@ namespace _project.Scripts.Card_Core
         [Tooltip("If True: Hovering over a card will pop it up a bit. If False: item will highlight on hover")]
         public bool handItem;
         
+        [Tooltip("If True: Hovering over a Sticker will scale it up a bit. If False: item will highlight on hover")]
+        public bool isSticker;
+        
         [DoNotSerialize] public bool isRetainedItem;
 
         [Tooltip("Default: 0.2 -- How fast the card pops up")]
@@ -27,6 +31,9 @@ namespace _project.Scripts.Card_Core
 
         [Tooltip("Default: 1.05 -- How large the card becomes")]
         public float scaleUp = 1.05f;
+        
+        [Tooltip("Default: 1.5 -- How large the stickers become")]
+        public float stickerScaleUp = 1.5f;
 
         [Tooltip("Default: 0.2 -- How high the card goes")]
         public float popHeight = 0.2f;
@@ -115,12 +122,20 @@ namespace _project.Scripts.Card_Core
         {
             RefreshState();
             if (!isEnabled || click3DGloballyDisabled) return;
-            if (!handItem)
+            if (!handItem && !isSticker)
             {
                 mouseOver = true;
                 _objectRenderer.material.color = _hoverColor; // this works for 90% of the time
                 _sharedPropertyBlock.SetColor(Color1, _hoverColor); // this gets the rest
                 _objectRenderer.SetPropertyBlock(_sharedPropertyBlock);
+                return;
+            }
+
+            if (isSticker)
+            {
+                var currentScale = transform.localScale;
+                var targetScale = currentScale * stickerScaleUp;
+                transform.DOScale(targetScale, animTime);
                 return;
             }
             
@@ -144,7 +159,16 @@ namespace _project.Scripts.Card_Core
             _sharedPropertyBlock.SetColor(Color1, targetColor);
             _objectRenderer.SetPropertyBlock(_sharedPropertyBlock);
 
-            if (!handItem) return;
+            if (!handItem && !isSticker) return;
+            
+            if (isSticker)
+            {
+                var currentScale = transform.localScale;
+                var targetScale = currentScale / stickerScaleUp;
+                transform.DOScale(targetScale, animTime);
+                return;
+            }
+            
             StopAllCoroutines();
             StartCoroutine(AnimateCardBack());
         }
