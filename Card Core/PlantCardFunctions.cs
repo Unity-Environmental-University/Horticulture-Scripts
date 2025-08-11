@@ -86,12 +86,8 @@ namespace _project.Scripts.Card_Core
             {
                 if (!cardHolder || !cardHolder.HoldingCard) continue;
 
-                var retainedSlot = FindFirstObjectByType<RetainedCardHolder>(FindObjectsInactive.Include);
-                
-                var cardView = cardHolder.placedCardView;
-                if (!cardView) continue;
-
-                var actionCard = cardView.GetCard();
+                // Use the data model stored on the holder, not the (possibly removed) CardView
+                var actionCard = cardHolder.PlacedCard;
                 if (actionCard?.Treatment is null) continue;
                 
                 var parent = cardHolder.transform.parent;
@@ -109,7 +105,12 @@ namespace _project.Scripts.Card_Core
                 if (CardGameMaster.Instance.debuggingCardClass) 
                     Debug.Log($"Applied treatment {actionCard.Treatment} from card {actionCard.Name} to Plant {targetPlant.name}");
 
-                if (cardHolder.placedCardClick3D.isRetainedItem) retainedSlot.ClearHeldCard();
+                // If the card came from the retained slot, clear it now
+                if (cardHolder.placedCardClick3D && cardHolder.placedCardClick3D.isRetainedItem)
+                {
+                    var retainedSlot = FindFirstObjectByType<RetainedCardHolder>(FindObjectsInactive.Include);
+                    if (retainedSlot) retainedSlot.ClearHeldCard();
+                }
                 ClearCardHolder(cardHolder);
             }
         }
