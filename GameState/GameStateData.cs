@@ -42,24 +42,26 @@ namespace _project.Scripts.GameState
         public List<CardData> actionDeck;
         public List<CardData> discardPile;
         public List<CardData> actionHand;
-        
+
         public List<CardData> afflictionDeck;
         public List<CardData> afflictionHand;
-        
+
         public List<CardData> plantDeck;
         public List<CardData> plantHand;
+
+        public List<StickerData> playerStickers;
     }
-    
+
     [Serializable]
     public class PlantData
     {
         public PlantType plantType;
         public CardData plantCard;
         public int locationIndex;
-        
+
         public List<string> currentAfflictions;
         public List<string> priorAfflictions;
-        
+
         public List<string> currentTreatments;
         public List<string> usedTreatments;
 
@@ -70,10 +72,10 @@ namespace _project.Scripts.GameState
     public class CardData
     {
         public string cardTypeName;
-        public int? Value;
         public List<StickerData> stickers;
+        public int? Value;
     }
-    
+
     [Serializable]
     public class StickerData
     {
@@ -82,7 +84,7 @@ namespace _project.Scripts.GameState
         public string description;
         public int? Value;
     }
-    
+
     [Serializable]
     public class RetainedCardData
     {
