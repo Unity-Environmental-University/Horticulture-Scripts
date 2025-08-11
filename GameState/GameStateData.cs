@@ -71,6 +71,16 @@ namespace _project.Scripts.GameState
     {
         public string cardTypeName;
         public int? Value;
+        public List<StickerData> stickers;
+    }
+    
+    [Serializable]
+    public class StickerData
+    {
+        public string stickerTypeName;
+        public string name;
+        public string description;
+        public int? Value;
     }
     
     [Serializable]

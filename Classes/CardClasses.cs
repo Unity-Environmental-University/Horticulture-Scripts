@@ -67,7 +67,9 @@ namespace _project.Scripts.Classes
             foreach (var card in PrototypeDeck)
             {
                 // Randomly duplicate each prototype card between 1 and 4 times.
-                var duplicates = Random.Range(1, 5); // Returns 1 to 4 copies.
+                const int minDuplicates = 1;
+                const int maxDuplicates = 5; // Exclusive upper bound (returns 1 to 4 copies)
+                var duplicates = Random.Range(minDuplicates, maxDuplicates);
                 for (var i = 0; i < duplicates; i++) Deck.Add(card.Clone());
             }
         }
