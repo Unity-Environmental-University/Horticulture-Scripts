@@ -1,4 +1,3 @@
-using System;
 using _project.Scripts.Classes;
 using UnityEngine;
 
@@ -14,16 +13,19 @@ namespace _project.Scripts.Stickers
         int? Value
         {
             get => null;
-            set => throw new NotImplementedException();
+            set { }
         }
 
         GameObject Prefab => null;
         Material Material => null;
         ISticker Clone();
 
-        void Selected() { throw new NotImplementedException(); }
-        void Apply(ICard card) { throw new NotImplementedException(); }
-        void Peel(ICard card) { throw new NotImplementedException(); }
+        void Selected() { }
+        void Apply(ICard card) 
+        { 
+            card?.ApplySticker(this);
+        }
+        void Peel(ICard card) { }
     }
 
     #endregion

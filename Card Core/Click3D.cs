@@ -54,6 +54,7 @@ namespace _project.Scripts.Card_Core
         private Vector3 _originalScale;
 
         private MaterialPropertyBlock _sharedPropertyBlock;
+        private Material _originalMaterial;
 
 
         private void Start()
@@ -75,11 +76,18 @@ namespace _project.Scripts.Card_Core
             if (GetComponent<CardView>() && !cardView) cardView = GetComponent<CardView>();
 
             _objectRenderer = GetComponentInChildren<Renderer>();
-            _objectRenderer.material = new Material(_objectRenderer.material);
-            _baseColor = _objectRenderer.material.color;
+            if (_objectRenderer != null)
+            {
+                // Store reference to original material instead of creating a new one
+                _originalMaterial = _objectRenderer.material;
+                _baseColor = _originalMaterial.color;
+                _sharedPropertyBlock = new MaterialPropertyBlock();
+                // Get current properties to avoid overriding other material properties
+                _objectRenderer.GetPropertyBlock(_sharedPropertyBlock);
+            }
+            
             _mainCamera = Camera.main;
             _mouse = Mouse.current;
-            _sharedPropertyBlock = new MaterialPropertyBlock();
 
             // Use localPosition so that AnimateCard and AnimateCardBack work consistently.
             _originalPos = transform.localPosition;
@@ -120,13 +128,14 @@ namespace _project.Scripts.Card_Core
 
         private void OnMouseEnter()
         {
-            RefreshState();
             if (!isEnabled || click3DGloballyDisabled) return;
+            
             if (!handItem && !isSticker)
             {
                 mouseOver = true;
-                _objectRenderer.material.color = _hoverColor; // this works for 90% of the time
-                _sharedPropertyBlock.SetColor(Color1, _hoverColor); // this gets the rest
+                // Only change colors for non-hand items
+                if (_objectRenderer == null || _sharedPropertyBlock == null) return;
+                _sharedPropertyBlock.SetColor(Color1, _hoverColor);
                 _objectRenderer.SetPropertyBlock(_sharedPropertyBlock);
                 return;
             }
@@ -138,27 +147,28 @@ namespace _project.Scripts.Card_Core
                 return;
             }
             
-            // Animate pop-up and scale-up
+            // Animate pop-up and scale-up for handItems (cards) - no color change
             StopAllCoroutines();
             StartCoroutine(AnimateCard());
         }
 
         private void OnMouseExit()
         {
-            RefreshState();
             if (!isEnabled || click3DGloballyDisabled) return;
-            mouseOver = false;
 
-            var targetColor = _baseColor;
             var plant = GetComponentInParent<PlantController>();
             if (plant) plant.FlagShadersUpdate();
 
-            _objectRenderer.material.color = targetColor;
-            _objectRenderer.GetPropertyBlock(_sharedPropertyBlock);
-            _sharedPropertyBlock.SetColor(Color1, targetColor);
-            _objectRenderer.SetPropertyBlock(_sharedPropertyBlock);
-
-            if (!handItem && !isSticker) return;
+            if (!handItem && !isSticker)
+            {
+                mouseOver = false;
+                // Only change colors for non-hand items
+                if (_objectRenderer == null || _sharedPropertyBlock == null) return;
+                _objectRenderer.GetPropertyBlock(_sharedPropertyBlock);
+                _sharedPropertyBlock.SetColor(Color1, _baseColor);
+                _objectRenderer.SetPropertyBlock(_sharedPropertyBlock);
+                return;
+            }
             
             if (isSticker)
             {
@@ -167,6 +177,7 @@ namespace _project.Scripts.Card_Core
                 return;
             }
             
+            // Animate back for handItems (cards) - no color change
             StopAllCoroutines();
             StartCoroutine(AnimateCardBack());
         }
@@ -180,13 +191,16 @@ namespace _project.Scripts.Card_Core
 
         public void RefreshState()
         {
-            if (!_objectRenderer) return;
+            // Hand items (cards) don't use color changes, only animations
+            if (handItem) return;
+            
+            if (_objectRenderer == null || _sharedPropertyBlock == null) return;
 
             var targetColor = isEnabled
                 ? mouseOver ? _hoverColor : _baseColor
                 : _disabledColor;
 
-            _objectRenderer.material.color = targetColor;
+            // Use MaterialPropertyBlock instead of modifying material directly
             _sharedPropertyBlock.SetColor(Color1, targetColor);
             _objectRenderer.SetPropertyBlock(_sharedPropertyBlock);
         }

@@ -29,6 +29,250 @@ namespace _project.Scripts.Card_Core
         ///     setting up its view, and positioning it within the holder. Additionally, it hides the original card
         ///     and updates relevant scoring data, including treatment costs.
         /// </remarks>
+        /// <summary>
+        /// Called when the placed card is clicked. Handles pickup and swapping logic.
+        /// </summary>
+        public void OnPlacedCardClicked()
+        {
+            // If the holder is empty, treat this as a normal placement
+            if (!HoldingCard)
+            {
+                TakeSelectedCard();
+                return;
+            }
+            
+            // If no card is selected in the hand, pick up this placed card
+            if (_deckManager.SelectedACard == null)
+            {
+                PickUpPlacedCard();
+                return;
+            }
+            
+            // If the selected card is the same as the placed card, pick it up (user clicked their own placed card)
+            if (_deckManager.SelectedACard == PlacedCard)
+            {
+                PickUpPlacedCard();
+                return;
+            }
+            
+            // If a different card is selected in the hand, swap it with this placed card
+            SwapWithSelectedCard();
+        }
+        
+        /// <summary>
+        /// Picks up the placed card and puts it back in the hand
+        /// </summary>
+        private void PickUpPlacedCard()
+        {
+            if (!HoldingCard) return;
+            
+            // Play pickup sound
+            Cgm.playerHandAudioSource.PlayOneShot(Cgm.soundSystem.selectCard);
+            
+            // Clear any existing selection first to prevent multiple selected cards
+            ClearAllSelections();
+            
+            // Update cost before clearing (subtract the cost since we're removing the card)
+            if (PlacedCard?.Value != null)
+            {
+                var retained = FindFirstObjectByType<RetainedCardHolder>(FindObjectsInactive.Include);
+                var isFromRetained = retained && retained.HeldCard == PlacedCard;
+                
+                if (!isFromRetained)
+                    _scoreManager.treatmentCost -= PlacedCard.Value.Value;
+            }
+            
+            // Find the original card in the hand and re-enable it
+            var handCards = _deckManager.actionCardParent.GetComponentsInChildren<CardView>(true);
+            foreach (var cardView in handCards)
+            {
+                if (cardView.GetCard() != PlacedCard) continue;
+                
+                // Re-enable the card in the hand
+                foreach (var rend in cardView.GetComponentsInChildren<Renderer>(true))
+                    rend.enabled = true;
+                    
+                var click3D = cardView.GetComponent<Click3D>();
+                if (click3D != null)
+                {
+                    click3D.isEnabled = true;
+                    click3D.selected = false; // Don't select it when picked up
+                }
+                
+                break;
+            }
+            
+            // Clear this holder (destroys the clone and resets the state)
+            ClearHolder();
+            
+            // Recalculate treatment cost
+            _scoreManager.CalculateTreatmentCost();
+        }
+        
+        /// <summary>
+        /// Swaps the currently selected card with the placed card
+        /// </summary>
+        private void SwapWithSelectedCard()
+        {
+            if (!HoldingCard || _deckManager.SelectedACard == null) return;
+            
+            // Play swap sound
+            Cgm.playerHandAudioSource.PlayOneShot(Cgm.soundSystem.placeCard);
+            
+            // Store what we're working with
+            var selectedCard = _deckManager.SelectedACard;
+            var selectedClick3D = _deckManager.selectedACardClick3D;
+            var currentPlacedCard = PlacedCard;
+            var currentCardClone = placedCardClick3D.gameObject;
+            
+            // Update costs - remove old placed card cost, will add new one in TakeSelectedCard
+            if (currentPlacedCard?.Value != null)
+            {
+                var retained = FindFirstObjectByType<RetainedCardHolder>(FindObjectsInactive.Include);
+                var isFromRetained = retained && retained.HeldCard == currentPlacedCard;
+                if (!isFromRetained)
+                    _scoreManager.treatmentCost -= currentPlacedCard.Value.Value;
+            }
+            
+            // IMPORTANT: Clear the holder state BEFORE calling TakeSelectedCard
+            // This ensures HoldingCard returns false and TakeSelectedCard won't call GiveBackCard
+            PlacedCard = null;
+            placedCardClick3D = null;
+            placedCardView = null;
+            
+            // Destroy the old-placed card visual
+            if (currentCardClone != null)
+                Destroy(currentCardClone);
+            
+            // Now place the selected card - since HoldingCard is false, it won't call GiveBackCard
+            TakeSelectedCard();
+            
+            // Put the old-placed card back in the hand without selecting it
+            RestoreCardToHandWithoutSelection(currentPlacedCard);
+            
+            // Final safety check - ensure no cards are selected after swap
+            // Clear manager state
+            _deckManager.selectedACardClick3D = null;
+            _deckManager.SelectedACard = null;
+            
+            // Also clear visual selection state on all hand cards to prevent any lingering selections
+            var allHandCards = _deckManager.actionCardParent.GetComponentsInChildren<CardView>(true);
+            foreach (var cardView in allHandCards)
+            {
+                var click3D = cardView.GetComponent<Click3D>();
+                if (click3D != null && click3D.selected)
+                {
+                    click3D.selected = false;
+                    click3D.StartCoroutine(click3D.AnimateCardBack());
+                }
+            }
+            
+            // Recalculate treatment cost
+            _scoreManager.CalculateTreatmentCost();
+        }
+        
+        /// <summary>
+        /// Clears all card selections in the hand
+        /// </summary>
+        private void ClearAllSelections()
+        {
+            // Clear deck manager selections
+            _deckManager.selectedACardClick3D = null;
+            _deckManager.SelectedACard = null;
+            
+            // Find all hand cards and deselect them
+            var handCards = _deckManager.actionCardParent.GetComponentsInChildren<CardView>(true);
+            foreach (var cardView in handCards)
+            {
+                var click3D = cardView.GetComponent<Click3D>();
+                if (click3D != null && click3D.selected)
+                {
+                    click3D.selected = false;
+                    click3D.StartCoroutine(click3D.AnimateCardBack());
+                }
+            }
+        }
+        
+        /// <summary>
+        /// Restores a card to the hand as the selected card
+        /// </summary>
+        private void RestoreCardToHand(ICard card)
+        {
+            // First, deselect any currently selected card
+            if (_deckManager.selectedACardClick3D != null)
+            {
+                _deckManager.selectedACardClick3D.selected = false;
+                _deckManager.selectedACardClick3D.StartCoroutine(_deckManager.selectedACardClick3D.AnimateCardBack());
+            }
+            
+            var handCards = _deckManager.actionCardParent.GetComponentsInChildren<CardView>(true);
+            foreach (var cardView in handCards)
+            {
+                if (cardView.GetCard() != card) continue;
+                
+                // Re-enable the card in the hand
+                foreach (var rend in cardView.GetComponentsInChildren<Renderer>(true))
+                    rend.enabled = true;
+                    
+                var click3D = cardView.GetComponent<Click3D>();
+                if (click3D != null)
+                {
+                    click3D.isEnabled = true;
+                    click3D.selected = true;
+                }
+                
+                // Set it as selected
+                _deckManager.selectedACardClick3D = click3D;
+                _deckManager.SelectedACard = card;
+                
+                break;
+            }
+        }
+        
+        /// <summary>
+        /// Restores a card to the hand without selecting it
+        /// </summary>
+        private void RestoreCardToHandWithoutSelection(ICard card)
+        {
+            var handCards = _deckManager.actionCardParent.GetComponentsInChildren<CardView>(true);
+            foreach (var cardView in handCards)
+            {
+                if (cardView.GetCard() != card) continue;
+                
+                // Re-enable the card in the hand
+                foreach (var rend in cardView.GetComponentsInChildren<Renderer>(true))
+                    rend.enabled = true;
+                    
+                var click3D = cardView.GetComponent<Click3D>();
+                if (click3D != null)
+                {
+                    click3D.isEnabled = true;
+                    click3D.selected = false; // Don't select it
+                    // Make sure it's not raised/animated
+                    click3D.StartCoroutine(click3D.AnimateCardBack());
+                }
+                
+                break;
+            }
+        }
+        
+        /// <summary>
+        /// Clears the holder without returning the card to hand
+        /// </summary>
+        private void ClearHolder()
+        {
+            if (placedCardClick3D != null)
+                Destroy(placedCardClick3D.gameObject);
+                
+            PlacedCard = null;
+            placedCardClick3D = null;
+            placedCardView = null;
+            
+            // Show the button/holder again
+            var buttonRenderer = GetComponentInChildren<MeshRenderer>(true);
+            if (buttonRenderer) buttonRenderer.enabled = true;
+        }
+
         public void TakeSelectedCard()
         {
             if (HoldingCard) GiveBackCard();
@@ -61,6 +305,20 @@ namespace _project.Scripts.Card_Core
             PlacedCard = _deckManager.SelectedACard;
             placedCardClick3D = cardClone.GetComponent<Click3D>();
             placedCardView = cardClone.GetComponent<CardView>();
+            
+            // Remove the CardView component from the clone to prevent interference with clicks
+            if (cardViewClone != null)
+            {
+                Destroy(cardViewClone);
+            }
+            
+            // Set up the click handler for the placed card
+            if (placedCardClick3D != null)
+            {
+                // Remove all existing listeners and add our placed card click handler
+                placedCardClick3D.onClick3D.RemoveAllListeners();
+                placedCardClick3D.onClick3D.AddListener(OnPlacedCardClicked);
+            }
 
             _deckManager.selectedACardClick3D = null;
             _deckManager.SelectedACard = null;
