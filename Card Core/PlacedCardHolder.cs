@@ -1,4 +1,5 @@
-﻿using _project.Scripts.Classes;
+﻿using System.Collections;
+using _project.Scripts.Classes;
 using UnityEngine;
 
 namespace _project.Scripts.Card_Core
@@ -318,6 +319,9 @@ namespace _project.Scripts.Card_Core
                 // Remove all existing listeners and add our placed card click handler
                 placedCardClick3D.onClick3D.RemoveAllListeners();
                 placedCardClick3D.onClick3D.AddListener(OnPlacedCardClicked);
+                // Debounce: prevent the placement click from immediately triggering pickup
+                placedCardClick3D.isEnabled = false;
+                StartCoroutine(ReenablePlacedCardClickNextFrame());
             }
 
             _deckManager.selectedACardClick3D = null;
@@ -341,6 +345,13 @@ namespace _project.Scripts.Card_Core
             }
 
             _scoreManager.CalculateTreatmentCost();
+        }
+
+        private IEnumerator ReenablePlacedCardClickNextFrame()
+        {
+            // Wait one frame so the click input that placed the card does’t trigger pickup
+            yield return null;
+            if (placedCardClick3D != null) placedCardClick3D.isEnabled = true;
         }
 
         /// <summary>
