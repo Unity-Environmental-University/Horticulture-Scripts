@@ -198,7 +198,6 @@ namespace _project.Scripts.Card_Core
             if (!isEnabled || click3DGloballyDisabled) return;
             if (_mouse == null || !_mainCamera) return;
 
-            if (handItem) { }
 
             var mousePosition = _mouse.position.ReadValue();
             var ray = _mainCamera.ScreenPointToRay(mousePosition);

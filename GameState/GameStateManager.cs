@@ -5,6 +5,7 @@ using System.Linq;
 using _project.Scripts.Card_Core;
 using _project.Scripts.Classes;
 using _project.Scripts.Core;
+using _project.Scripts.Stickers;
 using UnityEngine;
 using Object = UnityEngine.Object;
 
@@ -126,7 +127,19 @@ namespace _project.Scripts.GameState
             return new CardData
             {
                 cardTypeName = card.GetType().Name,
-                Value = card.Value
+                Value = card.Value,
+                stickers = card.Stickers?.Select(SerializeSticker).ToList() ?? new List<StickerData>()
+            };
+        }
+        
+        private static StickerData SerializeSticker(ISticker sticker)
+        {
+            return new StickerData
+            {
+                stickerTypeName = sticker.GetType().Name,
+                name = sticker.Name,
+                description = sticker.Description,
+                Value = sticker.Value
             };
         }
 
@@ -170,11 +183,61 @@ namespace _project.Scripts.GameState
                     throw new Exception($"Could not create card instance for type: {typeName}");
                 if (data.Value.HasValue)
                     clone.Value = data.Value.Value;
+                
+                // Restore stickers
+                if (data.stickers == null) return clone;
+                foreach (var sticker in data.stickers.Select(DeserializeSticker).Where(sticker => sticker != null))
+                {
+                    clone.ApplySticker(sticker);
+                }
+
                 return clone;
             }
             catch (Exception e)
             {
                 throw new Exception($"Could not deserialize card type {data.cardTypeName}", e);
+            }
+        }
+        
+        private static ISticker DeserializeSticker(StickerData data)
+        {
+            try
+            {
+                var typeName = data.stickerTypeName;
+                var stickerType = AppDomain.CurrentDomain.GetAssemblies()
+                    .SelectMany(a => a.GetTypes())
+                    .FirstOrDefault(t => t.Name == typeName && typeof(ISticker).IsAssignableFrom(t));
+                    
+                if (stickerType == null)
+                {
+                    Debug.LogWarning($"Unknown sticker type: {typeName}");
+                    return null;
+                }
+                
+                if (Activator.CreateInstance(stickerType) is not ISticker sticker)
+                {
+                    Debug.LogWarning($"Could not create sticker instance for type: {typeName}");
+                    return null;
+                }
+                
+                // For ScriptableObject-based stickers, we might need special handling
+                if (sticker is ScriptableObject)
+                {
+                    // Try to find existing asset or create runtime instance
+                    var existing = Resources.FindObjectsOfTypeAll(stickerType).FirstOrDefault();
+                    if (existing != null)
+                        return existing as ISticker;
+                }
+                
+                if (data.Value.HasValue)
+                    sticker.Value = data.Value.Value;
+                    
+                return sticker;
+            }
+            catch (Exception e)
+            {
+                Debug.LogError($"Could not deserialize sticker type {data.stickerTypeName}: {e.Message}");
+                return null;
             }
         }
         
