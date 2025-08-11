@@ -13,6 +13,35 @@ namespace _project.Scripts.Card_Core
 {
     public class DeckManager : MonoBehaviour
     {
+        #region Stickers
+
+        private void InitializeStickerDeck()
+        {
+            if (stickerDefinitions == null || stickerPackParent == null) return;
+            foreach (var def in stickerDefinitions)
+            {
+                _playerStickers.Add(def);
+                var go = Instantiate(def.Prefab,
+                    stickerPackParent.position,
+                    stickerPackParent.rotation,
+                    stickerPackParent);
+                // Attach StickerView so we can click and drag
+                var view = go.AddComponent<StickerView>();
+                view.definition = def;
+            }
+        }
+
+        #endregion
+
+        #region Constants
+
+        private const float MinMoldIntensity = 0.8f;
+        private const float MaxMoldIntensity = 1.0f;
+        private const int MinDuplicateCards = 1;
+        private const int MaxDuplicateCards = 5;
+
+        #endregion
+
         #region Prototype Decks
 
         private static readonly List<ICard> PrototypeAfflictionsDeck = new()
@@ -64,7 +93,6 @@ namespace _project.Scripts.Card_Core
 
         private readonly List<ICard> _tutorialAfflictionDeck = new();
 
-
         #endregion
 
         #region Declare Decks
@@ -84,17 +112,19 @@ namespace _project.Scripts.Card_Core
         private readonly CardHand _afflictionHand = new("Afflictions Hand", AfflictionsDeck, PrototypeAfflictionsDeck);
         private readonly CardHand _plantHand = new("Plants Hand", PlantDeck, PrototypePlantsDeck);
         private readonly List<ICard> _actionHand = new();
-        private static DeckManager Instance { get; set; }
+
         public List<Transform> plantLocations;
         public Transform actionCardParent;
         public Transform stickerPackParent;
+
         [Tooltip("Author your sticker assets here")]
         public List<StickerDefinition> stickerDefinitions;
-        
+
         /// <summary>
-        /// Currently selected sticker (click to apply on next card click).
+        ///     Currently selected sticker (click to apply on the next card click).
         /// </summary>
         public StickerView SelectedSticker { get; private set; }
+
         public Click3D selectedACardClick3D;
         public ICard SelectedACard;
         public GameObject cardPrefab;
@@ -110,17 +140,6 @@ namespace _project.Scripts.Card_Core
         #endregion
 
         #region Initialization
-
-        private void Awake()
-        {
-            if (Instance && Instance != this)
-            {
-                Destroy(gameObject);
-                return;
-            }
-
-            Instance = this;
-        }
 
         private void Start()
         {
@@ -203,65 +222,63 @@ namespace _project.Scripts.Card_Core
             return Mathf.Clamp(result, min, maxExclusive - 1);
         }
 
-        public List<ICard> GetActionDeck() => new List<ICard>(_actionDeck);
-        public List<ICard> GetDiscardPile() => new List<ICard>(_actionDiscardPile);
-        public List<ICard> GetActionHand() => new List<ICard>(_actionHand);
+        public List<ICard> GetActionDeck() => new(_actionDeck);
+        public List<ICard> GetDiscardPile() => new(_actionDiscardPile);
+        public List<ICard> GetActionHand() => new(_actionHand);
+        public List<ISticker> GetPlayerStickers() => new(_playerStickers);
 
         public void RestoreActionDeck(List<CardData> cards)
         {
             _actionDeck.Clear();
             foreach (var card in cards)
-            {
                 // Reconstruct each card from serialized data
                 _actionDeck.Add(GameStateManager.DeserializeCard(card));
-            }
         }
-        
+
         public void RestoreDiscardPile(List<CardData> cards)
         {
             _actionDiscardPile.Clear();
-            foreach (var card in cards)
-            {
-                _actionDiscardPile.Add(GameStateManager.DeserializeCard(card));
-            }
+            foreach (var card in cards) _actionDiscardPile.Add(GameStateManager.DeserializeCard(card));
         }
-        
+
         public void RestoreActionHand(List<CardData> cards)
         {
             _actionHand.Clear();
-            foreach (var card in cards)
+            foreach (var card in cards) _actionHand.Add(GameStateManager.DeserializeCard(card));
+        }
+
+        public void RestorePlayerStickers(List<StickerData> stickers)
+        {
+            // Clear existing sticker visuals
+            if (stickerPackParent != null)
+                foreach (Transform child in stickerPackParent)
+                    Destroy(child.gameObject);
+
+            _playerStickers.Clear();
+            foreach (var sticker in stickers.Select(GameStateManager.DeserializeSticker)
+                         .Where(sticker => sticker != null))
             {
-                _actionHand.Add(GameStateManager.DeserializeCard(card));
+                _playerStickers.Add(sticker);
+
+                // Recreate visual representation
+                if (!sticker.Prefab || !stickerPackParent) continue;
+                var go = Instantiate(sticker.Prefab,
+                    stickerPackParent.position,
+                    stickerPackParent.rotation,
+                    stickerPackParent);
+                var view = go.GetComponent<StickerView>() ?? go.AddComponent<StickerView>();
+                if (sticker is StickerDefinition definition)
+                    view.definition = definition;
             }
         }
-        
-        #endregion
-        
-        #region Stickers
-
-    private void InitializeStickerDeck()
-    {
-        if (stickerDefinitions == null || stickerPackParent == null) return;
-        foreach (var def in stickerDefinitions)
-        {
-            _playerStickers.Add(def);
-            var go = Instantiate(def.Prefab,
-                                 stickerPackParent.position,
-                                 stickerPackParent.rotation,
-                                 stickerPackParent);
-            // Attach StickerView so we can click and drag
-            var view = go.AddComponent<StickerView>();
-            view.definition = def;
-        }
-    }
 
         #endregion
 
         #region Sticker Drag & Drop
 
-    /// <summary>
-    /// Selects a sticker so it can be applied to the next clicked card.
-    /// </summary>
+        /// <summary>
+        ///     Selects a sticker so it can be applied to the next clicked card.
+        /// </summary>
         public void SelectSticker(StickerView sticker)
         {
             // Toggle off if clicking the already selected sticker
@@ -277,13 +294,13 @@ namespace _project.Scripts.Card_Core
                 SelectedSticker.GetComponent<Click3D>().selected = false;
 
             SelectedSticker = sticker;
-            // highlight new selection
+            // highlight a new selection
             sticker.GetComponent<Click3D>().selected = true;
         }
 
-    /// <summary>
-    /// Applies the selected sticker to the given card if it matches, then clears selection.
-    /// </summary>
+        /// <summary>
+        ///     Applies the selected sticker to the given card if it matches, then clears selection.
+        /// </summary>
         public void TryDropStickerOn(ICard card, StickerView sticker)
         {
             if (SelectedSticker != sticker) return;
@@ -359,10 +376,8 @@ namespace _project.Scripts.Card_Core
                 var cardHolders = location.GetComponentsInChildren<PlacedCardHolder>(true);
 
                 foreach (var cardHolder in cardHolders)
-                {
                     if (cardHolder)
                         cardHolder.ToggleCardHolder(plantController != null);
-                }
             }
         }
 
@@ -437,64 +452,65 @@ namespace _project.Scripts.Card_Core
                 case 0:
                     _tutorialPlantDeck.Clear();
                     _tutorialAfflictionDeck.Clear();
-                    
+
                     _tutorialPlantDeck.Add(new ColeusCard());
-                    
+
                     _tutorialAfflictionDeck.Add(new AphidsCard());
                     break;
                 case 1:
                     _tutorialPlantDeck.Clear();
                     _tutorialAfflictionDeck.Clear();
-                    
+
                     _tutorialPlantDeck.Add(new ColeusCard());
                     _tutorialPlantDeck.Add(new ChrysanthemumCard());
-                    
+
                     _tutorialAfflictionDeck.Add(new AphidsCard());
                     break;
                 case 2:
                     _tutorialPlantDeck.Clear();
                     _tutorialAfflictionDeck.Clear();
-                    
+
                     _tutorialPlantDeck.Add(new ColeusCard());
                     _tutorialPlantDeck.Add(new ChrysanthemumCard());
                     _tutorialPlantDeck.Add(new CucumberCard());
-                    
+
                     _tutorialAfflictionDeck.Add(new AphidsCard());
                     _tutorialAfflictionDeck.Add(new MealyBugsCard());
                     break;
                 case 3:
                     _tutorialPlantDeck.Clear();
                     _tutorialAfflictionDeck.Clear();
-                    
+
                     _tutorialPlantDeck.Add(new ColeusCard());
                     _tutorialPlantDeck.Add(new ChrysanthemumCard());
                     _tutorialPlantDeck.Add(new CucumberCard());
                     _tutorialPlantDeck.Add(new PepperCard());
-                    
+
                     _tutorialAfflictionDeck.Add(new AphidsCard());
                     _tutorialAfflictionDeck.Add(new MealyBugsCard());
                     _tutorialAfflictionDeck.Add(new MildewCard());
                     break;
                 case 4:
                     _tutorialAfflictionDeck.Clear();
-                    
+
                     _tutorialAfflictionDeck.Add(new AphidsCard());
                     _tutorialAfflictionDeck.Add(new MealyBugsCard());
                     _tutorialAfflictionDeck.Add(new MildewCard());
                     _tutorialAfflictionDeck.Add(new ThripsCard());
                     break;
             }
+
             _plantHand.Clear();
             foreach (var card in _tutorialPlantDeck)
                 _plantHand.Add(card.Clone());
-            
+
             Debug.Log("PlantHand: " + string.Join(", ", _plantHand.ConvertAll(card => card.Name)));
             Debug.Log("TUT PLANT HAND: " + string.Join(", ", _tutorialPlantDeck.ConvertAll(card => card.Name)));
             yield return StartCoroutine(PlacePlantsSequentially());
         }
 
         /// <summary>
-        /// Restores and places plants from saved game state sequentially, preserving transforms and afflictions.
+        ///     Restores and places plants from saved game state sequentially, preserving transforms and afflictions.
         /// </summary>
         public IEnumerator RestorePlantsSequentially(List<PlantData> plantDataList, float delay = 0.4f)
         {
@@ -523,26 +539,19 @@ namespace _project.Scripts.Card_Core
                 plant.PlantCard = cardProto;
                 if (plant.priceFlag && plant.priceFlagText)
                     plant.priceFlagText.text = "$" + plant.PlantCard.Value;
-                
+
                 // Restore history without queueing or duplicating afflictions
                 plant.PriorAfflictions.Clear();
                 if (pd.priorAfflictions != null)
-                {
                     foreach (var aff in pd.priorAfflictions.Select(GetAfflictionFromString).Where(aff => aff != null))
-                    {
                         plant.PriorAfflictions.Add(aff);
-                    }
-                }
 
                 // Restore current afflictions (effects suppressed during the load process)
                 plant.CurrentAfflictions.Clear();
                 if (pd.currentAfflictions != null)
-                {
                     foreach (var aff in pd.currentAfflictions.Select(GetAfflictionFromString).Where(aff => aff != null))
-                    {
                         plant.AddAffliction(aff);
-                    }
-                }
+
                 if (pd.usedTreatments != null)
                     foreach (var tr in pd.usedTreatments)
                         plant.UsedTreatments.Add(GetTreatmentFromString(tr));
@@ -564,11 +573,11 @@ namespace _project.Scripts.Card_Core
             {
                 "Aphids" => new PlantAfflictions.AphidsAffliction(),
                 "MealyBugs" => new PlantAfflictions.MealyBugsAffliction(),
-                "Mildew"  => new PlantAfflictions.MildewAffliction(),
+                "Mildew" => new PlantAfflictions.MildewAffliction(),
                 "Thrips" => new PlantAfflictions.ThripsAffliction(),
                 "Spider Mites" => new PlantAfflictions.SpiderMitesAffliction(),
                 "Fungus Gnats" => new PlantAfflictions.FungusGnatsAffliction(),
-                _ => null,
+                _ => null
             };
         }
 
@@ -598,17 +607,15 @@ namespace _project.Scripts.Card_Core
             ApplyAfflictionDeck();
             CardGameMaster.Instance.scoreManager.CalculateTreatmentCost();
         }
-        
+
         public void DrawTutorialActionHand()
         {
             if (updatingActionDisplay) return;
-            
+
             _actionHand.Clear();
 
             for (var i = 0; i < cardsDrawnPerTurn; i++)
-            {
                 _actionHand.Add(_tutorialActionDeck[i % _tutorialActionDeck.Count].Clone());
-            }
 
             // Clear all existing visualized cards
             ClearActionCardVisuals();
@@ -618,7 +625,6 @@ namespace _project.Scripts.Card_Core
             if (debug)
                 Debug.Log($"Tutorial Action Hand: {string.Join(", ", _actionHand.ConvertAll(card => card.Name))}");
         }
-        
 
         #endregion
 
@@ -674,7 +680,7 @@ namespace _project.Scripts.Card_Core
                 availablePlants.RemoveAt(randomIndex);
 
                 var card = _afflictionHand[i];
-                PlantAfflictions.IAffliction affliction = card.Affliction;
+                var affliction = card.Affliction;
                 if (affliction != null)
                 {
                     // Check if the plant already has the affliction, Skip if it does.
@@ -684,7 +690,7 @@ namespace _project.Scripts.Card_Core
 
                     if (affliction is PlantAfflictions.MildewAffliction)
                     {
-                        var intensity = Random.Range(0.8f, 01f);
+                        var intensity = Random.Range(MinMoldIntensity, MaxMoldIntensity);
                         plantController.SetMoldIntensity(intensity);
                     }
 
@@ -821,7 +827,7 @@ namespace _project.Scripts.Card_Core
 
             if (debug) Debug.Log("Cleared action hand and discarded cards.");
         }
-        
+
         public void AddActionCard(ICard card)
         {
             _actionHand.Add(card);
@@ -868,13 +874,13 @@ namespace _project.Scripts.Card_Core
                 // Set the local position and rotation.
                 cardObj.transform.localPosition = new Vector3(xOffset, 0f, 0f);
                 cardObj.transform.localRotation = Quaternion.Euler(0, 0, angleOffset);
-                
+
                 var playerAudio = CardGameMaster.Instance.playerHandAudioSource;
                 playerAudio.PlayOneShot(CardGameMaster.Instance.soundSystem.drawCard);
 
                 yield return new WaitForSeconds(0.5f);
             }
-            
+
             updatingActionDisplay = false;
         }
 
@@ -899,7 +905,7 @@ namespace _project.Scripts.Card_Core
                 Debug.LogWarning("Hand overflow detected. Trimming hand.");
                 _actionHand.RemoveRange(cardsDrawnPerTurn, _actionHand.Count - cardsDrawnPerTurn);
             }
-            
+
             // Clear all existing visualized cards in the action card parent
             ClearActionCardVisuals();
 
@@ -929,7 +935,7 @@ namespace _project.Scripts.Card_Core
         }
 
         /// <summary>
-        /// Destroys all GameObjects under actionCardParent.
+        ///     Destroys all GameObjects under actionCardParent.
         /// </summary>
         private void ClearActionCardVisuals()
         {
@@ -938,8 +944,8 @@ namespace _project.Scripts.Card_Core
         }
 
         /// <summary>
-        /// Refreshes the action hand display to match the current _actionHand list.
-        /// Clears existing visuals and plays the display sequence for all cards.
+        ///     Refreshes the action hand display to match the current _actionHand list.
+        ///     Clears existing visuals and plays the display sequence for all cards.
         /// </summary>
         public void RefreshActionHandDisplay()
         {

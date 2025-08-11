@@ -14,11 +14,11 @@ namespace _project.Scripts.GameState
     public static class GameStateManager
     {
         public static bool SuppressQueuedEffects { get; private set; }
-        
+
         public static void SaveGame()
         {
             var data = new GameStateData();
-            
+
             // Turn Data
             var tc = CardGameMaster.Instance.turnController;
             data.turnData = new TurnData
@@ -35,7 +35,7 @@ namespace _project.Scripts.GameState
                 shopQueued = tc.shopQueued,
                 tutorialCompleted = tc.tutorialCompleted
             };
-            
+
             // Score Data
             data.scoreData = new ScoreData
             {
@@ -48,21 +48,22 @@ namespace _project.Scripts.GameState
             {
                 actionDeck = dm.GetActionDeck().Select(SerializeCard).ToList(),
                 discardPile = dm.GetDiscardPile().Select(SerializeCard).ToList(),
-                actionHand = dm.GetActionHand().Select(SerializeCard).ToList()
+                actionHand = dm.GetActionHand().Select(SerializeCard).ToList(),
+                playerStickers = dm.GetPlayerStickers().Select(SerializeSticker).ToList()
             };
-            
+
             // Plant Data
             data.plants = SerializePlants(dm);
-            
+
             // Retained Card
             var retained = Object.FindFirstObjectByType<RetainedCardHolder>();
             if (retained && retained.HeldCard != null)
-            { 
+            {
                 data.retainedCard.card = SerializeCard(retained.HeldCard);
                 data.retainedCard.hasPaidForCard = retained.hasPaidForCard;
                 data.retainedCard.isCardLocked = retained.isCardLocked;
             }
-            
+
             // Save to PlayerPrefs
             var json = JsonUtility.ToJson(data);
             PlayerPrefs.SetString("GameState", json);
@@ -76,15 +77,15 @@ namespace _project.Scripts.GameState
                 Debug.LogError("Game state not found!");
                 return;
             }
-            
+
             var json = PlayerPrefs.GetString("GameState");
             var data = JsonUtility.FromJson<GameStateData>(json);
-            
+
             var tc = CardGameMaster.Instance.turnController;
             var dm = CardGameMaster.Instance.deckManager;
-            
+
             // Restore Turn Data
-            tc.turnCount =  data.turnData.turnCount;
+            tc.turnCount = data.turnData.turnCount;
             tc.level = data.turnData.level;
             tc.moneyGoal = data.turnData.moneyGoal;
             tc.currentTurn = data.turnData.currentTurn;
@@ -95,16 +96,20 @@ namespace _project.Scripts.GameState
             tc.newRoundReady = data.turnData.newRoundReady;
             tc.shopQueued = data.turnData.shopQueued;
             tc.tutorialCompleted = data.turnData.tutorialCompleted;
-            
+
             // Restore Score
             ScoreManager.SetScore(data.scoreData.money);
-            
+
             // Restore Decks
             dm.RestoreActionDeck(data.deckData.actionDeck);
             dm.RestoreDiscardPile(data.deckData.discardPile);
             dm.RestoreActionHand(data.deckData.actionHand);
             dm.RefreshActionHandDisplay();
-            
+
+            // Restore Sticker Inventory
+            if (data.deckData.playerStickers != null)
+                dm.RestorePlayerStickers(data.deckData.playerStickers);
+
             // Suppress any plant effects during restore and clear the queue when done
             SuppressQueuedEffects = true;
             CardGameMaster.Instance.StartCoroutine(RestorePlantsAndClearEffects(data.plants, tc));
@@ -114,7 +119,7 @@ namespace _project.Scripts.GameState
             if (retained && retained.HeldCard != null)
                 retained.HeldCard = DeserializeCard(data.retainedCard.card);
         }
-        
+
         private static IEnumerator RestorePlantsAndClearEffects(List<PlantData> plantData, TurnController tc)
         {
             yield return CardGameMaster.Instance.deckManager.RestorePlantsSequentially(plantData);
@@ -131,7 +136,7 @@ namespace _project.Scripts.GameState
                 stickers = card.Stickers?.Select(SerializeSticker).ToList() ?? new List<StickerData>()
             };
         }
-        
+
         private static StickerData SerializeSticker(ISticker sticker)
         {
             return new StickerData
@@ -152,8 +157,8 @@ namespace _project.Scripts.GameState
                 if (!plant) continue;
 
                 list.Add(new PlantData
-                { 
-                    plantType= plant.type,
+                {
+                    plantType = plant.type,
                     plantCard = SerializeCard(plant.PlantCard),
                     locationIndex = i,
                     currentAfflictions = plant.cAfflictions,
@@ -163,11 +168,12 @@ namespace _project.Scripts.GameState
                     moldIntensity = plant.moldIntensity
                 });
             }
+
             return list;
         }
 
         /// <summary>
-        /// Reconstructs a card instance from serialized data using its type name.
+        ///     Reconstructs a card instance from serialized data using its type name.
         /// </summary>
         public static ICard DeserializeCard(CardData data)
         {
@@ -183,13 +189,11 @@ namespace _project.Scripts.GameState
                     throw new Exception($"Could not create card instance for type: {typeName}");
                 if (data.Value.HasValue)
                     clone.Value = data.Value.Value;
-                
+
                 // Restore stickers
                 if (data.stickers == null) return clone;
                 foreach (var sticker in data.stickers.Select(DeserializeSticker).Where(sticker => sticker != null))
-                {
                     clone.ApplySticker(sticker);
-                }
 
                 return clone;
             }
@@ -198,8 +202,8 @@ namespace _project.Scripts.GameState
                 throw new Exception($"Could not deserialize card type {data.cardTypeName}", e);
             }
         }
-        
-        private static ISticker DeserializeSticker(StickerData data)
+
+        public static ISticker DeserializeSticker(StickerData data)
         {
             try
             {
@@ -207,31 +211,47 @@ namespace _project.Scripts.GameState
                 var stickerType = AppDomain.CurrentDomain.GetAssemblies()
                     .SelectMany(a => a.GetTypes())
                     .FirstOrDefault(t => t.Name == typeName && typeof(ISticker).IsAssignableFrom(t));
-                    
+
                 if (stickerType == null)
                 {
                     Debug.LogWarning($"Unknown sticker type: {typeName}");
                     return null;
                 }
-                
-                if (Activator.CreateInstance(stickerType) is not ISticker sticker)
+
+                ISticker sticker;
+
+                // Handle ScriptableObject-based stickers
+                if (typeof(ScriptableObject).IsAssignableFrom(stickerType))
                 {
-                    Debug.LogWarning($"Could not create sticker instance for type: {typeName}");
-                    return null;
-                }
-                
-                // For ScriptableObject-based stickers, we might need special handling
-                if (sticker is ScriptableObject)
-                {
-                    // Try to find existing asset or create runtime instance
-                    var existing = Resources.FindObjectsOfTypeAll(stickerType).FirstOrDefault();
+                    // Try to find existing sticker definitions by name first
+                    var existing = Resources.FindObjectsOfTypeAll(stickerType)
+                        .OfType<ISticker>()
+                        .FirstOrDefault(s => s.Name == data.name);
                     if (existing != null)
-                        return existing as ISticker;
+                        return existing;
+
+                    // If not found, create a runtime instance using ScriptableObject.CreateInstance
+                    sticker = ScriptableObject.CreateInstance(stickerType) as ISticker;
+                    if (sticker == null)
+                    {
+                        Debug.LogWarning($"Could not create ScriptableObject instance for type: {typeName}");
+                        return null;
+                    }
                 }
-                
+                else
+                {
+                    // Handle regular classes with Activator.CreateInstance
+                    sticker = Activator.CreateInstance(stickerType) as ISticker;
+                    if (sticker == null)
+                    {
+                        Debug.LogWarning($"Could not create sticker instance for type: {typeName}");
+                        return null;
+                    }
+                }
+
                 if (data.Value.HasValue)
                     sticker.Value = data.Value.Value;
-                    
+
                 return sticker;
             }
             catch (Exception e)
@@ -240,6 +260,5 @@ namespace _project.Scripts.GameState
                 return null;
             }
         }
-        
     }
 }
