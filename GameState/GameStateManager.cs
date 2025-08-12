@@ -79,35 +79,104 @@ namespace _project.Scripts.GameState
             }
 
             var json = PlayerPrefs.GetString("GameState");
-            var data = JsonUtility.FromJson<GameStateData>(json);
+            
+            // Validate JSON input before deserialization
+            if (string.IsNullOrEmpty(json))
+            {
+                Debug.LogError("Invalid game state data: empty or null JSON");
+                return;
+            }
+            
+            // Additional security: limit JSON size to prevent DoS attacks
+            if (json.Length > 1024 * 1024) // 1MB limit
+            {
+                Debug.LogError("Game state data too large, possible security issue");
+                return;
+            }
+            
+            GameStateData data;
+            try
+            {
+                data = JsonUtility.FromJson<GameStateData>(json);
+                if (data == null)
+                {
+                    Debug.LogError("Failed to deserialize game state: null data");
+                    return;
+                }
+            }
+            catch (Exception e)
+            {
+                Debug.LogError($"Failed to deserialize game state: {e.Message}");
+                return;
+            }
 
+            // Validate CardGameMaster instance and components exist
+            if (CardGameMaster.Instance == null)
+            {
+                Debug.LogError("CardGameMaster instance not found during load");
+                return;
+            }
+            
             var tc = CardGameMaster.Instance.turnController;
             var dm = CardGameMaster.Instance.deckManager;
+            
+            if (tc == null)
+            {
+                Debug.LogError("TurnController not found during load");
+                return;
+            }
+            
+            if (dm == null)
+            {
+                Debug.LogError("DeckManager not found during load");
+                return;
+            }
 
-            // Restore Turn Data
-            tc.turnCount = data.turnData.turnCount;
-            tc.level = data.turnData.level;
-            tc.moneyGoal = data.turnData.moneyGoal;
-            tc.currentTurn = data.turnData.currentTurn;
-            tc.currentTutorialTurn = data.turnData.currentTutorialTurn;
-            tc.totalTurns = data.turnData.totalTurns;
-            tc.currentRound = data.turnData.currentRound;
-            tc.canClickEnd = data.turnData.canClickEnd;
-            tc.newRoundReady = data.turnData.newRoundReady;
-            tc.shopQueued = data.turnData.shopQueued;
-            tc.tutorialCompleted = data.turnData.tutorialCompleted;
+            // Restore Turn Data with validation
+            if (data.turnData != null)
+            {
+                tc.turnCount = data.turnData.turnCount;
+                tc.level = data.turnData.level;
+                tc.moneyGoal = data.turnData.moneyGoal;
+                tc.currentTurn = data.turnData.currentTurn;
+                tc.currentTutorialTurn = data.turnData.currentTutorialTurn;
+                tc.totalTurns = data.turnData.totalTurns;
+                tc.currentRound = data.turnData.currentRound;
+                tc.canClickEnd = data.turnData.canClickEnd;
+                tc.newRoundReady = data.turnData.newRoundReady;
+                tc.shopQueued = data.turnData.shopQueued;
+                tc.tutorialCompleted = data.turnData.tutorialCompleted;
+            }
+            else
+            {
+                Debug.LogWarning("Turn data is null, skipping turn data restoration");
+            }
 
-            // Restore Score
-            ScoreManager.SetScore(data.scoreData.money);
+            // Restore Score with validation
+            if (data.scoreData != null)
+            {
+                ScoreManager.SetScore(data.scoreData.money);
+            }
+            else
+            {
+                Debug.LogWarning("Score data is null, skipping score restoration");
+            }
 
-            // Restore Decks
-            dm.RestoreActionDeck(data.deckData.actionDeck);
-            dm.RestoreDiscardPile(data.deckData.discardPile);
-            dm.RestoreActionHand(data.deckData.actionHand);
-            dm.RefreshActionHandDisplay();
+            // Restore Decks with validation
+            if (data.deckData != null)
+            {
+                dm.RestoreActionDeck(data.deckData.actionDeck);
+                dm.RestoreDiscardPile(data.deckData.discardPile);
+                dm.RestoreActionHand(data.deckData.actionHand);
+                dm.RefreshActionHandDisplay();
+            }
+            else
+            {
+                Debug.LogWarning("Deck data is null, skipping deck restoration");
+            }
 
             // Restore Sticker Inventory
-            if (data.deckData.playerStickers != null)
+            if (data.deckData!.playerStickers != null)
                 dm.RestorePlayerStickers(data.deckData.playerStickers);
 
             // Suppress any plant effects during restore and clear the queue when done

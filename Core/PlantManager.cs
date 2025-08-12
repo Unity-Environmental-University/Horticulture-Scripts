@@ -1,5 +1,5 @@
+using System;
 using System.Collections.Generic;
-using System.Linq;
 using UnityEngine;
 
 namespace _project.Scripts.Core
@@ -10,8 +10,36 @@ namespace _project.Scripts.Core
 
         public void TriggerPlantTreatments()
         {
-            foreach (var controller in CachedPlants.Select(plant => plant.GetComponent<PlantController>()))
-                controller.ProcessDay();
+            if (CachedPlants == null)
+            {
+                Debug.LogWarning("CachedPlants is null, cannot trigger plant treatments");
+                return;
+            }
+
+            foreach (var plant in CachedPlants)
+            {
+                if (!plant)
+                {
+                    Debug.LogWarning("Found null plant in CachedPlants, skipping");
+                    continue;
+                }
+
+                var controller = plant.GetComponent<PlantController>();
+                if (!controller)
+                {
+                    Debug.LogWarning($"PlantController not found on {plant.name}, skipping");
+                    continue;
+                }
+
+                try
+                {
+                    controller.ProcessDay();
+                }
+                catch (Exception e)
+                {
+                    Debug.LogError($"Error processing day for plant {plant.name}: {e.Message}");
+                }
+            }
         }
     }
 }
