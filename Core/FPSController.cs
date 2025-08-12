@@ -1,3 +1,4 @@
+using System;
 using System.Linq;
 using _project.Scripts.UI;
 using TMPro;
@@ -51,24 +52,50 @@ namespace _project.Scripts.Core
 
         private void Start()
         {
+            // Initialize CharacterController with null check
             _controller = GetComponent<CharacterController>();
-            Cursor.lockState = CursorLockMode.Locked;
-            if (!menuManager) menuManager = FindFirstObjectByType<MenuManager>();
-            if (!noteBook) Debug.LogError("No notebook found");
+            if (_controller == null)
+            {
+                Debug.LogError("CharacterController component missing from FPSController!");
+                return;
+            }
 
-            _lookAction = InputSystem.actions.FindAction("Look");
-            _escapeAction = InputSystem.actions.FindAction("Escape");
-            _sprintAction = InputSystem.actions.FindAction("Sprint");
-            _crouchAction = InputSystem.actions.FindAction("Crouch");
-            _jumpAction = InputSystem.actions.FindAction("Jump");
-            _noteAction = InputSystem.actions.FindAction("Note");
-            _galleryAction = InputSystem.actions.FindAction("Gallery");
-            _progressTimeAction = InputSystem.actions.FindAction("ProgressTime");
+            Cursor.lockState = CursorLockMode.Locked;
+            
+            // Auto-assign menuManager if not set
+            if (menuManager == null)
+            {
+                menuManager = FindFirstObjectByType<MenuManager>();
+                if (menuManager == null)
+                    Debug.LogWarning("MenuManager not found, some functionality may not work");
+            }
+            
+            if (noteBook == null)
+            {
+                Debug.LogError("Notebook GameObject not assigned!");
+            }
+
+            // Initialize input actions with null checks
+            try
+            {
+                _lookAction = InputSystem.actions.FindAction("Look");
+                _escapeAction = InputSystem.actions.FindAction("Escape");
+                _sprintAction = InputSystem.actions.FindAction("Sprint");
+                _crouchAction = InputSystem.actions.FindAction("Crouch");
+                _jumpAction = InputSystem.actions.FindAction("Jump");
+                _noteAction = InputSystem.actions.FindAction("Note");
+                _galleryAction = InputSystem.actions.FindAction("Gallery");
+                _progressTimeAction = InputSystem.actions.FindAction("ProgressTime");
+            }
+            catch (Exception e)
+            {
+                Debug.LogError($"Error initializing input actions: {e.Message}");
+            }
         }
 
         private void Update()
         {
-            if (mouseCaptured || menuManager.isPaused)
+            if (mouseCaptured || (menuManager != null && menuManager.isPaused))
                 return;
 
             // ReSharper disable once Unity.PerformanceCriticalCodeInvocation
@@ -86,8 +113,33 @@ namespace _project.Scripts.Core
 
         private void OnDestroy()
         {
-            // Destroy all others
-            foreach (var player in GameObject.FindGameObjectsWithTag("Player")) Destroy(player);
+            // Clean up input action references to prevent memory leaks
+            _lookAction = null;
+            _escapeAction = null;
+            _sprintAction = null;
+            _crouchAction = null;
+            _jumpAction = null;
+            _noteAction = null;
+            _galleryAction = null;
+            _progressTimeAction = null;
+            
+            // Destroy all other player objects
+            try
+            {
+                var players = GameObject.FindGameObjectsWithTag("Player");
+                if (players == null) return;
+                foreach (var player in players)
+                {
+                    if (player != null && player != gameObject)
+                    {
+                        Destroy(player);
+                    }
+                }
+            }
+            catch (Exception e)
+            {
+                Debug.LogError($"Error cleaning up player objects: {e.Message}");
+            }
         }
 
 
@@ -106,13 +158,16 @@ namespace _project.Scripts.Core
 
         private void HandleTimeProgression()
         {
-            if (!_progressTimeAction.WasReleasedThisFrame()) return;
-            scriptedSpread.SpreadDay(scriptedSpread.nextDay);
+            if (_progressTimeAction == null || !_progressTimeAction.WasReleasedThisFrame()) return;
+            if (scriptedSpread != null)
+                scriptedSpread.SpreadDay(scriptedSpread.nextDay);
         }
 
         private void HandleGallery()
         {
-            if (!_galleryAction.WasReleasedThisFrame()) return;
+            if (_galleryAction == null || !_galleryAction.WasReleasedThisFrame()) return;
+            if (gallery == null) return;
+            
             switch (gallery.activeSelf)
             {
                 case true:
@@ -126,24 +181,28 @@ namespace _project.Scripts.Core
 
         private void OpenGallery()
         {
-            gallery.SetActive(true);
-            menuManager.isPaused = true;
+            if (gallery != null)
+                gallery.SetActive(true);
+            if (menuManager != null)
+                menuManager.isPaused = true;
             Cursor.lockState = CursorLockMode.None;
             Cursor.visible = true;
         }
 
         public void CloseGallery()
         {
-            gallery.SetActive(false);
-            if (noteBook.gameObject.activeInHierarchy) return;
+            if (gallery != null)
+                gallery.SetActive(false);
+            if (noteBook != null && noteBook.gameObject.activeInHierarchy) return;
 
-            menuManager.isPaused = false;
+            if (menuManager != null)
+                menuManager.isPaused = false;
             Cursor.lockState = CursorLockMode.Locked;
             Cursor.visible = false;
         } // ReSharper disable Unity.PerformanceAnalysis
         private void UpdateLookDirection()
         {
-            if (lookLocked) return;
+            if (lookLocked || _lookAction == null) return;
             var lookInput = _lookAction.ReadValue<Vector2>();
             var currentInputDevice = GetCurrentDevice();
             mouseSensitivity = currentInputDevice is Gamepad ? 5f : 0.1f;
