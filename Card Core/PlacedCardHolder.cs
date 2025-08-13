@@ -1,6 +1,8 @@
 ﻿using System.Collections;
+using System.Reflection;
 using _project.Scripts.Classes;
 using UnityEngine;
+using UnityEngine.InputSystem;
 
 namespace _project.Scripts.Card_Core
 {
@@ -14,6 +16,10 @@ namespace _project.Scripts.Card_Core
         public bool HoldingCard => placedCardClick3D;
 
         private static CardGameMaster Cgm => CardGameMaster.Instance;
+        
+        private int _lastPlacementFrame = -1;
+        private float _lastPlacementTime = -1f;
+        private float _lastClickTime = -1f;
 
         private void Start()
         {
@@ -35,9 +41,34 @@ namespace _project.Scripts.Card_Core
         /// </summary>
         public void OnPlacedCardClicked()
         {
+            Debug.Log($"[CARD BOUNCE DEBUG] OnPlacedCardClicked called. Frame: {Time.frameCount}, LastPlacement: {_lastPlacementFrame}, Time: {Time.time:F2}, LastPlacementTime: {_lastPlacementTime:F2}, LastClickTime: {_lastClickTime:F2}, HoldingCard: {HoldingCard}, SelectedACard: {(_deckManager.SelectedACard?.GetType().Name ?? "null")}, PlacedCard: {(PlacedCard?.GetType().Name ?? "null")}");
+            
+            // Prevent duplicate clicks within the same frame (Input System double-processing)
+            if (Time.time - _lastClickTime < 0.1f)
+            {
+                Debug.Log($"[CARD BOUNCE DEBUG] Ignoring duplicate click ({Time.time - _lastClickTime:F3}s since last)");
+                return;
+            }
+            _lastClickTime = Time.time;
+            
+            // Prevent clicks in the same frame as placement to avoid input system double-processing
+            if (Time.frameCount == _lastPlacementFrame)
+            {
+                Debug.Log("[CARD BOUNCE DEBUG] Ignoring click - same frame as placement");
+                return;
+            }
+            
+            // Prevent clicks within 0.5 seconds of placement to avoid accidental immediate pickup
+            if (Time.time - _lastPlacementTime < 0.5f)
+            {
+                Debug.Log($"[CARD BOUNCE DEBUG] Ignoring click - too soon after placement ({Time.time - _lastPlacementTime:F2}s)");
+                return;
+            }
+            
             // If the holder is empty, treat this as a normal placement
             if (!HoldingCard)
             {
+                Debug.Log("[CARD BOUNCE DEBUG] Holder empty, calling TakeSelectedCard");
                 TakeSelectedCard();
                 return;
             }
@@ -45,6 +76,7 @@ namespace _project.Scripts.Card_Core
             // If no card is selected in the hand, pick up this placed card
             if (_deckManager.SelectedACard == null)
             {
+                Debug.Log("[CARD BOUNCE DEBUG] No card selected in hand, picking up placed card");
                 PickUpPlacedCard();
                 return;
             }
@@ -52,11 +84,13 @@ namespace _project.Scripts.Card_Core
             // If the selected card is the same as the placed card, pick it up (user clicked their own placed card)
             if (_deckManager.SelectedACard == PlacedCard)
             {
+                Debug.Log("[CARD BOUNCE DEBUG] Selected card same as placed card, picking up");
                 PickUpPlacedCard();
                 return;
             }
             
             // If a different card is selected in the hand, swap it with this placed card
+            Debug.Log("[CARD BOUNCE DEBUG] Swapping with selected card");
             SwapWithSelectedCard();
         }
         
@@ -65,6 +99,7 @@ namespace _project.Scripts.Card_Core
         /// </summary>
         private void PickUpPlacedCard()
         {
+            Debug.Log($"[CARD BOUNCE DEBUG] PickUpPlacedCard called. HoldingCard: {HoldingCard}");
             if (!HoldingCard) return;
             
             // Play pickup sound
@@ -276,10 +311,21 @@ namespace _project.Scripts.Card_Core
 
         public void TakeSelectedCard()
         {
-            if (HoldingCard) GiveBackCard();
-            if (_deckManager.selectedACardClick3D is null || _deckManager.SelectedACard is null) return;
+            Debug.Log($"[CARD BOUNCE DEBUG] TakeSelectedCard called. HoldingCard: {HoldingCard}, SelectedACard: {(_deckManager.SelectedACard?.GetType().Name ?? "null")}");
+            
+            if (HoldingCard) 
+            {
+                Debug.Log("[CARD BOUNCE DEBUG] Already holding card, giving it back first");
+                GiveBackCard();
+            }
+            if (_deckManager.selectedACardClick3D is null || _deckManager.SelectedACard is null) 
+            {
+                Debug.Log("[CARD BOUNCE DEBUG] No selected card to take, returning early");
+                return;
+            }
 
             var selectedCard = _deckManager.selectedACardClick3D;
+            Debug.Log($"[CARD BOUNCE DEBUG] Taking selected card: {_deckManager.SelectedACard.GetType().Name}");
 
             selectedCard.DisableClick3D();
             Cgm.playerHandAudioSource.PlayOneShot(Cgm.soundSystem.placeCard);
@@ -316,13 +362,16 @@ namespace _project.Scripts.Card_Core
             // Set up the click handler for the placed card
             if (placedCardClick3D != null)
             {
-                // Remove all existing listeners and add our placed card click handler
                 placedCardClick3D.onClick3D.RemoveAllListeners();
                 placedCardClick3D.onClick3D.AddListener(OnPlacedCardClicked);
-                // Debounce: prevent the placement click from immediately triggering pickup
-                placedCardClick3D.isEnabled = false;
-                StartCoroutine(ReenablePlacedCardClickNextFrame());
+                // Disable the component initially to prevent immediate clicks
+                placedCardClick3D.enabled = false;
+                Debug.Log($"[CARD BOUNCE DEBUG] Card placed, Click3D component disabled temporarily");
+                StartCoroutine(ReenablePlacedCardClickWithInputActionFix());
             }
+            
+            _lastPlacementFrame = Time.frameCount;
+            _lastPlacementTime = Time.time;
 
             _deckManager.selectedACardClick3D = null;
             _deckManager.SelectedACard = null;
@@ -347,12 +396,36 @@ namespace _project.Scripts.Card_Core
             _scoreManager.CalculateTreatmentCost();
         }
 
-        private IEnumerator ReenablePlacedCardClickNextFrame()
+        private IEnumerator ReenablePlacedCardClickWithInputActionFix()
         {
-            // Wait one frame so the click input that placed the card does’t trigger pickup
+            // Wait a few frames to ensure placement click is processed
             yield return null;
-            if (placedCardClick3D != null) placedCardClick3D.isEnabled = true;
+            yield return null;
+            yield return new WaitForEndOfFrame();
+            
+            if (placedCardClick3D != null) 
+            {
+                // Re-enable the component but destroy the InputAction to prevent double-processing
+                placedCardClick3D.enabled = true;
+                placedCardClick3D.isEnabled = true;
+                
+                // CORE FIX: Disable the InputAction on the clone after it's been created
+                var reflection = placedCardClick3D.GetType();
+                var inputActionField = reflection.GetField("_mouseClickAction", BindingFlags.NonPublic | BindingFlags.Instance);
+                if (inputActionField != null)
+                {
+                    var inputAction = inputActionField.GetValue(placedCardClick3D) as InputAction;
+                    if (inputAction != null)
+                    {
+                        inputAction.Disable();
+                        inputAction.Dispose();
+                        inputActionField.SetValue(placedCardClick3D, null);
+                        Debug.Log($"[CARD BOUNCE DEBUG] Clone's InputAction disabled via reflection, component re-enabled for mobile");
+                    }
+                }
+            }
         }
+
 
         /// <summary>
         ///     Returns the currently held card from the cardholder to its appropriate location.
