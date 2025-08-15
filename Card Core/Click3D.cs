@@ -318,5 +318,22 @@ namespace _project.Scripts.Card_Core
             transform.localScale = targetScale;
             transform.localPosition = targetPos;
         }
+
+        /// <summary>
+        /// Updates the original position and scale references used for hover animations.
+        /// This should be called when the card's transform is modified externally (e.g., during hand layout changes).
+        /// </summary>
+        /// <param name="newScale">The new reference scale for the object to use as baseline for scaling animations</param>
+        /// <param name="newPosition">The new reference position for the object to use as baseline for position animations</param>
+        /// <remarks>
+        /// This method allows external animation systems (like DOTween) to update the Click3D component's
+        /// original transform references after layout changes. This ensures hover animations work correctly
+        /// from the new baseline position and scale.
+        /// </remarks>
+        public void UpdateOriginalTransform(Vector3 newScale, Vector3 newPosition)
+        {
+            _originalScale = newScale;
+            _originalPos = newPosition;
+        }
     }
 }
