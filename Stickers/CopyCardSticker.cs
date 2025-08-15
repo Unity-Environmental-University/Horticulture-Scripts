@@ -10,7 +10,7 @@ namespace _project.Scripts.Stickers
         public override void Apply(ICard card)
         {
             base.Apply(card);
-            CardGameMaster.Instance.deckManager.AddCardToHand(card.Clone());
+            CardGameMaster.Instance.deckManager.AddCardToHandWithAnimation(card.Clone());
         }
     }
 }

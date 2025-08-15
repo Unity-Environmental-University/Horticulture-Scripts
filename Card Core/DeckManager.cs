@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
@@ -5,6 +6,7 @@ using _project.Scripts.Classes;
 using _project.Scripts.Core;
 using _project.Scripts.GameState;
 using _project.Scripts.Stickers;
+using DG.Tweening;
 using Unity.Serialization;
 using UnityEngine;
 using Random = UnityEngine.Random;
@@ -108,6 +110,10 @@ namespace _project.Scripts.Card_Core
         #region Class Variables
 
         [DontSerialize] public bool updatingActionDisplay;
+
+        // DOTween sequence management for memory leak prevention
+        private Sequence _currentHandSequence;
+        private Sequence _currentDisplaySequence;
 
         private readonly CardHand _afflictionHand = new("Afflictions Hand", AfflictionsDeck, PrototypeAfflictionsDeck);
         private readonly CardHand _plantHand = new("Plants Hand", PlantDeck, PrototypePlantsDeck);
@@ -334,7 +340,7 @@ namespace _project.Scripts.Card_Core
             yield return StartCoroutine(PlacePlantsSequentially());
         }
 
-        private IEnumerator PlacePlantsSequentially(float delay = 0.4f)
+        private IEnumerator PlacePlantsSequentially(float delay = 0.3f)
         {
             //delay = CardGameMaster.Instance.soundSystem.plantSpawn.length;
             for (var i = 0; i < _plantHand.Count && i < plantLocations.Count; i++)
@@ -620,7 +626,7 @@ namespace _project.Scripts.Card_Core
             // Clear all existing visualized cards
             ClearActionCardVisuals();
 
-            StartCoroutine(DisplayActionCardsSequence());
+            DisplayActionCardsSequence();
 
             if (debug)
                 Debug.Log($"Tutorial Action Hand: {string.Join(", ", _actionHand.ConvertAll(card => card.Name))}");
@@ -706,11 +712,140 @@ namespace _project.Scripts.Card_Core
 
         #endregion
 
+        #region Hand Layout Helpers
+
+        /// <summary>
+        /// Calculates position and rotation for a card at a specific index in the hand layout
+        /// </summary>
+        /// <param name="cardIndex">Index of the card in the hand (0-based)</param>
+        /// <param name="totalCards">Total number of cards in hand</param>
+        /// <param name="effectiveSpacing">Spacing between cards</param>
+        /// <param name="useOverlapLayout">Whether to use overlap layout or fan layout</param>
+        /// <returns>Target position and rotation for the card</returns>
+        private (Vector3 position, Quaternion rotation) CalculateCardTransform(int cardIndex, int totalCards, float effectiveSpacing, bool useOverlapLayout)
+        {
+            if (useOverlapLayout)
+            {
+                // Overlap layout: cards arranged horizontally with minimal spacing, no fan angle
+                var startX = -(totalCards - 1) * effectiveSpacing * 0.5f;
+                var xOffset = startX + cardIndex * effectiveSpacing;
+                var zOffset = cardIndex * 0.01f; // Small Z offset for proper layering (rightmost card on top)
+                var position = new Vector3(xOffset, 0f, -zOffset);
+                var rotation = Quaternion.identity; // No rotation in overlap mode
+                return (position, rotation);
+            }
+            else
+            {
+                // Fan layout: calculate fan offsets with adjusted spacing
+                const float totalFanAngle = -30f;
+                var angleOffset = totalCards > 1
+                    ? Mathf.Lerp(-totalFanAngle / 2, totalFanAngle / 2, (float)cardIndex / (totalCards - 1))
+                    : 0f;
+                var xOffset = totalCards > 1
+                    ? Mathf.Lerp(-effectiveSpacing, effectiveSpacing, (float)cardIndex / (totalCards - 1))
+                    : 0f;
+
+                var position = new Vector3(xOffset, 0f, 0f);
+                var rotation = Quaternion.Euler(0, 0, angleOffset);
+                return (position, rotation);
+            }
+        }
+
+        /// <summary>
+        /// Updates Click3D component's original transform references for proper hover behavior
+        /// </summary>
+        /// <param name="click3D">The Click3D component to update</param>
+        /// <param name="scale">The card's actual scale</param>
+        /// <param name="position">The card's actual position</param>
+        private static void UpdateClick3DFields(Click3D click3D, Vector3 scale, Vector3 position)
+        {
+            click3D?.UpdateOriginalTransform(scale, position);
+        }
+
+
+        /// <summary>
+        /// Calculates optimal hand layout parameters based on the total number of cards.
+        /// </summary>
+        /// <param name="totalCards">The current number of cards in the hand.</param>
+        /// <returns>A tuple containing:
+        /// <c>effectiveSpacing</c> – The spacing to apply between adjacent cards after any adjustments.<br/>
+        /// <c>cardScale</c> – The uniform scale to apply to each card, preserving the aspect ratio.<br/>
+        /// <c>useOverlapLayout</c> – A flag indicating whether the hand should switch to an overlap layout for large hands.</returns>
+        /// <remarks>
+        /// The method first attempts a scaling approach for up to six cards. If more than six cards are present,
+        /// it falls back to an overlapping layout (logic omitted in this snippet). For small hands, spacing
+        /// may be reduced proportionally to the number of cards drawn per turn, and card size is scaled
+        /// down only if the required width exceeds a maximum hand width. The returned values are used
+        /// by animation routines to position and scale card transforms smoothly.
+        /// </remarks>
+        private (float effectiveSpacing, Vector3 cardScale, bool useOverlapLayout) CalculateHandLayout(int totalCards)
+        {
+            const float maxHandWidth = 8f; // Maximum width for card hand spread
+            const int maxScalingCards = 6; // Switch to overlap after this many cards
+            
+            var effectiveSpacing = cardSpacing;
+            
+            // Get the prefab's original scale as baseline
+            var prefabScale = cardPrefab ? cardPrefab.transform.localScale : Vector3.one;
+            var cardScale = prefabScale;
+            var useOverlapLayout = false;
+            
+            // Hybrid approach: scaling up to 6 cards, overlap for 7+
+            if (totalCards <= maxScalingCards)
+            {
+                // Use scaling approach for smaller hands (up to 6 cards)
+                if (totalCards <= cardsDrawnPerTurn) return (effectiveSpacing, cardScale, false);
+                // Reduce spacing dynamically based on card count
+                var overflowFactor = (float)cardsDrawnPerTurn / totalCards;
+                effectiveSpacing = cardSpacing * overflowFactor;
+                    
+                // Calculate if we need to also scale down cards
+                var requiredWidth = totalCards > 1 ? (totalCards - 1) * effectiveSpacing * 2 : 0f;
+                if (!(requiredWidth > maxHandWidth)) return (effectiveSpacing, cardScale, false);
+                var scaleFactor = Mathf.Clamp(maxHandWidth / requiredWidth, 0.7f, 1f);
+                effectiveSpacing *= scaleFactor;
+                // Apply a scale factor to the prefab's original scale
+                cardScale = prefabScale * Mathf.Max(scaleFactor, 0.85f); // Don't scale below 85% of original
+            }
+            else
+            {
+                // Use overlap layout for 7+ cards
+                useOverlapLayout = true;
+                cardScale = prefabScale; // Keep cards at full size in overlap mode
+                
+                // Calculate overlap spacing - much smaller for overlap layout
+                // We want cards to overlap significantly, showing just enough to be selectable
+                effectiveSpacing = 0.1f; // Extremely tight overlap
+                
+                // Ensure the total width doesn't exceed our limit
+                var totalWidth = (totalCards - 1) * effectiveSpacing;
+                if (totalWidth > maxHandWidth)
+                {
+                    effectiveSpacing = maxHandWidth / (totalCards - 1);
+                }
+            }
+            
+            return (effectiveSpacing, cardScale, useOverlapLayout);
+        }
+
+        #endregion
+
         #region Action Card Management
 
-        /// Draws a new action hand by discarding the current hand and drawing the specified number of cards from the action deck.
-        /// If the action deck is empty, it recycles the discard pile into the action deck. The drawn cards are then displayed in sequence.
-        /// Optionally, log the state of the action hand, action deck, and discard the pile if debugging is enabled.
+        /// <summary>
+        /// Replaces the current action hand with a fresh set of cards drawn from the action deck.
+        /// </summary>
+        /// <remarks>
+        /// The operation follows these steps in order:
+        /// <para>1. If the action display is currently updating, the method exits immediately to avoid interference.</para>
+        /// <para>2. All cards presently held in the action hand are moved to the discard pile via <c>DiscardActionCard</c>, then the hand list is cleared.</para>
+        /// <para>3. If the number of cards that were previously in the hand exceeds the maximum allowed per turn, excess cards are removed and a warning is logged.</para>
+        /// <para>4. Any visual representations of action cards currently displayed are removed by calling <c>ClearActionCardVisuals</c>.</para>
+        /// <para>5. Cards are drawn from the top of the action deck until the hand contains the configured number of cards per turn.
+        /// If the deck is exhausted, it may be replenished from the discard pile (details omitted for brevity).</para>
+        /// <para>6. A coroutine is started to animate or otherwise display the newly drawn cards.</para>
+        /// <para>7. When debugging is enabled, the method logs the contents of the hand, deck, and discard pile for diagnostic purposes.</para>
+        /// </remarks>
         public void DrawActionHand()
         {
             if (updatingActionDisplay) return;
@@ -759,7 +894,7 @@ namespace _project.Scripts.Card_Core
                 cardsNeeded--;
             }
 
-            StartCoroutine(DisplayActionCardsSequence());
+            DisplayActionCardsSequence();
 
             if (debug)
                 Debug.Log(
@@ -811,6 +946,167 @@ namespace _project.Scripts.Card_Core
             _actionHand.Add(card);
         }
 
+
+        /// <summary>
+        /// Adds the specified card to the internal action hand list and, if visual assets are available,
+        /// creates a new card view instance, configures it with the supplied card data, and initiates
+        /// an animation that reflows the entire hand layout.
+        /// </summary>
+        /// <param name="card">The card object to add to the hand. The object is stored in the internal list and
+        /// used to configure the visual representation.</param>
+        /// <param name="animDuration">
+        /// Duration of the hand‑reflow animation, expressed in seconds. A default value of 0.3f is provided,
+        /// but callers may override it to create faster or slower transitions.
+        /// </param>
+        public void AddCardToHandWithAnimation(ICard card, float animDuration = 0.3f)
+        {
+            if (card == null)
+            {
+                Debug.LogError("Cannot add null card to hand");
+                return;
+            }
+            
+            // Prevent concurrent animation state issues
+            if (updatingActionDisplay)
+            {
+                Debug.LogWarning("Animation already in progress, queuing card addition after completion");
+                // For now, add the card immediately but skip animation to prevent race conditions
+                _actionHand.Add(card);
+                return;
+            }
+            
+            _actionHand.Add(card);
+
+            if (!actionCardParent || !cardPrefab)
+            {
+                // No visuals available; exit early.
+                return;
+            }
+
+            // Log hand size status if debugging is enabled
+            if (debug && _actionHand.Count > cardsDrawnPerTurn)
+            {
+                var layoutMode = _actionHand.Count <= 6 ? "scaling" : "overlap";
+                Debug.Log($"Hand overflow: {_actionHand.Count} cards (normal: {cardsDrawnPerTurn}). Using {layoutMode} layout.");
+            }
+
+            // Create the visual for the new card
+            var newCardObj = Instantiate(cardPrefab, actionCardParent);
+            var cardView = newCardObj.GetComponent<CardView>();
+            if (cardView)
+                cardView.Setup(card);
+            else
+                Debug.LogWarning("Action Card Prefab is missing a Card View...");
+
+            // Start from hidden/centered state with the correct scale
+            var t = newCardObj.transform;
+            t.localScale = Vector3.zero; // Start at zero, will animate to the final scale
+            t.localPosition = Vector3.zero;
+            t.localRotation = Quaternion.identity;
+
+            var playerAudio = CardGameMaster.Instance.playerHandAudioSource;
+            var sfx = CardGameMaster.Instance.soundSystem?.drawCard;
+            if (playerAudio && sfx) playerAudio.PlayOneShot(sfx);
+
+            // Animate the entire hand to its new layout including this card
+            AnimateHandReflow(animDuration);
+        }
+
+        private void AnimateHandReflow(float duration)
+        {
+            // Kill any existing hand animation sequence to prevent memory leaks
+            _currentHandSequence?.Kill();
+            
+            updatingActionDisplay = true;
+
+            // Capture current children as the visuals we will reflow
+            var childCount = actionCardParent.childCount;
+            if (childCount == 0)
+            {
+                updatingActionDisplay = false;
+                _currentHandSequence = null;
+                return;
+            }
+
+            // Calculate optimal layout for hand size
+            var (effectiveSpacing, cardScale, useOverlapLayout) = CalculateHandLayout(childCount);
+
+            // Temporarily disable Click3D interactions during animation to prevent conflicts
+            var click3DComponents = new Click3D[childCount];
+            for (var i = 0; i < childCount; i++)
+            {
+                var tf = actionCardParent.GetChild(i);
+                var click3D = tf.GetComponent<Click3D>();
+                if (click3D)
+                {
+                    click3DComponents[i] = click3D;
+                    click3D.StopAllCoroutines(); // Stop any ongoing hover animations
+                    click3D.enabled = false; // Temporarily disable to prevent conflicts
+                }
+            }
+
+            // Create a DOTween sequence for all card animations
+            _currentHandSequence = DOTween.Sequence();
+
+            for (var i = 0; i < childCount; i++)
+            {
+                var tf = actionCardParent.GetChild(i);
+                var (targetPos, targetRot) = CalculateCardTransform(i, childCount, effectiveSpacing, useOverlapLayout);
+
+                // All cards should use the same consistent scale
+                var targetScale = cardScale;
+
+                // Add simultaneous animations for position, rotation, and scale
+                _currentHandSequence.Join(tf.DOLocalMove(targetPos, duration).SetEase(Ease.OutQuart));
+                _currentHandSequence.Join(tf.DOLocalRotateQuaternion(targetRot, duration).SetEase(Ease.OutQuart));
+                _currentHandSequence.Join(tf.DOScale(targetScale, duration).SetEase(Ease.OutQuart));
+            }
+
+            // Set up completion callback
+            _currentHandSequence.OnComplete(() =>
+            {
+                try
+                {
+                    // Fix Click3D original scale and position for proper hover behavior, then re-enable
+                    for (var i = 0; i < childCount; i++)
+                    {
+                        if (i < actionCardParent.childCount && i < click3DComponents.Length) // Safety check for destroyed children
+                        {
+                            var tf = actionCardParent.GetChild(i);
+                            var (targetPos, targetRot) = CalculateCardTransform(i, childCount, effectiveSpacing, useOverlapLayout);
+                            var click3D = click3DComponents[i];
+                            if (click3D)
+                            {
+                                // Update the Click3D original transform references
+                                UpdateClick3DFields(click3D, cardScale, targetPos);
+                                // Re-enable the Click3D component now that our animation is complete
+                                click3D.enabled = true;
+                            }
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Debug.LogWarning($"Error in hand reflow completion: {ex.Message}");
+                    
+                    // Re-enable all Click3D components in case of error
+                    for (var i = 0; i < click3DComponents.Length; i++)
+                    {
+                        if (click3DComponents[i]) click3DComponents[i].enabled = true;
+                    }
+                }
+                finally
+                {
+                    // Always reset state, even if there was an error
+                    updatingActionDisplay = false;
+                    _currentHandSequence = null;
+                }
+            });
+
+            // Start the animation sequence
+            _currentHandSequence.Play();
+        }
+
         /// Clears the action hand, deck, and discard the pile by removing all cards from these lists.
         /// Additionally, destroys all child objects under the `actionCardParent` transform.
         /// After clearing, it reinitializes the action deck and logs the operation if debugging is enabled.
@@ -834,54 +1130,97 @@ namespace _project.Scripts.Card_Core
             if (debug) Debug.Log("Action Hand: " + string.Join(", ", _actionHand.ConvertAll(input => input.Name)));
         }
 
-        /// Displays action cards in a fanned-out sequence within the scene.
+        /// <summary>
+        /// Displays action cards in a fanned-out sequence within the scene using DOTween animations.
         /// This method creates GameObjects for each card in the action hand and positions them
         /// within a parent transform, arranging them in a visually pleasing fanned layout.
         /// Each card GameObject is initialized with its corresponding data through the CardView component.
-        /// The sequence incorporates a delay between visual updates to allow for smooth animations.
-        /// <returns>
-        ///     An IEnumerator to enable the sequence to be executed as a coroutine, supporting time delays
-        ///     for smooth visualization in Unity's coroutine system.
-        /// </returns>
-        private IEnumerator DisplayActionCardsSequence()
+        /// Cards appear sequentially with a staggered animation and scale up with a bounce effect.
+        /// </summary>
+        private void DisplayActionCardsSequence()
         {
+            // Kill any existing display animation sequence to prevent memory leaks
+            _currentDisplaySequence?.Kill();
+            
             updatingActionDisplay = true;
 
             var cardsToDisplay = new List<ICard>(_actionHand);
             var totalCards = _actionHand.Count;
-            const float totalFanAngle = -30f; // Total fan angle in degrees
+            
+            // Calculate optimal layout for hand size
+            var (effectiveSpacing, cardScale, useOverlapLayout) = CalculateHandLayout(totalCards);
+
+            // Create a DOTween sequence for staggered card appearances
+            _currentDisplaySequence = DOTween.Sequence();
+            const float cardDelay = 0.1f; // Reduced delay for smoother experience
 
             for (var i = 0; i < totalCards; i++)
             {
                 var card = cardsToDisplay[i];
-                var cardObj = Instantiate(cardPrefab, actionCardParent);
-                var cardView = cardObj.GetComponent<CardView>();
-                if (cardView)
-                    cardView.Setup(card);
-                else
-                    Debug.LogWarning("Action Card Prefab is missing a Card View...");
+                var cardIndex = i; // Capture for closure
+                
+                _currentDisplaySequence.AppendCallback(() =>
+                {
+                    try
+                    {
+                        var cardObj = Instantiate(cardPrefab, actionCardParent);
+                        var cardView = cardObj.GetComponent<CardView>();
+                        if (cardView)
+                            cardView.Setup(card);
+                        else
+                            Debug.LogWarning("Action Card Prefab is missing a Card View...");
 
-                // Calculate a fanning rotation offset.
-                var angleOffset = totalCards > 1
-                    ? Mathf.Lerp(-totalFanAngle / 2, totalFanAngle / 2, (float)i / (totalCards - 1))
-                    : 0f;
+                        var (targetPos, targetRot) = CalculateCardTransform(cardIndex, totalCards, effectiveSpacing, useOverlapLayout);
 
-                // Use cardSpacing to determine how far apart they are.
-                var xOffset = totalCards > 1
-                    ? Mathf.Lerp(-cardSpacing, cardSpacing, (float)i / (totalCards - 1))
-                    : 0f;
+                        // Start from zero scale and animate in
+                        cardObj.transform.localPosition = targetPos;
+                        cardObj.transform.localRotation = targetRot;
+                        cardObj.transform.localScale = Vector3.zero;
 
-                // Set the local position and rotation.
-                cardObj.transform.localPosition = new Vector3(xOffset, 0f, 0f);
-                cardObj.transform.localRotation = Quaternion.Euler(0, 0, angleOffset);
+                        // Temporarily disable Click3D to prevent conflicts during scale animation
+                        var click3D = cardObj.GetComponent<Click3D>();
+                        if (click3D)
+                        {
+                            click3D.enabled = false;
+                        }
 
-                var playerAudio = CardGameMaster.Instance.playerHandAudioSource;
-                playerAudio.PlayOneShot(CardGameMaster.Instance.soundSystem.drawCard);
+                        // Animate the card scaling up with a bounce effect
+                        cardObj.transform.DOScale(cardScale, 0.3f)
+                            .SetEase(Ease.OutBack)
+                            .OnComplete(() =>
+                            {
+                                // Re-enable Click3D and set proper original transform after animation completes
+                                if (click3D)
+                                {
+                                    UpdateClick3DFields(click3D, cardScale, targetPos);
+                                    click3D.enabled = true;
+                                }
+                            });
 
-                yield return new WaitForSeconds(0.5f);
+                        var playerAudio = CardGameMaster.Instance.playerHandAudioSource;
+                        var sfx = CardGameMaster.Instance.soundSystem?.drawCard;
+                        if (playerAudio && sfx) playerAudio.PlayOneShot(sfx);
+                    }
+                    catch (Exception ex)
+                    {
+                        Debug.LogError($"Error creating card in display sequence: {ex.Message}");
+                    }
+                });
+                
+                if (i < totalCards - 1) // Don't add delay after the last card
+                {
+                    _currentDisplaySequence.AppendInterval(cardDelay);
+                }
             }
 
-            updatingActionDisplay = false;
+            // Set completion callback
+            _currentDisplaySequence.OnComplete(() =>
+            {
+                updatingActionDisplay = false;
+                _currentDisplaySequence = null;
+            });
+
+            _currentDisplaySequence.Play();
         }
 
         public void RedrawCards()
@@ -928,7 +1267,7 @@ namespace _project.Scripts.Card_Core
                 _actionHand.Add(drawnCard);
             }
 
-            StartCoroutine(DisplayActionCardsSequence());
+            DisplayActionCardsSequence();
             if (debug) Debug.Log("Action Hand: " + string.Join(", ", _actionHand.ConvertAll(card => card.Name)));
             ScoreManager.SubtractMoneys(redrawCost);
             ScoreManager.UpdateMoneysText();
@@ -951,7 +1290,20 @@ namespace _project.Scripts.Card_Core
         {
             if (updatingActionDisplay) return;
             ClearActionCardVisuals();
-            StartCoroutine(DisplayActionCardsSequence());
+            DisplayActionCardsSequence();
+        }
+
+        #endregion
+
+        #region Unity Lifecycle
+
+        /// <summary>
+        /// Cleanup DOTween sequences on component destruction to prevent memory leaks
+        /// </summary>
+        private void OnDestroy()
+        {
+            _currentHandSequence?.Kill();
+            _currentDisplaySequence?.Kill();
         }
 
         #endregion
