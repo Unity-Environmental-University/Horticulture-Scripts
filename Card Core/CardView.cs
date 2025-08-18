@@ -88,7 +88,7 @@ namespace _project.Scripts.Card_Core
                 clickedCard.selected = false;
                 StartCoroutine(clickedCard.AnimateCardBack());
                 _deckManager.selectedACardClick3D = null;
-                _deckManager.SelectedACard = null;
+                _deckManager.selectedACard = null;
                 return;
             }
 
@@ -102,7 +102,7 @@ namespace _project.Scripts.Card_Core
 
             // otherwise, select the clicked card
             _deckManager.selectedACardClick3D = clickedCard;
-            _deckManager.SelectedACard = _originalCard;
+            _deckManager.selectedACard = _originalCard;
             _originalCard.Selected();
             clickedCard.selected = true;
             CardGameMaster.Instance.playerHandAudioSource.PlayOneShot(

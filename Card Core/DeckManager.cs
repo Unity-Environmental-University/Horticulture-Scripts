@@ -31,6 +31,71 @@ namespace _project.Scripts.Card_Core
                 var view = go.AddComponent<StickerView>();
                 view.definition = def;
             }
+            
+            // Arrange stickers in a fan layout
+            ArrangeStickersInFan();
+        }
+
+        /// <summary>
+        /// Sets up stickers in a simple stacked layout.
+        /// For single stickers, keep them centered.
+        /// For multiple stickers, stack them like cards.
+        /// </summary>
+        private void ArrangeStickersInFan()
+        {
+            if (stickerPackParent == null) return;
+            
+            var stickerViews = stickerPackParent.GetComponentsInChildren<StickerView>();
+            var stickerCount = stickerViews.Length;
+            
+            // If only one sticker, keep it centered at parent position
+            if (stickerCount <= 1) 
+            {
+                if (stickerCount != 1) return;
+                stickerViews[0].transform.localPosition = Vector3.zero;
+                stickerViews[0].transform.localRotation = Quaternion.identity;
+                return;
+            }
+            
+            // Set up stacked positions (like cards)
+            SetupStickerStack(stickerViews);
+        }
+        
+        /// <summary>
+        /// Positions stickers with consistent spacing regardless of quantity
+        /// </summary>
+        private static void SetupStickerStack(StickerView[] stickerViews)
+        {
+            var stickerCount = stickerViews.Length;
+            if (stickerCount == 0) return;
+            
+            // Consistent spacing parameters
+            const float arcRadius = 0.4f; // Radius of the arc (increased for mobile tapping)
+            const float anglePerSticker = 15f; // Degrees between each sticker (consistent spacing)
+            const float stickerSpacing = 0.08f; // Y spacing between stickers for depth progression
+            
+            for (var i = 0; i < stickerCount; i++)
+            {
+                var stickerView = stickerViews[i];
+                
+                // Calculate an angle with consistent spacing (centered around 0)
+                var totalSpan = (stickerCount - 1) * anglePerSticker;
+                var currentAngle = (i * anglePerSticker) - (totalSpan / 2f);
+                var angleInRadians = currentAngle * Mathf.Deg2Rad;
+                
+                // Convert to cartesian coordinates (arc curves upward)
+                var xOffset = Mathf.Sin(angleInRadians) * arcRadius;
+                var yOffset = (1f - Mathf.Cos(angleInRadians)) * arcRadius; // Starts at 0, curves up
+                
+                // Add consistent forward progression for visual depth
+                yOffset += i * stickerSpacing; // Configurable upward progression
+                
+                var stackOffset = new Vector3(xOffset, yOffset, -i * 0.01f); // Z for proper layering
+                var stackRotation = Quaternion.Euler(0, 0, currentAngle * 0.5f); // Rotation follows arc angle
+                
+                stickerView.transform.localPosition = stackOffset;
+                stickerView.transform.localRotation = stackRotation;
+            }
         }
 
         #endregion
@@ -39,8 +104,6 @@ namespace _project.Scripts.Card_Core
 
         private const float MinMoldIntensity = 0.8f;
         private const float MaxMoldIntensity = 1.0f;
-        private const int MinDuplicateCards = 1;
-        private const int MaxDuplicateCards = 5;
 
         #endregion
 
@@ -132,7 +195,7 @@ namespace _project.Scripts.Card_Core
         public StickerView SelectedSticker { get; private set; }
 
         public Click3D selectedACardClick3D;
-        public ICard SelectedACard;
+        public ICard selectedACard;
         public GameObject cardPrefab;
         public GameObject coleusPrefab;
         public GameObject chrysanthemumPrefab;
@@ -276,6 +339,9 @@ namespace _project.Scripts.Card_Core
                 if (sticker is StickerDefinition definition)
                     view.definition = definition;
             }
+            
+            // Arrange restored stickers in a fan layout
+            ArrangeStickersInFan();
         }
 
         #endregion
@@ -785,7 +851,7 @@ namespace _project.Scripts.Card_Core
             
             var effectiveSpacing = cardSpacing;
             
-            // Get the prefab's original scale as baseline
+            // Get the prefab's original scale as a baseline
             var prefabScale = cardPrefab ? cardPrefab.transform.localScale : Vector3.one;
             var cardScale = prefabScale;
             var useOverlapLayout = false;
@@ -793,7 +859,7 @@ namespace _project.Scripts.Card_Core
             // Hybrid approach: scaling up to 6 cards, overlap for 7+
             if (totalCards <= maxScalingCards)
             {
-                // Use scaling approach for smaller hands (up to 6 cards)
+                // Use a scaling approach for smaller hands (up to 6 cards)
                 if (totalCards <= cardsDrawnPerTurn) return (effectiveSpacing, cardScale, false);
                 // Reduce spacing dynamically based on card count
                 var overflowFactor = (float)cardsDrawnPerTurn / totalCards;
@@ -805,7 +871,7 @@ namespace _project.Scripts.Card_Core
                 var scaleFactor = Mathf.Clamp(maxHandWidth / requiredWidth, 0.7f, 1f);
                 effectiveSpacing *= scaleFactor;
                 // Apply a scale factor to the prefab's original scale
-                cardScale = prefabScale * Mathf.Max(scaleFactor, 0.85f); // Don't scale below 85% of original
+                cardScale = prefabScale * Mathf.Max(scaleFactor, 0.85f); // Don't scale below 85% of the original
             }
             else
             {
@@ -916,8 +982,8 @@ namespace _project.Scripts.Card_Core
         {
             _actionHand.Remove(card);
             if (addToDiscard) AddCardToDiscard(card);
-            if (card != SelectedACard) return;
-            SelectedACard = null;
+            if (card != selectedACard) return;
+            selectedACard = null;
             selectedACardClick3D = null;
         }
 
@@ -927,10 +993,10 @@ namespace _project.Scripts.Card_Core
         /// If no card is selected, the method does nothing.
         public void DiscardSelectedCard()
         {
-            if (SelectedACard == null) return;
-            _actionHand.Remove(SelectedACard);
-            AddCardToDiscard(SelectedACard);
-            SelectedACard = null;
+            if (selectedACard == null) return;
+            _actionHand.Remove(selectedACard);
+            AddCardToDiscard(selectedACard);
+            selectedACard = null;
 
             Destroy(selectedACardClick3D.gameObject);
             selectedACardClick3D = null;
@@ -998,7 +1064,7 @@ namespace _project.Scripts.Card_Core
             else
                 Debug.LogWarning("Action Card Prefab is missing a Card View...");
 
-            // Start from hidden/centered state with the correct scale
+            // Start from a hidden / centered state with the correct scale
             var t = newCardObj.transform;
             t.localScale = Vector3.zero; // Start at zero, will animate to the final scale
             t.localPosition = Vector3.zero;
@@ -1062,7 +1128,7 @@ namespace _project.Scripts.Card_Core
                 _currentHandSequence.Join(tf.DOScale(targetScale, duration).SetEase(Ease.OutQuart));
             }
 
-            // Set up completion callback
+            // Set up a completion callback
             _currentHandSequence.OnComplete(() =>
             {
                 try
@@ -1070,19 +1136,15 @@ namespace _project.Scripts.Card_Core
                     // Fix Click3D original scale and position for proper hover behavior, then re-enable
                     for (var i = 0; i < childCount; i++)
                     {
-                        if (i < actionCardParent.childCount && i < click3DComponents.Length) // Safety check for destroyed children
-                        {
-                            var tf = actionCardParent.GetChild(i);
-                            var (targetPos, targetRot) = CalculateCardTransform(i, childCount, effectiveSpacing, useOverlapLayout);
-                            var click3D = click3DComponents[i];
-                            if (click3D)
-                            {
-                                // Update the Click3D original transform references
-                                UpdateClick3DFields(click3D, cardScale, targetPos);
-                                // Re-enable the Click3D component now that our animation is complete
-                                click3D.enabled = true;
-                            }
-                        }
+                        if (i >= actionCardParent.childCount || i >= click3DComponents.Length) continue; // Safety check for destroyed children
+                        actionCardParent.GetChild(i);
+                        var (targetPos, _) = CalculateCardTransform(i, childCount, effectiveSpacing, useOverlapLayout);
+                        var click3D = click3DComponents[i];
+                        if (!click3D) continue;
+                        // Update the Click3D original transform references
+                        UpdateClick3DFields(click3D, cardScale, targetPos);
+                        // Re-enable the Click3D component now that our animation is complete
+                        click3D.enabled = true;
                     }
                 }
                 catch (Exception ex)
@@ -1090,9 +1152,9 @@ namespace _project.Scripts.Card_Core
                     Debug.LogWarning($"Error in hand reflow completion: {ex.Message}");
                     
                     // Re-enable all Click3D components in case of error
-                    for (var i = 0; i < click3DComponents.Length; i++)
+                    foreach (var t in click3DComponents)
                     {
-                        if (click3DComponents[i]) click3DComponents[i].enabled = true;
+                        if (t) t.enabled = true;
                     }
                 }
                 finally
@@ -1152,7 +1214,7 @@ namespace _project.Scripts.Card_Core
 
             // Create a DOTween sequence for staggered card appearances
             _currentDisplaySequence = DOTween.Sequence();
-            const float cardDelay = 0.1f; // Reduced delay for smoother experience
+            const float cardDelay = 0.1f; // Reduced delay for a smoother experience
 
             for (var i = 0; i < totalCards; i++)
             {
@@ -1172,7 +1234,7 @@ namespace _project.Scripts.Card_Core
 
                         var (targetPos, targetRot) = CalculateCardTransform(cardIndex, totalCards, effectiveSpacing, useOverlapLayout);
 
-                        // Start from zero scale and animate in
+                        // Start from zero scales and animate in
                         cardObj.transform.localPosition = targetPos;
                         cardObj.transform.localRotation = targetRot;
                         cardObj.transform.localScale = Vector3.zero;
@@ -1189,12 +1251,10 @@ namespace _project.Scripts.Card_Core
                             .SetEase(Ease.OutBack)
                             .OnComplete(() =>
                             {
-                                // Re-enable Click3D and set proper original transform after animation completes
-                                if (click3D)
-                                {
-                                    UpdateClick3DFields(click3D, cardScale, targetPos);
-                                    click3D.enabled = true;
-                                }
+                                // Re-enable Click3D and set the proper original transform after animation completes
+                                if (!click3D) return;
+                                UpdateClick3DFields(click3D, cardScale, targetPos);
+                                click3D.enabled = true;
                             });
 
                         var playerAudio = CardGameMaster.Instance.playerHandAudioSource;

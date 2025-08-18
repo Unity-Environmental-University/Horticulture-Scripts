@@ -42,7 +42,7 @@ namespace _project.Scripts.Card_Core
         /// </summary>
         public void OnPlacedCardClicked()
         {
-            Debug.Log($"[CARD BOUNCE DEBUG] OnPlacedCardClicked called. Frame: {Time.frameCount}, LastPlacement: {_lastPlacementFrame}, Time: {Time.time:F2}, LastPlacementTime: {_lastPlacementTime:F2}, LastClickTime: {_lastClickTime:F2}, HoldingCard: {HoldingCard}, SelectedACard: {(_deckManager.SelectedACard?.GetType().Name ?? "null")}, PlacedCard: {(PlacedCard?.GetType().Name ?? "null")}");
+            Debug.Log($"[CARD BOUNCE DEBUG] OnPlacedCardClicked called. Frame: {Time.frameCount}, LastPlacement: {_lastPlacementFrame}, Time: {Time.time:F2}, LastPlacementTime: {_lastPlacementTime:F2}, LastClickTime: {_lastClickTime:F2}, HoldingCard: {HoldingCard}, SelectedACard: {(_deckManager.selectedACard?.GetType().Name ?? "null")}, PlacedCard: {(PlacedCard?.GetType().Name ?? "null")}");
             
             // Prevent duplicate clicks within the same frame (Input System double-processing)
             if (Time.time - _lastClickTime < 0.1f)
@@ -75,7 +75,7 @@ namespace _project.Scripts.Card_Core
             }
             
             // If no card is selected in the hand, pick up this placed card
-            if (_deckManager.SelectedACard == null)
+            if (_deckManager.selectedACard == null)
             {
                 Debug.Log("[CARD BOUNCE DEBUG] No card selected in hand, picking up placed card");
                 PickUpPlacedCard();
@@ -83,7 +83,7 @@ namespace _project.Scripts.Card_Core
             }
             
             // If the selected card is the same as the placed card, pick it up (user clicked their own placed card)
-            if (_deckManager.SelectedACard == PlacedCard)
+            if (_deckManager.selectedACard == PlacedCard)
             {
                 Debug.Log("[CARD BOUNCE DEBUG] Selected card same as placed card, picking up");
                 PickUpPlacedCard();
@@ -151,13 +151,13 @@ namespace _project.Scripts.Card_Core
         /// </summary>
         private void SwapWithSelectedCard()
         {
-            if (!HoldingCard || _deckManager.SelectedACard == null) return;
+            if (!HoldingCard || _deckManager.selectedACard == null) return;
             
             // Play swap sound
             Cgm.playerHandAudioSource.PlayOneShot(Cgm.soundSystem.placeCard);
             
             // Store what we're working with
-            var selectedCard = _deckManager.SelectedACard;
+            var selectedCard = _deckManager.selectedACard;
             var selectedClick3D = _deckManager.selectedACardClick3D;
             var currentPlacedCard = PlacedCard;
             var currentCardClone = placedCardClick3D.gameObject;
@@ -190,7 +190,7 @@ namespace _project.Scripts.Card_Core
             // Final safety check - ensure no cards are selected after swap
             // Clear manager state
             _deckManager.selectedACardClick3D = null;
-            _deckManager.SelectedACard = null;
+            _deckManager.selectedACard = null;
             
             // Also clear visual selection state on all hand cards to prevent any lingering selections
             var allHandCards = _deckManager.actionCardParent.GetComponentsInChildren<CardView>(true);
@@ -215,7 +215,7 @@ namespace _project.Scripts.Card_Core
         {
             // Clear deck manager selections
             _deckManager.selectedACardClick3D = null;
-            _deckManager.SelectedACard = null;
+            _deckManager.selectedACard = null;
             
             // Find all hand cards and deselect them
             var handCards = _deckManager.actionCardParent.GetComponentsInChildren<CardView>(true);
@@ -260,7 +260,7 @@ namespace _project.Scripts.Card_Core
                 
                 // Set it as selected
                 _deckManager.selectedACardClick3D = click3D;
-                _deckManager.SelectedACard = card;
+                _deckManager.selectedACard = card;
                 
                 break;
             }
@@ -312,21 +312,21 @@ namespace _project.Scripts.Card_Core
 
         public void TakeSelectedCard()
         {
-            Debug.Log($"[CARD BOUNCE DEBUG] TakeSelectedCard called. HoldingCard: {HoldingCard}, SelectedACard: {(_deckManager.SelectedACard?.GetType().Name ?? "null")}");
+            Debug.Log($"[CARD BOUNCE DEBUG] TakeSelectedCard called. HoldingCard: {HoldingCard}, SelectedACard: {(_deckManager.selectedACard?.GetType().Name ?? "null")}");
             
             if (HoldingCard) 
             {
                 Debug.Log("[CARD BOUNCE DEBUG] Already holding card, giving it back first");
                 GiveBackCard();
             }
-            if (_deckManager.selectedACardClick3D is null || _deckManager.SelectedACard is null) 
+            if (_deckManager.selectedACardClick3D is null || _deckManager.selectedACard is null) 
             {
                 Debug.Log("[CARD BOUNCE DEBUG] No selected card to take, returning early");
                 return;
             }
 
             var selectedCard = _deckManager.selectedACardClick3D;
-            Debug.Log($"[CARD BOUNCE DEBUG] Taking selected card: {_deckManager.SelectedACard.GetType().Name}");
+            Debug.Log($"[CARD BOUNCE DEBUG] Taking selected card: {_deckManager.selectedACard.GetType().Name}");
 
             selectedCard.DisableClick3D();
             Cgm.playerHandAudioSource.PlayOneShot(Cgm.soundSystem.placeCard);
@@ -337,7 +337,7 @@ namespace _project.Scripts.Card_Core
             // Set up the CloneCardView
             var cardViewClone = cardClone.GetComponent<CardView>();
             if (cardViewClone)
-                cardViewClone.Setup(_deckManager.SelectedACard);
+                cardViewClone.Setup(_deckManager.selectedACard);
 
             // Set parent without preserving world values
             //originalCardTransform = selectedCard.transform;
@@ -350,7 +350,7 @@ namespace _project.Scripts.Card_Core
             cardClone.transform.localScale = Vector3.one * 0.9f;
 
             // Hold the Card Data
-            PlacedCard = _deckManager.SelectedACard;
+            PlacedCard = _deckManager.selectedACard;
             placedCardClick3D = cardClone.GetComponent<Click3D>();
             placedCardView = cardClone.GetComponent<CardView>();
             
@@ -369,7 +369,7 @@ namespace _project.Scripts.Card_Core
             _lastPlacementTime = Time.time;
 
             _deckManager.selectedACardClick3D = null;
-            _deckManager.SelectedACard = null;
+            _deckManager.selectedACard = null;
 
             // Hide the CardButton and the card in Hand
             var buttonRenderer = GetComponentInChildren<MeshRenderer>(true);

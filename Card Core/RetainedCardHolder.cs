@@ -26,7 +26,7 @@ namespace _project.Scripts.Card_Core
         public void HoldSelectedCard()
         {
             var cgm = CardGameMaster.Instance;
-            var selectedCard = _deckManager.SelectedACard;
+            var selectedCard = _deckManager.selectedACard;
             var selectedClick3D = _deckManager.selectedACardClick3D;
 
             if (selectedCard == null || selectedClick3D == null)
@@ -83,7 +83,7 @@ namespace _project.Scripts.Card_Core
             selectedClick3D.isEnabled = false;
 
             // Clear selection
-            _deckManager.SelectedACard = null;
+            _deckManager.selectedACard = null;
             _deckManager.selectedACardClick3D = null;
 
             // Hide the retained slot button
@@ -108,10 +108,10 @@ namespace _project.Scripts.Card_Core
             var click3D = cardGoClone.GetComponent<Click3D>();
             if (click3D == null) return;
 
-            if (_deckManager.SelectedACard == HeldCard)
+            if (_deckManager.selectedACard == HeldCard)
             {
                 _deckManager.selectedACardClick3D = null;
-                _deckManager.SelectedACard = null;
+                _deckManager.selectedACard = null;
                 click3D.selected = false;
                 StartCoroutine(click3D.AnimateCardBack());
             }
@@ -128,7 +128,7 @@ namespace _project.Scripts.Card_Core
                 click3D.selected = true;
                 click3D.RefreshState();
 
-                _deckManager.SelectedACard = HeldCard;
+                _deckManager.selectedACard = HeldCard;
                 _deckManager.selectedACardClick3D = click3D;
                 CardGameMaster.Instance.playerHandAudioSource.PlayOneShot(
                     CardGameMaster.Instance.soundSystem.selectCard);

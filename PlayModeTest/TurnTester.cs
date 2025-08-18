@@ -524,7 +524,7 @@ namespace _project.Scripts.PlayModeTest
                 ?.SetValue(handCardView, treatmentCard);
 
             // Set this as the selected card in the deck manager (simulates player selecting a card)
-            _deckManager.SelectedACard = treatmentCard;
+            _deckManager.selectedACard = treatmentCard;
             _deckManager.selectedACardClick3D = handClick3D;
 
             // Verify initial state
@@ -532,7 +532,7 @@ namespace _project.Scripts.PlayModeTest
             Assert.IsFalse(cardHolder.HoldingCard, "Card holder should start empty");
             
             // Verify test setup is correct
-            Assert.IsNotNull(_deckManager.SelectedACard, "SelectedACard should be set");
+            Assert.IsNotNull(_deckManager.selectedACard, "SelectedACard should be set");
             Assert.IsNotNull(_deckManager.selectedACardClick3D, "selectedACardClick3D should be set");
             Assert.IsNotNull(handCardView, "handCardView should be set");
 
