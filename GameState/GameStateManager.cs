@@ -192,24 +192,22 @@ namespace _project.Scripts.GameState
 
             // Restore Retained Card
             var retained = Object.FindFirstObjectByType<RetainedCardHolder>();
-            if (retained != null)
+            if (retained == null) return;
+            if (data.retainedCard is { card: not null })
             {
-                if (data.retainedCard != null && data.retainedCard.card != null)
-                {
-                    // Restore the retained card
-                    var restoredCard = DeserializeCard(data.retainedCard.card);
-                    retained.HeldCard = restoredCard;
-                    retained.hasPaidForCard = data.retainedCard.hasPaidForCard;
-                    retained.isCardLocked = data.retainedCard.isCardLocked;
+                // Restore the retained card
+                var restoredCard = DeserializeCard(data.retainedCard.card);
+                retained.HeldCard = restoredCard;
+                retained.hasPaidForCard = data.retainedCard.hasPaidForCard;
+                retained.isCardLocked = data.retainedCard.isCardLocked;
                     
-                    // Create the visual representation of the retained card
-                    retained.RestoreCardVisual();
-                }
-                else
-                {
-                    // No retained card in save data, ensure slot is clear
-                    retained.ClearHeldCard();
-                }
+                // Create the visual representation of the retained card
+                retained.RestoreCardVisual();
+            }
+            else
+            {
+                // No retained card in save data, ensure the slot is clear
+                retained.ClearHeldCard();
             }
         }
 
