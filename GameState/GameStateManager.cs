@@ -216,6 +216,16 @@ namespace _project.Scripts.GameState
             yield return CardGameMaster.Instance.deckManager.RestorePlantsSequentially(plantData);
             tc.ClearEffectQueue();
             SuppressQueuedEffects = false;
+            
+            // Update plant shaders after restoration to show current afflictions/treatments visually
+            var plantControllers = Object.FindObjectsByType<PlantController>(FindObjectsSortMode.None);
+            foreach (var plantController in plantControllers)
+            {
+                plantController.FlagShadersUpdate();
+            }
+            
+            // Wait one frame to ensure shader updates are processed
+            yield return null;
         }
 
         private static CardData SerializeCard(ICard card)
