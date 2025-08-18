@@ -15,24 +15,27 @@ namespace _project.Scripts.Cinematics
         {
             if (director == null)
                 director = FindFirstObjectByType<PlayableDirector>();
-            CardGameMaster.Instance.turnController.ReadyToPlay = () => director.state != PlayState.Playing;
+            var gm = CardGameMaster.Instance;
+            if (gm?.turnController != null)
+                gm.turnController.ReadyToPlay = () => director != null && director.state != PlayState.Playing;
         }
 
         private void Start()
         {
-            if (CardGameMaster.IsSequencingEnabled)
+            if (CardGameMaster.IsSequencingEnabled && introTimeline && director)
                 PlayScene(introTimeline);
         }
 
         public void SkipScene()
         {
-            if (director.state != PlayState.Playing) return;
+            if (director == null || director.state != PlayState.Playing) return;
             director.Stop();
             Debug.Log("Cutscene Skipped!");
         }
 
         public static void PlayScene(PlayableAsset timeline)
         {
+            if (director == null || timeline == null) return;
             director.playableAsset = timeline;
             director.Play();
         }

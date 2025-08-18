@@ -89,9 +89,26 @@ namespace _project.Scripts.Card_Core
                 return;
             }
 
-            // Double Check Controllers
-            if (!scoreManager || !deckManager || !turnController || !cinematicDirector || !soundSystem)
-                throw new Exception("Crucial Component Missing!");
+            // Set instance early so other components can query it safely during their Awake/Start
+            Instance = this;
+
+            // Try to fetch required components if not assigned in the inspector
+            if (!scoreManager) scoreManager = GetComponent<ScoreManager>();
+            if (!deckManager) deckManager = GetComponent<DeckManager>();
+            if (!turnController) turnController = GetComponent<TurnController>();
+            if (!cinematicDirector) cinematicDirector = GetComponent<CinematicDirector>();
+            if (!soundSystem) soundSystem = GetComponent<SoundSystemMaster>();
+
+            // Log warning if some crucial elements are missing but do not throw in test/minimal setups
+            var missing = new List<string>();
+            if (!scoreManager) missing.Add(nameof(scoreManager));
+            if (!deckManager) missing.Add(nameof(deckManager));
+            if (!turnController) missing.Add(nameof(turnController));
+            if (!cinematicDirector) missing.Add(nameof(cinematicDirector));
+            if (!soundSystem) missing.Add(nameof(soundSystem));
+            if (missing.Count > 0)
+                Debug.LogWarning(
+                    $"CardGameMaster missing components: {string.Join(", ", missing)}. Running in degraded mode (tests/minimal setup).");
 
             // Find all CardHolders
             try
@@ -108,8 +125,6 @@ namespace _project.Scripts.Card_Core
                 Debug.LogError($"Error finding PlacedCardHolder instances: {e.Message}");
                 cardHolders = new List<PlacedCardHolder>();
             }
-
-            Instance = this;
         }
 
         public void Save()

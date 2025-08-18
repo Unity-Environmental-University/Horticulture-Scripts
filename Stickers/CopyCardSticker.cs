@@ -10,7 +10,14 @@ namespace _project.Scripts.Stickers
         public override void Apply(ICard card)
         {
             base.Apply(card);
-            CardGameMaster.Instance.deckManager.AddCardToHandWithAnimation(card.Clone());
+            var cloned = card.Clone();
+            HandleClonedCard(cloned);
+        }
+
+        // Test seam: allows tests to intercept cloned card without requiring runtime singletons.
+        protected virtual void HandleClonedCard(ICard cloned)
+        {
+            CardGameMaster.Instance.deckManager.AddCardToHandWithAnimation(cloned);
         }
     }
 }
