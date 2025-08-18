@@ -10,6 +10,7 @@ using _project.Scripts.Classes;
 using _project.Scripts.Core;
 using _project.Scripts.Stickers;
 using NUnit.Framework;
+using TMPro;
 using UnityEngine;
 using UnityEngine.TestTools;
 using Object = UnityEngine.Object;
@@ -69,11 +70,14 @@ namespace _project.Scripts.PlayModeTest
             {
                 Name = name;
                 Treatment = treatment;
+                Stickers = new List<ISticker>();
             }
 
             public string Name { get; }
             public PlantAfflictions.ITreatment Treatment { get; }
             public string Description => "Test card";
+            public int? Value => 1; // Return a dummy value
+            public Material Material => null; // CardView.Setup handles null materials
             public List<ISticker> Stickers { get; }
             public ICard Clone() => new FakeCard(Name, Treatment);
         }
@@ -154,12 +158,20 @@ namespace _project.Scripts.PlayModeTest
             _actionParentGo = new GameObject("ActionCardParent");
             _deckManager.actionCardParent = _actionParentGo.transform;
 
+            // Create mock UI text components for ScoreManager
+            var treatmentCostTextGo = new GameObject("TreatmentCostText");
+            var treatmentCostText = treatmentCostTextGo.AddComponent<TextMeshPro>();
+            var potentialProfitTextGo = new GameObject("PotentialProfitText");
+            var potentialProfitText = potentialProfitTextGo.AddComponent<TextMeshPro>();
+
             // Inject dependencies into CardGameMaster.
             cardGameMaster.deckManager = _deckManager;
             cardGameMaster.scoreManager = _scoreManager;
             cardGameMaster.turnController = _turnController;
             cardGameMaster.soundSystem = soundSystem;
             cardGameMaster.playerHandAudioSource = audioSource;
+            cardGameMaster.treatmentCostText = treatmentCostText;
+            cardGameMaster.potentialProfitText = potentialProfitText;
 
             // Use reflection to set the private static Instance property.
             typeof(CardGameMaster)
@@ -433,6 +445,116 @@ namespace _project.Scripts.PlayModeTest
             {
                 Assert.AreEqual(initialDeckNames[i], newDeckNames[i], $"Card mismatch at position {i}");
             }
+        }
+
+        /// <summary>
+        /// Regression test for CardView destruction bug. 
+        /// This test simulates the real card placement workflow through TakeSelectedCard()
+        /// to ensure that treatments can still be applied after the card is placed.
+        /// Previously, the CardView component was destroyed during placement, 
+        /// causing ApplyQueuedTreatments to skip treatment application.
+        /// </summary>
+        [UnityTest]
+        public IEnumerator TakeSelectedCard_PreservesCardViewForTreatmentApplication()
+        {
+            // Remove the default setup to create a more realistic test scenario
+            Object.DestroyImmediate(_plantSpawnGo);
+            CardGameMaster.Instance.cardHolders.Clear();
+
+            // Create a plant with an affliction
+            _plantSpawnGo = new GameObject("TestPlantSpawn");
+            var plantGo = new GameObject("Plant");
+            plantGo.transform.SetParent(_plantSpawnGo.transform);
+            var plant = plantGo.AddComponent<PlantController>();
+            plant.PlantCard = new ColeusCard();
+            plant.CurrentAfflictions.Add(new FakeAffliction());
+
+            var plantFunctions = plantGo.AddComponent<PlantCardFunctions>();
+            plantFunctions.plantController = plant;
+            plantFunctions.deckManager = _deckManager;
+            plant.plantCardFunctions = plantFunctions;
+
+            // Create a card holder (this simulates a placement location on a plant)
+            var cardHolderGo = new GameObject("CardHolder");
+            cardHolderGo.transform.SetParent(_plantSpawnGo.transform);
+            var cardHolder = cardHolderGo.AddComponent<PlacedCardHolder>();
+            
+            // Initialize the card holder's dependencies (normally done in Start())
+            typeof(PlacedCardHolder)
+                .GetField("_deckManager", BindingFlags.NonPublic | BindingFlags.Instance)
+                ?.SetValue(cardHolder, _deckManager);
+            typeof(PlacedCardHolder)
+                .GetField("_scoreManager", BindingFlags.NonPublic | BindingFlags.Instance)
+                ?.SetValue(cardHolder, _scoreManager);
+                
+            CardGameMaster.Instance.cardHolders.Add(cardHolder);
+
+            // Create a hand card with CardView (this simulates a card in the player's hand)
+            var handCardGo = new GameObject("HandCard");
+            handCardGo.transform.SetParent(_actionParentGo.transform);
+            var handCardView = handCardGo.AddComponent<CardView>();
+            var handClick3D = handCardGo.AddComponent<SafeClick3D>();
+            
+            // Set up mock UI components that CardView.Setup() expects
+            var titleTextGo = new GameObject("TitleText");
+            titleTextGo.transform.SetParent(handCardGo.transform);
+            var titleText = titleTextGo.AddComponent<TextMeshPro>();
+            
+            var descTextGo = new GameObject("DescText");
+            descTextGo.transform.SetParent(handCardGo.transform);
+            var descText = descTextGo.AddComponent<TextMeshPro>();
+            
+            var costTextGo = new GameObject("CostText");
+            costTextGo.transform.SetParent(handCardGo.transform);
+            var costText = costTextGo.AddComponent<TextMeshPro>();
+            
+            // Assign the mock UI components to CardView
+            handCardView.titleText = titleText;
+            handCardView.descriptionText = descText;
+            handCardView.treatmentCostText = costText;
+            
+            // Add a Renderer component that CardView.Setup() expects
+            var renderer = handCardGo.AddComponent<MeshRenderer>();
+            renderer.material = new Material(Shader.Find("Standard")); // Create a basic material
+
+            // Set up the card with treatment
+            var treatmentCard = new FakeCard("Healing Card", new FakeTreatment());
+            typeof(CardView)
+                .GetField("_originalCard", BindingFlags.NonPublic | BindingFlags.Instance)
+                ?.SetValue(handCardView, treatmentCard);
+
+            // Set this as the selected card in the deck manager (simulates player selecting a card)
+            _deckManager.SelectedACard = treatmentCard;
+            _deckManager.selectedACardClick3D = handClick3D;
+
+            // Verify initial state
+            Assert.AreEqual(1, plant.CurrentAfflictions.Count, "Plant should start with 1 affliction");
+            Assert.IsFalse(cardHolder.HoldingCard, "Card holder should start empty");
+            
+            // Verify test setup is correct
+            Assert.IsNotNull(_deckManager.SelectedACard, "SelectedACard should be set");
+            Assert.IsNotNull(_deckManager.selectedACardClick3D, "selectedACardClick3D should be set");
+            Assert.IsNotNull(handCardView, "handCardView should be set");
+
+            // CRITICAL: Call TakeSelectedCard() to simulate real card placement workflow
+            // This is where the bug occurred - CardView was destroyed but reference was kept
+            cardHolder.TakeSelectedCard();
+            yield return null;
+
+            // Verify the card was placed correctly
+            Assert.IsTrue(cardHolder.HoldingCard, "Card holder should now hold a card");
+            Assert.IsNotNull(cardHolder.PlacedCard, "PlacedCard should be set");
+            Assert.IsNotNull(cardHolder.placedCardView, "placedCardView should NOT be null after placement");
+
+            // REGRESSION TEST: Apply treatments - this should work now
+            // Previously this would fail because placedCardView was null
+            plant.plantCardFunctions.ApplyQueuedTreatments();
+            yield return null;
+
+            // Verify the treatment was applied
+            Assert.AreEqual(0, plant.CurrentAfflictions.Count, 
+                "Treatment should have been applied and affliction removed. " +
+                "If this fails, the CardView destruction bug has returned.");
         }
     }
 }
