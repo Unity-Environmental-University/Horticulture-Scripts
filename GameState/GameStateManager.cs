@@ -59,9 +59,16 @@ namespace _project.Scripts.GameState
             var retained = Object.FindFirstObjectByType<RetainedCardHolder>();
             if (retained && retained.HeldCard != null)
             {
-                data.retainedCard.card = SerializeCard(retained.HeldCard);
-                data.retainedCard.hasPaidForCard = retained.hasPaidForCard;
-                data.retainedCard.isCardLocked = retained.isCardLocked;
+                data.retainedCard = new RetainedCardData
+                {
+                    card = SerializeCard(retained.HeldCard),
+                    hasPaidForCard = retained.hasPaidForCard,
+                    isCardLocked = retained.isCardLocked
+                };
+            }
+            else
+            {
+                data.retainedCard = null; // No retained card to save
             }
 
             // Save to PlayerPrefs
@@ -185,8 +192,25 @@ namespace _project.Scripts.GameState
 
             // Restore Retained Card
             var retained = Object.FindFirstObjectByType<RetainedCardHolder>();
-            if (retained && retained.HeldCard != null)
-                retained.HeldCard = DeserializeCard(data.retainedCard.card);
+            if (retained != null)
+            {
+                if (data.retainedCard != null && data.retainedCard.card != null)
+                {
+                    // Restore the retained card
+                    var restoredCard = DeserializeCard(data.retainedCard.card);
+                    retained.HeldCard = restoredCard;
+                    retained.hasPaidForCard = data.retainedCard.hasPaidForCard;
+                    retained.isCardLocked = data.retainedCard.isCardLocked;
+                    
+                    // Create the visual representation of the retained card
+                    retained.RestoreCardVisual();
+                }
+                else
+                {
+                    // No retained card in save data, ensure slot is clear
+                    retained.ClearHeldCard();
+                }
+            }
         }
 
         private static IEnumerator RestorePlantsAndClearEffects(List<PlantData> plantData, TurnController tc)

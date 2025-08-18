@@ -210,5 +210,51 @@ namespace _project.Scripts.Card_Core
             if (_buttonRenderer)
                 _buttonRenderer.enabled = true;
         }
+        
+        /// <summary>
+        /// Restores the visual representation of a retained card after loading from save data
+        /// </summary>
+        public void RestoreCardVisual()
+        {
+            if (HeldCard == null) return;
+            
+            // Clear any existing visual first
+            if (cardGoClone != null)
+            {
+                Destroy(cardGoClone);
+                cardGoClone = null;
+            }
+            
+            // Create visual representation similar to HoldSelectedCard()
+            var cgm = CardGameMaster.Instance;
+            cardGoClone = Instantiate(cgm.deckManager.cardPrefab, transform);
+            
+            var cardView = cardGoClone.GetComponent<CardView>();
+            if (cardView)
+                cardView.Setup(HeldCard);
+            
+            var click3D = cardGoClone.GetComponent<Click3D>();
+            if (click3D)
+            {
+                click3D.onClick3D.RemoveAllListeners();
+                click3D.onClick3D.AddListener(SelectHeldCard);
+                // Disable pop-up/resize on hover for retained cards
+                click3D.handItem = false;
+                click3D.isEnabled = !isCardLocked;
+                click3D.RefreshState();
+            }
+            
+            // Position and scale the card
+            cardGoClone.transform.localPosition = Vector3.zero;
+            cardGoClone.transform.localRotation = Quaternion.Euler(-90f, 0f, 0f);
+            cardGoClone.transform.localScale = Vector3.one * 0.8f;
+            
+            // Hide the retained slot button
+            if (_buttonRenderer)
+                _buttonRenderer.enabled = false;
+            
+            // Update cost display
+            cgm.scoreManager.CalculateTreatmentCost();
+        }
     }
 }
