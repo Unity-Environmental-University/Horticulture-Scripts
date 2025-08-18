@@ -33,8 +33,9 @@ namespace _project.Scripts.Card_Core
         /// <remarks>
         ///     If a card is already being held by the cardholder, it is returned before the new card is taken.
         ///     This method ensures the proper management of card interactions, such as cloning the selected card,
-        ///     setting up its view, and positioning it within the holder. Additionally, it hides the original card
-        ///     and updates relevant scoring data, including treatment costs.
+        ///     setting up its view, and positioning it within the holder. The CardView component is preserved
+        ///     on the clone to enable treatment application during the card game flow. Additionally, it hides 
+        ///     the original card and updates relevant scoring data, including treatment costs.
         /// </remarks>
         /// <summary>
         /// Called when the placed card is clicked. Handles pickup and swapping logic.
@@ -352,12 +353,6 @@ namespace _project.Scripts.Card_Core
             PlacedCard = _deckManager.SelectedACard;
             placedCardClick3D = cardClone.GetComponent<Click3D>();
             placedCardView = cardClone.GetComponent<CardView>();
-            
-            // Remove the CardView component from the clone to prevent interference with clicks
-            if (cardViewClone != null)
-            {
-                Destroy(cardViewClone);
-            }
             
             // Set up the click handler for the placed card
             if (placedCardClick3D != null)
