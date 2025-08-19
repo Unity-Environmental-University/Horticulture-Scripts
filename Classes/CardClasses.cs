@@ -77,6 +77,26 @@ namespace _project.Scripts.Classes
 
     #endregion
 
+    #region Plant Location Cards
+
+    public interface ILocationCard : ICard
+    {
+        bool IsPermanent { get; }
+        bool IsStackable { get; }
+        int MaxStackSize { get; }
+        LocationEffectType EffectType { get; }
+
+        void ApplyLocationEffect(PlantController plant);
+        void RemoveLocationEffect(PlantController plant);
+        bool CanPlaceAt(int locationIndex);
+    }
+
+    public abstract class LocationEffectType
+    {
+    }
+
+    #endregion
+
     #region PlantCards
 
     public class ColeusCard : ICard
