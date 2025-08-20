@@ -88,12 +88,39 @@ namespace _project.Scripts.Classes
 
         void ApplyLocationEffect(PlantController plant);
         void RemoveLocationEffect(PlantController plant);
-        bool CanPlaceAt(int locationIndex);
     }
 
     public abstract class LocationEffectType
     {
     }
+
+    public class FertilizerBasic : ILocationCard
+    {
+        public string Name => "FertilizerBasic";
+        public List<ISticker> Stickers => new();
+        public ICard Clone()
+        {
+            return new FertilizerBasic();
+        }
+
+        public bool IsPermanent => false;
+        public bool IsStackable => false;
+        public int MaxStackSize => 0; //?
+        public LocationEffectType EffectType => null;
+
+        public void ApplyLocationEffect(PlantController plant)
+        {
+            throw new NotImplementedException();
+            // do make the plant more valuable 20% over 3 turns
+        }
+
+        public void RemoveLocationEffect(PlantController plant)
+        {
+            throw new NotImplementedException();
+            // will remove/destroy itself
+        }
+    }
+    
 
     #endregion
 
