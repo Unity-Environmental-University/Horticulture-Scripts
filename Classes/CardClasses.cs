@@ -81,9 +81,8 @@ namespace _project.Scripts.Classes
 
     public interface ILocationCard : ICard
     {
+        int EffectDuration { get; }
         bool IsPermanent { get; }
-        bool IsStackable { get; }
-        int MaxStackSize { get; }
         LocationEffectType EffectType { get; }
 
         void ApplyLocationEffect(PlantController plant);
@@ -97,16 +96,26 @@ namespace _project.Scripts.Classes
     public class FertilizerBasic : ILocationCard
     {
         public string Name => "FertilizerBasic";
-        public List<ISticker> Stickers => new();
-        public ICard Clone()
+        public string Description => "Does FertilizerBasic Things";
+        
+        private int _value = -1;
+        public int? Value
         {
-            return new FertilizerBasic();
+            get => _value;
+            set => _value = value ?? 0;
         }
 
+        public int EffectDuration => IsPermanent ? 999 : 3;
         public bool IsPermanent => false;
-        public bool IsStackable => false;
-        public int MaxStackSize => 0; //?
+        
+        public GameObject Prefab { get; set; }
+        public Material Material => Resources.Load<Material>($"Materials/Cards/FertilizerBasic");
+        public List<ISticker> Stickers => new();
         public LocationEffectType EffectType => null;
+        
+        public ICard Clone() { return new FertilizerBasic(); }
+        public void Selected() { if (CardGameMaster.Instance.debuggingCardClass) Debug.Log("Selected " + Name); }
+        public void ModifyValue(int delta) => _value += delta;
 
         public void ApplyLocationEffect(PlantController plant)
         {

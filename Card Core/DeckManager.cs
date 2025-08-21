@@ -136,7 +136,9 @@ namespace _project.Scripts.Card_Core
             new SoapyWaterBasic(),
             new SoapyWaterBasic(),
             new Panacea(),
-            new Panacea()
+            new Panacea(),
+            new FertilizerBasic(),
+            new FertilizerBasic()
         };
 
         private readonly List<ICard> _tutorialActionDeck = new()
