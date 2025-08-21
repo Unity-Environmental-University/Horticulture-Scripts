@@ -89,16 +89,15 @@ namespace _project.Scripts.Classes
         void RemoveLocationEffect(PlantController plant);
     }
 
-    public abstract class LocationEffectType
-    {
-    }
-
+    public abstract class LocationEffectType { }
+    
     public class FertilizerBasic : ILocationCard
     {
         public string Name => "FertilizerBasic";
         public string Description => "Does FertilizerBasic Things";
-        
+
         private int _value = -1;
+
         public int? Value
         {
             get => _value;
@@ -108,13 +107,24 @@ namespace _project.Scripts.Classes
         public int EffectDuration => IsPermanent ? 999 : 3;
         public bool IsPermanent => false;
         public GameObject Prefab => CardGameMaster.Instance.locationCardPrefab;
-        public Material Material => Resources.Load<Material>($"Materials/Cards/FertilizerBasic");
+        public Material Material => Resources.Load<Material>("Materials/Cards/NeemOil");
         public List<ISticker> Stickers => new();
         public LocationEffectType EffectType => null;
-        
-        public ICard Clone() { return new FertilizerBasic(); }
-        public void Selected() { if (CardGameMaster.Instance.debuggingCardClass) Debug.Log("Selected " + Name); }
-        public void ModifyValue(int delta) => _value += delta;
+
+        public ICard Clone()
+        {
+            return new FertilizerBasic();
+        }
+
+        public void Selected()
+        {
+            if (CardGameMaster.Instance.debuggingCardClass) Debug.Log("Selected " + Name);
+        }
+
+        public void ModifyValue(int delta)
+        {
+            _value += delta;
+        }
 
         public void ApplyLocationEffect(PlantController plant)
         {
@@ -128,7 +138,6 @@ namespace _project.Scripts.Classes
             // will remove/destroy itself
         }
     }
-    
 
     #endregion
 

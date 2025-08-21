@@ -32,7 +32,11 @@ namespace _project.Scripts.Card_Core
         {
             titleText.text = card.Name;
             cardMaterial = card.Material;
-            gameObject.GetComponent<Renderer>().material = cardMaterial;
+            var cardRenderer = GetComponentInChildren<Renderer>(true);
+            if (cardRenderer)
+                cardRenderer.material = cardMaterial;
+            else
+                Debug.LogWarning("CardView: No Renderer found on card prefab; skipping material assignment.");
             descriptionText.text = card.Description;
             if (card.Value != null) treatmentCostText.text = "$ " + card.Value;
             _originalCard = card;
@@ -62,9 +66,9 @@ namespace _project.Scripts.Card_Core
         public void CardClicked(Click3D clickedCard)
         {
             // if a sticker is being dragged, drop it here instead of selecting the card
-            var dm = CardGameMaster.Instance.deckManager;
-            var drag = dm.SelectedSticker;
-            if (drag != null)
+            var dm = _deckManager ?? CardGameMaster.Instance?.deckManager;
+            var drag = dm != null ? dm.SelectedSticker : null;
+            if (dm != null && drag != null)
             {
                 dm.TryDropStickerOn(_originalCard, drag);
                 // visually attach the sticker prefab onto this card
@@ -103,9 +107,9 @@ namespace _project.Scripts.Card_Core
             // otherwise, select the clicked card
             _deckManager.selectedACardClick3D = clickedCard;
             _deckManager.selectedACard = _originalCard;
-            _originalCard.Selected();
+            _originalCard?.Selected();
             clickedCard.selected = true;
-            CardGameMaster.Instance.playerHandAudioSource.PlayOneShot(
+            CardGameMaster.Instance!.playerHandAudioSource.PlayOneShot(
                 CardGameMaster.Instance.soundSystem.selectCard);
         }
     }
