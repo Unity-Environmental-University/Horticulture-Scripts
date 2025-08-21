@@ -132,6 +132,7 @@ namespace _project.Scripts.Card_Core
                 var click3D = cardView.GetComponent<Click3D>();
                 if (click3D != null)
                 {
+                    click3D.enabled = true;
                     click3D.isEnabled = true;
                     click3D.selected = false; // Don't select it when picked up
                 }
@@ -254,6 +255,7 @@ namespace _project.Scripts.Card_Core
                 var click3D = cardView.GetComponent<Click3D>();
                 if (click3D != null)
                 {
+                    click3D.enabled = true;
                     click3D.isEnabled = true;
                     click3D.selected = true;
                 }
@@ -283,6 +285,7 @@ namespace _project.Scripts.Card_Core
                 var click3D = cardView.GetComponent<Click3D>();
                 if (click3D != null)
                 {
+                    click3D.enabled = true;
                     click3D.isEnabled = true;
                     click3D.selected = false; // Don't select it
                     // Make sure it's not raised/animated
@@ -328,7 +331,9 @@ namespace _project.Scripts.Card_Core
             var selectedCard = _deckManager.selectedACardClick3D;
             Debug.Log($"[CARD BOUNCE DEBUG] Taking selected card: {_deckManager.selectedACard.GetType().Name}");
 
+            // Properly disable the original card's Click3D component to prevent duplicate clicks
             selectedCard.DisableClick3D();
+            selectedCard.enabled = false;
             Cgm.playerHandAudioSource.PlayOneShot(Cgm.soundSystem.placeCard);
 
             // Clone the card and all its components
@@ -451,6 +456,7 @@ namespace _project.Scripts.Card_Core
                 var click3D = cardView.GetComponent<Click3D>();
                 if (click3D)
                 {
+                    click3D.enabled = true;
                     click3D.isEnabled = true;
                     click3D.selected = false;
                     click3D.RefreshState();

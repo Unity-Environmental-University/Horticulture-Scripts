@@ -86,6 +86,13 @@ namespace _project.Scripts.Card_Core
                 return;
             }
 
+            // Safety check: ensure _deckManager is not null before accessing
+            if (_deckManager == null)
+            {
+                Debug.LogWarning("CardView: _deckManager is null, cannot process card click");
+                return;
+            }
+
             // if the clicked card is already selected, unselect it
             if (_deckManager.selectedACardClick3D == clickedCard)
             {
