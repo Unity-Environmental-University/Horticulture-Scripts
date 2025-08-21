@@ -107,8 +107,7 @@ namespace _project.Scripts.Classes
 
         public int EffectDuration => IsPermanent ? 999 : 3;
         public bool IsPermanent => false;
-        
-        public GameObject Prefab { get; set; }
+        public GameObject Prefab => CardGameMaster.Instance.locationCardPrefab;
         public Material Material => Resources.Load<Material>($"Materials/Cards/FertilizerBasic");
         public List<ISticker> Stickers => new();
         public LocationEffectType EffectType => null;
@@ -145,7 +144,7 @@ namespace _project.Scripts.Classes
             get => _value;
             set => _value = value ?? 0;
         }
-        public GameObject Prefab { get; set; }
+        public GameObject Prefab => CardGameMaster.Instance.actionCardPrefab;
 
         public List<ISticker> Stickers => new();
         public ICard Clone() { return new ColeusCard(); }
@@ -162,7 +161,8 @@ namespace _project.Scripts.Classes
             get => _value;
             set => _value = value ?? 0;
         }
-        public GameObject Prefab { get; set; }
+
+        public GameObject Prefab => CardGameMaster.Instance.actionCardPrefab;
         public List<ISticker> Stickers => new();
 
         public ICard Clone() { return new ChrysanthemumCard(); }
@@ -179,7 +179,7 @@ namespace _project.Scripts.Classes
             get => _value;
             set => _value = value ?? 0;
         }
-        public GameObject Prefab { get; set; }
+        public GameObject Prefab => CardGameMaster.Instance.actionCardPrefab;
         public List<ISticker> Stickers => new();
 
         public ICard Clone() { return new PepperCard(); }
@@ -196,7 +196,7 @@ namespace _project.Scripts.Classes
             get => _value;
             set => _value = value ?? 0;
         }
-        public GameObject Prefab { get; set; }
+        public GameObject Prefab => CardGameMaster.Instance.actionCardPrefab;
         public List<ISticker> Stickers => new();
 
         public ICard Clone() { return new CucumberCard(); }
@@ -287,7 +287,7 @@ namespace _project.Scripts.Classes
             get => _description ?? Treatment.Description;
         }
 
-        public GameObject Prefab { get; set; }
+        public GameObject Prefab => CardGameMaster.Instance.actionCardPrefab;
         public Material Material => Resources.Load<Material>($"Materials/Cards/NeemOil");
 
         public void Selected() { if (CardGameMaster.Instance.debuggingCardClass) Debug.Log("Selected " + Name); }
@@ -314,7 +314,7 @@ namespace _project.Scripts.Classes
             get => _description ?? Treatment.Description;
         }
 
-        public GameObject Prefab { get; set; }
+        public GameObject Prefab => CardGameMaster.Instance.actionCardPrefab;
         public Material Material => Resources.Load<Material>($"Materials/Cards/SyntheticInsecticide");
 
         public void Selected() { if (CardGameMaster.Instance.debuggingCardClass) Debug.Log("Selected " + Name); }
@@ -342,7 +342,7 @@ namespace _project.Scripts.Classes
             get => _description ?? Treatment.Description;
         }
 
-        public GameObject Prefab { get; set; }
+        public GameObject Prefab => CardGameMaster.Instance.actionCardPrefab;
         public Material Material => Resources.Load<Material>($"Materials/Cards/Fungicide");
 
         public void Selected() { if (CardGameMaster.Instance.debuggingCardClass) Debug.Log("Selected " + Name); }
@@ -369,7 +369,7 @@ namespace _project.Scripts.Classes
             get => _description ?? Treatment.Description;
         }
 
-        public GameObject Prefab { get; set; }
+        public GameObject Prefab => CardGameMaster.Instance.actionCardPrefab;
         public Material Material => Resources.Load<Material>($"Materials/Cards/SoapyWater");
 
         public void Selected() { if (CardGameMaster.Instance.debuggingCardClass) Debug.Log("Selected " + Name); }
@@ -396,7 +396,7 @@ namespace _project.Scripts.Classes
             get => _description ?? Treatment.Description;
         }
 
-        public GameObject Prefab { get; set; }
+        public GameObject Prefab => CardGameMaster.Instance.actionCardPrefab;
         public Material Material => Resources.Load<Material>($"Materials/Cards/Spinosad");
 
         public void Selected() { if (CardGameMaster.Instance.debuggingCardClass) Debug.Log("Selected " + Name); }
@@ -423,7 +423,7 @@ namespace _project.Scripts.Classes
             get => _description ?? Treatment.Description;
         }
 
-        public GameObject Prefab { get; set; }
+        public GameObject Prefab => CardGameMaster.Instance.actionCardPrefab;
         public Material Material => Resources.Load<Material>($"Materials/Cards/Imidacloprid");
 
         public void Selected() { if (CardGameMaster.Instance.debuggingCardClass) Debug.Log("Selected " + Name); }
@@ -450,7 +450,7 @@ namespace _project.Scripts.Classes
             get => _description ?? Treatment.Description;
         }
 
-        public GameObject Prefab { get; set; }
+        public GameObject Prefab => CardGameMaster.Instance.actionCardPrefab;
         public Material Material => Resources.Load<Material>($"Materials/Cards/Panacea");
 
         public void Selected() { if (CardGameMaster.Instance.debuggingCardClass) Debug.Log("Selected " + Name); }

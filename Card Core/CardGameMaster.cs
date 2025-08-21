@@ -45,10 +45,14 @@ namespace _project.Scripts.Card_Core
         // ReSharper disable once UnusedMember.Global
         public AudioSource robotAudioSource;
 
-        [Space(5)] [Header("Objects")] public Volume postProcessVolume;
-
+        [Space(5)] [Header("Objects")]
+        public Volume postProcessVolume;
         public InputSystemUIInputModule uiInputModule;
         public GameObject inspectingInfoPanels;
+
+        [Space(5)] [Header("Referencable Objects")]
+        public GameObject actionCardPrefab;
+        public GameObject locationCardPrefab;
 
         [Space(5)] [Header("Text Items")] [CanBeNull]
         public TextMeshProUGUI shopMoneyText;

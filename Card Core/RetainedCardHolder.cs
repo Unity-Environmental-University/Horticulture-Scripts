@@ -227,7 +227,7 @@ namespace _project.Scripts.Card_Core
             
             // Create visual representation similar to HoldSelectedCard()
             var cgm = CardGameMaster.Instance;
-            cardGoClone = Instantiate(cgm.deckManager.cardPrefab, transform);
+            cardGoClone = Instantiate(cgm.actionCardPrefab, transform);
             
             var cardView = cardGoClone.GetComponent<CardView>();
             if (cardView)

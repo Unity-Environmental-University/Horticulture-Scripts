@@ -85,7 +85,7 @@ namespace _project.Scripts.PlayModeTest
             // Set up a fake card prefab with CardViewFake.
             fakePrefab = new GameObject("FakeCardPrefab");
             fakePrefab.AddComponent<CardViewFake>();
-            deckManager.cardPrefab = fakePrefab;
+            CardGameMaster.Instance.actionCardPrefab = fakePrefab;
 
             // Allow Unity to run initial setup code silently.
             LogAssert.ignoreFailingMessages = true;

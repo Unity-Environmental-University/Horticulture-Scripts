@@ -198,7 +198,7 @@ namespace _project.Scripts.Card_Core
 
         public Click3D selectedACardClick3D;
         public ICard selectedACard;
-        public GameObject cardPrefab;
+        //public GameObject cardPrefab;
         public GameObject coleusPrefab;
         public GameObject chrysanthemumPrefab;
         public GameObject cucumberPrefab;
@@ -854,7 +854,8 @@ namespace _project.Scripts.Card_Core
             var effectiveSpacing = cardSpacing;
             
             // Get the prefab's original scale as a baseline
-            var prefabScale = cardPrefab ? cardPrefab.transform.localScale : Vector3.one;
+            var cgm = CardGameMaster.Instance;
+            var prefabScale = cgm.actionCardPrefab ? cgm.actionCardPrefab.transform.localScale : Vector3.one;
             var cardScale = prefabScale;
             var useOverlapLayout = false;
             
@@ -1045,7 +1046,7 @@ namespace _project.Scripts.Card_Core
             
             _actionHand.Add(card);
 
-            if (!actionCardParent || !cardPrefab)
+            if (!actionCardParent || !card.Prefab)
             {
                 // No visuals available; exit early.
                 return;
@@ -1059,7 +1060,7 @@ namespace _project.Scripts.Card_Core
             }
 
             // Create the visual for the new card
-            var newCardObj = Instantiate(cardPrefab, actionCardParent);
+            var newCardObj = Instantiate(card.Prefab, actionCardParent);
             var cardView = newCardObj.GetComponent<CardView>();
             if (cardView)
                 cardView.Setup(card);
@@ -1105,12 +1106,10 @@ namespace _project.Scripts.Card_Core
             {
                 var tf = actionCardParent.GetChild(i);
                 var click3D = tf.GetComponent<Click3D>();
-                if (click3D)
-                {
-                    click3DComponents[i] = click3D;
-                    click3D.StopAllCoroutines(); // Stop any ongoing hover animations
-                    click3D.enabled = false; // Temporarily disable to prevent conflicts
-                }
+                if (!click3D) continue;
+                click3DComponents[i] = click3D;
+                click3D.StopAllCoroutines(); // Stop any ongoing hover animations
+                click3D.enabled = false; // Temporarily disable to prevent conflicts
             }
 
             // Create a DOTween sequence for all card animations
@@ -1227,14 +1226,15 @@ namespace _project.Scripts.Card_Core
                 {
                     try
                     {
-                        var cardObj = Instantiate(cardPrefab, actionCardParent);
+                        var cardObj = Instantiate(card.Prefab, actionCardParent);
                         var cardView = cardObj.GetComponent<CardView>();
                         if (cardView)
                             cardView.Setup(card);
                         else
                             Debug.LogWarning("Action Card Prefab is missing a Card View...");
 
-                        var (targetPos, targetRot) = CalculateCardTransform(cardIndex, totalCards, effectiveSpacing, useOverlapLayout);
+                        var (targetPos, targetRot) = 
+                            CalculateCardTransform(cardIndex, totalCards, effectiveSpacing, useOverlapLayout);
 
                         // Start from zero scales and animate in
                         cardObj.transform.localPosition = targetPos;
