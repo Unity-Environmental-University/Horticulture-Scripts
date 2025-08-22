@@ -98,9 +98,9 @@ namespace _project.Scripts.Card_Core
         private void SwapWithSelectedCard()
         {
             if (!HoldingCard || _deckManager.selectedACard == null) return;
-            
+
             Cgm.playerHandAudioSource.PlayOneShot(Cgm.soundSystem.placeCard);
-            
+
             var currentPlacedCard = placedCard;
             var currentCardClone = placedCardClick3D.gameObject;
 
@@ -111,21 +111,21 @@ namespace _project.Scripts.Card_Core
                 if (!isFromRetained)
                     _scoreManager.treatmentCost -= currentPlacedCard.Value.Value;
             }
-            
+
             placedCard = null;
             placedCardClick3D = null;
             placedCardView = null;
-            
+
             if (currentCardClone != null)
                 Destroy(currentCardClone);
-            
+
             TakeSelectedCard();
-            
+
             RestoreCardToHandWithoutSelection(currentPlacedCard);
-            
+
             _deckManager.selectedACardClick3D = null;
             _deckManager.selectedACard = null;
-            
+
             var allHandCards = _deckManager.actionCardParent.GetComponentsInChildren<CardView>(true);
             foreach (var cardView in allHandCards)
             {
@@ -134,7 +134,7 @@ namespace _project.Scripts.Card_Core
                 click3D.selected = false;
                 click3D.StartCoroutine(click3D.AnimateCardBack());
             }
-            
+
             _scoreManager.CalculateTreatmentCost();
         }
 
@@ -190,23 +190,11 @@ namespace _project.Scripts.Card_Core
 
         public void TakeSelectedCard()
         {
-            Debug.Log(
-                $"[CARD BOUNCE DEBUG] TakeSelectedCard called. HoldingCard: {HoldingCard}, SelectedACard: {_deckManager.selectedACard?.GetType().Name ?? "null"}");
+            if (HoldingCard) GiveBackCard();
 
-            if (HoldingCard)
-            {
-                Debug.Log("[CARD BOUNCE DEBUG] Already holding card, giving it back first");
-                GiveBackCard();
-            }
-
-            if (_deckManager.selectedACardClick3D is null || _deckManager.selectedACard is null)
-            {
-                Debug.Log("[CARD BOUNCE DEBUG] No selected card to take, returning early");
-                return;
-            }
+            if (_deckManager.selectedACardClick3D is null || _deckManager.selectedACard is null) return;
 
             var selectedCard = _deckManager.selectedACardClick3D;
-            Debug.Log($"[CARD BOUNCE DEBUG] Taking selected card: {_deckManager.selectedACard.GetType().Name}");
 
             // Properly disable the original card's Click3D component to prevent duplicate clicks
             selectedCard.DisableClick3D();
@@ -232,18 +220,13 @@ namespace _project.Scripts.Card_Core
                 placedCardClick3D.onClick3D.RemoveAllListeners();
                 placedCardClick3D.onClick3D.AddListener(OnPlacedCardClicked);
                 placedCardClick3D.enabled = false;
-                Debug.Log("[CARD BOUNCE DEBUG] Card placed, Click3D component disabled temporarily");
                 StartCoroutine(ReenablePlacedCardClickWithInputActionFix());
             }
 
             _lastPlacementFrame = Time.frameCount;
             _lastPlacementTime = Time.time;
 
-            if (placedCardView != null)
-            {
-                placedCardView.enabled = false;
-                Debug.Log("[CARD BOUNCE DEBUG] CardView component disabled on placed card");
-            }
+            if (placedCardView != null) placedCardView.enabled = false;
 
             _deckManager.selectedACardClick3D = null;
             _deckManager.selectedACard = null;
@@ -285,8 +268,6 @@ namespace _project.Scripts.Card_Core
             inputAction.Disable();
             inputAction.Dispose();
             inputActionField.SetValue(placedCardClick3D, null);
-            Debug.Log(
-                "[CARD BOUNCE DEBUG] Clone's InputAction disabled via reflection, component re-enabled for mobile");
         }
 
         /// <summary>
