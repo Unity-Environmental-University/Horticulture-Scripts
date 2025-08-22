@@ -48,14 +48,17 @@ namespace _project.Scripts.Card_Core
         {
             if (_originalCard?.Stickers == null || !stickerHolder) return;
 
+
             foreach (Transform child in stickerHolder) Destroy(child.gameObject);
+
             foreach (var click3D in from sticker in _originalCard.Stickers
-                     where sticker?.Prefab
-                     select Instantiate(sticker?.Prefab, stickerHolder, false)
+                     where sticker?.Prefab != null
+                     select Instantiate(sticker.Prefab, stickerHolder, false)
                      into stickerInstance
+                     where stickerInstance != null
                      select stickerInstance.GetComponent<Click3D>()
                      into click3D
-                     where click3D
+                     where click3D != null
                      select click3D) click3D.enabled = false;
         }
 

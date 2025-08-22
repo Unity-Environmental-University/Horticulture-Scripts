@@ -34,6 +34,15 @@ namespace _project.Scripts.Classes
         void ModifyValue(int delta) { }
     }
 
+    public interface IPlantCard : ICard
+    {
+        int InfectLevel { get; set; }
+        int EggLevel { get; set; }
+    }
+
+    public interface IAfflictionCard : ICard { }
+
+
     #region Decks
 
     public class CardHand : List<ICard>
@@ -108,12 +117,15 @@ namespace _project.Scripts.Classes
         public bool IsPermanent => false;
         public GameObject Prefab => CardGameMaster.Instance.locationCardPrefab;
         public Material Material => Resources.Load<Material>("Materials/Cards/NeemOil");
-        public List<ISticker> Stickers => new();
+        private readonly List<ISticker> _stickers = new();
+        public List<ISticker> Stickers => _stickers;
         public LocationEffectType EffectType => null;
 
         public ICard Clone()
         {
-            return new FertilizerBasic();
+            var clone = new FertilizerBasic { Value = this.Value };
+            foreach (var sticker in _stickers) clone._stickers.Add(sticker.Clone());
+            return clone;
         }
 
         public void Selected()
@@ -142,12 +154,16 @@ namespace _project.Scripts.Classes
     #endregion
 
     #region PlantCards
-
-    public class ColeusCard : ICard
+    
+    public class ColeusCard : IPlantCard
     {
         public PlantType Type => PlantType.Coleus;
         public string Name => "Coleus";
         private int _value = 5;
+        public int InfectLevel { get; set; }
+
+        public int EggLevel { get; set; }
+
         public int? Value
         {
             get => _value;
@@ -155,16 +171,25 @@ namespace _project.Scripts.Classes
         }
         public GameObject Prefab => CardGameMaster.Instance.actionCardPrefab;
 
-        public List<ISticker> Stickers => new();
-        public ICard Clone() { return new ColeusCard(); }
+        private readonly List<ISticker> _stickers = new();
+        public List<ISticker> Stickers => _stickers;
+        public ICard Clone() { 
+            var clone = new ColeusCard { InfectLevel = this.InfectLevel, EggLevel = this.EggLevel, Value = this.Value };
+            foreach (var sticker in _stickers) clone._stickers.Add(sticker.Clone());
+            return clone;
+        }
         public void ModifyValue(int delta) => Value = (Value ?? 0) + delta;
     }
 
-    public class ChrysanthemumCard : ICard
+    public class ChrysanthemumCard : IPlantCard
     {
         public PlantType Type => PlantType.Chrysanthemum;
         public string Name => "Chrysanthemum";
         private int _value = 8;
+        public int InfectLevel { get; set; }
+
+        public int EggLevel { get; set; }
+
         public int? Value
         {
             get => _value;
@@ -172,105 +197,153 @@ namespace _project.Scripts.Classes
         }
 
         public GameObject Prefab => CardGameMaster.Instance.actionCardPrefab;
-        public List<ISticker> Stickers => new();
+        public List<ISticker> Stickers { get; } = new();
 
-        public ICard Clone() { return new ChrysanthemumCard(); }
+        public ICard Clone() { 
+            var clone = new ChrysanthemumCard { InfectLevel = this.InfectLevel, EggLevel = this.EggLevel, Value = this.Value };
+            foreach (var sticker in Stickers) clone.Stickers.Add(sticker.Clone());
+            return clone;
+        }
         public void ModifyValue(int delta) => Value = (Value ?? 0) + delta;
     }
 
-    public class PepperCard : ICard
+    public class PepperCard : IPlantCard
     {
         public PlantType Type => PlantType.Pepper;
         public string Name => "Pepper";
         private int _value = 4;
+        public int InfectLevel { get; set; }
+
+        public int EggLevel { get; set; }
+
         public int? Value
         {
             get => _value;
             set => _value = value ?? 0;
         }
         public GameObject Prefab => CardGameMaster.Instance.actionCardPrefab;
-        public List<ISticker> Stickers => new();
+        public List<ISticker> Stickers { get; } = new();
 
-        public ICard Clone() { return new PepperCard(); }
+        public ICard Clone() { 
+            var clone = new PepperCard { InfectLevel = this.InfectLevel, EggLevel = this.EggLevel, Value = this.Value };
+            foreach (var sticker in Stickers) clone.Stickers.Add(sticker.Clone());
+            return clone;
+        }
         public void ModifyValue(int delta) => Value = (Value ?? 0) + delta;
     }
 
-    public class CucumberCard : ICard
+    public class CucumberCard : IPlantCard
     {
         public PlantType Type => PlantType.Cucumber;
         public string Name => "Cucumber";
         private int _value = 3;
+        public int InfectLevel { get; set; }
+
+        public int EggLevel { get; set; }
+
         public int? Value
         {
             get => _value;
             set => _value = value ?? 0;
         }
         public GameObject Prefab => CardGameMaster.Instance.actionCardPrefab;
-        public List<ISticker> Stickers => new();
+        public List<ISticker> Stickers { get; } = new();
 
-        public ICard Clone() { return new CucumberCard(); }
+        public ICard Clone() { 
+            var clone = new CucumberCard { InfectLevel = this.InfectLevel, EggLevel = this.EggLevel, Value = this.Value };
+            foreach (var sticker in Stickers) clone.Stickers.Add(sticker.Clone());
+            return clone;
+        }
         public void ModifyValue(int delta) => Value = (Value ?? 0) + delta;
     }
 
     #endregion
 
-    #region Disease Cards
+    #region Affliction Cards
 
-    public class AphidsCard : ICard
+    public class AphidsCard : IAfflictionCard
     {
         public PlantAfflictions.IAffliction Affliction => new PlantAfflictions.AphidsAffliction();
         public string Name => "Aphids";
         public int? Value => -2;
-        public List<ISticker> Stickers => new();
+        public List<ISticker> Stickers { get; } = new();
 
-        public ICard Clone() { return new AphidsCard(); }
+        public ICard Clone() { 
+            var clone = new AphidsCard();
+            foreach (var sticker in Stickers) clone.Stickers.Add(sticker.Clone());
+            return clone;
+        }
     }
 
-    public class MealyBugsCard : ICard
+    public class MealyBugsCard : IAfflictionCard
     {
         public PlantAfflictions.IAffliction Affliction => new PlantAfflictions.MealyBugsAffliction();
         public string Name => "Mealy Bugs";
         public int? Value => -4;
-        public List<ISticker> Stickers => new();
+        public List<ISticker> Stickers { get; } = new();
 
-        public ICard Clone() { return new MealyBugsCard(); }
+        public ICard Clone() { 
+            var clone = new MealyBugsCard();
+            foreach (var sticker in Stickers) clone.Stickers.Add(sticker.Clone());
+            return clone;
+        }
     }
 
-    public class ThripsCard : ICard
+    public class ThripsCard : IAfflictionCard
     {
         public PlantAfflictions.IAffliction Affliction => new PlantAfflictions.ThripsAffliction();
         public string Name => "Thrips";
         public int? Value => -5;
-        public List<ISticker> Stickers => new();
+        public List<ISticker> Stickers { get; } = new();
 
-        public ICard Clone() { return new ThripsCard(); }
+        public ICard Clone() { 
+            var clone = new ThripsCard();
+            foreach (var sticker in Stickers) clone.Stickers.Add(sticker.Clone());
+            return clone;
+        }
     }
 
-    public class MildewCard : ICard
+    public class MildewCard : IAfflictionCard
     {
         public PlantAfflictions.IAffliction Affliction => new PlantAfflictions.MildewAffliction();
         public string Name => "Mildew";
         public int? Value => -4;
-        public List<ISticker> Stickers => new();
-        public ICard Clone() { return new MildewCard(); }
+        public List<ISticker> Stickers { get; } = new();
+
+        public ICard Clone() { 
+            var clone = new MildewCard();
+            foreach (var sticker in Stickers) clone.Stickers.Add(sticker.Clone());
+            return clone;
+        }
     }
 
-    public class SpiderMitesCard : ICard
+    public class SpiderMitesCard : IAfflictionCard
     {
         public PlantAfflictions.IAffliction Affliction => new PlantAfflictions.SpiderMitesAffliction();
         public string Name => "Spider Mites";
         public int? Value => -3;
-        public List<ISticker> Stickers => new();
-        public ICard Clone() { return new SpiderMitesCard(); }
+
+        public List<ISticker> Stickers { get; } = new();
+
+        public ICard Clone() { 
+            var clone = new SpiderMitesCard();
+            foreach (var sticker in Stickers) clone.Stickers.Add(sticker.Clone());
+            return clone;
+        }
     }
 
-    public class FungusGnatsCard : ICard
+    public class FungusGnatsCard : IAfflictionCard
     {
         public PlantAfflictions.IAffliction Affliction => new PlantAfflictions.FungusGnatsAffliction();
         public string Name => "Fungus Gnats";
         public int? Value => -2;
-        public List<ISticker> Stickers => new();
-        public ICard Clone() { return new FungusGnatsCard(); }
+        public List<ISticker> Stickers { get; } = new();
+
+        public ICard Clone() { 
+            var clone = new FungusGnatsCard();
+            foreach (var sticker in Stickers) clone.Stickers.Add(sticker.Clone());
+            return clone;
+        }
     }
 
     #endregion
@@ -288,7 +361,8 @@ namespace _project.Scripts.Classes
             get => _value;
             set => _value = value ?? 0;
         }
-        public List<ISticker> Stickers => new();
+
+        public List<ISticker> Stickers { get; } = new();
 
         public string Description
         {
@@ -301,7 +375,11 @@ namespace _project.Scripts.Classes
 
         public void Selected() { if (CardGameMaster.Instance.debuggingCardClass) Debug.Log("Selected " + Name); }
         public void ModifyValue(int delta) => _value += delta;
-        public ICard Clone() { return new HorticulturalOilBasic(); }
+        public ICard Clone() { 
+            var clone = new HorticulturalOilBasic { Value = this.Value };
+            foreach (var sticker in Stickers) clone.Stickers.Add(sticker.Clone());
+            return clone;
+        }
     }
 
     public class InsecticideBasic : ICard
@@ -315,7 +393,8 @@ namespace _project.Scripts.Classes
             get => _value;
             set => _value = value ?? 0;
         }
-        public List<ISticker> Stickers => new();
+
+        public List<ISticker> Stickers { get; } = new();
 
         public string Description
         {
@@ -328,7 +407,11 @@ namespace _project.Scripts.Classes
 
         public void Selected() { if (CardGameMaster.Instance.debuggingCardClass) Debug.Log("Selected " + Name); }
         public void ModifyValue(int delta) => _value += delta;
-        public ICard Clone() { return new InsecticideBasic(); }
+        public ICard Clone() { 
+            var clone = new InsecticideBasic { Value = this.Value };
+            foreach (var sticker in Stickers) clone.Stickers.Add(sticker.Clone());
+            return clone;
+        }
     }
 
     public class FungicideBasic : ICard
@@ -343,7 +426,7 @@ namespace _project.Scripts.Classes
             set => _value = value ?? 0;
         }
 
-        public List<ISticker> Stickers => new();
+        public List<ISticker> Stickers { get; } = new();
 
         public string Description
         {
@@ -356,7 +439,11 @@ namespace _project.Scripts.Classes
 
         public void Selected() { if (CardGameMaster.Instance.debuggingCardClass) Debug.Log("Selected " + Name); }
         public void ModifyValue(int delta) => _value += delta;
-        public ICard Clone() { return new FungicideBasic(); }
+        public ICard Clone() { 
+            var clone = new FungicideBasic { Value = this.Value };
+            foreach (var sticker in Stickers) clone.Stickers.Add(sticker.Clone());
+            return clone;
+        }
     }
 
     public class SoapyWaterBasic : ICard
@@ -364,7 +451,8 @@ namespace _project.Scripts.Classes
         [CanBeNull] private string _description;
         public PlantAfflictions.ITreatment Treatment => new PlantAfflictions.SoapyWaterTreatment();
         public string Name => "Soapy Water Basic";
-        public List<ISticker> Stickers => new();
+        public List<ISticker> Stickers { get; } = new();
+
         private int _value = -1;
         public int? Value
         {
@@ -383,7 +471,11 @@ namespace _project.Scripts.Classes
 
         public void Selected() { if (CardGameMaster.Instance.debuggingCardClass) Debug.Log("Selected " + Name); }
         public void ModifyValue(int delta) => _value += delta;
-        public ICard Clone() { return new SoapyWaterBasic(); }
+        public ICard Clone() { 
+            var clone = new SoapyWaterBasic { Value = this.Value };
+            foreach (var sticker in Stickers) clone.Stickers.Add(sticker.Clone());
+            return clone;
+        }
     }
     
     public class SpinosadTreatment : ICard
@@ -397,7 +489,8 @@ namespace _project.Scripts.Classes
             get => _value;
             set => _value = value ?? 0;
         }
-        public List<ISticker> Stickers => new();
+
+        public List<ISticker> Stickers { get; } = new();
 
         public string Description
         {
@@ -410,7 +503,11 @@ namespace _project.Scripts.Classes
 
         public void Selected() { if (CardGameMaster.Instance.debuggingCardClass) Debug.Log("Selected " + Name); }
         public void ModifyValue(int delta) => _value += delta;
-        public ICard Clone() { return new SpinosadTreatment(); }
+        public ICard Clone() { 
+            var clone = new SpinosadTreatment { Value = this.Value };
+            foreach (var sticker in Stickers) clone.Stickers.Add(sticker.Clone());
+            return clone;
+        }
     }
 
     public class ImidaclopridTreatment : ICard
@@ -424,8 +521,9 @@ namespace _project.Scripts.Classes
             get => _value;
             set => _value = value ?? 0;
         }
-        public List<ISticker> Stickers => new();
-        
+
+        public List<ISticker> Stickers { get; } = new();
+
         public string Description
         {
             set => _description = value;
@@ -437,7 +535,11 @@ namespace _project.Scripts.Classes
 
         public void Selected() { if (CardGameMaster.Instance.debuggingCardClass) Debug.Log("Selected " + Name); }
         public void ModifyValue(int delta) => _value += delta;
-        public ICard Clone() { return new ImidaclopridTreatment(); }
+        public ICard Clone() { 
+            var clone = new ImidaclopridTreatment { Value = this.Value };
+            foreach (var sticker in Stickers) clone.Stickers.Add(sticker.Clone());
+            return clone;
+        }
     }
 
     public class Panacea : ICard
@@ -451,7 +553,8 @@ namespace _project.Scripts.Classes
             get => _value;
             set => _value = value ?? 0;
         }
-        public List<ISticker> Stickers => new();
+
+        public List<ISticker> Stickers { get; } = new();
 
         public string Description
         {
@@ -464,7 +567,11 @@ namespace _project.Scripts.Classes
 
         public void Selected() { if (CardGameMaster.Instance.debuggingCardClass) Debug.Log("Selected " + Name); }
         public void ModifyValue(int delta) => _value += delta;
-        public ICard Clone() { return new Panacea(); }
+        public ICard Clone() { 
+            var clone = new Panacea { Value = this.Value };
+            foreach (var sticker in Stickers) clone.Stickers.Add(sticker.Clone());
+            return clone;
+        }
     }
 
     #endregion

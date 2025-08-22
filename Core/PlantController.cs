@@ -58,6 +58,18 @@ namespace _project.Scripts.Core
         public List<PlantAfflictions.IAffliction> PriorAfflictions { get; } = new();
         public List<PlantAfflictions.ITreatment> UsedTreatments { get; } = new();
 
+        public int InfectLevel
+        {
+            get => GetInfectLevel();
+            set => SetInfectLevel(value);
+        }
+
+        public int EggLevel
+        {
+            get => GetEggLevel();
+            set => SetEggLevel(value);
+        }
+
         private void Start()
         {
             if (!TryGetComponent(out plantCardFunctions)) { }
@@ -183,6 +195,34 @@ namespace _project.Scripts.Core
                     particle: debuffSystem,
                     sound: CardGameMaster.Instance.soundSystem.GetInsectSound(affliction),
                     delay: 0.3f);
+        }
+
+        public int GetInfectLevel()
+        {
+            if (PlantCard is IPlantCard plantCardInterface)
+                return plantCardInterface.InfectLevel;
+            return 0;
+        }
+
+        public void SetInfectLevel(int infectLevel)
+        {
+            if (PlantCard is not IPlantCard plantCardInterface) return;
+            plantCardInterface.InfectLevel = Mathf.Max(0, infectLevel);
+            FlagShadersUpdate();
+        }
+
+        public int GetEggLevel()
+        {
+            if (PlantCard is IPlantCard plantCardInterface)
+                return plantCardInterface.EggLevel;
+            return 0;
+        }
+
+        public void SetEggLevel(int eggLevel)
+        {
+            if (PlantCard is not IPlantCard plantCardInterface) return;
+            plantCardInterface.EggLevel = Mathf.Max(0, eggLevel);
+            FlagShadersUpdate();
         }
 
         public bool HasHadAffliction(PlantAfflictions.IAffliction affliction)
