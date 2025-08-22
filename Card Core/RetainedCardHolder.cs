@@ -36,7 +36,6 @@ namespace _project.Scripts.Card_Core
                 return;
             }
 
-            // Check if already holding the card
             if (HasCard && HeldCard != selectedCard)
                 return;
 
@@ -46,18 +45,15 @@ namespace _project.Scripts.Card_Core
                 return;
             }
 
-            // Set the stored data
             HeldCard = selectedCard;
 
             cardGoClone = Instantiate(cardPrefab, transform);
             cardGoClone.name = cardPrefab.name;
 
-            // Setup visuals
             var cardView = cardGoClone.GetComponent<CardView>();
             if (cardView)
                 cardView.Setup(HeldCard);
 
-            // Setup interaction logic
             var click3D = cardGoClone.GetComponent<Click3D>();
             if (click3D)
             {
@@ -68,30 +64,23 @@ namespace _project.Scripts.Card_Core
                 click3D.RefreshState();
             }
             
-            //Play Place Sound
             cgm.playerHandAudioSource.PlayOneShot(cgm.soundSystem.placeCard);
 
-            // Final visual positioning
             cardGoClone.transform.SetParent(transform, false);
             cardGoClone.transform.localPosition = Vector3.zero;
             cardGoClone.transform.localRotation = Quaternion.Euler(-90f, 0f, 0f);
             cardGoClone.transform.localScale = Vector3.one * 0.8f;
 
-            // Hide the original card in the hand
             foreach (var r in selectedClick3D.GetComponentsInChildren<Renderer>())
                 r.enabled = false;
             selectedClick3D.isEnabled = false;
 
-            // Clear selection
             _deckManager.selectedACard = null;
             _deckManager.selectedACardClick3D = null;
 
-            // Hide the retained slot button
             var buttonRenderer = GetComponentInChildren<MeshRenderer>(true);
             if (buttonRenderer)
                 buttonRenderer.enabled = false;
-
-            // Update cost
             var scoreManager = cgm.scoreManager;
             if (!hasPaidForCard && HeldCard.Value != null)
             {
@@ -159,7 +148,6 @@ namespace _project.Scripts.Card_Core
                 cardGoClone = null;
             }
 
-            // Get the card data from the returned visual
             var returnedCardView = returnedCardGo.GetComponent<CardView>();
             HeldCard = returnedCardView?.GetCard();
 
@@ -169,11 +157,9 @@ namespace _project.Scripts.Card_Core
                 return;
             }
 
-            // Create a clean visual from prefab
             cardGoClone = Instantiate(cardPrefab, transform);
             cardGoClone.name = cardPrefab.name;
 
-            // Setup components
             var cardView = cardGoClone.GetComponent<CardView>();
             if (cardView) cardView.Setup(HeldCard);
 
@@ -183,7 +169,6 @@ namespace _project.Scripts.Card_Core
                 click3D.cardView = cardView;
                 click3D.isEnabled = true;
                 click3D.selected = false;
-                // disable pop-up/resize on hover for retained cards
                 click3D.handItem = false;
                 click3D.RefreshState();
             }

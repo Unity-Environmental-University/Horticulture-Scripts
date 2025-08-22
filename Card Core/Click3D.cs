@@ -59,41 +59,31 @@ namespace _project.Scripts.Card_Core
 
         private void Start()
         {
-            // Initialize Global Variables
             if (!_click3DGloballyInitialized)
             {
                 click3DGloballyDisabled = false;
                 _click3DGloballyInitialized = true;
             }
             
-            // Initialize Click3D with a True isEnabled state
             isEnabled = true;
 
-            // Let's remove this from non-CardGame scenes
             if (SceneManager.GetActiveScene().name != "CardGame") Destroy(this);
-
-            // If the ClickObject has a CardView, we store it
             if (GetComponent<CardView>() && !cardView) cardView = GetComponent<CardView>();
 
             _objectRenderer = GetComponentInChildren<Renderer>();
             if (_objectRenderer != null)
             {
-                // Store reference to original material instead of creating a new one
                 _originalMaterial = _objectRenderer.material;
                 _baseColor = _originalMaterial.color;
                 _sharedPropertyBlock = new MaterialPropertyBlock();
-                // Get current properties to avoid overriding other material properties
                 _objectRenderer.GetPropertyBlock(_sharedPropertyBlock);
             }
             
             _mainCamera = Camera.main;
             _mouse = Mouse.current;
 
-            // Use localPosition so that AnimateCard and AnimateCardBack work consistently.
             _originalPos = transform.localPosition;
             _originalScale = transform.localScale;
-
-            // Create a new action for mouse click
             _mouseClickAction = new InputAction("MouseClick", binding: "<Mouse>/leftButton");
             _mouseClickAction.performed += OnMouseClick;
             _mouseClickAction.Enable();
@@ -133,7 +123,6 @@ namespace _project.Scripts.Card_Core
             if (!handItem && !isSticker)
             {
                 mouseOver = true;
-                // Only change colors for non-hand items
                 if (_objectRenderer == null || _sharedPropertyBlock == null) return;
                 _sharedPropertyBlock.SetColor(Color1, _hoverColor);
                 _objectRenderer.SetPropertyBlock(_sharedPropertyBlock);
@@ -147,7 +136,6 @@ namespace _project.Scripts.Card_Core
                 return;
             }
             
-            // Animate pop-up and scale-up for handItems (cards) - no color change
             StopAllCoroutines();
             StartCoroutine(AnimateCard());
         }
@@ -162,7 +150,6 @@ namespace _project.Scripts.Card_Core
             if (!handItem && !isSticker)
             {
                 mouseOver = false;
-                // Only change colors for non-hand items
                 if (_objectRenderer == null || _sharedPropertyBlock == null) return;
                 _objectRenderer.GetPropertyBlock(_sharedPropertyBlock);
                 _sharedPropertyBlock.SetColor(Color1, _baseColor);
@@ -177,7 +164,6 @@ namespace _project.Scripts.Card_Core
                 return;
             }
             
-            // Animate back for handItems (cards) - no color change
             StopAllCoroutines();
             StartCoroutine(AnimateCardBack());
         }
@@ -200,7 +186,6 @@ namespace _project.Scripts.Card_Core
                 ? mouseOver ? _hoverColor : _baseColor
                 : _disabledColor;
 
-            // Use MaterialPropertyBlock instead of modifying material directly
             _sharedPropertyBlock.SetColor(Color1, targetColor);
             _objectRenderer.SetPropertyBlock(_sharedPropertyBlock);
         }
@@ -218,7 +203,6 @@ namespace _project.Scripts.Card_Core
 
             if (!Physics.Raycast(ray, out var hit) || hit.transform != transform) return;
 
-            // Run an assigned method from the inspector
             onClick3D?.Invoke();
         }
 

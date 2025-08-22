@@ -41,7 +41,6 @@ namespace _project.Scripts.Card_Core
             if (card.Value != null) treatmentCostText.text = "$ " + card.Value;
             _originalCard = card;
 
-            // Restore sticker visuals if the card has any stickers
             RestoreStickerVisuals();
         }
 
@@ -49,10 +48,7 @@ namespace _project.Scripts.Card_Core
         {
             if (_originalCard?.Stickers == null || !stickerHolder) return;
 
-            // Clear any existing sticker visuals first
             foreach (Transform child in stickerHolder) Destroy(child.gameObject);
-
-            // Recreate visuals for each sticker
             foreach (var click3D in from sticker in _originalCard.Stickers
                      where sticker?.Prefab
                      select Instantiate(sticker?.Prefab, stickerHolder, false)
@@ -65,35 +61,28 @@ namespace _project.Scripts.Card_Core
 
         public void CardClicked(Click3D clickedCard)
         {
-            // if a sticker is being dragged, drop it here instead of selecting the card
             var dm = _deckManager ?? CardGameMaster.Instance?.deckManager;
             var drag = dm != null ? dm.SelectedSticker : null;
             if (dm != null && drag != null)
             {
                 dm.TryDropStickerOn(_originalCard, drag);
-                // visually attach the sticker prefab onto this card
                 if (!stickerHolder || !drag.definition?.Prefab) return;
                 var stickerInstance = Instantiate(drag.definition.Prefab, stickerHolder, false);
                 if (stickerInstance == null) return;
-                // disable click interactions on the applied sticker visual
                 var click3D = stickerInstance.GetComponent<Click3D>();
                 if (click3D != null) click3D.enabled = false;
-                        
-                // update displayed cost/value after sticker effect
                 if (treatmentCostText != null)
                     treatmentCostText.text = "$ " + (_originalCard.Value ?? 0);
 
                 return;
             }
 
-            // Safety check: ensure _deckManager is not null before accessing
             if (_deckManager == null)
             {
                 Debug.LogWarning("CardView: _deckManager is null, cannot process card click");
                 return;
             }
 
-            // if the clicked card is already selected, unselect it
             if (_deckManager.selectedACardClick3D == clickedCard)
             {
                 clickedCard.selected = false;
@@ -103,7 +92,6 @@ namespace _project.Scripts.Card_Core
                 return;
             }
 
-            // switch to a new card on click
             if (_deckManager.selectedACardClick3D != null)
             {
                 var selCard = _deckManager.selectedACardClick3D;
@@ -111,7 +99,6 @@ namespace _project.Scripts.Card_Core
                 StartCoroutine(selCard.AnimateCardBack());
             }
 
-            // otherwise, select the clicked card
             _deckManager.selectedACardClick3D = clickedCard;
             _deckManager.selectedACard = _originalCard;
             _originalCard?.Selected();

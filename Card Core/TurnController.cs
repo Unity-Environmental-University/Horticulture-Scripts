@@ -89,7 +89,6 @@ namespace _project.Scripts.Card_Core
 
             yield return new WaitForSeconds(2f);
 
-            // If we just finished the last tutorial turn, give a brief pause before the regular game
             if (level == 0 && CardGameMaster.IsSequencingEnabled && currentTutorialTurn >= TutorialTurnCount && !tutorialCompleted)
             {
                 if (debugging)
@@ -125,7 +124,6 @@ namespace _project.Scripts.Card_Core
                         $"[TurnController] Tutorial: DrawTutorialAfflictions/Action (turn {currentTutorialTurn + 1}/{TutorialTurnCount})");
                 _deckManager.DrawTutorialAfflictions();
                 TryPlayQueuedEffects();
-                // Play aphids cinematic after plants placed, before drawing action hand
                 if (currentTutorialTurn == 0)
                 {
                     CinematicDirector.PlayScene(CardGameMaster.Instance.cinematicDirector.aphidsTimeline);

@@ -27,12 +27,10 @@ namespace _project.Scripts.Card_Core
                     stickerPackParent.position,
                     stickerPackParent.rotation,
                     stickerPackParent);
-                // Attach StickerView so we can click and drag
                 var view = go.AddComponent<StickerView>();
                 view.definition = def;
             }
             
-            // Arrange stickers in a fan layout
             ArrangeStickersInFan();
         }
 
@@ -48,7 +46,6 @@ namespace _project.Scripts.Card_Core
             var stickerViews = stickerPackParent.GetComponentsInChildren<StickerView>();
             var stickerCount = stickerViews.Length;
             
-            // If only one sticker, keep it centered at parent position
             if (stickerCount <= 1) 
             {
                 if (stickerCount != 1) return;
@@ -57,7 +54,6 @@ namespace _project.Scripts.Card_Core
                 return;
             }
             
-            // Set up stacked positions (like cards)
             SetupStickerStack(stickerViews);
         }
         
@@ -69,29 +65,24 @@ namespace _project.Scripts.Card_Core
             var stickerCount = stickerViews.Length;
             if (stickerCount == 0) return;
             
-            // Consistent spacing parameters
-            const float arcRadius = 0.4f; // Radius of the arc (increased for mobile tapping)
-            const float anglePerSticker = 15f; // Degrees between each sticker (consistent spacing)
-            const float stickerSpacing = 0.08f; // Y spacing between stickers for depth progression
+            const float arcRadius = 0.4f;
+            const float anglePerSticker = 15f;
+            const float stickerSpacing = 0.08f;
             
             for (var i = 0; i < stickerCount; i++)
             {
                 var stickerView = stickerViews[i];
                 
-                // Calculate an angle with consistent spacing (centered around 0)
                 var totalSpan = (stickerCount - 1) * anglePerSticker;
                 var currentAngle = (i * anglePerSticker) - (totalSpan / 2f);
                 var angleInRadians = currentAngle * Mathf.Deg2Rad;
                 
-                // Convert to cartesian coordinates (arc curves upward)
                 var xOffset = Mathf.Sin(angleInRadians) * arcRadius;
-                var yOffset = (1f - Mathf.Cos(angleInRadians)) * arcRadius; // Starts at 0, curves up
+                var yOffset = (1f - Mathf.Cos(angleInRadians)) * arcRadius;
+                yOffset += i * stickerSpacing;
                 
-                // Add consistent forward progression for visual depth
-                yOffset += i * stickerSpacing; // Configurable upward progression
-                
-                var stackOffset = new Vector3(xOffset, yOffset, -i * 0.01f); // Z for proper layering
-                var stackRotation = Quaternion.Euler(0, 0, currentAngle * 0.5f); // Rotation follows arc angle
+                var stackOffset = new Vector3(xOffset, yOffset, -i * 0.01f);
+                var stackRotation = Quaternion.Euler(0, 0, currentAngle * 0.5f);
                 
                 stickerView.transform.localPosition = stackOffset;
                 stickerView.transform.localRotation = stackRotation;
@@ -198,7 +189,6 @@ namespace _project.Scripts.Card_Core
 
         public Click3D selectedACardClick3D;
         public ICard selectedACard;
-        //public GameObject cardPrefab;
         public GameObject coleusPrefab;
         public GameObject chrysanthemumPrefab;
         public GameObject cucumberPrefab;
@@ -215,7 +205,7 @@ namespace _project.Scripts.Card_Core
         private void Start()
         {
             InitializeActionDeck();
-            InitializeStickerDeck(); //Temp
+            InitializeStickerDeck();
             _plantHand.DeckRandomDraw();
             _afflictionHand.DeckRandomDraw();
             if (debug) Debug.Log("Initial Deck Order: " + string.Join(", ", PlantDeck.ConvertAll(card => card.Name)));

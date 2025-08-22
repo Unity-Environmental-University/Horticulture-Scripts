@@ -34,7 +34,6 @@ namespace _project.Scripts.Card_Core
         /// </summary>
         private void OnPlacedCardClicked()
         {
-            // Help reduce wierd place/unplace bugs
             if (Time.time - _lastClickTime < 0.1f) return;
             _lastClickTime = Time.time;
             if (Time.frameCount == _lastPlacementFrame) return;
@@ -72,13 +71,11 @@ namespace _project.Scripts.Card_Core
                     _scoreManager.treatmentCost -= placedCard.Value.Value;
             }
 
-            // Find the original card in the hand and re-enable it
             var handCards = _deckManager.actionCardParent.GetComponentsInChildren<CardView>(true);
             foreach (var cardView in handCards)
             {
                 if (cardView.GetCard() != placedCard) continue;
 
-                // Re-enable the card in the hand
                 foreach (var rend in cardView.GetComponentsInChildren<Renderer>(true))
                     rend.enabled = true;
 
@@ -87,7 +84,7 @@ namespace _project.Scripts.Card_Core
                 {
                     click3D.enabled = true;
                     click3D.isEnabled = true;
-                    click3D.selected = false; // Don't select it when picked up
+                    click3D.selected = false;
                 }
 
                 break;
@@ -107,7 +104,6 @@ namespace _project.Scripts.Card_Core
             var currentPlacedCard = placedCard;
             var currentCardClone = placedCardClick3D.gameObject;
 
-            // Update costs - remove old placed card cost, will add new one in TakeSelectedCard
             if (currentPlacedCard?.Value != null)
             {
                 var retained = FindFirstObjectByType<RetainedCardHolder>(FindObjectsInactive.Include);
@@ -142,16 +138,10 @@ namespace _project.Scripts.Card_Core
             _scoreManager.CalculateTreatmentCost();
         }
 
-        /// <summary>
-        ///     Clears all card selections in the hand
-        /// </summary>
         private void ClearAllSelections()
         {
-            // Clear deck manager selections
             _deckManager.selectedACardClick3D = null;
             _deckManager.selectedACard = null;
-
-            // Find all hand cards and deselect them
             var handCards = _deckManager.actionCardParent.GetComponentsInChildren<CardView>(true);
             foreach (var cardView in handCards)
             {
@@ -162,46 +152,6 @@ namespace _project.Scripts.Card_Core
             }
         }
 
-        /// <summary>
-        ///     Restores a card to the hand as the selected card
-        /// </summary>
-        private void RestoreCardToHand(ICard card)
-        {
-            // First, deselect any currently selected card
-            if (_deckManager.selectedACardClick3D != null)
-            {
-                _deckManager.selectedACardClick3D.selected = false;
-                _deckManager.selectedACardClick3D.StartCoroutine(_deckManager.selectedACardClick3D.AnimateCardBack());
-            }
-
-            var handCards = _deckManager.actionCardParent.GetComponentsInChildren<CardView>(true);
-            foreach (var cardView in handCards)
-            {
-                if (cardView.GetCard() != card) continue;
-
-                // Re-enable the card in the hand
-                foreach (var rend in cardView.GetComponentsInChildren<Renderer>(true))
-                    rend.enabled = true;
-
-                var click3D = cardView.GetComponent<Click3D>();
-                if (click3D != null)
-                {
-                    click3D.enabled = true;
-                    click3D.isEnabled = true;
-                    click3D.selected = true;
-                }
-
-                // Set it as selected
-                _deckManager.selectedACardClick3D = click3D;
-                _deckManager.selectedACard = card;
-
-                break;
-            }
-        }
-
-        /// <summary>
-        ///     Restores a card to the hand without selecting it
-        /// </summary>
         private void RestoreCardToHandWithoutSelection(ICard card)
         {
             var handCards = _deckManager.actionCardParent.GetComponentsInChildren<CardView>(true);
@@ -209,7 +159,6 @@ namespace _project.Scripts.Card_Core
             {
                 if (cardView.GetCard() != card) continue;
 
-                // Re-enable the card in the hand
                 foreach (var rend in cardView.GetComponentsInChildren<Renderer>(true))
                     rend.enabled = true;
 
@@ -218,8 +167,7 @@ namespace _project.Scripts.Card_Core
                 {
                     click3D.enabled = true;
                     click3D.isEnabled = true;
-                    click3D.selected = false; // Don't select it
-                    // Make sure it's not raised/animated
+                    click3D.selected = false;
                     click3D.StartCoroutine(click3D.AnimateCardBack());
                 }
 
@@ -227,9 +175,6 @@ namespace _project.Scripts.Card_Core
             }
         }
 
-        /// <summary>
-        ///     Clears the holder without returning the card to hand
-        /// </summary>
         private void ClearHolder()
         {
             if (placedCardClick3D != null)
@@ -239,7 +184,6 @@ namespace _project.Scripts.Card_Core
             placedCardClick3D = null;
             placedCardView = null;
 
-            // Show the button/holder again
             var buttonRenderer = GetComponentInChildren<MeshRenderer>(true);
             if (buttonRenderer) buttonRenderer.enabled = true;
         }
@@ -269,35 +213,24 @@ namespace _project.Scripts.Card_Core
             selectedCard.enabled = false;
             Cgm.playerHandAudioSource.PlayOneShot(Cgm.soundSystem.placeCard);
 
-            // Clone the card and all its components
             var cardClone = Instantiate(selectedCard.gameObject, transform);
 
-            // Set up the CloneCardView
             var cardViewClone = cardClone.GetComponent<CardView>();
             if (cardViewClone)
                 cardViewClone.Setup(_deckManager.selectedACard);
 
-            // Set parent without preserving world values
-            //originalCardTransform = selectedCard.transform;
             cardClone.transform.SetParent(transform, false);
-
-            // Snap to the transform exactly (position, rotation, scale)
             cardClone.transform.localPosition = Vector3.zero;
-            cardClone.transform.localRotation = Quaternion.Euler(-90f, 0f, 0f); // Lying flat
-            cardClone.transform.localScale = Vector3.one; // or the original prefab scale, if different
+            cardClone.transform.localRotation = Quaternion.Euler(-90f, 0f, 0f);
             cardClone.transform.localScale = Vector3.one * 0.9f;
-
-            // Hold the Card Data
             placedCard = _deckManager.selectedACard;
             placedCardClick3D = cardClone.GetComponent<Click3D>();
             placedCardView = cardClone.GetComponent<CardView>();
 
-            // Set up the click handler for the placed card
             if (placedCardClick3D != null)
             {
                 placedCardClick3D.onClick3D.RemoveAllListeners();
                 placedCardClick3D.onClick3D.AddListener(OnPlacedCardClicked);
-                // Disable the component initially to prevent immediate clicks
                 placedCardClick3D.enabled = false;
                 Debug.Log("[CARD BOUNCE DEBUG] Card placed, Click3D component disabled temporarily");
                 StartCoroutine(ReenablePlacedCardClickWithInputActionFix());
@@ -306,7 +239,6 @@ namespace _project.Scripts.Card_Core
             _lastPlacementFrame = Time.frameCount;
             _lastPlacementTime = Time.time;
 
-            // Disable CardView component on placed card to prevent it from handling clicks
             if (placedCardView != null)
             {
                 placedCardView.enabled = false;
@@ -316,7 +248,6 @@ namespace _project.Scripts.Card_Core
             _deckManager.selectedACardClick3D = null;
             _deckManager.selectedACard = null;
 
-            // Hide the CardButton and the card in Hand
             var buttonRenderer = GetComponentInChildren<MeshRenderer>(true);
             if (buttonRenderer)
                 buttonRenderer.enabled = false;
@@ -338,17 +269,13 @@ namespace _project.Scripts.Card_Core
 
         private IEnumerator ReenablePlacedCardClickWithInputActionFix()
         {
-            // Wait a few frames to ensure placement click is processed
             yield return null;
             yield return null;
             yield return new WaitForEndOfFrame();
 
             if (placedCardClick3D == null) yield break;
-            // Re-enable the component but destroy the InputAction to prevent double-processing
             placedCardClick3D.enabled = true;
             placedCardClick3D.isEnabled = true;
-
-            // CORE FIX: Disable the InputAction on the clone after it's been created
             var reflection = placedCardClick3D.GetType();
             var inputActionField =
                 reflection.GetField("_mouseClickAction", BindingFlags.NonPublic | BindingFlags.Instance);

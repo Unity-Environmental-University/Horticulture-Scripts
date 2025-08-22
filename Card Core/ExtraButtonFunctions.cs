@@ -51,14 +51,12 @@ namespace _project.Scripts.Card_Core
                 return;
             }
 
-            // Apply button logic
             var shouldDisableApply = !_turnController.canClickEnd || _deckManager.updatingActionDisplay;
             var wasEnabled = _click3D.isEnabled;
             var nowEnabled = !shouldDisableApply;
 
             _click3D.isEnabled = nowEnabled;
 
-            // If re-enabled this frame, and the mouse is currently over the button, set hover
             if (!wasEnabled && nowEnabled)
             {
                 if (_camera)

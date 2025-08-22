@@ -93,17 +93,13 @@ namespace _project.Scripts.Card_Core
                 return;
             }
 
-            // Set instance early so other components can query it safely during their Awake/Start
             Instance = this;
-
-            // Try to fetch required components if not assigned in the inspector
             if (!scoreManager) scoreManager = GetComponent<ScoreManager>();
             if (!deckManager) deckManager = GetComponent<DeckManager>();
             if (!turnController) turnController = GetComponent<TurnController>();
             if (!cinematicDirector) cinematicDirector = GetComponent<CinematicDirector>();
             if (!soundSystem) soundSystem = GetComponent<SoundSystemMaster>();
 
-            // Log warning if some crucial elements are missing but do not throw in test/minimal setups
             var missing = new List<string>();
             if (!scoreManager) missing.Add(nameof(scoreManager));
             if (!deckManager) missing.Add(nameof(deckManager));
@@ -114,7 +110,6 @@ namespace _project.Scripts.Card_Core
                 Debug.LogWarning(
                     $"CardGameMaster missing components: {string.Join(", ", missing)}. Running in degraded mode (tests/minimal setup).");
 
-            // Find all CardHolders
             try
             {
                 var foundHolders =
