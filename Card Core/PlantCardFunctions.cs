@@ -90,7 +90,7 @@ namespace _project.Scripts.Card_Core
                 if (!cardHolder.placedCardView) continue;
 
                 // Use the data model stored on the holder, not the (possibly removed) CardView
-                var actionCard = cardHolder.PlacedCard;
+                var actionCard = cardHolder.placedCard;
                 if (actionCard?.Treatment is null) continue;
 
                 // Determine a safe search root for finding the plant controller
@@ -126,12 +126,12 @@ namespace _project.Scripts.Card_Core
 
         private void ClearCardHolder(PlacedCardHolder cardHolder)
         {
-            if (deckManager) deckManager.DiscardActionCard(cardHolder.PlacedCard, true);
+            if (deckManager) deckManager.DiscardActionCard(cardHolder.placedCard, true);
             if (cardHolder.placedCardClick3D && cardHolder.placedCardClick3D.gameObject)
                 Destroy(cardHolder.placedCardClick3D.gameObject);
             cardHolder.placedCardView = null;
             cardHolder.placedCardClick3D = null;
-            cardHolder.PlacedCard = null;
+            cardHolder.placedCard = null;
             if (deckManager) StartCoroutine(deckManager.UpdateCardHolderRenders());
         }
     }

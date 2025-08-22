@@ -108,7 +108,7 @@ namespace _project.Scripts.PlayModeTest
                 ?.SetValue(view, card);
 
             holder.placedCardView = view;
-            holder.PlacedCard = card;
+            holder.placedCard = card;
 
             // Register holder with CardGameMaster
             CardGameMaster.Instance.cardHolders.Add(holder);
@@ -235,7 +235,7 @@ namespace _project.Scripts.PlayModeTest
                 ?.SetValue(cardView, fakeCard);
 
             cardHolder.placedCardView = cardView;
-            cardHolder.PlacedCard = fakeCard;
+            cardHolder.placedCard = fakeCard;
 
             yield return null;
         }
@@ -299,7 +299,7 @@ namespace _project.Scripts.PlayModeTest
             var plant = CreatePlant(new FakeAffliction());
 
             var cardHolder = new GameObject("CardHolder").AddComponent<PlacedCardHolder>();
-            cardHolder.PlacedCard = new FakeCard("Healing", new FakeTreatment());
+            cardHolder.placedCard = new FakeCard("Healing", new FakeTreatment());
             cardHolder.placedCardClick3D = cardHolder.gameObject.AddComponent<SafeClick3D>();
             CardGameMaster.Instance.cardHolders.Add(cardHolder);
 
@@ -543,7 +543,7 @@ namespace _project.Scripts.PlayModeTest
 
             // Verify the card was placed correctly
             Assert.IsTrue(cardHolder.HoldingCard, "Card holder should now hold a card");
-            Assert.IsNotNull(cardHolder.PlacedCard, "PlacedCard should be set");
+            Assert.IsNotNull(cardHolder.placedCard, "PlacedCard should be set");
             Assert.IsNotNull(cardHolder.placedCardView, "placedCardView should NOT be null after placement");
 
             // REGRESSION TEST: Apply treatments - this should work now
