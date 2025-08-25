@@ -40,7 +40,11 @@ namespace _project.Scripts.Classes
         int EggLevel { get; set; }
     }
 
-    public interface IAfflictionCard : ICard { }
+    public interface IAfflictionCard : ICard
+    {
+        int BaseInfectLevel { get; set; }
+        int BaseEggLevel { get; set; }
+    }
 
 
     #region Decks
@@ -310,9 +314,26 @@ namespace _project.Scripts.Classes
         public PlantAfflictions.IAffliction Affliction => new PlantAfflictions.AphidsAffliction();
         public string Name => "Aphids";
         public int? Value => -2;
+
+        private int _baseInfectLevel = 1;
+        private int _baseEggLevel;
+
+        public int BaseInfectLevel
+        {
+            get => _baseInfectLevel;
+            set => _baseInfectLevel = Mathf.Max(0, value);
+        }
+
+        public int BaseEggLevel
+        {
+            get => _baseEggLevel;
+            set => _baseEggLevel = Mathf.Max(0, value);
+        }
+
         public List<ISticker> Stickers { get; } = new();
 
-        public ICard Clone() { 
+        public ICard Clone()
+        {
             var clone = new AphidsCard();
             foreach (var sticker in Stickers) clone.Stickers.Add(sticker.Clone());
             return clone;
@@ -324,9 +345,25 @@ namespace _project.Scripts.Classes
         public PlantAfflictions.IAffliction Affliction => new PlantAfflictions.MealyBugsAffliction();
         public string Name => "Mealy Bugs";
         public int? Value => -4;
+        private int _baseInfectLevel = 1;
+        private int _baseEggLevel;
+
+        public int BaseInfectLevel
+        {
+            get => _baseInfectLevel;
+            set => _baseInfectLevel = Mathf.Max(0, value);
+        }
+
+        public int BaseEggLevel
+        {
+            get => _baseEggLevel;
+            set => _baseEggLevel = Mathf.Max(0, value);
+        }
+
         public List<ISticker> Stickers { get; } = new();
 
-        public ICard Clone() { 
+        public ICard Clone()
+        {
             var clone = new MealyBugsCard();
             foreach (var sticker in Stickers) clone.Stickers.Add(sticker.Clone());
             return clone;
@@ -338,9 +375,25 @@ namespace _project.Scripts.Classes
         public PlantAfflictions.IAffliction Affliction => new PlantAfflictions.ThripsAffliction();
         public string Name => "Thrips";
         public int? Value => -5;
+        private int _baseInfectLevel = 1;
+        private int _baseEggLevel = 1;
+
+        public int BaseInfectLevel
+        {
+            get => _baseInfectLevel;
+            set => _baseInfectLevel = Mathf.Max(0, value);
+        }
+
+        public int BaseEggLevel
+        {
+            get => _baseEggLevel;
+            set => _baseEggLevel = Mathf.Max(0, value);
+        }
+
         public List<ISticker> Stickers { get; } = new();
 
-        public ICard Clone() { 
+        public ICard Clone()
+        {
             var clone = new ThripsCard();
             foreach (var sticker in Stickers) clone.Stickers.Add(sticker.Clone());
             return clone;
@@ -352,9 +405,25 @@ namespace _project.Scripts.Classes
         public PlantAfflictions.IAffliction Affliction => new PlantAfflictions.MildewAffliction();
         public string Name => "Mildew";
         public int? Value => -4;
+        private int _baseInfectLevel = 1;
+        private int _baseEggLevel;
+
+        public int BaseInfectLevel
+        {
+            get => _baseInfectLevel;
+            set => _baseInfectLevel = Mathf.Max(0, value);
+        }
+
+        public int BaseEggLevel
+        {
+            get => _baseEggLevel;
+            set => _baseEggLevel = Mathf.Max(0, value);
+        }
+
         public List<ISticker> Stickers { get; } = new();
 
-        public ICard Clone() { 
+        public ICard Clone()
+        {
             var clone = new MildewCard();
             foreach (var sticker in Stickers) clone.Stickers.Add(sticker.Clone());
             return clone;
@@ -366,10 +435,25 @@ namespace _project.Scripts.Classes
         public PlantAfflictions.IAffliction Affliction => new PlantAfflictions.SpiderMitesAffliction();
         public string Name => "Spider Mites";
         public int? Value => -3;
+        private int _baseInfectLevel = 1;
+        private int _baseEggLevel;
+
+        public int BaseInfectLevel
+        {
+            get => _baseInfectLevel;
+            set => _baseInfectLevel = Mathf.Max(0, value);
+        }
+
+        public int BaseEggLevel
+        {
+            get => _baseEggLevel;
+            set => _baseEggLevel = Mathf.Max(0, value);
+        }
 
         public List<ISticker> Stickers { get; } = new();
 
-        public ICard Clone() { 
+        public ICard Clone()
+        {
             var clone = new SpiderMitesCard();
             foreach (var sticker in Stickers) clone.Stickers.Add(sticker.Clone());
             return clone;
@@ -381,9 +465,25 @@ namespace _project.Scripts.Classes
         public PlantAfflictions.IAffliction Affliction => new PlantAfflictions.FungusGnatsAffliction();
         public string Name => "Fungus Gnats";
         public int? Value => -2;
+        private int _baseInfectLevel = 1;
+        private int _baseEggLevel;
+
+        public int BaseInfectLevel
+        {
+            get => _baseInfectLevel;
+            set => _baseInfectLevel = Mathf.Max(0, value);
+        }
+
+        public int BaseEggLevel
+        {
+            get => _baseEggLevel;
+            set => _baseEggLevel = Mathf.Max(0, value);
+        }
+
         public List<ISticker> Stickers { get; } = new();
 
-        public ICard Clone() { 
+        public ICard Clone()
+        {
             var clone = new FungusGnatsCard();
             foreach (var sticker in Stickers) clone.Stickers.Add(sticker.Clone());
             return clone;
