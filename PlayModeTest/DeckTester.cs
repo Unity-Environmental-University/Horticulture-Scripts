@@ -34,7 +34,7 @@ namespace _project.Scripts.PlayModeTest
             }
 
             public string Name { get; }
-
+            public GameObject Prefab => CardGameMaster.Instance?.actionCardPrefab;
             public List<ISticker> Stickers { get; } = new();
 
             public ICard Clone()

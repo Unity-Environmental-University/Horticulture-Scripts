@@ -160,9 +160,20 @@ namespace _project.Scripts.Classes
         public PlantType Type => PlantType.Coleus;
         public string Name => "Coleus";
         private int _value = 5;
-        public int InfectLevel { get; set; }
+        private int _infectLevel;
+        private int _eggLevel;
+        
+        public int InfectLevel 
+        { 
+            get => _infectLevel; 
+            set => _infectLevel = Mathf.Max(0, value);
+        }
 
-        public int EggLevel { get; set; }
+        public int EggLevel 
+        { 
+            get => _eggLevel; 
+            set => _eggLevel = Mathf.Max(0, value);
+        }
 
         public int? Value
         {
@@ -186,9 +197,20 @@ namespace _project.Scripts.Classes
         public PlantType Type => PlantType.Chrysanthemum;
         public string Name => "Chrysanthemum";
         private int _value = 8;
-        public int InfectLevel { get; set; }
+        private int _infectLevel;
+        private int _eggLevel;
+        
+        public int InfectLevel 
+        { 
+            get => _infectLevel; 
+            set => _infectLevel = Mathf.Max(0, value);
+        }
 
-        public int EggLevel { get; set; }
+        public int EggLevel 
+        { 
+            get => _eggLevel; 
+            set => _eggLevel = Mathf.Max(0, value);
+        }
 
         public int? Value
         {
@@ -212,9 +234,20 @@ namespace _project.Scripts.Classes
         public PlantType Type => PlantType.Pepper;
         public string Name => "Pepper";
         private int _value = 4;
-        public int InfectLevel { get; set; }
+        private int _infectLevel;
+        private int _eggLevel;
+        
+        public int InfectLevel 
+        { 
+            get => _infectLevel; 
+            set => _infectLevel = Mathf.Max(0, value);
+        }
 
-        public int EggLevel { get; set; }
+        public int EggLevel 
+        { 
+            get => _eggLevel; 
+            set => _eggLevel = Mathf.Max(0, value);
+        }
 
         public int? Value
         {
@@ -237,9 +270,20 @@ namespace _project.Scripts.Classes
         public PlantType Type => PlantType.Cucumber;
         public string Name => "Cucumber";
         private int _value = 3;
-        public int InfectLevel { get; set; }
+        private int _infectLevel;
+        private int _eggLevel;
+        
+        public int InfectLevel 
+        { 
+            get => _infectLevel; 
+            set => _infectLevel = Mathf.Max(0, value);
+        }
 
-        public int EggLevel { get; set; }
+        public int EggLevel 
+        { 
+            get => _eggLevel; 
+            set => _eggLevel = Mathf.Max(0, value);
+        }
 
         public int? Value
         {

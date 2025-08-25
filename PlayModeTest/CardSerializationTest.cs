@@ -79,7 +79,8 @@ namespace _project.Scripts.PlayModeTest
         [Test]
         public void TestStickerImplementationLimitation()
         {
-            // This test documents the current sticker implementation issue
+            // This test documents cards with proper vs improper sticker implementation
+            // ColeusCard has proper backing field, but some other cards use { get; } = new()
             ICard testCard = new ColeusCard();
             var initialStickerCount = testCard.Stickers.Count;
             
@@ -87,12 +88,12 @@ namespace _project.Scripts.PlayModeTest
             testCard.ApplySticker(sticker);
             
             var afterApplyStickerCount = testCard.Stickers.Count;
+            var secondCheckCount = testCard.Stickers.Count;
             
-            // This will demonstrate the issue - stickers are not persisted
+            // ColeusCard has proper sticker support with backing field
             Assert.AreEqual(0, initialStickerCount, "Initial sticker count should be 0");
-            Assert.AreEqual(0, afterApplyStickerCount, 
-                "Stickers are not persisted because card.Stickers always returns new List<ISticker>(). " +
-                "Card classes need private backing fields for proper sticker support.");
+            Assert.AreEqual(1, afterApplyStickerCount, "ColeusCard properly supports stickers with backing field");
+            Assert.AreEqual(1, secondCheckCount, "Sticker should persist across multiple property accesses");
         }
 
         [Test]
