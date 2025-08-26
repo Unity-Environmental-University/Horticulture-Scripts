@@ -36,8 +36,8 @@ namespace _project.Scripts.Cinematics
             
             // Wait until the Timeline has concluded, then resume the UI Pop-in animation
             var turnController = CardGameMaster.Instance.turnController;
-            yield return new WaitUntil(turnController.ReadyToPlay =
-                () => CinematicDirector.director.state != PlayState.Playing);
+            yield return new WaitUntil(turnController.readyToPlay =
+                () => CinematicDirector.Director.state != PlayState.Playing);
             uiAnimator[clipName].speed = 1;
             robotController.currentLookTarget = player;
         }

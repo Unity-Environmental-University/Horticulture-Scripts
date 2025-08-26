@@ -5,17 +5,17 @@ namespace _project.Scripts.Classes
 {
     public class PlantEffectRequest
     {
-        public readonly PlantController Plant;
-        public readonly ParticleSystem Particle;
-        public readonly AudioClip Sound;
-        public readonly float Delay;
+        public readonly PlantController plant;
+        public readonly ParticleSystem particle;
+        public readonly AudioClip sound;
+        public readonly float delay;
 
         public PlantEffectRequest(PlantController plant, ParticleSystem particle, AudioClip sound, float delay)
         {
-            Plant = plant;
-            Particle = particle;
-            Sound = sound;
-            Delay = delay;
+            this.plant = plant;
+            this.particle = particle;
+            this.sound = sound;
+            this.delay = delay;
         }
     }
 }

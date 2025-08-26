@@ -233,7 +233,7 @@ namespace _project.Scripts.GameState
             return new CardData
             {
                 cardTypeName = card.GetType().Name,
-                Value = card.Value,
+                value = card.Value,
                 stickers = card.Stickers?.Select(SerializeSticker).ToList() ?? new List<StickerData>()
             };
         }
@@ -245,7 +245,7 @@ namespace _project.Scripts.GameState
                 stickerTypeName = sticker.GetType().Name,
                 name = sticker.Name,
                 description = sticker.Description,
-                Value = sticker.Value
+                value = sticker.Value
             };
         }
 
@@ -288,8 +288,8 @@ namespace _project.Scripts.GameState
                     throw new Exception($"Unknown card type: {typeName}");
                 if (Activator.CreateInstance(cardType) is not ICard clone)
                     throw new Exception($"Could not create card instance for type: {typeName}");
-                if (data.Value.HasValue)
-                    clone.Value = data.Value.Value;
+                if (data.value.HasValue)
+                    clone.Value = data.value.Value;
 
                 // Restore stickers
                 if (data.stickers == null) return clone;
@@ -350,8 +350,8 @@ namespace _project.Scripts.GameState
                     }
                 }
 
-                if (data.Value.HasValue)
-                    sticker.Value = data.Value.Value;
+                if (data.value.HasValue)
+                    sticker.Value = data.value.Value;
 
                 return sticker;
             }

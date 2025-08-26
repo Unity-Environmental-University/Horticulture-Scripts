@@ -24,14 +24,14 @@ namespace _project.Scripts.Card_Core
         {
             GenerateShopInventory();
             shopPanel.SetActive(true);
-            Click3D.click3DGloballyDisabled = true;
+            Click3D.Click3DGloballyDisabled = true;
             CardGameMaster.Instance.uiInputModule.enabled = true;
         }
 
         public void CloseShop()
         {
             shopPanel.SetActive(false);
-            Click3D.click3DGloballyDisabled = false;
+            Click3D.Click3DGloballyDisabled = false;
             CardGameMaster.Instance.uiInputModule.enabled = false;
 
             if (CardGameMaster.Instance.turnController.level == 2)

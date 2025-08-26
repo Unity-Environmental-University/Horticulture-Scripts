@@ -20,7 +20,7 @@ namespace _project.Scripts.UI
             if (popUpPanel.activeInHierarchy) return;
 
             Time.timeScale = 0;
-            Click3D.click3DGloballyDisabled = true;
+            Click3D.Click3DGloballyDisabled = true;
             popUpPanel.SetActive(true);
             ToggleUiInput();
 
@@ -34,7 +34,7 @@ namespace _project.Scripts.UI
             popUpPanel.SetActive(false);
             ClearPanelElements();
             ToggleUiInput();
-            Click3D.click3DGloballyDisabled = false;
+            Click3D.Click3DGloballyDisabled = false;
         }
 
         private void ClearPanelElements()

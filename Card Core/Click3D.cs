@@ -13,7 +13,7 @@ namespace _project.Scripts.Card_Core
     public class Click3D : MonoBehaviour
     {
         private static bool _click3DGloballyInitialized;
-        public static bool click3DGloballyDisabled;
+        public static bool Click3DGloballyDisabled;
 
         private static readonly int Color1 = Shader.PropertyToID("_Color");
         [SerializeField] public UnityEvent onClick3D;
@@ -61,7 +61,7 @@ namespace _project.Scripts.Card_Core
         {
             if (!_click3DGloballyInitialized)
             {
-                click3DGloballyDisabled = false;
+                Click3DGloballyDisabled = false;
                 _click3DGloballyInitialized = true;
             }
             
@@ -99,7 +99,7 @@ namespace _project.Scripts.Card_Core
         private void Update()
         {
             if (!isEnabled || SceneManager.GetActiveScene().name != "CardGame" || !_mainCamera 
-                || click3DGloballyDisabled)
+                || Click3DGloballyDisabled)
                 return;
 
             // Handle touch (mobile)
@@ -118,7 +118,7 @@ namespace _project.Scripts.Card_Core
 
         private void OnMouseEnter()
         {
-            if (!isEnabled || click3DGloballyDisabled) return;
+            if (!isEnabled || Click3DGloballyDisabled) return;
             
             if (!handItem && !isSticker)
             {
@@ -142,7 +142,7 @@ namespace _project.Scripts.Card_Core
 
         private void OnMouseExit()
         {
-            if (!isEnabled || click3DGloballyDisabled) return;
+            if (!isEnabled || Click3DGloballyDisabled) return;
 
             var plant = GetComponentInParent<PlantController>();
             if (plant) plant.FlagShadersUpdate();
@@ -194,7 +194,7 @@ namespace _project.Scripts.Card_Core
 
         private void OnMouseClick(InputAction.CallbackContext context)
         {
-            if (!isEnabled || click3DGloballyDisabled) return;
+            if (!isEnabled || Click3DGloballyDisabled) return;
             if (_mouse == null || !_mainCamera) return;
 
 
@@ -218,7 +218,7 @@ namespace _project.Scripts.Card_Core
         /// </returns>
         private IEnumerator AnimateCard()
         {
-            if (click3DGloballyDisabled) yield return null;
+            if (Click3DGloballyDisabled) yield return null;
             // Define fixed target values relative to the original state.
             var targetScale = _originalScale * scaleUp;
             var targetPos = _originalPos + new Vector3(0f, popHeight, 0f);

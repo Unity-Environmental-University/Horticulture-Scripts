@@ -30,7 +30,7 @@ namespace _project.Scripts.Card_Core
         public bool shopQueued;
         [DontSerialize] public bool tutorialCompleted;
 
-        public Func<bool> ReadyToPlay;
+        public Func<bool> readyToPlay;
         private static readonly Queue<PlantEffectRequest> PlantEffectQueue = new(); 
         private DeckManager _deckManager;
         private ScoreManager _scoreManager;
@@ -38,7 +38,7 @@ namespace _project.Scripts.Card_Core
         private const int TutorialTurnCount = 5;
         private const int TutorialMoneyGoal = 500;
 
-        public TurnController(Func<bool> readyToPlay) => ReadyToPlay = readyToPlay;
+        public TurnController(Func<bool> readyToPlay) => this.readyToPlay = readyToPlay;
 
         private static TurnController Instance { get; set; }
 
@@ -60,7 +60,7 @@ namespace _project.Scripts.Card_Core
         {
             UpdateMoneyGoal();
             _scoreManager.ResetMoneys();
-            if (ReadyToPlay != null)
+            if (readyToPlay != null)
                 StartCoroutine(BeginTurnSequence());
         }
 
@@ -79,8 +79,8 @@ namespace _project.Scripts.Card_Core
         public IEnumerator BeginTurnSequence()
         {
             yield return new WaitForEndOfFrame();
-            if (ReadyToPlay != null)
-                yield return new WaitUntil(ReadyToPlay);
+            if (readyToPlay != null)
+                yield return new WaitUntil(readyToPlay);
             if (lostGameObjects.activeInHierarchy) lostGameObjects.SetActive(false);
             canClickEnd = false;
             currentTurn = 1;
@@ -127,7 +127,7 @@ namespace _project.Scripts.Card_Core
                 if (currentTutorialTurn == 0)
                 {
                     CinematicDirector.PlayScene(CardGameMaster.Instance.cinematicDirector.aphidsTimeline);
-                    yield return new WaitUntil(ReadyToPlay);
+                    yield return new WaitUntil(readyToPlay);
                 }
 
                 _deckManager.DrawTutorialActionHand();
@@ -448,21 +448,21 @@ namespace _project.Scripts.Card_Core
             while (PlantEffectQueue.Count > 0)
             {
                 var request = PlantEffectQueue.Dequeue();
-                if (request.Plant)
+                if (request.plant)
                 {
-                    if (request.Particle)
-                        request.Particle.Play();
+                    if (request.particle)
+                        request.particle.Play();
 
-                    if (request.Sound && request.Plant.audioSource)
+                    if (request.sound && request.plant.audioSource)
                     {
-                        request.Plant.audioSource.pitch = 1f;
-                        request.Plant.audioSource.volume = 1f;
-                        request.Plant.audioSource.spatialBlend = 0f;
-                        request.Plant.audioSource.PlayOneShot(request.Sound);
+                        request.plant.audioSource.pitch = 1f;
+                        request.plant.audioSource.volume = 1f;
+                        request.plant.audioSource.spatialBlend = 0f;
+                        request.plant.audioSource.PlayOneShot(request.sound);
                     }
                 }
 
-                yield return new WaitForSeconds(request.Delay);
+                yield return new WaitForSeconds(request.delay);
             }
 
             plantEffectCoroutine = null;
@@ -473,8 +473,8 @@ namespace _project.Scripts.Card_Core
             while (PlantEffectQueue.Count > 0)
             {
                 var request = PlantEffectQueue.Dequeue();
-                if (request.Particle)
-                    request.Particle.Stop();
+                if (request.particle)
+                    request.particle.Stop();
             }
 
             plantEffectCoroutine = null;

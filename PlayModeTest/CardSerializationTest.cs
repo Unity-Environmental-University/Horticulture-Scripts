@@ -156,7 +156,7 @@ namespace _project.Scripts.PlayModeTest
             // Create a fresh instance to verify basic properties are preserved in CardData
             var freshCard = TryCreateCard(cardType);
             Assert.IsNotNull(freshCard, $"Failed to create fresh instance of read-only card {cardType.Name}");
-            Assert.AreEqual(freshCard.Value, cardData.Value, $"CardData value doesn't match card value for {cardType.Name}");
+            Assert.AreEqual(freshCard.Value, cardData.value, $"CardData value doesn't match card value for {cardType.Name}");
         }
         
         private void TestReadOnlyCardSerialization(Type cardType)
@@ -255,13 +255,13 @@ namespace _project.Scripts.PlayModeTest
             return new CardData
             {
                 cardTypeName = card.GetType().Name,
-                Value = card.Value,
+                value = card.Value,
                 stickers = card.Stickers?.Select(s => new StickerData
                 {
                     stickerTypeName = s.GetType().Name,
                     name = s.Name,
                     description = s.Description,
-                    Value = s.Value
+                    value = s.Value
                 }).ToList() ?? new List<StickerData>()
             };
         }
