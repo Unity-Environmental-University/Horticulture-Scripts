@@ -14,15 +14,9 @@ using UnityEngine.Rendering;
 namespace _project.Scripts.Card_Core
 {
     /// <summary>
-    ///     Represents the primary controller for managing the card game's overall functionality,
-    ///     including integration with deck, score, turn, and other essential systems.
+    /// Central controller for the card game system. Manages integration between deck, score, turn, and other core systems.
+    /// Implements singleton pattern for global access.
     /// </summary>
-    /// <remarks>
-    ///     The <c>CardGameMaster</c> class ensures seamless communication between core components such as
-    ///     <c>DeckManager</c>, <c>ScoreManager</c>, and <c>TurnController</c>. It is designed to manage singleton
-    ///     behavior, providing centralized access throughout the game's lifecycle. This class interacts with
-    ///     mission-critical elements, including UI updates, audio playback, and game state control.
-    /// </remarks>
     [RequireComponent(typeof(DeckManager))]
     [RequireComponent(typeof(ScoreManager))]
     [RequireComponent(typeof(TurnController))]
@@ -75,16 +69,8 @@ namespace _project.Scripts.Card_Core
         public static CardGameMaster Instance { get; private set; }
 
         /// <summary>
-        ///     Initializes the CardGameMaster instance and ensures the singleton pattern is correctly implemented.
-        ///     Verifies that essential components (DeckManager, ScoreManager, TurnController) are properly assigned.
-        ///     Prevents the existence of multiple duplicate instances by destroying any duplicates found.
-        ///     Scans and stores all instances of PlacedCardHolder in the current scene.
-        ///     Ensures the GameObject persists across scenes during transitions.
+        /// Initializes singleton instance and required components. Scans for PlacedCardHolder instances.
         /// </summary>
-        /// <exception cref="Exception">
-        ///     Thrown when one or more required components (DeckManager, ScoreManager, TurnController)
-        ///     are not assigned.
-        /// </exception>
         private void Awake()
         {
             if (Instance && Instance != this)

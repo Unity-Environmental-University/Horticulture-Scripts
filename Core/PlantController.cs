@@ -11,6 +11,10 @@ using Random = System.Random;
 
 namespace _project.Scripts.Core
 {
+    /// <summary>
+    /// Enumeration of supported plant types in the game.
+    /// Uses flags to allow for potential combination types in the future.
+    /// </summary>
     [Flags]
     public enum PlantType
     {
@@ -22,6 +26,19 @@ namespace _project.Scripts.Core
         Chrysanthemum = 1 << 3
     }
 
+    /// <summary>
+    /// Controls individual plant behavior including health, afflictions, treatments, and visual effects.
+    /// This component manages the lifecycle of a plant from placement to death, handling all
+    /// interactions with the card game system, visual feedback, and state persistence.
+    /// </summary>
+    /// <remarks>
+    /// PlantController is the core component for plant management in the game. It integrates with:
+    /// - Card system for plant cards and their properties
+    /// - Affliction system for pest/disease management
+    /// - Treatment system for player interventions
+    /// - Visual system for shaders, particles, and UI feedback
+    /// - Save/load system for persistent plant state
+    /// </remarks>
     public class PlantController : MonoBehaviour
     {
         private readonly int _moldIntensityID = Shader.PropertyToID("_Mold_Intensity");
@@ -53,12 +70,16 @@ namespace _project.Scripts.Core
         private bool _needsShaderUpdate;
         private Renderer[] _renderers;
         private MaterialPropertyBlock _sharedPropertyBlock;
+        private bool _afflictionsChanged = true;
 
         public List<PlantAfflictions.IAffliction> CurrentAfflictions { get; } = new();
         public List<PlantAfflictions.ITreatment> CurrentTreatments { get; } = new();
         public List<PlantAfflictions.IAffliction> PriorAfflictions { get; } = new();
         public List<PlantAfflictions.ITreatment> UsedTreatments { get; } = new();
         
+        /// <summary>
+        /// Gets or sets the total egg level on this plant from all affliction sources.
+        /// </summary>
         public int EggLevel
         {
             get => GetEggLevel();
@@ -81,7 +102,7 @@ namespace _project.Scripts.Core
                 (true), r => r.CompareTag("Plant"));
             _sharedPropertyBlock = new MaterialPropertyBlock();
 
-            // ReSharper disable Twice ShaderLabShaderReferenceNotResolved
+            // Initialize shaders for mold/disease visual effects
             var mildewAfflictionInstance = new PlantAfflictions.MildewAffliction();
             if (!moldShader) moldShader = mildewAfflictionInstance.Shader;
             if (!litShader) litShader = Shader.Find("Shader Graphs/CustomLit");
@@ -91,10 +112,15 @@ namespace _project.Scripts.Core
 
         private void Update()
         {
-            cAfflictions = CurrentAfflictions.Select(a => a.Name).ToList();
-            cTreatments = CurrentTreatments.Select(a => a.Name).ToList();
-            pAfflictions = PriorAfflictions.Select(a => a.Name).ToList();
-            uTreatments = UsedTreatments.Select(a => a.Name).ToList();
+            if (_afflictionsChanged)
+            {
+                cAfflictions = CurrentAfflictions.Select(a => a.Name).ToList();
+                cTreatments = CurrentTreatments.Select(a => a.Name).ToList();
+                pAfflictions = PriorAfflictions.Select(a => a.Name).ToList();
+                uTreatments = UsedTreatments.Select(a => a.Name).ToList();
+                _afflictionsChanged = false;
+            }
+            
             if (PlantCard is { Value: <= 0 }) KillPlant();
 
             if (!_needsShaderUpdate) return;
@@ -102,6 +128,9 @@ namespace _project.Scripts.Core
             _needsShaderUpdate = false;
         }
 
+        /// <summary>
+        /// Marks the plant's shaders as needing an update on the next frame.
+        /// </summary>
         public void FlagShadersUpdate() => _needsShaderUpdate = true;
 
         public void UpdatePriceFlag(int newValue)
@@ -110,6 +139,9 @@ namespace _project.Scripts.Core
             CardGameMaster.Instance.scoreManager.CalculatePotentialProfit();
         }
 
+        /// <summary>
+        /// Sets the mold intensity for visual shader effects (0 = no mold, 1 = full coverage).
+        /// </summary>
         public void SetMoldIntensity(float value)
         {
             if (Mathf.Approximately(moldIntensity, value)) return;
@@ -128,7 +160,6 @@ namespace _project.Scripts.Core
                 renderer1.GetMaterials(mats);
                 foreach (var material in mats)
                 {
-                    // var targetShader = hasMildew ? moldShader : GetShader(renderer1);
                     var targetShader = GetShader(renderer1);
                     if (material.shader != targetShader)
                         material.shader = targetShader;
@@ -146,9 +177,14 @@ namespace _project.Scripts.Core
             return afflictions.Any() ? CurrentAfflictions.FirstOrDefault(a => a.Shader)?.Shader : litShader;
         }
 
+        /// <summary>
+        /// Removes a specific affliction from the plant and triggers healing effects.
+        /// </summary>
+        /// <param name="affliction">The affliction to remove</param>
         public void RemoveAffliction(PlantAfflictions.IAffliction affliction)
         {
             if (!CurrentAfflictions.Remove(affliction)) return;
+            _afflictionsChanged = true;
             switch (affliction)
             {
                 case PlantAfflictions.MildewAffliction:
@@ -170,12 +206,17 @@ namespace _project.Scripts.Core
                 );
         }
 
+        /// <summary>
+        /// Adds an affliction to the plant, applying its effects and updating visuals.
+        /// </summary>
+        /// <param name="affliction">The affliction to add to the plant</param>
         public void AddAffliction(PlantAfflictions.IAffliction affliction)
         {
             PriorAfflictions.Add(affliction);
             var rand = new Random();
             var randomValue = rand.NextDouble() * 0.5f + 0.5f;
             CurrentAfflictions.Add(affliction);
+            _afflictionsChanged = true;
             switch (affliction)
             {
                 case PlantAfflictions.MildewAffliction:
@@ -210,6 +251,9 @@ namespace _project.Scripts.Core
                     delay: 0.3f);
         }
 
+        /// <summary>
+        /// Gets the total infection level across all affliction sources.
+        /// </summary>
         public int GetInfectLevel()
         {
             if (PlantCard is IPlantCard plantCardInterface)
@@ -276,11 +320,18 @@ namespace _project.Scripts.Core
             FlagShadersUpdate();
         }
 
+        /// <summary>
+        /// Checks if the plant has ever been affected by a specific type of affliction (for immunity mechanics).
+        /// </summary>
         public bool HasHadAffliction(PlantAfflictions.IAffliction affliction)
         {
             return PriorAfflictions.Any(existing => existing.GetType() == affliction.GetType());
         }
 
+        /// <summary>
+        /// Processes all daily activities for the plant (treatments and affliction progression).
+        /// Called once per game turn.
+        /// </summary>
         public void ProcessDay()
         {
             foreach (var treatment in CurrentTreatments) treatment.ApplyTreatment(this);
@@ -289,7 +340,6 @@ namespace _project.Scripts.Core
             _needsShaderUpdate = true;
         }
 
-        // Check if the affliction is already present
         public bool HasAffliction(PlantAfflictions.IAffliction affliction)
         {
             return CurrentAfflictions.Any(existing => existing.GetType() == affliction.GetType());

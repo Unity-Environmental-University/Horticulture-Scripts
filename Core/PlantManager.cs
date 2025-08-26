@@ -4,10 +4,16 @@ using UnityEngine;
 
 namespace _project.Scripts.Core
 {
+    /// <summary>
+    /// Manages the collection of all plants in the scene and coordinates their daily processing.
+    /// </summary>
     public class PlantManager : MonoBehaviour
     {
         public readonly List<GameObject> CachedPlants = new();
 
+        /// <summary>
+        /// Processes daily activities for all managed plants. Called once per game turn.
+        /// </summary>
         public void TriggerPlantTreatments()
         {
             if (CachedPlants == null)

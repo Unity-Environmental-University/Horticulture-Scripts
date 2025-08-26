@@ -79,9 +79,9 @@ namespace _project.Scripts.Classes
             Deck.Clear();
             foreach (var card in PrototypeDeck)
             {
-                // Randomly duplicate each prototype card between 1 and 4 times.
+                // Generate 1-4 random copies of each prototype card
                 const int minDuplicates = 1;
-                const int maxDuplicates = 5; // Exclusive upper bound (returns 1 to 4 copies)
+                const int maxDuplicates = 5;
                 var duplicates = Random.Range(minDuplicates, maxDuplicates);
                 for (var i = 0; i < duplicates; i++) Deck.Add(card.Clone());
             }
@@ -145,13 +145,11 @@ namespace _project.Scripts.Classes
         public void ApplyLocationEffect(PlantController plant)
         {
             throw new NotImplementedException();
-            // do make the plant more valuable 20% over 3 turns
         }
 
         public void RemoveLocationEffect(PlantController plant)
         {
             throw new NotImplementedException();
-            // will remove/destroy itself
         }
     }
 
@@ -327,7 +325,11 @@ namespace _project.Scripts.Classes
 
         public ICard Clone()
         {
-            var clone = new AphidsCard();
+            var clone = new AphidsCard
+            {
+                BaseInfectLevel = BaseInfectLevel,
+                BaseEggLevel = BaseEggLevel
+            };
             foreach (var sticker in Stickers) clone.Stickers.Add(sticker.Clone());
             return clone;
         }
@@ -357,7 +359,11 @@ namespace _project.Scripts.Classes
 
         public ICard Clone()
         {
-            var clone = new MealyBugsCard();
+            var clone = new MealyBugsCard
+            {
+                BaseInfectLevel = BaseInfectLevel,
+                BaseEggLevel = BaseEggLevel
+            };
             foreach (var sticker in Stickers) clone.Stickers.Add(sticker.Clone());
             return clone;
         }
@@ -387,7 +393,11 @@ namespace _project.Scripts.Classes
 
         public ICard Clone()
         {
-            var clone = new ThripsCard();
+            var clone = new ThripsCard
+            {
+                BaseInfectLevel = BaseInfectLevel,
+                BaseEggLevel = BaseEggLevel
+            };
             foreach (var sticker in Stickers) clone.Stickers.Add(sticker.Clone());
             return clone;
         }
@@ -417,7 +427,11 @@ namespace _project.Scripts.Classes
 
         public ICard Clone()
         {
-            var clone = new MildewCard();
+            var clone = new MildewCard
+            {
+                BaseInfectLevel = BaseInfectLevel,
+                BaseEggLevel = BaseEggLevel
+            };
             foreach (var sticker in Stickers) clone.Stickers.Add(sticker.Clone());
             return clone;
         }
@@ -447,7 +461,11 @@ namespace _project.Scripts.Classes
 
         public ICard Clone()
         {
-            var clone = new SpiderMitesCard();
+            var clone = new SpiderMitesCard
+            {
+                BaseInfectLevel = BaseInfectLevel,
+                BaseEggLevel = BaseEggLevel
+            };
             foreach (var sticker in Stickers) clone.Stickers.Add(sticker.Clone());
             return clone;
         }
@@ -477,7 +495,11 @@ namespace _project.Scripts.Classes
 
         public ICard Clone()
         {
-            var clone = new FungusGnatsCard();
+            var clone = new FungusGnatsCard
+            {
+                BaseInfectLevel = BaseInfectLevel,
+                BaseEggLevel = BaseEggLevel
+            };
             foreach (var sticker in Stickers) clone.Stickers.Add(sticker.Clone());
             return clone;
         }
