@@ -48,6 +48,13 @@ namespace _project.Scripts.Classes
             a.infect = Mathf.Max(0, a.infect + delta);
             SetInfectData(source, a);
         }
+
+        public void ReduceInfect(string source, int delta)
+        {
+            var a = GetInfectData(source);
+            a.infect = Mathf.Max(0, a.infect - delta);
+            SetInfectData(source, a);
+        }
         public void RemoveInfect(string source, int delta) => AddInfect(source, -delta);
 
         // Egg helpers

@@ -10,6 +10,8 @@ namespace _project.Scripts.Card_Core
         public GameObject eggPrefab;
         public GameObject infectBarParent;
         public GameObject eggBarParent;
+        private int _lastEggCount = -1;
+        private int _lastInfectCount = -1;
 
         private void Start()
         {
@@ -20,18 +22,43 @@ namespace _project.Scripts.Card_Core
             SpawnHearts(plantController);
         }
 
+        private void Update()
+        {
+            if (!plantController) return;
+            var currentInf = plantController.GetInfectLevel();
+            var currentEgg = plantController.GetEggLevel();
+
+            if (currentInf == _lastInfectCount && currentEgg == _lastEggCount) return;
+            // Sync UI to new values
+            SyncBar(infectBarParent, heartPrefab, currentInf, ref _lastInfectCount);
+            SyncBar(eggBarParent, eggPrefab, currentEgg, ref _lastEggCount);
+        }
+
         public void SpawnHearts(PlantController plant)
         {
             var infLevel = plant.GetInfectLevel();
             var eggLevel = plant.GetEggLevel();
+            SyncBar(infectBarParent, heartPrefab, infLevel, ref _lastInfectCount);
+            SyncBar(eggBarParent, eggPrefab, eggLevel, ref _lastEggCount);
+        }
 
+        private void SyncBar(GameObject barParent, GameObject prefab, int targetCount, ref int cache)
+        {
+            if (!barParent || !prefab) return;
+            var t = barParent.transform;
+            var current = t.childCount;
 
-            if (!infectBarParent || !eggBarParent) return;
-            for (var i = 0; i < infLevel; i++)
-                Instantiate(heartPrefab, infectBarParent.transform, false);
+            if (current < targetCount)
+                for (var i = current; i < targetCount; i++)
+                    Instantiate(prefab, t, false);
+            else if (current > targetCount)
+                for (var i = current - 1; i >= targetCount; i--)
+                {
+                    var child = t.GetChild(i);
+                    if (child) Destroy(child.gameObject);
+                }
 
-            for (var i = 0; i < eggLevel; i++)
-                Instantiate(eggPrefab, eggBarParent.transform, false);
+            cache = targetCount;
         }
     }
 }

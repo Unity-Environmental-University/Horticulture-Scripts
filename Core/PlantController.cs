@@ -82,7 +82,6 @@ namespace _project.Scripts.Core
             _sharedPropertyBlock = new MaterialPropertyBlock();
 
             // ReSharper disable Twice ShaderLabShaderReferenceNotResolved
-            //if (!moldShader) moldShader = Shader.Find("Shader Graphs/Mold");
             var mildewAfflictionInstance = new PlantAfflictions.MildewAffliction();
             if (!moldShader) moldShader = mildewAfflictionInstance.Shader;
             if (!litShader) litShader = Shader.Find("Shader Graphs/CustomLit");
@@ -159,6 +158,9 @@ namespace _project.Scripts.Core
                     if (thripsFX) thripsFX.Stop();
                     break;
             }
+
+            ReduceInfect(affliction, 1);
+            
             
             TurnController.QueuePlantEffect(
                 this,
@@ -227,6 +229,14 @@ namespace _project.Scripts.Core
             if (PlantCard is not IPlantCard plantCardInterface) return;
             var source = affliction?.Name ?? affliction?.GetType().Name ?? "Unknown";
             plantCardInterface.Infect.AddInfect(source, Mathf.Max(0, amount));
+            FlagShadersUpdate();
+        }
+
+        private void ReduceInfect(PlantAfflictions.IAffliction affliction, int amount)
+        {
+            if (PlantCard is not IPlantCard plantCardInterface) return;
+            var source = affliction?.Name ?? affliction?.GetType().Name ?? "Unknown";
+            plantCardInterface.Infect.ReduceInfect(source, Mathf.Max(0, amount));
             FlagShadersUpdate();
         }
 
