@@ -80,11 +80,7 @@ namespace _project.Scripts.Card_Core
                 return;
             }
 
-            if (_deckManager == null)
-            {
-                Debug.LogWarning("CardView: _deckManager is null, cannot process card click");
-                return;
-            }
+            if (_deckManager == null) return;
 
             if (_deckManager.selectedACardClick3D == clickedCard)
             {
