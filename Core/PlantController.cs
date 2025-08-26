@@ -46,6 +46,7 @@ namespace _project.Scripts.Core
         [CanBeNull] public TextMeshPro priceFlagText;
         [CanBeNull] public AudioSource audioSource;
         public PlantType type;
+        // ReSharper disable once InconsistentNaming
         public ICard PlantCard;
         public GameObject prefab;
 
@@ -57,13 +58,7 @@ namespace _project.Scripts.Core
         public List<PlantAfflictions.ITreatment> CurrentTreatments { get; } = new();
         public List<PlantAfflictions.IAffliction> PriorAfflictions { get; } = new();
         public List<PlantAfflictions.ITreatment> UsedTreatments { get; } = new();
-
-        public int InfectLevel
-        {
-            get => GetInfectLevel();
-            set => SetInfectLevel(value);
-        }
-
+        
         public int EggLevel
         {
             get => GetEggLevel();
@@ -188,6 +183,22 @@ namespace _project.Scripts.Core
                     if (thripsFX) thripsFX.Play();
                     break;
             }
+
+            var iCard = affliction.GetCard();
+            var healthBarHandler = GetComponent<PlantHealthBarHandler>();
+            
+            if (iCard is IAfflictionCard afflictionInterface)
+            {
+                AddInfect(affliction, afflictionInterface.BaseInfectLevel);
+                if(healthBarHandler) healthBarHandler.SpawnHearts(this);
+                if (afflictionInterface.BaseEggLevel > 0)
+                    AddEggs(affliction, afflictionInterface.BaseEggLevel);
+            }
+
+            Debug.LogWarning(name + " has " + CurrentAfflictions.Count + " afflictions. Current infect level is " +
+                      GetInfectLevel());
+            
+            
             
             if (debuffSystem) 
                 TurnController.QueuePlantEffect(
@@ -200,15 +211,45 @@ namespace _project.Scripts.Core
         public int GetInfectLevel()
         {
             if (PlantCard is IPlantCard plantCardInterface)
-                return plantCardInterface.InfectLevel;
+                return plantCardInterface.Infect.InfectTotal;
             return 0;
         }
 
         public void SetInfectLevel(int infectLevel)
         {
             if (PlantCard is not IPlantCard plantCardInterface) return;
-            plantCardInterface.InfectLevel = Mathf.Max(0, infectLevel);
+            plantCardInterface.Infect.SetInfect("Manual", Mathf.Max(0, infectLevel));
             FlagShadersUpdate();
+        }
+
+        private void AddInfect(PlantAfflictions.IAffliction affliction, int amount)
+        {
+            if (PlantCard is not IPlantCard plantCardInterface) return;
+            var source = affliction?.Name ?? affliction?.GetType().Name ?? "Unknown";
+            plantCardInterface.Infect.AddInfect(source, Mathf.Max(0, amount));
+            FlagShadersUpdate();
+        }
+
+        private void AddEggs(PlantAfflictions.IAffliction affliction, int amount)
+        {
+            if (PlantCard is not IPlantCard plantCardInterface) return;
+            var source = affliction?.Name ?? affliction?.GetType().Name ?? "Unknown";
+            plantCardInterface.Infect.AddEggs(source, Mathf.Max(0, amount));
+            FlagShadersUpdate();
+        }
+        
+        public int GetInfectFrom(PlantAfflictions.IAffliction affliction)
+        {
+            if (PlantCard is not IPlantCard plantCardInterface) return 0;
+            var source = affliction?.Name ?? affliction?.GetType().Name ?? "Unknown";
+            return plantCardInterface.Infect.GetInfect(source);
+        }
+
+        public int GetEggsFrom(PlantAfflictions.IAffliction affliction)
+        {
+            if (PlantCard is not IPlantCard plantCardInterface) return 0;
+            var source = affliction?.Name ?? affliction?.GetType().Name ?? "Unknown";
+            return plantCardInterface.Infect.GetEggs(source);
         }
 
         public int GetEggLevel()
@@ -218,7 +259,7 @@ namespace _project.Scripts.Core
             return 0;
         }
 
-        public void SetEggLevel(int eggLevel)
+        private void SetEggLevel(int eggLevel)
         {
             if (PlantCard is not IPlantCard plantCardInterface) return;
             plantCardInterface.EggLevel = Mathf.Max(0, eggLevel);

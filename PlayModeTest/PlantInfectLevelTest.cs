@@ -14,30 +14,30 @@ namespace _project.Scripts.PlayModeTest
             var coleusCard = new ColeusCard();
             
             // Assert
-            Assert.AreEqual(0, coleusCard.InfectLevel, "InfectLevel should default to 0");
+            Assert.AreEqual(0, coleusCard.Infect.InfectTotal, "Infect total should default to 0");
             
             // Act
-            coleusCard.InfectLevel = 5;
+            coleusCard.Infect.SetInfect("Test", 5);
             
             // Assert
-            Assert.AreEqual(5, coleusCard.InfectLevel, "InfectLevel should be settable");
+            Assert.AreEqual(5, coleusCard.Infect.InfectTotal, "Infect total should be settable");
             
             // Arrange
             var chrysanthemumCard = new ChrysanthemumCard();
             
             // Act
-            chrysanthemumCard.InfectLevel = 3;
+            chrysanthemumCard.Infect.SetInfect("Test", 3);
             
             // Assert
-            Assert.AreEqual(3, chrysanthemumCard.InfectLevel, "Chrysanthemum InfectLevel should be settable");
+            Assert.AreEqual(3, chrysanthemumCard.Infect.InfectTotal, "Chrysanthemum infect total should be settable");
             
             var pepperCard = new PepperCard();
-            pepperCard.InfectLevel = 7;
-            Assert.AreEqual(7, pepperCard.InfectLevel, "Pepper InfectLevel should be settable");
+            pepperCard.Infect.SetInfect("Test", 7);
+            Assert.AreEqual(7, pepperCard.Infect.InfectTotal, "Pepper infect total should be settable");
             
             var cucumberCard = new CucumberCard();
-            cucumberCard.InfectLevel = 2;
-            Assert.AreEqual(2, cucumberCard.InfectLevel, "Cucumber InfectLevel should be settable");
+            cucumberCard.Infect.SetInfect("Test", 2);
+            Assert.AreEqual(2, cucumberCard.Infect.InfectTotal, "Cucumber infect total should be settable");
         }
 
         [Test]
@@ -61,7 +61,7 @@ namespace _project.Scripts.PlayModeTest
         {
             // Arrange
             var originalCard = new ColeusCard();
-            originalCard.InfectLevel = 4;
+            originalCard.Infect.SetInfect("Manual", 4);
             originalCard.EggLevel = 2;
             originalCard.Value = 8;
             
@@ -69,7 +69,7 @@ namespace _project.Scripts.PlayModeTest
             var clonedCard = (ColeusCard)originalCard.Clone();
             
             // Assert
-            Assert.AreEqual(4, clonedCard.InfectLevel, "Cloned card should preserve InfectLevel");
+            Assert.AreEqual(4, clonedCard.Infect.InfectTotal, "Cloned card should preserve infect total");
             Assert.AreEqual(2, clonedCard.EggLevel, "Cloned card should preserve EggLevel");
             Assert.AreEqual(8, clonedCard.Value, "Cloned card should preserve Value");
         }
@@ -84,14 +84,14 @@ namespace _project.Scripts.PlayModeTest
             plantController.PlantCard = plantCard;
 
             // Assert
-            Assert.AreEqual(0, plantController.InfectLevel, "PlantController InfectLevel should default to 0");
+            Assert.AreEqual(0, plantController.GetInfectLevel(), "PlantController infect total should default to 0");
             
             // Act
-            plantController.InfectLevel = 6;
+            plantController.SetInfectLevel(6);
             
             // Assert
-            Assert.AreEqual(6, plantController.InfectLevel, "PlantController InfectLevel should be settable");
-            Assert.AreEqual(6, plantCard.InfectLevel, "Setting PlantController InfectLevel should update card");
+            Assert.AreEqual(6, plantController.GetInfectLevel(), "PlantController infect total should be settable");
+            Assert.AreEqual(6, plantCard.Infect.InfectTotal, "Setting PlantController infect total should update card");
             
             // Act
             plantController.EggLevel = 4;
@@ -113,10 +113,10 @@ namespace _project.Scripts.PlayModeTest
             plantController.PlantCard = plantCard;
 
             // Act
-            plantController.InfectLevel = -5;
+            plantController.SetInfectLevel(-5);
             
             // Assert
-            Assert.AreEqual(0, plantController.InfectLevel, "Negative InfectLevel should be clamped to 0");
+            Assert.AreEqual(0, plantController.GetInfectLevel(), "Negative infect total should be clamped to 0");
             
             // Act
             plantController.EggLevel = -3;
@@ -134,10 +134,10 @@ namespace _project.Scripts.PlayModeTest
             var coleusCard = new ColeusCard();
             
             // Act
-            coleusCard.InfectLevel = -10;
+            coleusCard.Infect.SetInfect("Test", -10);
             
             // Assert
-            Assert.AreEqual(0, coleusCard.InfectLevel, "Negative InfectLevel should be clamped to 0 at card level");
+            Assert.AreEqual(0, coleusCard.Infect.InfectTotal, "Negative infect total should be clamped to 0 at card level");
             
             // Act
             coleusCard.EggLevel = -5;

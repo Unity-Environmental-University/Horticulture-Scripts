@@ -36,7 +36,7 @@ namespace _project.Scripts.Classes
 
     public interface IPlantCard : ICard
     {
-        int InfectLevel { get; set; }
+        InfectLevel Infect { get; }
         int EggLevel { get; set; }
     }
 
@@ -121,14 +121,14 @@ namespace _project.Scripts.Classes
         public bool IsPermanent => false;
         public GameObject Prefab => CardGameMaster.Instance.locationCardPrefab;
         public Material Material => Resources.Load<Material>("Materials/Cards/NeemOil");
-        private readonly List<ISticker> _stickers = new();
-        public List<ISticker> Stickers => _stickers;
+        public List<ISticker> Stickers { get; } = new();
+
         public LocationEffectType EffectType => null;
 
         public ICard Clone()
         {
             var clone = new FertilizerBasic { Value = this.Value };
-            foreach (var sticker in _stickers) clone._stickers.Add(sticker.Clone());
+            foreach (var sticker in Stickers) clone.Stickers.Add(sticker.Clone());
             return clone;
         }
 
@@ -164,19 +164,12 @@ namespace _project.Scripts.Classes
         public PlantType Type => PlantType.Coleus;
         public string Name => "Coleus";
         private int _value = 5;
-        private int _infectLevel;
-        private int _eggLevel;
-        
-        public int InfectLevel 
-        { 
-            get => _infectLevel; 
-            set => _infectLevel = Mathf.Max(0, value);
-        }
+        public InfectLevel Infect { get; } = new();
 
-        public int EggLevel 
-        { 
-            get => _eggLevel; 
-            set => _eggLevel = Mathf.Max(0, value);
+        public int EggLevel
+        {
+            get => Infect.EggTotal;
+            set => Infect.SetEggs("Manual", Mathf.Max(0, value));
         }
 
         public int? Value
@@ -186,11 +179,17 @@ namespace _project.Scripts.Classes
         }
         public GameObject Prefab => CardGameMaster.Instance.actionCardPrefab;
 
-        private readonly List<ISticker> _stickers = new();
-        public List<ISticker> Stickers => _stickers;
-        public ICard Clone() { 
-            var clone = new ColeusCard { InfectLevel = this.InfectLevel, EggLevel = this.EggLevel, Value = this.Value };
-            foreach (var sticker in _stickers) clone._stickers.Add(sticker.Clone());
+        public List<ISticker> Stickers { get; } = new();
+
+        public ICard Clone()
+        {
+            var clone = new ColeusCard { EggLevel = this.EggLevel, Value = this.Value };
+            foreach (var kv in Infect.All)
+            {
+                clone.Infect.SetInfect(kv.Key, kv.Value.infect);
+                clone.Infect.SetEggs(kv.Key, kv.Value.eggs);
+            }
+            foreach (var sticker in Stickers) clone.Stickers.Add(sticker.Clone());
             return clone;
         }
         public void ModifyValue(int delta) => Value = (Value ?? 0) + delta;
@@ -201,19 +200,13 @@ namespace _project.Scripts.Classes
         public PlantType Type => PlantType.Chrysanthemum;
         public string Name => "Chrysanthemum";
         private int _value = 8;
-        private int _infectLevel;
-        private int _eggLevel;
-        
-        public int InfectLevel 
-        { 
-            get => _infectLevel; 
-            set => _infectLevel = Mathf.Max(0, value);
-        }
+
+        public InfectLevel Infect { get; } = new();
 
         public int EggLevel 
         { 
-            get => _eggLevel; 
-            set => _eggLevel = Mathf.Max(0, value);
+            get => Infect.EggTotal; 
+            set => Infect.SetEggs("Manual", Mathf.Max(0, value));
         }
 
         public int? Value
@@ -225,8 +218,12 @@ namespace _project.Scripts.Classes
         public GameObject Prefab => CardGameMaster.Instance.actionCardPrefab;
         public List<ISticker> Stickers { get; } = new();
 
-        public ICard Clone() { 
-            var clone = new ChrysanthemumCard { InfectLevel = this.InfectLevel, EggLevel = this.EggLevel, Value = this.Value };
+        public ICard Clone() {
+            var clone = new ChrysanthemumCard { EggLevel = this.EggLevel, Value = this.Value };
+            foreach (var kv in Infect.All) {
+                clone.Infect.SetInfect(kv.Key, kv.Value.infect);
+                clone.Infect.SetEggs(kv.Key, kv.Value.eggs);
+            }
             foreach (var sticker in Stickers) clone.Stickers.Add(sticker.Clone());
             return clone;
         }
@@ -238,19 +235,13 @@ namespace _project.Scripts.Classes
         public PlantType Type => PlantType.Pepper;
         public string Name => "Pepper";
         private int _value = 4;
-        private int _infectLevel;
-        private int _eggLevel;
-        
-        public int InfectLevel 
-        { 
-            get => _infectLevel; 
-            set => _infectLevel = Mathf.Max(0, value);
-        }
+
+        public InfectLevel Infect { get; } = new();
 
         public int EggLevel 
         { 
-            get => _eggLevel; 
-            set => _eggLevel = Mathf.Max(0, value);
+            get => Infect.EggTotal; 
+            set => Infect.SetEggs("Manual", Mathf.Max(0, value));
         }
 
         public int? Value
@@ -261,8 +252,12 @@ namespace _project.Scripts.Classes
         public GameObject Prefab => CardGameMaster.Instance.actionCardPrefab;
         public List<ISticker> Stickers { get; } = new();
 
-        public ICard Clone() { 
-            var clone = new PepperCard { InfectLevel = this.InfectLevel, EggLevel = this.EggLevel, Value = this.Value };
+        public ICard Clone() {
+            var clone = new PepperCard { EggLevel = this.EggLevel, Value = this.Value };
+            foreach (var kv in Infect.All) {
+                clone.Infect.SetInfect(kv.Key, kv.Value.infect);
+                clone.Infect.SetEggs(kv.Key, kv.Value.eggs);
+            }
             foreach (var sticker in Stickers) clone.Stickers.Add(sticker.Clone());
             return clone;
         }
@@ -274,19 +269,13 @@ namespace _project.Scripts.Classes
         public PlantType Type => PlantType.Cucumber;
         public string Name => "Cucumber";
         private int _value = 3;
-        private int _infectLevel;
-        private int _eggLevel;
-        
-        public int InfectLevel 
-        { 
-            get => _infectLevel; 
-            set => _infectLevel = Mathf.Max(0, value);
-        }
+
+        public InfectLevel Infect { get; } = new();
 
         public int EggLevel 
         { 
-            get => _eggLevel; 
-            set => _eggLevel = Mathf.Max(0, value);
+            get => Infect.EggTotal; 
+            set => Infect.SetEggs("Manual", Mathf.Max(0, value));
         }
 
         public int? Value
@@ -297,8 +286,12 @@ namespace _project.Scripts.Classes
         public GameObject Prefab => CardGameMaster.Instance.actionCardPrefab;
         public List<ISticker> Stickers { get; } = new();
 
-        public ICard Clone() { 
-            var clone = new CucumberCard { InfectLevel = this.InfectLevel, EggLevel = this.EggLevel, Value = this.Value };
+        public ICard Clone() {
+            var clone = new CucumberCard { EggLevel = this.EggLevel, Value = this.Value };
+            foreach (var kv in Infect.All) {
+                clone.Infect.SetInfect(kv.Key, kv.Value.infect);
+                clone.Infect.SetEggs(kv.Key, kv.Value.eggs);
+            }
             foreach (var sticker in Stickers) clone.Stickers.Add(sticker.Clone());
             return clone;
         }
