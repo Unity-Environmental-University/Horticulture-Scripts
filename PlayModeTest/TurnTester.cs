@@ -76,7 +76,8 @@ namespace _project.Scripts.PlayModeTest
             public string Name { get; }
             public PlantAfflictions.ITreatment Treatment { get; }
             public string Description => "Test card";
-            public int? Value => 1; // Return a dummy value
+            // ReSharper disable once UnusedMember.Local
+            public int? Value => 1; // Return a fake value
             public Material Material => null; // CardView.Setup handles null materials
             public List<ISticker> Stickers { get; }
             public ICard Clone() => new FakeCard(Name, Treatment);
