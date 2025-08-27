@@ -10,6 +10,7 @@ namespace _project.Scripts.Stickers
         string Name { get; }
         string Description => null;
 
+        // ReSharper disable once ValueParameterNotUsed
         int? Value
         {
             get => null;

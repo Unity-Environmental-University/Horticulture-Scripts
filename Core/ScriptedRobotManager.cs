@@ -210,8 +210,8 @@ namespace _project.Scripts.Core
 
         private IEnumerator StageFiveScript()
         {
-            var random = Random.Range(0, plantManager.CachedPlants.Count);
-            var selectedPlant = plantManager.CachedPlants[random];
+            var random = Random.Range(0, plantManager.cachedPlants.Count);
+            var selectedPlant = plantManager.cachedPlants[random];
             ClearFlag(ScriptFlags.Roaming);
             robotController.SetNewFocusTarget(selectedPlant);
             robotController.GoToNewLocation(selectedPlant.transform.position);
@@ -307,13 +307,13 @@ namespace _project.Scripts.Core
         {
             while (CheckFlag(ScriptFlags.Roaming))
             {
-                if (plantManager.CachedPlants.Count == 0) throw new Exception("No Plants!");
+                if (plantManager.cachedPlants.Count == 0) throw new Exception("No Plants!");
 
                 GameObject randomPlant;
                 do
                 {
-                    randomPlant = plantManager.CachedPlants[Random.Range(0, plantManager.CachedPlants.Count)];
-                } while (randomPlant == _lastSelectedPlant && plantManager.CachedPlants.Count > 1);
+                    randomPlant = plantManager.cachedPlants[Random.Range(0, plantManager.cachedPlants.Count)];
+                } while (randomPlant == _lastSelectedPlant && plantManager.cachedPlants.Count > 1);
 
                 _lastSelectedPlant = randomPlant;
 

@@ -9,20 +9,20 @@ namespace _project.Scripts.Core
     /// </summary>
     public class PlantManager : MonoBehaviour
     {
-        public readonly List<GameObject> CachedPlants = new();
+        public readonly List<GameObject> cachedPlants = new();
 
         /// <summary>
         /// Processes daily activities for all managed plants. Called once per game turn.
         /// </summary>
         public void TriggerPlantTreatments()
         {
-            if (CachedPlants == null)
+            if (cachedPlants == null)
             {
                 Debug.LogWarning("CachedPlants is null, cannot trigger plant treatments");
                 return;
             }
 
-            foreach (var plant in CachedPlants)
+            foreach (var plant in cachedPlants)
             {
                 if (!plant)
                 {

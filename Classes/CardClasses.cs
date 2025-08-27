@@ -42,8 +42,8 @@ namespace _project.Scripts.Classes
 
     public interface IAfflictionCard : ICard
     {
-        int BaseInfectLevel { get; set; }
-        int BaseEggLevel { get; set; }
+        int BaseInfectLevel { get; }
+        int BaseEggLevel { get; }
     }
 
 

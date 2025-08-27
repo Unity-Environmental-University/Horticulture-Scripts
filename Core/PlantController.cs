@@ -34,7 +34,7 @@ namespace _project.Scripts.Core
     /// <remarks>
     /// PlantController is the core component for plant management in the game. It integrates with:
     /// - Card system for plant cards and their properties
-    /// - Affliction system for pest/disease management
+    /// - Affliction system for a pest/disease management
     /// - Treatment system for player interventions
     /// - Visual system for shaders, particles, and UI feedback
     /// - Save/load system for persistent plant state
@@ -105,6 +105,7 @@ namespace _project.Scripts.Core
             // Initialize shaders for mold/disease visual effects
             var mildewAfflictionInstance = new PlantAfflictions.MildewAffliction();
             if (!moldShader) moldShader = mildewAfflictionInstance.Shader;
+            // ReSharper disable once ShaderLabShaderReferenceNotResolved
             if (!litShader) litShader = Shader.Find("Shader Graphs/CustomLit");
 
             UpdateShaders();

@@ -48,15 +48,15 @@ namespace _project.Scripts.Core
 
             if (localPlants.Contains(other.gameObject)) return;
             localPlants.Add(other.gameObject);
-            if (plantManager && !plantManager.CachedPlants.Contains(other.GameObject()))
-                plantManager.CachedPlants.Add(other.gameObject);
+            if (plantManager && !plantManager.cachedPlants.Contains(other.GameObject()))
+                plantManager.cachedPlants.Add(other.gameObject);
             ProcessPlants();
         }
 
         private void ProcessPlants()
         {
             localPlants.RemoveAll(plant => !plant);
-            if (plantManager) plantManager.CachedPlants.RemoveAll(plant => !plant);
+            if (plantManager) plantManager.cachedPlants.RemoveAll(plant => !plant);
 
             foreach (var controller in localPlants
                          .Select(plant => plant.GetComponent<PlantController>()))
