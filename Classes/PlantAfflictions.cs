@@ -29,6 +29,8 @@ namespace _project.Scripts.Classes
         {
             string Name { get; }
             string Description { get; }
+            int? InfectCureValue { get; set; }
+            int? EggCureValue { get; set; }
 
             public void ApplyTreatment(PlantController plant)
             {
@@ -41,7 +43,7 @@ namespace _project.Scripts.Classes
                 var afflictions = plant.CurrentAfflictions != null
                     ? new List<IAffliction>(plant.CurrentAfflictions)
                     : new List<IAffliction>();
-
+                
                 if (afflictions.Count == 0) Debug.LogWarning("No afflictions found on the plant.");
 
                 foreach (var item in afflictions)
@@ -49,6 +51,21 @@ namespace _project.Scripts.Classes
                     item.TreatWith(this, plant);
                     if (CardGameMaster.Instance.debuggingCardClass) Debug.Log($"Applied treatment to affliction: {item.Name}");
                 }
+                
+                // var infect = plant.GetInfectLevel();
+                // var egg = plant.GetEggLevel();
+                //
+                // if (InfectCureValue != null)
+                // {
+                //     infect -= InfectCureValue.Value;
+                //     plant.SetInfectLevel(infect);
+                // }
+                //
+                // if (EggCureValue != null)
+                // {
+                //     egg -= EggCureValue.Value;
+                //     plant.SetEggLevel(egg);
+                // }
             }
         }
 
@@ -228,6 +245,19 @@ namespace _project.Scripts.Classes
             public string Name => "Horticultural Oil";
             public string Description => "Removes Aphids & Thrips";
             public int BeeValue => -1;
+            private int _infectCureValue = 1;
+            private int _eggCureValue = 1;
+            public int? InfectCureValue
+            {
+                get => _infectCureValue;
+                set => _infectCureValue = value ?? 0;
+            }
+
+            public int? EggCureValue
+            {
+                get => _eggCureValue;
+                set => _eggCureValue = value ?? 0;
+            }
         }
 
         public class FungicideTreatment : ITreatment
@@ -235,6 +265,19 @@ namespace _project.Scripts.Classes
             public string Name => "Fungicide";
             public string Description => "Removes Mildew";
             public int BeeValue => -3;
+            private int _infectCureValue = 1;
+            private int _eggCureValue = 1;
+            public int? InfectCureValue
+            {
+                get => _infectCureValue;
+                set => _infectCureValue = value ?? 0;
+            }
+
+            public int? EggCureValue
+            {
+                get => _eggCureValue;
+                set => _eggCureValue = value ?? 0;
+            }
         }
 
         public class InsecticideTreatment : ITreatment
@@ -242,6 +285,19 @@ namespace _project.Scripts.Classes
             public string Name => "Insecticide";
             public string Description => "Removes Insects";
             public int BeeValue => -4;
+            private int _infectCureValue = 1;
+            private int _eggCureValue;
+            public int? InfectCureValue
+            {
+                get => _infectCureValue;
+                set => _infectCureValue = value ?? 0;
+            }
+
+            public int? EggCureValue
+            {
+                get => _eggCureValue;
+                set => _eggCureValue = value ?? 0;
+            }
         }
 
         public class SoapyWaterTreatment : ITreatment
@@ -249,6 +305,19 @@ namespace _project.Scripts.Classes
             public string Name => "SoapyWater";
             public string Description => "Removes MealyBugs";
             public int BeeValue => 0;
+            private int _infectCureValue = 1;
+            private int _eggCureValue = 1;
+            public int? InfectCureValue
+            {
+                get => _infectCureValue;
+                set => _infectCureValue = value ?? 0;
+            }
+
+            public int? EggCureValue
+            {
+                get => _eggCureValue;
+                set => _eggCureValue = value ?? 0;
+            }
         }
 
         public class SpinosadTreatment : ITreatment
@@ -256,6 +325,20 @@ namespace _project.Scripts.Classes
             public string Name => "Spinosad";
             public string Description => "Effective against: Thrips, Mites, Gnats";
             public int BeeValue => -2; //TODO Get Bee Value
+            private int _infectCureValue = 1;
+            private int _eggCureValue = 1;
+            public int? InfectCureValue
+            {
+                get => _infectCureValue;
+                set => _infectCureValue = value ?? 0;
+            }
+
+            public int? EggCureValue
+            {
+                get => _eggCureValue;
+                set => _eggCureValue = value ?? 0;
+            }
+            
         }
 
         public class ImidaclopridTreatment : ITreatment
@@ -263,6 +346,19 @@ namespace _project.Scripts.Classes
             public string Name => "Imidacloprid";
             public string Description => "Insecticide, systemic, neonicotinoid, effective, broad-spectrum.";
             public int BeeValue => -5; //TODO Get Bee Value
+            private int _infectCureValue = 1;
+            private int _eggCureValue = 1;
+            public int? InfectCureValue
+            {
+                get => _infectCureValue;
+                set => _infectCureValue = value ?? 0;
+            }
+
+            public int? EggCureValue
+            {
+                get => _eggCureValue;
+                set => _eggCureValue = value ?? 0;
+            }
         }
 
         public class Panacea : ITreatment
@@ -270,6 +366,19 @@ namespace _project.Scripts.Classes
             public string Name => "Panacea";
             public string Description => "Cures All Afflictions";
             public int BeeValue => 0;
+            private int _infectCureValue = 999;
+            private int _eggCureValue = 999;
+            public int? InfectCureValue
+            {
+                get => _infectCureValue;
+                set => _infectCureValue = value ?? 0;
+            }
+
+            public int? EggCureValue
+            {
+                get => _eggCureValue;
+                set => _eggCureValue = value ?? 0;
+            }
         }
 
         #endregion

@@ -314,7 +314,7 @@ namespace _project.Scripts.Core
             return 0;
         }
 
-        private void SetEggLevel(int eggLevel)
+        public void SetEggLevel(int eggLevel)
         {
             if (PlantCard is not IPlantCard plantCardInterface) return;
             plantCardInterface.EggLevel = Mathf.Max(0, eggLevel);
