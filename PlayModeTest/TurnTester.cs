@@ -33,6 +33,8 @@ namespace _project.Scripts.PlayModeTest
         {
             public string Name => "Panacea";
             public string Description => "Cures all afflictions";
+            public int? InfectCureValue { get; set; } = 999;
+            public int? EggCureValue { get; set; } = 999;
 
             public void ApplyTreatment(PlantController plant)
             {
@@ -340,10 +342,65 @@ namespace _project.Scripts.PlayModeTest
             Assert.AreEqual(1, plant.CurrentAfflictions.Count);
         }
 
+        [UnityTest]
+        public IEnumerator AddAffliction_IncreasesInfectAndEggLevels()
+        {
+            // Fresh plant without afflictions
+            Object.DestroyImmediate(_plantSpawnGo);
+            CardGameMaster.Instance.cardHolders.Clear();
+
+            _plantSpawnGo = new GameObject("TestPlantSpawn");
+            var plant = CreatePlant();
+
+            // Precondition
+            Assert.AreEqual(0, plant.GetInfectLevel());
+            Assert.AreEqual(0, plant.GetEggLevel());
+
+            // Add a real affliction that carries infect and egg values
+            plant.AddAffliction(new PlantAfflictions.ThripsAffliction());
+            yield return null;
+
+            // ThripsCard defaults to BaseInfectLevel=1 and BaseEggLevel=1
+            Assert.AreEqual(1, plant.GetInfectLevel(), "Infect should increase when affliction is added");
+            Assert.AreEqual(1, plant.GetEggLevel(), "Eggs should increase when affliction is added");
+        }
+
+        [UnityTest]
+        public IEnumerator ApplyQueuedTreatments_ReducesInfect_ButNotEggs()
+        {
+            // Reset and build a simple environment
+            Object.DestroyImmediate(_plantSpawnGo);
+            CardGameMaster.Instance.cardHolders.Clear();
+
+            _plantSpawnGo = new GameObject("TestPlantSpawn");
+            var plant = CreatePlant();
+
+            // Seed with an affliction that adds infect/eggs
+            plant.AddAffliction(new PlantAfflictions.ThripsAffliction());
+            yield return null;
+
+            Assert.AreEqual(1, plant.GetInfectLevel());
+            Assert.AreEqual(1, plant.GetEggLevel());
+
+            // Queue a treatment via a placed card
+            CreateCardHolder(new FakeCard("Panacea", new FakeTreatment()));
+
+            // Apply queued treatments
+            plant.plantCardFunctions.ApplyQueuedTreatments();
+            yield return null;
+
+            // Affliction removed, infect reduced by 1 via RemoveAffliction; eggs unchanged
+            Assert.AreEqual(0, plant.CurrentAfflictions.Count);
+            Assert.AreEqual(0, plant.GetInfectLevel(), "Infect should be reduced after treatment removes affliction");
+            Assert.AreEqual(1, plant.GetEggLevel(), "Egg level persists (no automatic egg cure applied)");
+        }
+
         private class ThrowingTreatment : PlantAfflictions.ITreatment
         {
             public string Name => "Explosive";
             public string Description => "Throws on apply";
+            public int? InfectCureValue { get; set; } = 0;
+            public int? EggCureValue { get; set; } = 0;
 
             public void ApplyTreatment(PlantController plant)
             {
@@ -407,6 +464,8 @@ namespace _project.Scripts.PlayModeTest
         {
             public string Name => "SafeClear";
             public string Description => "Removes all afflictions";
+            public int? InfectCureValue { get; set; } = 999;
+            public int? EggCureValue { get; set; } = 999;
 
             public void ApplyTreatment(PlantController plant)
             {
@@ -424,27 +483,48 @@ namespace _project.Scripts.PlayModeTest
             // Ignore exceptions from UI updates during turn sequencing
             LogAssert.ignoreFailingMessages = true;
 
-            // Reflect _actionDeck
-            var actionDeckField = typeof(DeckManager).GetField("_actionDeck", BindingFlags.NonPublic | BindingFlags.Instance);
-            Assert.IsNotNull(actionDeckField, "_actionDeck field not found");
+            // Helper to count cards by name across deck, hand, and discard
+            static Dictionary<string, int> CountByName(IEnumerable<ICard> cards)
+            {
+                var map = new Dictionary<string, int>();
+                foreach (var c in cards)
+                {
+                    if (c == null) continue;
+                    var name = c.Name;
+                    if (!map.ContainsKey(name)) map[name] = 0;
+                    map[name] += 1;
+                }
+                return map;
+            }
 
-            // Initialize Deck State
-            var initialDeck = (List<ICard>)actionDeckField.GetValue(_deckManager);
-            var initialDeckNames = initialDeck.ConvertAll(card => card.Name);
+            // Capture initial multiset of cards across deck + hand + discard
+            var initialAll = new List<ICard>();
+            initialAll.AddRange(_deckManager.GetActionDeck());
+            initialAll.AddRange(_deckManager.GetActionHand());
+            initialAll.AddRange(_deckManager.GetDiscardPile());
+            var initialCounts = CountByName(initialAll);
 
+            // Ensure a RetainedCardHolder exists (EndTurn references it without null check)
+            var retainedGo = new GameObject("RetainedSlot");
+            retainedGo.AddComponent<RetainedCardHolder>();
+
+            // Advance turn which will draw a new action hand, mutating deck order/content positions
             _turnController.EndTurn();
-
             yield return new WaitForSeconds(3f);
 
-            // Get New Deck State
-            var newDeck = (List<ICard>)actionDeckField.GetValue(_deckManager);
-            var newDeckNames = newDeck.ConvertAll(card => card.Name);
+            // Capture new multiset after turn advancement
+            var newAll = new List<ICard>();
+            newAll.AddRange(_deckManager.GetActionDeck());
+            newAll.AddRange(_deckManager.GetActionHand());
+            newAll.AddRange(_deckManager.GetDiscardPile());
+            var newCounts = CountByName(newAll);
 
-            // Assert the deck is the same order and content
-            Assert.AreEqual(initialDeckNames.Count, newDeckNames.Count, "Action deck count changed between rounds");
-            for (var i = 0; i < initialDeckNames.Count; i++)
+            // Assert the multiset of cards remains identical (order/location may differ)
+            Assert.AreEqual(initialCounts.Count, newCounts.Count, "Card type count changed between rounds");
+            foreach (var kvp in initialCounts)
             {
-                Assert.AreEqual(initialDeckNames[i], newDeckNames[i], $"Card mismatch at position {i}");
+                Assert.IsTrue(newCounts.ContainsKey(kvp.Key), $"Missing card '{kvp.Key}' after round");
+                Assert.AreEqual(kvp.Value, newCounts[kvp.Key], $"Count mismatch for '{kvp.Key}'");
             }
         }
 
