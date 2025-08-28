@@ -356,7 +356,7 @@ namespace _project.Scripts.PlayModeTest
             Assert.AreEqual(0, plant.GetInfectLevel());
             Assert.AreEqual(0, plant.GetEggLevel());
 
-            // Add a real affliction that carries infect and egg values
+            // Add a real affliction that carries infection and egg values
             plant.AddAffliction(new PlantAfflictions.ThripsAffliction());
             yield return null;
 
@@ -491,7 +491,7 @@ namespace _project.Scripts.PlayModeTest
                 {
                     if (c == null) continue;
                     var name = c.Name;
-                    if (!map.ContainsKey(name)) map[name] = 0;
+                    map.TryAdd(name, 0);
                     map[name] += 1;
                 }
                 return map;
@@ -504,7 +504,7 @@ namespace _project.Scripts.PlayModeTest
             initialAll.AddRange(_deckManager.GetDiscardPile());
             var initialCounts = CountByName(initialAll);
 
-            // Ensure a RetainedCardHolder exists (EndTurn references it without null check)
+            // Ensure a RetainedCardHolder exists (EndTurn references it without a null check)
             var retainedGo = new GameObject("RetainedSlot");
             retainedGo.AddComponent<RetainedCardHolder>();
 
@@ -555,12 +555,12 @@ namespace _project.Scripts.PlayModeTest
             plantFunctions.deckManager = _deckManager;
             plant.plantCardFunctions = plantFunctions;
 
-            // Create a card holder (this simulates a placement location on a plant)
+            // Create a cardholder (this simulates a placement location on a plant)
             var cardHolderGo = new GameObject("CardHolder");
             cardHolderGo.transform.SetParent(_plantSpawnGo.transform);
             var cardHolder = cardHolderGo.AddComponent<PlacedCardHolder>();
             
-            // Initialize the card holder's dependencies (normally done in Start())
+            // Initialize the cardholder's dependencies (normally done in Start())
             typeof(PlacedCardHolder)
                 .GetField("_deckManager", BindingFlags.NonPublic | BindingFlags.Instance)
                 ?.SetValue(cardHolder, _deckManager);
