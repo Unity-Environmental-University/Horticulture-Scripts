@@ -148,7 +148,8 @@ namespace _project.Scripts.Card_Core
         private void Update()
         {
             if (CardGameMaster.Instance.turnText)
-                CardGameMaster.Instance.turnText!.text = "Turn: " + currentTurn + "/" + turnCount;
+                // No hard turn cap; show current turn only
+                CardGameMaster.Instance.turnText!.text = "Turn: " + currentTurn;
             if (CardGameMaster.Instance.roundText)
                 CardGameMaster.Instance.roundText!.text = "Round: " + currentRound;
             if (CardGameMaster.Instance.levelText)
@@ -181,19 +182,10 @@ namespace _project.Scripts.Card_Core
         public void EndTurn()
         {
             if (_deckManager.updatingActionDisplay || !canClickEnd) return;
+            // Debounce apply button immediately to prevent double-trigger within a single input frame
+            canClickEnd = false;
 
-            // During tutorial steps, money goal cannot end the level
-            if (!(level == 0 && CardGameMaster.IsSequencingEnabled && currentTutorialTurn < TutorialTurnCount)
-                && ScoreManager.GetMoneys() >= moneyGoal)
-            {
-                currentTurn++;
-                totalTurns++;
-                shopQueued = true; // We'll need to maybe find a use for this
-                EndLevel();
-                return;
-            }
-
-            // If we're ready for a new round, call setup and return
+            // If we're ready for a new round, call setup and return immediately
             if (newRoundReady)
             {
                 newRoundReady = false;
@@ -201,7 +193,7 @@ namespace _project.Scripts.Card_Core
                 return;
             }
 
-            // Get an array of plant controllers
+            // Snapshot plant controllers for this turn's processing
             var plantControllers = _deckManager.plantLocations
                 .SelectMany(location => location.GetComponentsInChildren<PlantController>(false))
                 .ToArray();
@@ -211,7 +203,7 @@ namespace _project.Scripts.Card_Core
             {
                 if (debugging) Debug.Log($"Found {plantControllers.Length} PlantControllers in PlantLocation.");
 
-                // Apply queued treatments and update shaders
+                // Apply queued treatments, process day effects, and update visuals for each plant
                 foreach (var controller in plantControllers)
                 {
                     controller.plantCardFunctions.ApplyQueuedTreatments();
@@ -222,28 +214,55 @@ namespace _project.Scripts.Card_Core
 
                 TryPlayQueuedEffects();
                 var retainedCardHolder = FindFirstObjectByType<RetainedCardHolder>();
-                retainedCardHolder.isCardLocked = false;
+                if (retainedCardHolder) retainedCardHolder.isCardLocked = false;
             }
 
-            // End round early if all plants are free of afflictions
-            if (plantControllers.All(controller => controller.PlantCard is { Value: <= 0 } ||
-                                                   !controller.CurrentAfflictions.Any()))
+            // Re-evaluate health AFTER daily processing to decide on early round end or level end
+            // Important: avoid vacuous truth on empty plant list (All() on empty => true)
+            var hasPlants = plantControllers.Length > 0;
+            var allPlantsHealthy = hasPlants && plantControllers.All(controller =>
+                controller.PlantCard is { Value: <= 0 } ||
+                (controller.GetInfectLevel() == 0 && controller.GetEggLevel() == 0));
+
+            if (debugging)
             {
+                foreach (var controller in plantControllers)
+                {
+                    var isDead = controller.PlantCard is { Value: <= 0 };
+                    var isHealthy = controller.GetInfectLevel() == 0 && controller.GetEggLevel() == 0;
+                    Debug.Log($"Plant {controller.name}: Dead={isDead}, Healthy={isHealthy}, Infect={controller.GetInfectLevel()}, Eggs={controller.GetEggLevel()}, Afflictions={controller.CurrentAfflictions.Count}");
+                }
+                Debug.Log($"PlantControllers count={plantControllers.Length}, All plants healthy (post-process)={allPlantsHealthy}, Money={ScoreManager.GetMoneys()}/{moneyGoal}");
+            }
+
+            // During tutorial steps, money goal cannot end the level
+            // Money goal can only end level if all plants are also healthy
+            if (!(level == 0 && CardGameMaster.IsSequencingEnabled && currentTutorialTurn < TutorialTurnCount)
+                && ScoreManager.GetMoneys() >= moneyGoal && allPlantsHealthy)
+            {
+                if (debugging) Debug.Log("Ending level - money goal reached AND all plants healthy");
+                currentTurn++;
+                totalTurns++;
+                shopQueued = true; // We'll need to maybe find a use for this
+                EndLevel();
+                return;
+            }
+
+            // If all plants are healthy/dead after processing, end the round early
+            if (allPlantsHealthy)
+            {
+                if (debugging) Debug.Log("Ending round early - all plants are dead or healthy after processing");
                 StartCoroutine(EndRound(advanceTutorial: true));
                 return;
             }
 
-            if (currentTurn < turnCount)
-            {
-                currentTurn++;
-                totalTurns++;
-                SpreadAfflictions(plantControllers);
-                _deckManager.DrawActionHand();
-            }
-            else
-            {
-                StartCoroutine(EndRound());
-            }
+            // Otherwise continue with normal turn flow (no hard end on turn limit)
+            currentTurn++;
+            totalTurns++;
+            SpreadAfflictions(plantControllers);
+            _deckManager.DrawActionHand();
+            // Re-enable after scheduling next hand; UI stays disabled while updatingActionDisplay is true
+            canClickEnd = true;
 
             _scoreManager.CalculateTreatmentCost();
         }
@@ -289,7 +308,8 @@ namespace _project.Scripts.Card_Core
                         target.HasHadAffliction(affliction))
                         continue;
 
-                    target.AddAffliction(affliction);
+                    // Use a fresh instance to avoid shared state across plants
+                    target.AddAffliction(affliction.Clone());
                     _scoreManager.CalculateTreatmentCost();
                     StartCoroutine(PauseRoutine());
                     target.FlagShadersUpdate();

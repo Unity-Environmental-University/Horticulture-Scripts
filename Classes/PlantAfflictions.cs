@@ -53,7 +53,9 @@ namespace _project.Scripts.Classes
                 foreach (var item in afflictions)
                 {
                     item.TreatWith(this, plant);
-                    if (CardGameMaster.Instance.debuggingCardClass) Debug.Log($"Applied treatment to affliction: {item.Name}");
+                    if (CardGameMaster.Instance == null || !CardGameMaster.Instance.debuggingCardClass) continue;
+                    if (CardGameMaster.Instance.debuggingCardClass)
+                        Debug.Log($"Applied treatment to affliction: {item.Name}");
                 }
             }
         }
@@ -76,19 +78,24 @@ namespace _project.Scripts.Classes
                 var infectReduction = 0;
                 var eggReduction = 0;
                 
-                // Use type checking for consistency with other afflictions
+                // Get actual current values from plant (not internal flags)
+                var currentInfect = plant.GetInfectFrom(this);
+                var currentEggs = plant.GetEggsFrom(this);
+                
+                // Insecticide or Panacea: targets adults (reduces infect)
                 if (treatment is InsecticideTreatment or Panacea)
                 {
-                    if (_hasAdults)
+                    if (currentInfect > 0) // Only treat if actual infect exists
                     {
                         _hasAdults = false;
                         infectReduction = treatment.InfectCureValue ?? 0;
                     }
                 }
                 
+                // Horticultural Oil or Panacea: targets larvae (reduces eggs)
                 if (treatment is HorticulturalOilTreatment or Panacea)
                 {
-                    if (_hasLarvae)
+                    if (currentEggs > 0) // Only treat if actual eggs exist
                     {
                         _hasLarvae = false;
                         eggReduction = treatment.EggCureValue ?? 0;
@@ -99,6 +106,12 @@ namespace _project.Scripts.Classes
                 {
                     plant.ReduceAfflictionValues(this, infectReduction, eggReduction);
                 }
+                
+                // Update internal flags based on remaining values after treatment
+                var remainingInfect = plant.GetInfectFrom(this);
+                var remainingEggs = plant.GetEggsFrom(this);
+                _hasAdults = remainingInfect > 0;
+                _hasLarvae = remainingEggs > 0;
             }
 
             public void TickDay(PlantController plant)

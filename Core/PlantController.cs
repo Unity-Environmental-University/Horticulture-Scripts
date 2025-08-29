@@ -137,7 +137,8 @@ namespace _project.Scripts.Core
         public void UpdatePriceFlag(int newValue)
         {
             if (priceFlagText) priceFlagText.text = "$" + newValue;
-            CardGameMaster.Instance.scoreManager.CalculatePotentialProfit();
+            if (CardGameMaster.Instance != null)
+                CardGameMaster.Instance.scoreManager.CalculatePotentialProfit();
         }
 
         /// <summary>
@@ -199,12 +200,15 @@ namespace _project.Scripts.Core
             // Note: Infect/egg reduction is now handled by treatments, not by removal
             
             
-            TurnController.QueuePlantEffect(
-                this,
-                particle: buffSystem,
-                sound: CardGameMaster.Instance.soundSystem.plantHeal,
-                delay: 0.3f
-                );
+            if (CardGameMaster.Instance != null)
+            {
+                TurnController.QueuePlantEffect(
+                    this,
+                    particle: buffSystem,
+                    sound: CardGameMaster.Instance.soundSystem.plantHeal,
+                    delay: 0.3f
+                    );
+            }
         }
 
         /// <summary>
@@ -234,9 +238,11 @@ namespace _project.Scripts.Core
             if (iCard is IAfflictionCard afflictionInterface)
             {
                 AddInfect(affliction, afflictionInterface.BaseInfectLevel);
-                if(healthBarHandler) healthBarHandler.SpawnHearts(this);
                 if (afflictionInterface.BaseEggLevel > 0)
                     AddEggs(affliction, afflictionInterface.BaseEggLevel);
+                    
+                // Update health bar UI after both infect and eggs are added
+                if(healthBarHandler) healthBarHandler.SpawnHearts(this);
             }
 
             Debug.LogWarning(name + " has " + CurrentAfflictions.Count + " afflictions. Current infect level is " +
@@ -244,7 +250,7 @@ namespace _project.Scripts.Core
             
             
             
-            if (debuffSystem) 
+            if (debuffSystem && CardGameMaster.Instance != null) 
                 TurnController.QueuePlantEffect(
                     plant: this,
                     particle: debuffSystem,
@@ -398,7 +404,8 @@ namespace _project.Scripts.Core
 
         private void KillPlant()
         {
-            StartCoroutine(CardGameMaster.Instance.deckManager.ClearPlant(this));
+            if (CardGameMaster.Instance != null)
+                StartCoroutine(CardGameMaster.Instance.deckManager.ClearPlant(this));
         }
     }
 }
