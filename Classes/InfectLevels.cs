@@ -72,6 +72,13 @@ namespace _project.Scripts.Classes
             SetInfectData(source, a);
         }
         public void RemoveEggs(string source, int delta) => AddEggs(source, -delta);
+        
+        public void ReduceEggs(string source, int delta)
+        {
+            var a = GetInfectData(source);
+            a.eggs = Mathf.Max(0, a.eggs - delta);
+            SetInfectData(source, a);
+        }
 
         public void ClearSource(string source)
         {

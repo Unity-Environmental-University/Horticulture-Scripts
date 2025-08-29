@@ -196,7 +196,7 @@ namespace _project.Scripts.Core
                     break;
             }
 
-            ReduceInfect(affliction, 1);
+            // Note: Infect/egg reduction is now handled by treatments, not by removal
             
             
             TurnController.QueuePlantEffect(
@@ -284,6 +284,14 @@ namespace _project.Scripts.Core
             plantCardInterface.Infect.ReduceInfect(source, Mathf.Max(0, amount));
             FlagShadersUpdate();
         }
+        
+        private void ReduceEggs(PlantAfflictions.IAffliction affliction, int amount)
+        {
+            if (PlantCard is not IPlantCard plantCardInterface) return;
+            var source = affliction?.Name ?? affliction?.GetType().Name ?? "Unknown";
+            plantCardInterface.Infect.ReduceEggs(source, Mathf.Max(0, amount));
+            FlagShadersUpdate();
+        }
 
         private void AddEggs(PlantAfflictions.IAffliction affliction, int amount)
         {
@@ -319,6 +327,48 @@ namespace _project.Scripts.Core
             if (PlantCard is not IPlantCard plantCardInterface) return;
             plantCardInterface.EggLevel = Mathf.Max(0, eggLevel);
             FlagShadersUpdate();
+        }
+        
+        /// <summary>
+        /// Reduces infect and egg values for a specific affliction source by the specified amounts.
+        /// If both values reach zero, the affliction is automatically removed.
+        /// </summary>
+        /// <param name="affliction">The affliction to reduce values for</param>
+        /// <param name="infectReduction">Amount to reduce infection by (negative values are clamped to 0)</param>
+        /// <param name="eggReduction">Amount to reduce eggs by (negative values are clamped to 0)</param>
+        public void ReduceAfflictionValues(PlantAfflictions.IAffliction affliction, int infectReduction, int eggReduction)
+        {
+            if (affliction == null)
+            {
+                Debug.LogWarning("Cannot reduce values for null affliction");
+                return;
+            }
+            
+            if (PlantCard is not IPlantCard plantCardInterface) return;
+            
+            // Validate reduction amounts (clamp to non-negative)
+            infectReduction = Mathf.Max(0, infectReduction);
+            eggReduction = Mathf.Max(0, eggReduction);
+            
+            var source = affliction.Name ?? affliction.GetType().Name;
+            
+            // Reduce infect and egg values
+            if (infectReduction > 0)
+                plantCardInterface.Infect.ReduceInfect(source, infectReduction);
+                
+            if (eggReduction > 0)
+                plantCardInterface.Infect.ReduceEggs(source, eggReduction);
+            
+            FlagShadersUpdate();
+            
+            // Check if affliction should be removed (both infect and eggs are zero)
+            var remainingInfect = plantCardInterface.Infect.GetInfect(source);
+            var remainingEggs = plantCardInterface.Infect.GetEggs(source);
+            
+            if (remainingInfect <= 0 && remainingEggs <= 0)
+            {
+                RemoveAffliction(affliction);
+            }
         }
 
         /// <summary>

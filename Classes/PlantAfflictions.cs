@@ -10,6 +10,10 @@ namespace _project.Scripts.Classes
 {
     public class PlantAfflictions : MonoBehaviour
     {
+        // Constants for treatment effectiveness
+        private const int StandardCureAmount = 1;
+        private const int PanaceaCureAmount = 999;
+
         public interface IAffliction
         {
             string Name { get; }
@@ -51,21 +55,6 @@ namespace _project.Scripts.Classes
                     item.TreatWith(this, plant);
                     if (CardGameMaster.Instance.debuggingCardClass) Debug.Log($"Applied treatment to affliction: {item.Name}");
                 }
-                
-                // var infect = plant.GetInfectLevel();
-                // var egg = plant.GetEggLevel();
-                //
-                // if (InfectCureValue != null)
-                // {
-                //     infect -= InfectCureValue.Value;
-                //     plant.SetInfectLevel(infect);
-                // }
-                //
-                // if (EggCureValue != null)
-                // {
-                //     egg -= EggCureValue.Value;
-                //     plant.SetEggLevel(egg);
-                // }
             }
         }
 
@@ -84,24 +73,32 @@ namespace _project.Scripts.Classes
 
             public void TreatWith(ITreatment treatment, PlantController plant)
             {
-                switch (treatment.Name)
+                var infectReduction = 0;
+                var eggReduction = 0;
+                
+                // Use type checking for consistency with other afflictions
+                if (treatment is InsecticideTreatment or Panacea)
                 {
-                    case "Insecticide":
+                    if (_hasAdults)
+                    {
                         _hasAdults = false;
-                        //Debug.LogError("HadAdults: " + _hasAdults + "HasLarvae " + _hasLarvae);
-                        break;
-                    case "Horticultural Oil":
+                        infectReduction = treatment.InfectCureValue ?? 0;
+                    }
+                }
+                
+                if (treatment is HorticulturalOilTreatment or Panacea)
+                {
+                    if (_hasLarvae)
+                    {
                         _hasLarvae = false;
-                        //Debug.LogError("HadAdults: " + _hasAdults + "HasLarvae " + _hasLarvae);
-                        break;
-                    case "Panacea":
-                        _hasAdults = false;
-                        _hasLarvae = false;
-                        //Debug.LogError("HadAdults: " + _hasAdults + "HasLarvae " + _hasLarvae);
-                        break;
+                        eggReduction = treatment.EggCureValue ?? 0;
+                    }
                 }
 
-                if (!_hasAdults && !_hasLarvae) plant.RemoveAffliction(this);
+                if (infectReduction > 0 || eggReduction > 0)
+                {
+                    plant.ReduceAfflictionValues(this, infectReduction, eggReduction);
+                }
             }
 
             public void TickDay(PlantController plant)
@@ -128,7 +125,11 @@ namespace _project.Scripts.Classes
             public void TreatWith(ITreatment treatment, PlantController plant)
             {
                 if (treatment is SoapyWaterTreatment or InsecticideTreatment or ImidaclopridTreatment or Panacea)
-                    plant.RemoveAffliction(this);
+                {
+                    var infectReduction = treatment.InfectCureValue ?? 0;
+                    var eggReduction = treatment.EggCureValue ?? 0;
+                    plant.ReduceAfflictionValues(this, infectReduction, eggReduction);
+                }
             }
 
             public void TickDay(PlantController plant)
@@ -152,7 +153,12 @@ namespace _project.Scripts.Classes
 
             public void TreatWith(ITreatment treatment, PlantController plant)
             {
-                if (treatment is FungicideTreatment or Panacea) plant.RemoveAffliction(this);
+                if (treatment is FungicideTreatment or Panacea)
+                {
+                    var infectReduction = treatment.InfectCureValue ?? 0;
+                    var eggReduction = treatment.EggCureValue ?? 0;
+                    plant.ReduceAfflictionValues(this, infectReduction, eggReduction);
+                }
             }
 
             public void TickDay(PlantController plant)
@@ -176,7 +182,12 @@ namespace _project.Scripts.Classes
             public void TreatWith(ITreatment treatment, PlantController plant)
             {
                 if (treatment is HorticulturalOilTreatment or ImidaclopridTreatment or SpinosadTreatment
-                    or InsecticideTreatment or Panacea) plant.RemoveAffliction(this);
+                    or InsecticideTreatment or Panacea)
+                {
+                    var infectReduction = treatment.InfectCureValue ?? 0;
+                    var eggReduction = treatment.EggCureValue ?? 0;
+                    plant.ReduceAfflictionValues(this, infectReduction, eggReduction);
+                }
             }
 
             public void TickDay(PlantController plant)
@@ -199,7 +210,12 @@ namespace _project.Scripts.Classes
             
             public void TreatWith(ITreatment treatment, PlantController plant)
             {
-                if (treatment is HorticulturalOilTreatment or Panacea) plant.RemoveAffliction(this);
+                if (treatment is HorticulturalOilTreatment or Panacea)
+                {
+                    var infectReduction = treatment.InfectCureValue ?? 0;
+                    var eggReduction = treatment.EggCureValue ?? 0;
+                    plant.ReduceAfflictionValues(this, infectReduction, eggReduction);
+                }
             }
 
             public void TickDay(PlantController plant)
@@ -223,7 +239,12 @@ namespace _project.Scripts.Classes
             
             public void TreatWith(ITreatment treatment, PlantController plant)
             {
-                if (treatment is ImidaclopridTreatment or SpinosadTreatment or Panacea) plant.RemoveAffliction(this);
+                if (treatment is ImidaclopridTreatment or SpinosadTreatment or Panacea)
+                {
+                    var infectReduction = treatment.InfectCureValue ?? 0;
+                    var eggReduction = treatment.EggCureValue ?? 0;
+                    plant.ReduceAfflictionValues(this, infectReduction, eggReduction);
+                }
             }
 
             public void TickDay(PlantController plant)
@@ -245,8 +266,8 @@ namespace _project.Scripts.Classes
             public string Name => "Horticultural Oil";
             public string Description => "Removes Aphids & Thrips";
             public int BeeValue => -1;
-            private int _infectCureValue = 1;
-            private int _eggCureValue = 1;
+            private int _infectCureValue = StandardCureAmount;
+            private int _eggCureValue = StandardCureAmount;
             public int? InfectCureValue
             {
                 get => _infectCureValue;
@@ -265,8 +286,8 @@ namespace _project.Scripts.Classes
             public string Name => "Fungicide";
             public string Description => "Removes Mildew";
             public int BeeValue => -3;
-            private int _infectCureValue = 1;
-            private int _eggCureValue = 1;
+            private int _infectCureValue = StandardCureAmount;
+            private int _eggCureValue = StandardCureAmount;
             public int? InfectCureValue
             {
                 get => _infectCureValue;
@@ -305,8 +326,8 @@ namespace _project.Scripts.Classes
             public string Name => "SoapyWater";
             public string Description => "Removes MealyBugs";
             public int BeeValue => 0;
-            private int _infectCureValue = 1;
-            private int _eggCureValue = 1;
+            private int _infectCureValue = StandardCureAmount;
+            private int _eggCureValue = StandardCureAmount;
             public int? InfectCureValue
             {
                 get => _infectCureValue;
@@ -325,8 +346,8 @@ namespace _project.Scripts.Classes
             public string Name => "Spinosad";
             public string Description => "Effective against: Thrips, Mites, Gnats";
             public int BeeValue => -2; //TODO Get Bee Value
-            private int _infectCureValue = 1;
-            private int _eggCureValue = 1;
+            private int _infectCureValue = StandardCureAmount;
+            private int _eggCureValue = StandardCureAmount;
             public int? InfectCureValue
             {
                 get => _infectCureValue;
@@ -346,8 +367,8 @@ namespace _project.Scripts.Classes
             public string Name => "Imidacloprid";
             public string Description => "Insecticide, systemic, neonicotinoid, effective, broad-spectrum.";
             public int BeeValue => -5; //TODO Get Bee Value
-            private int _infectCureValue = 1;
-            private int _eggCureValue = 1;
+            private int _infectCureValue = StandardCureAmount;
+            private int _eggCureValue = StandardCureAmount;
             public int? InfectCureValue
             {
                 get => _infectCureValue;
@@ -366,8 +387,8 @@ namespace _project.Scripts.Classes
             public string Name => "Panacea";
             public string Description => "Cures All Afflictions";
             public int BeeValue => 0;
-            private int _infectCureValue = 999;
-            private int _eggCureValue = 999;
+            private int _infectCureValue = PanaceaCureAmount;
+            private int _eggCureValue = PanaceaCureAmount;
             public int? InfectCureValue
             {
                 get => _infectCureValue;
