@@ -128,7 +128,9 @@ namespace _project.Scripts.Card_Core
 
         private IEnumerator AnimateCard(float animationDuration = 0.2f)
         {
-            cardGoClone.transform.DOScale(Vector3.one, animationDuration);
+            cardGoClone.transform
+                .DOScale(Vector3.one, animationDuration)
+                .SetLink(cardGoClone, LinkBehaviour.KillOnDisable);
             yield return new WaitForSeconds(animationDuration);
         }
 
@@ -240,6 +242,15 @@ namespace _project.Scripts.Card_Core
             
             // Update cost display
             cgm.scoreManager.CalculateTreatmentCost();
+        }
+
+        private void OnDestroy()
+        {
+            if (cardGoClone)
+            {
+                cardGoClone.transform.DOKill();
+            }
+            transform.DOKill();
         }
     }
 }

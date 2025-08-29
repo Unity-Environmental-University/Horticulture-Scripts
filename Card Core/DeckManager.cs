@@ -1114,9 +1114,21 @@ namespace _project.Scripts.Card_Core
                 var targetScale = cardScale;
 
                 // Add simultaneous animations for position, rotation, and scale
-                _currentHandSequence.Join(tf.DOLocalMove(targetPos, duration).SetEase(Ease.OutQuart));
-                _currentHandSequence.Join(tf.DOLocalRotateQuaternion(targetRot, duration).SetEase(Ease.OutQuart));
-                _currentHandSequence.Join(tf.DOScale(targetScale, duration).SetEase(Ease.OutQuart));
+                _currentHandSequence.Join(
+                    tf.DOLocalMove(targetPos, duration)
+                        .SetEase(Ease.OutQuart)
+                        .SetLink(tf.gameObject, LinkBehaviour.KillOnDisable)
+                );
+                _currentHandSequence.Join(
+                    tf.DOLocalRotateQuaternion(targetRot, duration)
+                        .SetEase(Ease.OutQuart)
+                        .SetLink(tf.gameObject, LinkBehaviour.KillOnDisable)
+                );
+                _currentHandSequence.Join(
+                    tf.DOScale(targetScale, duration)
+                        .SetEase(Ease.OutQuart)
+                        .SetLink(tf.gameObject, LinkBehaviour.KillOnDisable)
+                );
             }
 
             // Set up a completion callback
@@ -1239,7 +1251,9 @@ namespace _project.Scripts.Card_Core
                         }
 
                         // Animate the card scaling up with a bounce effect
-                        cardObj.transform.DOScale(cardScale, 0.3f)
+                        cardObj.transform
+                            .DOScale(cardScale, 0.3f)
+                            .SetLink(cardObj, LinkBehaviour.KillOnDisable)
                             .SetEase(Ease.OutBack)
                             .OnComplete(() =>
                             {

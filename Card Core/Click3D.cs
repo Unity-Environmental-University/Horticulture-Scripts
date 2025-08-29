@@ -110,7 +110,9 @@ namespace _project.Scripts.Card_Core
 
         private void OnDestroy()
         {
-            // Clean up when the object is destroyed
+            // Ensure any active tweens on this transform are killed to avoid Safe Mode warnings
+            transform.DOKill();
+            // Clean up input when the object is destroyed
             if (_mouseClickAction == null) return;
             _mouseClickAction.performed -= OnMouseClick;
             _mouseClickAction.Disable();
@@ -132,7 +134,9 @@ namespace _project.Scripts.Card_Core
             if (isSticker)
             {
                 var targetScale = _originalScale * stickerScaleUp;
-                transform.DOScale(targetScale, animTime);
+                transform
+                    .DOScale(targetScale, animTime)
+                    .SetLink(gameObject, LinkBehaviour.KillOnDisable);
                 return;
             }
             
@@ -160,7 +164,9 @@ namespace _project.Scripts.Card_Core
             if (isSticker)
             {
                 if (selected) return;
-                transform.DOScale(_originalScale, animTime);
+                transform
+                    .DOScale(_originalScale, animTime)
+                    .SetLink(gameObject, LinkBehaviour.KillOnDisable);
                 return;
             }
             
