@@ -110,6 +110,16 @@ namespace _project.Scripts.Card_Core
                 Debug.LogError($"Error finding PlacedCardHolder instances: {e.Message}");
                 cardHolders = new List<PlacedCardHolder>();
             }
+
+            // Load user mods (cards/stickers) before deck initialization runs in Start()
+            try
+            {
+                ModLoader.TryLoadMods(this);
+            }
+            catch (Exception e)
+            {
+                Debug.LogWarning($"Mod loading failed: {e.Message}");
+            }
         }
 
         public void Save()

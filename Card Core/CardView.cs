@@ -30,14 +30,17 @@ namespace _project.Scripts.Card_Core
 
         public void Setup(ICard card)
         {
-            titleText.text = card.Name;
-            cardMaterial = card.Material;
+            var title = card.Name ?? string.Empty;
+            if (card is _project.Scripts.Classes.RuntimeCard)
+                title += " [MOD]";
+            titleText.text = title;
+            cardMaterial = card.Material ? card.Material : Core.DefaultMaterials.White;
             var cardRenderer = GetComponentInChildren<Renderer>(true);
             if (cardRenderer)
                 cardRenderer.material = cardMaterial;
             else
                 Debug.LogWarning("CardView: No Renderer found on card prefab; skipping material assignment.");
-            descriptionText.text = card.Description;
+            descriptionText.text = card.Description ?? string.Empty;
             if (card.Value != null) treatmentCostText.text = "$ " + card.Value;
             _originalCard = card;
 

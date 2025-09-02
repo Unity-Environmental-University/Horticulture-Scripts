@@ -1,0 +1,20 @@
+{
+  "name": "My Custom Card",
+  "description": "Describe what this card does.",
+  "value": -1,
+  "treatment": "",
+  "rarity": "Common",
+  "weight": 1,
+
+  // Option A: leave these empty to use the default prefab/material
+  // or set to a Resources path, e.g., "Prefabs/Cards/ActionCard"
+  "prefabResource": "",
+  "materialResource": "",
+
+  // Option B: use an AssetBundle placed in Mods/
+  // Set bundleKey to filename without extension; then reference asset names inside the bundle
+  "bundleKey": "",
+  "prefab": "",
+  "material": ""
+}
+

@@ -219,13 +219,47 @@ namespace _project.Scripts.Card_Core
         /// Optionally logs the initialized deck order if debugging is enabled.
         private void InitializeActionDeck()
         {
-            foreach (var card in PrototypeActionDeck)
-                _actionDeck.Add(card.Clone());
+            foreach (var prototype in PrototypeActionDeck)
+            {
+                var copies = 1;
+                if (prototype is RuntimeCard rc)
+                    copies = Mathf.Clamp(rc.Weight, 1, 50);
+
+                for (var i = 0; i < copies; i++)
+                    _actionDeck.Add(prototype.Clone());
+            }
 
             ShuffleDeck(_actionDeck);
             if (debug)
                 Debug.Log("Initialized ActionDeck Order: " +
                           string.Join(", ", _actionDeck.ConvertAll(card => card.Name)));
+        }
+
+        /// <summary>
+        /// Register a new action card prototype from a mod before deck initialization.
+        /// </summary>
+        /// <param name="prototype">Card to add to the action prototype pool</param>
+        public void RegisterModActionPrototype(ICard prototype)
+        {
+            if (prototype == null) return;
+            PrototypeActionDeck.Add(prototype);
+            if (debug) Debug.Log($"[Mods] Added action prototype: {prototype.Name}");
+        }
+
+        /// <summary>
+        /// Register a StickerDefinition from a mod and spawn it in the sticker pack area if present.
+        /// </summary>
+        public void RegisterModSticker(StickerDefinition def)
+        {
+            if (def == null) return;
+            stickerDefinitions ??= new List<StickerDefinition>();
+            stickerDefinitions.Add(def);
+
+            if (stickerPackParent == null || !def.Prefab) return;
+            var go = Instantiate(def.Prefab, stickerPackParent.position, stickerPackParent.rotation, stickerPackParent);
+            var view = go.GetComponent<StickerView>() ?? go.AddComponent<StickerView>();
+            view.definition = def;
+            ArrangeStickersInFan();
         }
 
         #endregion
