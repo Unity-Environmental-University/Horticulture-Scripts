@@ -34,13 +34,26 @@ namespace _project.Scripts.PlayModeTest
             public string Name => "Panacea";
             public string Description => "Cures all afflictions";
             public int? InfectCureValue { get; set; } = 999;
-            public int? EggCureValue { get; set; } = 999;
+            public int? EggCureValue { get; set; } = 0;
 
             public void ApplyTreatment(PlantController plant)
             {
                 var afflictions = plant.CurrentAfflictions != null
                     ? new List<PlantAfflictions.IAffliction>(plant.CurrentAfflictions)
                     : new List<PlantAfflictions.IAffliction>();
+                
+                // Apply cure values before removing afflictions
+                foreach (var affliction in afflictions)
+                {
+                    var infectCure = InfectCureValue ?? 0;
+                    var eggCure = EggCureValue ?? 0;
+                    if (infectCure > 0 || eggCure > 0)
+                    {
+                        plant.ReduceAfflictionValues(affliction, infectCure, eggCure);
+                    }
+                }
+                
+                // Remove all afflictions
                 foreach (var affliction in afflictions)
                 {
                     plant.RemoveAffliction(affliction);
@@ -470,6 +483,19 @@ namespace _project.Scripts.PlayModeTest
             public void ApplyTreatment(PlantController plant)
             {
                 var afflictionsCopy = new List<PlantAfflictions.IAffliction>(plant.CurrentAfflictions);
+                
+                // Apply cure values before removing afflictions
+                foreach (var affliction in afflictionsCopy)
+                {
+                    var infectCure = InfectCureValue ?? 0;
+                    var eggCure = EggCureValue ?? 0;
+                    if (infectCure > 0 || eggCure > 0)
+                    {
+                        plant.ReduceAfflictionValues(affliction, infectCure, eggCure);
+                    }
+                }
+                
+                // Remove all afflictions
                 foreach (var affliction in afflictionsCopy)
                 {
                     plant.RemoveAffliction(affliction);
