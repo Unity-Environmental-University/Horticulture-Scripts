@@ -5,7 +5,7 @@ using _project.Scripts.Classes;
 using _project.Scripts.Stickers;
 using UnityEngine;
 
-namespace _project.Scripts.ModLoader
+namespace _project.Scripts.ModLoading
 {
     /// <summary>
     /// Simple mod loader for JSON cards and AssetBundle stickers.

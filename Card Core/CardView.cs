@@ -1,6 +1,6 @@
 using System.Linq;
 using _project.Scripts.Classes;
-using _project.Scripts.ModLoader;
+using _project.Scripts.ModLoading;
 using TMPro;
 using UnityEngine;
 

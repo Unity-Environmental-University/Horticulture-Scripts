@@ -1,6 +1,6 @@
-# ModLoader System
+# ModLoading System
 
-This directory contains the complete ModLoader system for the Horticulture game.
+This directory contains the complete ModLoading system for the Horticulture game.
 
 ## Files Overview
 
@@ -62,7 +62,7 @@ Application.streamingAssetsPath/Mods/    (Shipped mods)
 - Assets accessible via `ModAssets.LoadFromBundle<T>()`
 
 ## Namespace
-All files use: `_project.Scripts.ModLoader`
+All files use: `_project.Scripts.ModLoading`
 
 ## Total System Size
 ~190 lines of core functionality + tests + documentation

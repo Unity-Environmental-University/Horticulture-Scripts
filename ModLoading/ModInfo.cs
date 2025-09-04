@@ -1,7 +1,7 @@
 using System;
 using UnityEngine;
 
-namespace _project.Scripts.ModLoader
+namespace _project.Scripts.ModLoading
 {
     /// <summary>
     /// Simple mod information structure for basic mod metadata
