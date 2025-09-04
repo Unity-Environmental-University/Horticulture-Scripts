@@ -13,8 +13,7 @@ namespace _project.Scripts.ModLoading
         public static void RegisterBundle(string key, AssetBundle bundle)
         {
             if (string.IsNullOrWhiteSpace(key) || bundle == null) return;
-            if (Bundles.ContainsKey(key)) return;
-            Bundles[key] = bundle;
+            if (!Bundles.TryAdd(key, bundle)) return;
         }
 
         public static T LoadFromBundle<T>(string key, string assetName) where T : UnityEngine.Object
