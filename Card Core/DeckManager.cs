@@ -5,6 +5,7 @@ using System.Linq;
 using _project.Scripts.Classes;
 using _project.Scripts.Core;
 using _project.Scripts.GameState;
+using _project.Scripts.ModLoader;
 using _project.Scripts.Stickers;
 using DG.Tweening;
 using Unity.Serialization;

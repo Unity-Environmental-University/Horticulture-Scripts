@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using UnityEngine;
 
-namespace _project.Scripts.Core
+namespace _project.Scripts.ModLoader
 {
     /// <summary>
     /// Registry for mod-loaded AssetBundles and helper asset resolution.

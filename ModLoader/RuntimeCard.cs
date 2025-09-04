@@ -1,9 +1,10 @@
 using System.Collections.Generic;
 using _project.Scripts.Card_Core;
+using _project.Scripts.Classes;
 using _project.Scripts.Stickers;
 using UnityEngine;
 
-namespace _project.Scripts.Classes
+namespace _project.Scripts.ModLoader
 {
     /// <summary>
     /// Data-driven action card loaded from JSON. Supports optional prefab/material from Resources
@@ -75,7 +76,7 @@ namespace _project.Scripts.Classes
                 // Prefer bundle asset if specified
                 if (!string.IsNullOrWhiteSpace(_bundleKey) && !string.IsNullOrWhiteSpace(_bundlePrefabName))
                 {
-                    var fromBundle = _project.Scripts.Core.ModAssets.LoadFromBundle<GameObject>(_bundleKey, _bundlePrefabName);
+                    var fromBundle = _project.Scripts.ModLoader.ModAssets.LoadFromBundle<GameObject>(_bundleKey, _bundlePrefabName);
                     if (fromBundle) return fromBundle;
                 }
 
@@ -95,7 +96,7 @@ namespace _project.Scripts.Classes
             {
                 if (!string.IsNullOrWhiteSpace(_bundleKey) && !string.IsNullOrWhiteSpace(_bundleMaterialName))
                 {
-                    var fromBundle = _project.Scripts.Core.ModAssets.LoadFromBundle<Material>(_bundleKey, _bundleMaterialName);
+                    var fromBundle = _project.Scripts.ModLoader.ModAssets.LoadFromBundle<Material>(_bundleKey, _bundleMaterialName);
                     if (fromBundle) return fromBundle;
                 }
 

@@ -4,6 +4,7 @@ using _project.Scripts.Audio;
 using _project.Scripts.Cinematics;
 using _project.Scripts.Core;
 using _project.Scripts.GameState;
+using _project.Scripts.ModLoader;
 using _project.Scripts.UI;
 using JetBrains.Annotations;
 using TMPro;

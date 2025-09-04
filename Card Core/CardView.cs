@@ -1,5 +1,6 @@
 using System.Linq;
 using _project.Scripts.Classes;
+using _project.Scripts.ModLoader;
 using TMPro;
 using UnityEngine;
 
@@ -31,7 +32,7 @@ namespace _project.Scripts.Card_Core
         public void Setup(ICard card)
         {
             var title = card.Name ?? string.Empty;
-            if (card is _project.Scripts.Classes.RuntimeCard)
+            if (card is RuntimeCard)
                 title += " [MOD]";
             titleText.text = title;
             cardMaterial = card.Material ? card.Material : Core.DefaultMaterials.White;
