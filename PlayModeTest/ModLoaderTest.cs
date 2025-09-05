@@ -56,19 +56,6 @@ namespace _project.Scripts.PlayModeTest
             Assert.IsNull(ModAssets.LoadFromBundle<GameObject>("key", ""));
         }
         
-        [Test]
-        public void ModInfo_HandlesInvalidJson()
-        {
-            var info = ModInfo.FromJson("");
-            Assert.IsNotNull(info);
-            Assert.AreEqual("Unknown Mod", info.name);
-            
-            info = ModInfo.FromJson("invalid json");
-            Assert.IsNotNull(info);
-            
-            info = ModInfo.FromJson(@"{""name"":""Test""}");
-            Assert.AreEqual("Test", info.name);
-        }
         
         [Test]
         public void ModAfflictionRegistry_RegisterAndRetrieve()

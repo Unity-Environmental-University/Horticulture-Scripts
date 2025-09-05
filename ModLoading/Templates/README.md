@@ -29,8 +29,6 @@ This directory contains example template files for creating Horticulture mods.
 - **`custom_scale_insect.affliction.json`** - Example custom insect pest with hard shell protection
 - **`treatment_for_custom_affliction.card.json`** - Treatment card targeting the custom afflictions above
 
-### Metadata Template
-- **`mod_info_template.json`** - Optional mod information file (not currently used by system but good for organization)
 
 ## Usage
 
