@@ -26,8 +26,8 @@ namespace _project.Scripts.ModLoading
             Name = name ?? "Unknown Affliction";
             Description = description ?? "";
             Color = color;
-            Shader = !string.IsNullOrEmpty(shaderName) ? UnityEngine.Shader.Find(shaderName) : null;
-            _vulnerableToTreatments = vulnerableToTreatments ?? new string[0];
+            Shader = !string.IsNullOrEmpty(shaderName) ? Shader.Find(shaderName) : null;
+            _vulnerableToTreatments = vulnerableToTreatments ?? Array.Empty<string>();
         }
         
         public PlantAfflictions.IAffliction Clone()

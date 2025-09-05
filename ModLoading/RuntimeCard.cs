@@ -13,7 +13,7 @@ namespace _project.Scripts.ModLoading
     public class RuntimeCard : ICard
     {
         private readonly string _name;
-        private string _description;
+        private readonly string _description;
         private int _value;
         private readonly string _prefabResourcePath;
         private readonly string _materialResourcePath;
@@ -129,11 +129,11 @@ namespace _project.Scripts.ModLoading
         {
             var clone = new RuntimeCard(_name, _description, _value, _prefabResourcePath, _materialResourcePath, _treatmentFactory)
             {
-                Weight = this.Weight
+                Weight = Weight,
+                _bundleKey = _bundleKey,
+                _bundlePrefabName = _bundlePrefabName,
+                _bundleMaterialName = _bundleMaterialName
             };
-            clone._bundleKey = this._bundleKey;
-            clone._bundlePrefabName = this._bundlePrefabName;
-            clone._bundleMaterialName = this._bundleMaterialName;
             foreach (var sticker in _stickers)
                 clone._stickers.Add(sticker.Clone());
             return clone;

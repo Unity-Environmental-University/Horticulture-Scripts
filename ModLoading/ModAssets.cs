@@ -16,7 +16,7 @@ namespace _project.Scripts.ModLoading
             if (!Bundles.TryAdd(key, bundle)) return;
         }
 
-        public static T LoadFromBundle<T>(string key, string assetName) where T : UnityEngine.Object
+        public static T LoadFromBundle<T>(string key, string assetName) where T : Object
         {
             if (string.IsNullOrWhiteSpace(key) || string.IsNullOrWhiteSpace(assetName)) return null;
             if (!Bundles.TryGetValue(key, out var bundle) || bundle == null) return null;

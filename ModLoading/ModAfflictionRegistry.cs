@@ -9,7 +9,7 @@ namespace _project.Scripts.ModLoading
     /// </summary>
     public static class ModAfflictionRegistry
     {
-        private static readonly Dictionary<string, PlantAfflictions.IAffliction> _registeredAfflictions = new();
+        private static readonly Dictionary<string, PlantAfflictions.IAffliction> RegisteredAfflictions = new();
         
         /// <summary>
         /// Register a custom affliction for use in the game
@@ -18,7 +18,7 @@ namespace _project.Scripts.ModLoading
         {
             if (string.IsNullOrEmpty(name) || affliction == null) return;
             
-            _registeredAfflictions[name] = affliction;
+            RegisteredAfflictions[name] = affliction;
             Debug.Log($"[ModAfflictionRegistry] Registered affliction: {name}");
         }
         
@@ -29,7 +29,7 @@ namespace _project.Scripts.ModLoading
         {
             if (string.IsNullOrEmpty(name)) return null;
             
-            _registeredAfflictions.TryGetValue(name, out var affliction);
+            RegisteredAfflictions.TryGetValue(name, out var affliction);
             return affliction?.Clone(); // Always return a clone to avoid shared state
         }
         
@@ -38,7 +38,7 @@ namespace _project.Scripts.ModLoading
         /// </summary>
         public static bool IsRegistered(string name)
         {
-            return !string.IsNullOrEmpty(name) && _registeredAfflictions.ContainsKey(name);
+            return !string.IsNullOrEmpty(name) && RegisteredAfflictions.ContainsKey(name);
         }
         
         /// <summary>
@@ -46,7 +46,7 @@ namespace _project.Scripts.ModLoading
         /// </summary>
         public static IEnumerable<string> GetAllAfflictionNames()
         {
-            return _registeredAfflictions.Keys;
+            return RegisteredAfflictions.Keys;
         }
         
         /// <summary>
@@ -54,13 +54,13 @@ namespace _project.Scripts.ModLoading
         /// </summary>
         public static void Clear()
         {
-            _registeredAfflictions.Clear();
+            RegisteredAfflictions.Clear();
             Debug.Log("[ModAfflictionRegistry] Cleared all registered afflictions");
         }
         
         /// <summary>
         /// Get count of registered afflictions
         /// </summary>
-        public static int Count => _registeredAfflictions.Count;
+        public static int Count => RegisteredAfflictions.Count;
     }
 }

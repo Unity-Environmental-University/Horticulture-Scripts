@@ -140,7 +140,7 @@ namespace _project.Scripts.ModLoading
                     var def = JsonUtility.FromJson<AfflictionJson>(text);
                     if (string.IsNullOrEmpty(def?.name)) continue;
 
-                    var color = def.color != null && def.color.Length >= 3 
+                    var color = def.color is { Length: >= 3 } 
                         ? new Color(def.color[0], def.color[1], def.color[2], def.color.Length > 3 ? def.color[3] : 1f)
                         : Color.red;
 
@@ -274,13 +274,13 @@ namespace _project.Scripts.ModLoading
         private static PlantAfflictions.ITreatment CreateTreatment(CardJson def)
         {
             // New affliction-specific effectiveness system takes priority
-            if (def.effectiveness != null && def.effectiveness.Length > 0)
+            if (def.effectiveness is { Length: > 0 })
             {
                 var treatmentName = !string.IsNullOrEmpty(def.treatment) ? def.treatment : def.name;
                 return new ModTreatment(treatmentName, def.description, def.effectiveness);
             }
             
-            // Fallback to legacy system for backward compatibility
+            // Fallback to a legacy system for backward compatibility
             return CreateLegacyTreatment(def.treatment, def.infectCure, def.eggCure);
         }
         
