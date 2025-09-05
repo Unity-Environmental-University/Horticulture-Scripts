@@ -6,8 +6,18 @@ using UnityEngine.InputSystem;
 
 namespace _project.Scripts.Card_Core
 {
+    public enum CardHolderType
+    {
+        Any,
+        ActionOnly,
+        LocationOnly
+    }
+
     public class PlacedCardHolder : MonoBehaviour
     {
+        [Header("Card Type Restrictions")]
+        [SerializeField] private CardHolderType acceptedCardType = CardHolderType.Any;
+        
         public Click3D placedCardClick3D;
         public CardView placedCardView;
         private DeckManager _deckManager;
@@ -25,6 +35,28 @@ namespace _project.Scripts.Card_Core
         {
             _deckManager = CardGameMaster.Instance.deckManager;
             _scoreManager = CardGameMaster.Instance.scoreManager;
+        }
+
+        private bool CanAcceptCard(ICard card)
+        {
+            if (card == null) return false;
+            
+            return acceptedCardType switch
+            {
+                CardHolderType.ActionOnly => card is not ILocationCard,
+                CardHolderType.LocationOnly => card is ILocationCard,
+                _ => true
+            };
+        }
+
+        public void SetCardHolderType(CardHolderType cardType)
+        {
+            acceptedCardType = cardType;
+        }
+
+        public CardHolderType GetCardHolderType()
+        {
+            return acceptedCardType;
         }
 
 
@@ -98,6 +130,12 @@ namespace _project.Scripts.Card_Core
         private void SwapWithSelectedCard()
         {
             if (!HoldingCard || _deckManager.selectedACard == null) return;
+
+            if (!CanAcceptCard(_deckManager.selectedACard))
+            {
+                Debug.Log($"Card holder of type {acceptedCardType} cannot accept card: {_deckManager.selectedACard.Name}");
+                return;
+            }
 
             Cgm.playerHandAudioSource.PlayOneShot(Cgm.soundSystem.placeCard);
 
@@ -193,6 +231,12 @@ namespace _project.Scripts.Card_Core
             if (HoldingCard) GiveBackCard();
 
             if (_deckManager.selectedACardClick3D is null || _deckManager.selectedACard is null) return;
+
+            if (!CanAcceptCard(_deckManager.selectedACard))
+            {
+                Debug.Log($"Card holder of type {acceptedCardType} cannot accept card: {_deckManager.selectedACard.Name}");
+                return;
+            }
 
             var selectedCard = _deckManager.selectedACardClick3D;
 
