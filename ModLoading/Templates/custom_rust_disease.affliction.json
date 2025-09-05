@@ -1,0 +1,7 @@
+{
+    "name": "RustDisease",
+    "description": "Orange-brown fungal disease that creates rusty spots on leaves",
+    "color": [0.8, 0.4, 0.1, 1.0],
+    "shader": "Shader Graphs/Rust",
+    "vulnerableToTreatments": ["Fungicide", "Copper"]
+}

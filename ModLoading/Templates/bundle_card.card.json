@@ -1,0 +1,12 @@
+{
+    "name": "Bundle Asset Card",
+    "description": "A card using assets from an AssetBundle with enhanced adult targeting",
+    "value": -4,
+    "treatment": "Insecticide",
+    "bundleKey": "mycustommods",
+    "prefab": "SpecialCardPrefab",
+    "material": "SpecialCardMaterial",
+    "rarity": "uncommon",
+    "infectCure": 4,
+    "eggCure": 0
+}

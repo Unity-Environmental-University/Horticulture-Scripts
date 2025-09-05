@@ -1,0 +1,9 @@
+{
+    "name": "Adult Killer",
+    "description": "Powerful insecticide that eliminates adult pests but doesn't affect eggs - follow up treatment needed",
+    "value": -4,
+    "treatment": "Insecticide", 
+    "rarity": "rare",
+    "infectCure": 3,
+    "eggCure": 0
+}

@@ -1,7 +1,9 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using _project.Scripts.Card_Core;
 using _project.Scripts.Classes;
+using _project.Scripts.Core;
 using _project.Scripts.Stickers;
 using UnityEngine;
 
@@ -27,6 +29,27 @@ namespace _project.Scripts.ModLoading
             public string treatment;
             public int weight = 1;
             public string rarity;
+            public int? infectCure;
+            public int? eggCure;
+            public AfflictionEffectiveness[] effectiveness;
+        }
+
+        [Serializable]
+        public class AfflictionEffectiveness
+        {
+            public string affliction;
+            public int infectCure;
+            public int eggCure;
+        }
+
+        [Serializable]
+        private class AfflictionJson
+        {
+            public string name;
+            public string description;
+            public float[] color = { 1f, 0f, 0f, 1f }; // Default to red
+            public string shader;
+            public string[] vulnerableToTreatments;
         }
 
         /// <summary>
@@ -46,6 +69,7 @@ namespace _project.Scripts.ModLoading
 
             LoadCards(folder, master);
             LoadStickers(folder, master);
+            LoadAfflictions(folder, master);
         }
 
         /// <summary>
@@ -62,8 +86,8 @@ namespace _project.Scripts.ModLoading
                     if (string.IsNullOrEmpty(def?.name)) continue;
 
                     var card = !string.IsNullOrEmpty(def.bundleKey) 
-                        ? RuntimeCard.FromBundle(def.name, def.description, def.value, def.bundleKey, def.prefab, def.material, () => CreateTreatment(def.treatment))
-                        : new RuntimeCard(def.name, def.description, def.value, def.prefabResource, def.materialResource, () => CreateTreatment(def.treatment));
+                        ? RuntimeCard.FromBundle(def.name, def.description, def.value, def.bundleKey, def.prefab, def.material, () => CreateTreatment(def))
+                        : new RuntimeCard(def.name, def.description, def.value, def.prefabResource, def.materialResource, () => CreateTreatment(def));
 
                     card.Weight = GetWeight(def.weight, def.rarity);
                     master.deckManager.RegisterModActionPrototype(card);
@@ -103,6 +127,37 @@ namespace _project.Scripts.ModLoading
             }
         }
 
+        /// <summary>
+        /// Load *.affliction.json files and register as ModAfflictions
+        /// </summary>
+        private static void LoadAfflictions(string folder, CardGameMaster master)
+        {
+            foreach (var json in Directory.GetFiles(folder, "*.affliction.json", SearchOption.AllDirectories))
+            {
+                try
+                {
+                    var text = File.ReadAllText(json);
+                    var def = JsonUtility.FromJson<AfflictionJson>(text);
+                    if (string.IsNullOrEmpty(def?.name)) continue;
+
+                    var color = def.color != null && def.color.Length >= 3 
+                        ? new Color(def.color[0], def.color[1], def.color[2], def.color.Length > 3 ? def.color[3] : 1f)
+                        : Color.red;
+
+                    var affliction = new ModAffliction(def.name, def.description, color, def.shader, def.vulnerableToTreatments);
+                    
+                    // Register with the mod registry for later use
+                    ModAfflictionRegistry.Register(def.name, affliction);
+                    
+                    Debug.Log($"[ModLoader] Loaded custom affliction: {def.name}");
+                }
+                catch (Exception e)
+                {
+                    Debug.LogWarning($"[ModLoader] Failed to load affliction {json}: {e.Message}");
+                }
+            }
+        }
+
         private static int GetWeight(int weight, string rarity)
         {
             if (weight > 0) return Mathf.Clamp(weight, 1, 10);
@@ -117,11 +172,123 @@ namespace _project.Scripts.ModLoading
             };
         }
 
-        private static PlantAfflictions.ITreatment CreateTreatment(string name)
+        /// <summary>
+        /// Custom treatment wrapper that allows overriding infect/egg cure values
+        /// </summary>
+        private class CustomTreatmentWrapper : PlantAfflictions.ITreatment
+        {
+            private readonly PlantAfflictions.ITreatment _baseTreatment;
+            
+            public CustomTreatmentWrapper(PlantAfflictions.ITreatment baseTreatment, int? infectCure = null, int? eggCure = null)
+            {
+                _baseTreatment = baseTreatment;
+                InfectCureValue = infectCure ?? baseTreatment.InfectCureValue;
+                EggCureValue = eggCure ?? baseTreatment.EggCureValue;
+            }
+            
+            public string Name => _baseTreatment.Name;
+            public string Description => _baseTreatment.Description;
+            public int? InfectCureValue { get; set; }
+            public int? EggCureValue { get; set; }
+        }
+
+        /// <summary>
+        /// Fully modular treatment that uses affliction-specific effectiveness instead of hardcoded type checking
+        /// </summary>
+        public class ModTreatment : PlantAfflictions.ITreatment
+        {
+            private readonly Dictionary<string, AfflictionEffectiveness> _effectiveness;
+            
+            public ModTreatment(string name, string description, AfflictionEffectiveness[] effectiveness)
+            {
+                Name = name;
+                Description = description;
+                _effectiveness = new Dictionary<string, AfflictionEffectiveness>();
+                
+                if (effectiveness != null)
+                {
+                    foreach (var eff in effectiveness)
+                    {
+                        if (!string.IsNullOrEmpty(eff.affliction))
+                            _effectiveness[eff.affliction] = eff;
+                    }
+                }
+                
+                // Default fallback values
+                InfectCureValue = 0;
+                EggCureValue = 0;
+            }
+            
+            public string Name { get; }
+            public string Description { get; }
+            public int? InfectCureValue { get; set; }
+            public int? EggCureValue { get; set; }
+            
+            /// <summary>
+            /// Get effectiveness for a specific affliction by name
+            /// </summary>
+            public (int infectCure, int eggCure) GetEffectivenessFor(string afflictionName)
+            {
+                if (_effectiveness.TryGetValue(afflictionName, out var eff))
+                    return (eff.infectCure, eff.eggCure);
+                return (0, 0); // No effect on unknown afflictions
+            }
+            
+            /// <summary>
+            /// Override ApplyTreatment to use affliction-specific effectiveness
+            /// </summary>
+            public void ApplyTreatment(PlantController plant)
+            {
+                if (!plant)
+                {
+                    Debug.LogWarning("PlantController is null, cannot apply treatment.");
+                    return;
+                }
+
+                var afflictions = plant.CurrentAfflictions != null
+                    ? new List<PlantAfflictions.IAffliction>(plant.CurrentAfflictions)
+                    : new List<PlantAfflictions.IAffliction>();
+                
+                if (afflictions.Count == 0) Debug.LogWarning("No afflictions found on the plant.");
+
+                foreach (var affliction in afflictions)
+                {
+                    var (infectCure, eggCure) = GetEffectivenessFor(affliction.Name);
+                    if (infectCure > 0 || eggCure > 0)
+                    {
+                        // Create a temporary treatment wrapper with specific effectiveness for this affliction
+                        var afflictionSpecificTreatment = new CustomTreatmentWrapper(this, infectCure, eggCure);
+                        affliction.TreatWith(afflictionSpecificTreatment, plant);
+                        
+                        if (CardGameMaster.Instance?.debuggingCardClass == true)
+                            Debug.Log($"Applied {Name} to {affliction.Name}: infectCure={infectCure}, eggCure={eggCure}");
+                    }
+                    else if (CardGameMaster.Instance?.debuggingCardClass == true)
+                    {
+                        Debug.Log($"{Name} has no effect on {affliction.Name}");
+                    }
+                }
+            }
+        }
+        
+        private static PlantAfflictions.ITreatment CreateTreatment(CardJson def)
+        {
+            // New affliction-specific effectiveness system takes priority
+            if (def.effectiveness != null && def.effectiveness.Length > 0)
+            {
+                var treatmentName = !string.IsNullOrEmpty(def.treatment) ? def.treatment : def.name;
+                return new ModTreatment(treatmentName, def.description, def.effectiveness);
+            }
+            
+            // Fallback to legacy system for backward compatibility
+            return CreateLegacyTreatment(def.treatment, def.infectCure, def.eggCure);
+        }
+        
+        private static PlantAfflictions.ITreatment CreateLegacyTreatment(string name, int? infectCure = null, int? eggCure = null)
         {
             if (string.IsNullOrEmpty(name)) return null;
             
-            return name.Replace(" ", "").ToLower() switch
+            PlantAfflictions.ITreatment baseTreatment = name.Replace(" ", "").ToLower() switch
             {
                 "horticulturaloil" => new PlantAfflictions.HorticulturalOilTreatment(),
                 "fungicide" => new PlantAfflictions.FungicideTreatment(),
@@ -132,6 +299,15 @@ namespace _project.Scripts.ModLoading
                 "panacea" => new PlantAfflictions.Panacea(),
                 _ => null
             };
+            
+            if (baseTreatment == null) return null;
+            
+            // If no custom values specified, return the base treatment
+            if (!infectCure.HasValue && !eggCure.HasValue)
+                return baseTreatment;
+                
+            // Otherwise, wrap with custom values
+            return new CustomTreatmentWrapper(baseTreatment, infectCure, eggCure);
         }
     }
 }

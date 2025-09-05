@@ -1,0 +1,6 @@
+{
+    "name": "Utility Card",
+    "description": "A card with no specific treatment effect",
+    "value": -1,
+    "weight": 4
+}

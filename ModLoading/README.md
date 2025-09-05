@@ -61,8 +61,11 @@ Application.streamingAssetsPath/Mods/    (Shipped mods)
 - Automatically registered with filename as key
 - Assets accessible via `ModAssets.LoadFromBundle<T>()`
 
+## Templates
+- **`Templates/`** directory contains example mod files for modders to copy and customize
+
 ## Namespace
 All files use: `_project.Scripts.ModLoading`
 
 ## Total System Size
-~190 lines of core functionality + tests + documentation
+~190 lines of core functionality + templates + tests + documentation

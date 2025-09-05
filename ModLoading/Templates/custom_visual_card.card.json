@@ -1,0 +1,11 @@
+{
+    "name": "Custom Visual Card",
+    "description": "A card with custom prefab and material from Resources, with targeted fungal effectiveness",
+    "value": -5,
+    "treatment": "Fungicide",
+    "prefabResource": "ModCards/CustomCardPrefab",
+    "materialResource": "ModCards/CustomCardMaterial",
+    "weight": 3,
+    "infectCure": 2,
+    "eggCure": 1
+}

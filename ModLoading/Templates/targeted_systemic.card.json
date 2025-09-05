@@ -1,0 +1,9 @@
+{
+    "name": "Targeted Systemic",
+    "description": "Systemic treatment absorbed by plants - effective against persistent pests like gnats and mealybugs",
+    "value": -6,
+    "treatment": "Imidacloprid",
+    "rarity": "rare",
+    "infectCure": 2,
+    "eggCure": 3
+}
