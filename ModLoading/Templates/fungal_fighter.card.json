@@ -1,0 +1,13 @@
+{
+    "name": "Fungal Fighter",
+    "description": "Specialized anti-fungal treatment with no effect on beneficial insects",
+    "value": -3,
+    "rarity": "common",
+    "effectiveness": [
+        {
+            "affliction": "Mildew",
+            "infectCure": 4,
+            "eggCure": 4
+        }
+    ]
+}

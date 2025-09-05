@@ -1,0 +1,18 @@
+{
+    "name": "Mystery Garden Elixir",
+    "description": "An experimental treatment with unknown effects - some pests are highly susceptible while others are completely resistant",
+    "value": -4,
+    "rarity": "epic",
+    "effectiveness": [
+        {
+            "affliction": "SpiderMites",
+            "infectCure": 8,
+            "eggCure": 0
+        },
+        {
+            "affliction": "FungusGnats", 
+            "infectCure": 0,
+            "eggCure": 6
+        }
+    ]
+}

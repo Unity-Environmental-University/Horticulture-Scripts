@@ -1,0 +1,10 @@
+{
+    "name": "Premium Treatment",
+    "description": "An expensive but highly effective treatment with enhanced potency",
+    "value": -8,
+    "treatment": "Panacea",
+    "weight": 2,
+    "rarity": "rare",
+    "infectCure": 5,
+    "eggCure": 3
+}

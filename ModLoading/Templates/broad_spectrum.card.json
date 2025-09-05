@@ -1,0 +1,9 @@
+{
+    "name": "Broad Spectrum Treatment",
+    "description": "Effective against both adults and larvae of soft-bodied insects like mealybugs",
+    "value": -5,
+    "treatment": "SoapyWater",
+    "weight": 2,
+    "infectCure": 2,
+    "eggCure": 2
+}

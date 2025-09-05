@@ -1,0 +1,23 @@
+{
+    "name": "Anti-Rust Copper Spray",
+    "description": "Specialized copper-based treatment for rust diseases and scale insects",
+    "value": -6,
+    "rarity": "uncommon",
+    "effectiveness": [
+        {
+            "affliction": "RustDisease",
+            "infectCure": 4,
+            "eggCure": 4
+        },
+        {
+            "affliction": "ScaleInsect",
+            "infectCure": 2,
+            "eggCure": 1
+        },
+        {
+            "affliction": "Mildew",
+            "infectCure": 1,
+            "eggCure": 1
+        }
+    ]
+}

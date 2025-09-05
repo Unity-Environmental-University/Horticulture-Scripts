@@ -1,0 +1,9 @@
+{
+    "name": "Basic Treatment",
+    "description": "A simple, affordable treatment card with moderate effectiveness",
+    "value": -2,
+    "treatment": "SoapyWater",
+    "rarity": "common",
+    "infectCure": 1,
+    "eggCure": 1
+}

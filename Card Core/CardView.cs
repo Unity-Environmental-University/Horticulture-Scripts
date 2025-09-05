@@ -1,5 +1,6 @@
 using System.Linq;
 using _project.Scripts.Classes;
+using _project.Scripts.ModLoading;
 using TMPro;
 using UnityEngine;
 
@@ -30,14 +31,17 @@ namespace _project.Scripts.Card_Core
 
         public void Setup(ICard card)
         {
-            titleText.text = card.Name;
-            cardMaterial = card.Material;
+            var title = card.Name ?? string.Empty;
+            if (card is RuntimeCard)
+                title += " [MOD]";
+            titleText.text = title;
+            cardMaterial = card.Material ? card.Material : Core.DefaultMaterials.White;
             var cardRenderer = GetComponentInChildren<Renderer>(true);
             if (cardRenderer)
                 cardRenderer.material = cardMaterial;
             else
                 Debug.LogWarning("CardView: No Renderer found on card prefab; skipping material assignment.");
-            descriptionText.text = card.Description;
+            descriptionText.text = card.Description ?? string.Empty;
             if (card.Value != null) treatmentCostText.text = "$ " + card.Value;
             _originalCard = card;
 

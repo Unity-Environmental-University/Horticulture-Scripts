@@ -1,0 +1,33 @@
+{
+    "name": "Universal Pest Control",
+    "description": "Broad-spectrum treatment effective against multiple pest types but with varying effectiveness",
+    "value": -8,
+    "rarity": "rare", 
+    "effectiveness": [
+        {
+            "affliction": "Aphids",
+            "infectCure": 2,
+            "eggCure": 2
+        },
+        {
+            "affliction": "SpiderMites",
+            "infectCure": 3,
+            "eggCure": 1
+        },
+        {
+            "affliction": "Thrips",
+            "infectCure": 2,
+            "eggCure": 3
+        },
+        {
+            "affliction": "MealyBugs",
+            "infectCure": 1,
+            "eggCure": 2
+        },
+        {
+            "affliction": "FungusGnats",
+            "infectCure": 2,
+            "eggCure": 1
+        }
+    ]
+}

@@ -1,0 +1,23 @@
+{
+    "name": "Aphid Specialist",
+    "description": "Targeted systemic treatment designed specifically for aphid control with secondary effects on related pests",
+    "value": -5,
+    "rarity": "uncommon",
+    "effectiveness": [
+        {
+            "affliction": "Aphids",
+            "infectCure": 5,
+            "eggCure": 3
+        },
+        {
+            "affliction": "MealyBugs", 
+            "infectCure": 2,
+            "eggCure": 1
+        },
+        {
+            "affliction": "Thrips",
+            "infectCure": 1,
+            "eggCure": 0
+        }
+    ]
+}

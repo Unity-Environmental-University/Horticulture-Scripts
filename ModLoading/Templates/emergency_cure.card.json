@@ -1,0 +1,9 @@
+{
+    "name": "Emergency Cure",
+    "description": "Last resort treatment that completely eliminates all pest problems - expensive but guaranteed",
+    "value": -12,
+    "treatment": "Panacea",
+    "rarity": "legendary",
+    "infectCure": 10,
+    "eggCure": 10
+}

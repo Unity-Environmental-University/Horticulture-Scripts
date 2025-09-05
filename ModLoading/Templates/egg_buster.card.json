@@ -1,0 +1,9 @@
+{
+    "name": "Egg Buster",
+    "description": "Specialized treatment that targets only egg stages, leaving adults unharmed for natural predator balance",
+    "value": -3,
+    "treatment": "HorticulturalOil",
+    "rarity": "uncommon",
+    "infectCure": 0,
+    "eggCure": 3
+}
