@@ -128,12 +128,31 @@ namespace _project.Scripts.Card_Core
             // Process temporary effects with duration
             _remainingDuration--;
 
-            // Check expiration and handle cleanup properly
+            // Check expiration and handle cleanup
             if (_remainingDuration > 0) return;
 
-            // Properly deactivate effect
+            var expired = cLocationCard;
             _effectActive = false;
             cLocationCard = null;
+
+            var holders = GetComponentsInChildren<PlacedCardHolder>(true);
+            if (transform.parent != null)
+            {
+                var parentHolders = transform.parent.GetComponentsInChildren<PlacedCardHolder>(true);
+                if (parentHolders != null && parentHolders.Length > 0)
+                {
+                    var list = new System.Collections.Generic.List<PlacedCardHolder>(holders);
+                    foreach (var h in parentHolders) if (!list.Contains(h)) list.Add(h);
+                    holders = list.ToArray();
+                }
+            }
+
+            foreach (var holder in holders)
+            {
+                if (!holder || holder.placedCard != expired) continue;
+                holder.ClearLocationCardByExpiry();
+                break;
+            }
         }
 
 

@@ -66,6 +66,7 @@ namespace _project.Scripts.Card_Core
         /// </summary>
         private void OnPlacedCardClicked()
         {
+            if (placedCard is ILocationCard) return;
             if (Time.time - _lastClickTime < 0.1f) return;
             _lastClickTime = Time.time;
             if (Time.frameCount == _lastPlacementFrame) return;
@@ -225,6 +226,18 @@ namespace _project.Scripts.Card_Core
             placedCard = null;
             placedCardClick3D = null;
             placedCardView = null;
+
+            var buttonRenderer = GetComponentInChildren<MeshRenderer>(true);
+            if (buttonRenderer) buttonRenderer.enabled = true;
+        }
+
+        public void ClearLocationCardByExpiry()
+        {
+            if (placedCard is not ILocationCard) return;
+            if (placedCardClick3D) Destroy(placedCardClick3D.gameObject);
+            placedCardView = null;
+            placedCardClick3D = null;
+            placedCard = null;
 
             var buttonRenderer = GetComponentInChildren<MeshRenderer>(true);
             if (buttonRenderer) buttonRenderer.enabled = true;
