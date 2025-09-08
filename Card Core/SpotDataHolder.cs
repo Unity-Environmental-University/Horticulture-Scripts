@@ -27,87 +27,61 @@ namespace _project.Scripts.Card_Core
             if (!_associatedPlant && transform.parent != null)
                 _associatedPlant = transform.parent.GetComponentInChildren<PlantController>();
 
-            if (previousPlant == _associatedPlant || cLocationCard == null || !_effectActive) return;
-            if (previousPlant) cLocationCard.RemoveLocationEffect(previousPlant);
-
-            if (_associatedPlant) cLocationCard.ApplyLocationEffect(_associatedPlant);
+            // In turn-based system, effects are applied during ProcessTurn()
+            // No immediate effect application needed here
         }
 
         public void OnLocationCardPlaced(ILocationCard locationCard)
         {
-            Debug.LogWarning(
-                $"[SpotDataHolder] Location card placed: {locationCard?.Name ?? "null"} at {transform.name}");
-
-            if (cLocationCard != null && _effectActive) RemoveLocationEffect();
+            // In turn-based system, simply clear previous effect and set new card
+            if (cLocationCard != null && _effectActive) _effectActive = false;
 
             cLocationCard = locationCard;
             RefreshAssociatedPlant();
-            if (locationCard != null) ApplyLocationEffect();
+
+            // Activate the effect - it will apply on next ProcessTurn()
+            if (locationCard == null) return;
+            _remainingDuration = locationCard.EffectDuration;
+            _effectActive = true;
         }
 
         public void OnLocationCardRemoved()
         {
-            Debug.LogWarning(
-                $"[SpotDataHolder] Location card removed: {cLocationCard?.Name ?? "none"} from {transform.name}");
+            // In turn-based system, simply deactivate the effect
+            if (cLocationCard != null && _effectActive)
+            {
+                _effectActive = false;
+            }
 
-            if (cLocationCard != null && _effectActive) RemoveLocationEffect();
             cLocationCard = null;
         }
 
-        private void ApplyLocationEffect()
-        {
-            if (cLocationCard == null) return;
-
-            _remainingDuration = cLocationCard.EffectDuration;
-            _effectActive = true;
-
-            Debug.LogWarning($"[SpotDataHolder] ApplyLocationEffect - Plant found: {_associatedPlant != null}, Plant: {_associatedPlant?.name}");
-            
-            if (_associatedPlant != null) 
-            {
-                Debug.LogWarning($"[SpotDataHolder] Calling ApplyLocationEffect on plant {_associatedPlant.name}");
-                cLocationCard.ApplyLocationEffect(_associatedPlant);
-            }
-
-            if (CardGameMaster.Instance != null && CardGameMaster.Instance.debuggingCardClass)
-            {
-                var plantStatus = _associatedPlant != null ? $"to plant at {transform.name}" : "to empty spot";
-                Debug.Log($"Applied location effect {cLocationCard.Name} {plantStatus}");
-            }
-        }
-
-        private void RemoveLocationEffect()
-        {
-            if (cLocationCard == null || !_effectActive) return;
-
-            if (_associatedPlant != null) cLocationCard.RemoveLocationEffect(_associatedPlant);
-
-            _effectActive = false;
-
-            if (CardGameMaster.Instance == null || !CardGameMaster.Instance.debuggingCardClass) return;
-            var plantStatus = _associatedPlant != null ? $"from plant at {transform.name}" : "from empty spot";
-            Debug.Log($"Removed location effect {cLocationCard.Name} {plantStatus}");
-        }
 
         public void ProcessTurn()
         {
-            if (cLocationCard == null || !_effectActive || cLocationCard.IsPermanent) return;
+            if (cLocationCard == null || !_effectActive) return;
 
-            RefreshAssociatedPlant();
-            if (_associatedPlant != null)
+            // Handle permanent effects separately
+            if (cLocationCard.IsPermanent)
             {
+                RefreshAssociatedPlant();
+                if (_associatedPlant == null) return;
                 cLocationCard.ApplyTurnEffect(_associatedPlant);
+                return;
             }
+
+            // Process temporary effects with duration
+            RefreshAssociatedPlant();
+            if (_associatedPlant != null) cLocationCard.ApplyTurnEffect(_associatedPlant);
 
             _remainingDuration--;
-            Debug.LogWarning($"[SpotDataHolder] Processing turn for {cLocationCard.Name} at {transform.name}, remaining duration: {_remainingDuration}");
 
-            if (_remainingDuration <= 0)
-            {
-                Debug.LogWarning($"[SpotDataHolder] Location effect {cLocationCard.Name} expired at {transform.name}");
-                RemoveLocationEffect();
-                cLocationCard = null;
-            }
+            // Check expiration and handle cleanup properly
+            if (_remainingDuration > 0) return;
+            
+            // Properly deactivate effect
+            _effectActive = false;
+            cLocationCard = null;
         }
 
 

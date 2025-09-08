@@ -143,15 +143,17 @@ namespace _project.Scripts.Classes
             _value += delta;
         }
 
-        public void ApplyLocationEffect(PlantController plant) { }
+        public void ApplyLocationEffect(PlantController plant) 
+        { 
+        }
 
-        public void RemoveLocationEffect(PlantController plant) { }
+        public void RemoveLocationEffect(PlantController plant) 
+        { 
+        }
 
         public void ApplyTurnEffect(PlantController plant)
         {
-            var oldValue = plant.PlantCard.Value;
             plant.PlantCard.Value += 1;
-            Debug.LogWarning($"[FertilizerBasic] Tick on {plant.PlantCard.Name}: {oldValue} -> {plant.PlantCard.Value}");
             plant.UpdatePriceFlag(plant.PlantCard.Value ?? 0);
         }
     }

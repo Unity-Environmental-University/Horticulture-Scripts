@@ -423,8 +423,6 @@ namespace _project.Scripts.Card_Core
             if (spotDataHolder == null)
                 spotDataHolder = GetComponentInChildren<SpotDataHolder>();
 
-            Debug.LogWarning($"[PlacedCardHolder] Notifying SpotDataHolder - Found: {spotDataHolder != null}, Card: {placedCard?.Name}, IsLocationCard: {placedCard is ILocationCard}");
-
             if (spotDataHolder != null && placedCard is ILocationCard locationCard)
             {
                 spotDataHolder.OnLocationCardPlaced(locationCard);
@@ -436,8 +434,6 @@ namespace _project.Scripts.Card_Core
             var spotDataHolder = GetComponentInParent<SpotDataHolder>();
             if (spotDataHolder == null)
                 spotDataHolder = GetComponentInChildren<SpotDataHolder>();
-
-            Debug.LogWarning($"[PlacedCardHolder] Notifying SpotDataHolder removal - Found: {spotDataHolder != null}");
 
             if (spotDataHolder != null)
             {
