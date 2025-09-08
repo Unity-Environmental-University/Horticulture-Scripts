@@ -212,6 +212,13 @@ namespace _project.Scripts.Card_Core
                     controller.FlagShadersUpdate();
                 }
 
+                // Process location card effects for each spot
+                var spotDataHolders = FindObjectsByType<SpotDataHolder>(FindObjectsSortMode.None);
+                foreach (var spotDataHolder in spotDataHolders)
+                {
+                    spotDataHolder.ProcessTurn();
+                }
+
                 TryPlayQueuedEffects();
                 var retainedCardHolder = FindFirstObjectByType<RetainedCardHolder>();
                 if (retainedCardHolder) retainedCardHolder.isCardLocked = false;

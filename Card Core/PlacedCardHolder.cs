@@ -123,6 +123,8 @@ namespace _project.Scripts.Card_Core
             }
 
             ClearHolder();
+            
+            NotifySpotDataHolderRemoval();
 
             _scoreManager.CalculateTreatmentCost();
         }
@@ -174,6 +176,8 @@ namespace _project.Scripts.Card_Core
             }
 
             _scoreManager.CalculateTreatmentCost();
+            
+            NotifySpotDataHolder();
         }
 
         private void ClearAllSelections()
@@ -292,6 +296,8 @@ namespace _project.Scripts.Card_Core
             }
 
             _scoreManager.CalculateTreatmentCost();
+            
+            NotifySpotDataHolder();
         }
 
         private IEnumerator ReenablePlacedCardClickWithInputActionFix()
@@ -384,6 +390,8 @@ namespace _project.Scripts.Card_Core
             }
 
             _scoreManager.CalculateTreatmentCost();
+            
+            NotifySpotDataHolderRemoval();
 
             // Clear this holder's state
             placedCardView = null;
@@ -407,6 +415,34 @@ namespace _project.Scripts.Card_Core
             click3D.isEnabled = state;
             if (buttonRenderer)
                 buttonRenderer.enabled = state;
+        }
+
+        private void NotifySpotDataHolder()
+        {
+            var spotDataHolder = GetComponentInParent<SpotDataHolder>();
+            if (spotDataHolder == null)
+                spotDataHolder = GetComponentInChildren<SpotDataHolder>();
+
+            Debug.LogWarning($"[PlacedCardHolder] Notifying SpotDataHolder - Found: {spotDataHolder != null}, Card: {placedCard?.Name}, IsLocationCard: {placedCard is ILocationCard}");
+
+            if (spotDataHolder != null && placedCard is ILocationCard locationCard)
+            {
+                spotDataHolder.OnLocationCardPlaced(locationCard);
+            }
+        }
+
+        private void NotifySpotDataHolderRemoval()
+        {
+            var spotDataHolder = GetComponentInParent<SpotDataHolder>();
+            if (spotDataHolder == null)
+                spotDataHolder = GetComponentInChildren<SpotDataHolder>();
+
+            Debug.LogWarning($"[PlacedCardHolder] Notifying SpotDataHolder removal - Found: {spotDataHolder != null}");
+
+            if (spotDataHolder != null)
+            {
+                spotDataHolder.OnLocationCardRemoved();
+            }
         }
     }
 }

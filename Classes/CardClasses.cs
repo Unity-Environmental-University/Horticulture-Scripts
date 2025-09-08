@@ -100,6 +100,7 @@ namespace _project.Scripts.Classes
 
         void ApplyLocationEffect(PlantController plant);
         void RemoveLocationEffect(PlantController plant);
+        void ApplyTurnEffect(PlantController plant);
     }
 
     public abstract class LocationEffectType { }
@@ -142,14 +143,16 @@ namespace _project.Scripts.Classes
             _value += delta;
         }
 
-        public void ApplyLocationEffect(PlantController plant)
-        {
-            throw new NotImplementedException();
-        }
+        public void ApplyLocationEffect(PlantController plant) { }
 
-        public void RemoveLocationEffect(PlantController plant)
+        public void RemoveLocationEffect(PlantController plant) { }
+
+        public void ApplyTurnEffect(PlantController plant)
         {
-            throw new NotImplementedException();
+            var oldValue = plant.PlantCard.Value;
+            plant.PlantCard.Value += 1;
+            Debug.LogWarning($"[FertilizerBasic] Tick on {plant.PlantCard.Name}: {oldValue} -> {plant.PlantCard.Value}");
+            plant.UpdatePriceFlag(plant.PlantCard.Value ?? 0);
         }
     }
 

@@ -457,6 +457,13 @@ namespace _project.Scripts.Card_Core
                 if (plantController.priceFlag && plantController.priceFlagText)
                     plantController.priceFlagText!.text = "$" + plantController.PlantCard.Value;
 
+                // Notify SpotDataHolder that a plant was added
+                var spotDataHolder = plantLocation.GetComponentInChildren<SpotDataHolder>();
+                if (spotDataHolder != null)
+                {
+                    spotDataHolder.RefreshAssociatedPlant();
+                }
+
                 yield return new WaitForSeconds(delay);
             }
 
@@ -490,6 +497,14 @@ namespace _project.Scripts.Card_Core
                          .Select(slot => slot.GetComponentsInChildren<PlantController>(true))
                          .SelectMany(children => children)) Destroy(child.gameObject);
 
+            // Notify SpotDataHolders that plants were removed
+            foreach (var spotDataHolder in plantLocations
+                         .Select(location => location.GetComponentInChildren<SpotDataHolder>())
+                         .Where(holder => holder != null))
+            {
+                spotDataHolder.RefreshAssociatedPlant();
+            }
+
             // hide all cardholders
             foreach (var holder in plantLocations
                          .Select(location => location.GetComponentsInChildren<PlacedCardHolder>(true))
@@ -506,12 +521,21 @@ namespace _project.Scripts.Card_Core
 
             plant.deathFX.Play();
             yield return new WaitForSeconds(plant.deathFX.main.duration + 0.5f);
-            Destroy(plant.gameObject);
-
+            
             var location = plantLocations.FirstOrDefault(slot =>
                 slot.GetComponentsInChildren<PlantController>(true).Contains(plant));
 
+            Destroy(plant.gameObject);
+
             if (!location) yield break;
+
+            // Notify SpotDataHolder that the plant was removed
+            var spotDataHolder = location.GetComponentInChildren<SpotDataHolder>();
+            if (spotDataHolder != null)
+            {
+                spotDataHolder.RefreshAssociatedPlant();
+            }
+
             var cardHolders = location.GetComponentsInChildren<PlacedCardHolder>(true);
             foreach (var holder in cardHolders)
                 holder.ToggleCardHolder(false);
