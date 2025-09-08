@@ -419,25 +419,39 @@ namespace _project.Scripts.Card_Core
 
         private void NotifySpotDataHolder()
         {
-            var spotDataHolder = GetComponentInParent<SpotDataHolder>();
-            if (spotDataHolder == null)
-                spotDataHolder = GetComponentInChildren<SpotDataHolder>();
-
-            if (spotDataHolder != null && placedCard is ILocationCard locationCard)
+            try
             {
-                spotDataHolder.OnLocationCardPlaced(locationCard);
+                var spotDataHolder = GetComponentInParent<SpotDataHolder>();
+                if (spotDataHolder == null)
+                    spotDataHolder = GetComponentInChildren<SpotDataHolder>();
+
+                if (spotDataHolder != null && placedCard is ILocationCard locationCard)
+                {
+                    spotDataHolder.OnLocationCardPlaced(locationCard);
+                }
+            }
+            catch (System.Exception e)
+            {
+                Debug.LogError($"Error notifying SpotDataHolder of card placement: {e.Message}");
             }
         }
 
         private void NotifySpotDataHolderRemoval()
         {
-            var spotDataHolder = GetComponentInParent<SpotDataHolder>();
-            if (spotDataHolder == null)
-                spotDataHolder = GetComponentInChildren<SpotDataHolder>();
-
-            if (spotDataHolder != null)
+            try
             {
-                spotDataHolder.OnLocationCardRemoved();
+                var spotDataHolder = GetComponentInParent<SpotDataHolder>();
+                if (spotDataHolder == null)
+                    spotDataHolder = GetComponentInChildren<SpotDataHolder>();
+
+                if (spotDataHolder != null)
+                {
+                    spotDataHolder.OnLocationCardRemoved();
+                }
+            }
+            catch (System.Exception e)
+            {
+                Debug.LogError($"Error notifying SpotDataHolder of card removal: {e.Message}");
             }
         }
     }

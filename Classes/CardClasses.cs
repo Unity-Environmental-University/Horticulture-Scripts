@@ -153,6 +153,8 @@ namespace _project.Scripts.Classes
 
         public void ApplyTurnEffect(PlantController plant)
         {
+            if (plant?.PlantCard?.Value == null) return;
+            
             plant.PlantCard.Value += 1;
             plant.UpdatePriceFlag(plant.PlantCard.Value ?? 0);
         }

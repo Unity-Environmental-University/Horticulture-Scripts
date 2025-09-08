@@ -461,6 +461,7 @@ namespace _project.Scripts.Card_Core
                 var spotDataHolder = plantLocation.GetComponentInChildren<SpotDataHolder>();
                 if (spotDataHolder != null)
                 {
+                    spotDataHolder.InvalidatePlantCache();
                     spotDataHolder.RefreshAssociatedPlant();
                 }
 
@@ -502,6 +503,7 @@ namespace _project.Scripts.Card_Core
                          .Select(location => location.GetComponentInChildren<SpotDataHolder>())
                          .Where(holder => holder != null))
             {
+                spotDataHolder.InvalidatePlantCache();
                 spotDataHolder.RefreshAssociatedPlant();
             }
 
@@ -533,6 +535,7 @@ namespace _project.Scripts.Card_Core
             var spotDataHolder = location.GetComponentInChildren<SpotDataHolder>();
             if (spotDataHolder != null)
             {
+                spotDataHolder.InvalidatePlantCache();
                 spotDataHolder.RefreshAssociatedPlant();
             }
 
