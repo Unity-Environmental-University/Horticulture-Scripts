@@ -416,6 +416,15 @@ namespace _project.Scripts.Card_Core
             var score = _scoreManager.CalculateScore();
             if (_scoreManager) _scoreManager.treatmentCost = 0;
 
+            // If money goal reached at end-of-round, end the level immediately (except during tutorial steps)
+            var isTutorialStep = level == 0 && CardGameMaster.IsSequencingEnabled && currentTutorialTurn < TutorialTurnCount;
+            if (!isTutorialStep && ScoreManager.GetMoneys() >= moneyGoal)
+            {
+                shopQueued = true;
+                EndLevel();
+                yield break;
+            }
+
             _deckManager.ClearAllPlants();
 
             if (debugging) Debug.Log("Score: " + score);

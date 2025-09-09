@@ -34,8 +34,17 @@ namespace _project.Scripts.Card_Core
             Click3D.Click3DGloballyDisabled = false;
             CardGameMaster.Instance.uiInputModule.enabled = false;
 
-            if (CardGameMaster.Instance.turnController.level == 2)
-                CardGameMaster.Instance.turnController.ShowBetaScreen();
+            var tc = CardGameMaster.Instance.turnController;
+            if (tc.level == 2)
+            {
+                tc.ShowBetaScreen();
+                return;
+            }
+
+            // Proceed to the next level sequence immediately after closing the shop
+            tc.canClickEnd = false;
+            tc.newRoundReady = false;
+            StartCoroutine(tc.BeginTurnSequence());
         }
 
         private void GenerateShopInventory()
