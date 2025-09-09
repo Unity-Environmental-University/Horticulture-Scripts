@@ -481,9 +481,9 @@ namespace _project.Scripts.Card_Core
             {
                 var plantController = location.GetComponentInChildren<PlantController>(true);
                 var cardHolders = location.GetComponentsInChildren<PlacedCardHolder>(true);
-
+                
                 foreach (var cardHolder in cardHolders)
-                    if (cardHolder)
+                    if (cardHolder && !cardHolder.HoldingCard)
                         cardHolder.ToggleCardHolder(plantController != null);
             }
         }
