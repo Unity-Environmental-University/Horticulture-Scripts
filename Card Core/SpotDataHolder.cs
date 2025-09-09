@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using _project.Scripts.Classes;
 using _project.Scripts.Core;
 using UnityEngine;
@@ -23,31 +24,25 @@ namespace _project.Scripts.Card_Core
         public void RefreshAssociatedPlant()
         {
             // Only refresh if cache is dirty or plant reference is invalid
-            if (!_plantCacheDirty && _associatedPlant != null && _associatedPlant.PlantCard != null)
+            if (!_plantCacheDirty && _associatedPlant && _associatedPlant.PlantCard != null)
                 return;
 
-            var previousPlant = _associatedPlant;
-
-            // Optimized plant finding - try most likely locations first
             _associatedPlant = GetComponentInChildren<PlantController>();
-            if (_associatedPlant == null)
+            if (!_associatedPlant)
                 _associatedPlant = GetComponentInParent<PlantController>();
-            if (_associatedPlant == null && transform.parent != null)
+            if (!_associatedPlant && transform.parent)
                 _associatedPlant = transform.parent.GetComponentInChildren<PlantController>();
 
             _plantCacheDirty = false;
         }
 
-        public void InvalidatePlantCache()
-        {
-            _plantCacheDirty = true;
-        }
+        public void InvalidatePlantCache() => _plantCacheDirty = true;
 
         public void OnLocationCardPlaced(ILocationCard locationCard)
         {
             try
             {
-                // In turn-based system, simply clear previous effect and set new card
+                // In turn-based system, clear previous effect and set new card
                 if (cLocationCard != null && _effectActive) _effectActive = false;
 
                 cLocationCard = locationCard;
@@ -72,7 +67,7 @@ namespace _project.Scripts.Card_Core
         {
             try
             {
-                // In turn-based system, simply deactivate the effect
+                // In turn-based system, deactivate the effect
                 if (cLocationCard != null && _effectActive) _effectActive = false;
 
                 cLocationCard = null;
@@ -93,22 +88,13 @@ namespace _project.Scripts.Card_Core
 
             // Validate and refresh plant reference before applying effects
             RefreshAssociatedPlant();
-
-            // If no plant is found, keep effect active but don't apply
-            if (_associatedPlant == null)
+            
+            if (_associatedPlant == null || _associatedPlant.PlantCard == null)
             {
                 if (!cLocationCard.IsPermanent) _remainingDuration--;
                 return;
             }
-
-            // Validate plant is still alive and valid
-            if (_associatedPlant.PlantCard == null)
-            {
-                if (!cLocationCard.IsPermanent) _remainingDuration--;
-                return;
-            }
-
-            // Apply the turn effect safely
+            
             try
             {
                 cLocationCard.ApplyTurnEffect(_associatedPlant);
@@ -121,14 +107,10 @@ namespace _project.Scripts.Card_Core
                 cLocationCard = null;
                 return;
             }
-
-            // Handle permanent effects (no duration management)
+            
             if (cLocationCard.IsPermanent) return;
-
-            // Process temporary effects with duration
+            
             _remainingDuration--;
-
-            // Check expiration and handle cleanup
             if (_remainingDuration > 0) return;
 
             var expired = cLocationCard;
@@ -139,10 +121,12 @@ namespace _project.Scripts.Card_Core
             if (transform.parent != null)
             {
                 var parentHolders = transform.parent.GetComponentsInChildren<PlacedCardHolder>(true);
-                if (parentHolders != null && parentHolders.Length > 0)
+                if (parentHolders is { Length: > 0 })
                 {
-                    var list = new System.Collections.Generic.List<PlacedCardHolder>(holders);
-                    foreach (var h in parentHolders) if (!list.Contains(h)) list.Add(h);
+                    var list = new List<PlacedCardHolder>(holders);
+                    foreach (var h in parentHolders)
+                        if (!list.Contains(h))
+                            list.Add(h);
                     holders = list.ToArray();
                 }
             }
@@ -153,22 +137,6 @@ namespace _project.Scripts.Card_Core
                 holder.ClearLocationCardByExpiry();
                 break;
             }
-        }
-
-
-        public bool HasActiveLocationEffect()
-        {
-            return cLocationCard != null && _effectActive;
-        }
-
-        public ILocationCard GetActiveLocationCard()
-        {
-            return _effectActive ? cLocationCard : null;
-        }
-
-        public int GetRemainingDuration()
-        {
-            return _remainingDuration;
         }
     }
 }
