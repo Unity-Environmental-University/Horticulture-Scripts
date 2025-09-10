@@ -161,7 +161,7 @@ namespace _project.Scripts.Card_Core
                 }
 
                 // Always layout to avoid overlapping
-                LayoutIcons(pool, t, targetCount, prefab);
+                LayoutIcons(pool, targetCount, prefab);
             }
             else
             {
@@ -196,7 +196,7 @@ namespace _project.Scripts.Card_Core
             }
         }
 
-        private void LayoutIcons(List<Transform> pool, Transform parent, int targetCount, GameObject prefab)
+        private void LayoutIcons(List<Transform> pool, int targetCount, GameObject prefab)
         {
             // Gather active icons up to targetCount
             var actives = new List<Transform>(targetCount);
