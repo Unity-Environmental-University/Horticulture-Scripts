@@ -129,7 +129,9 @@ namespace _project.Scripts.Card_Core
                     CinematicDirector.PlayScene(CardGameMaster.Instance.cinematicDirector.aphidsTimeline);
                     yield return new WaitUntil(readyToPlay);
                 }
-
+                // Reveal UI, wait for pop-in to finish, then draw the hand
+                var sequencer = FindFirstObjectByType<RobotCardGameSequencer>(FindObjectsInactive.Exclude);
+                if (sequencer) yield return StartCoroutine(sequencer.ResumeUIPopInAndWait());
                 _deckManager.DrawTutorialActionHand();
             }
             else
@@ -137,6 +139,9 @@ namespace _project.Scripts.Card_Core
                 if (debugging) Debug.Log("[TurnController] Regular: DrawAfflictions/Action");
                 _deckManager.DrawAfflictions();
                 TryPlayQueuedEffects();
+                // Reveal UI, wait for pop-in to finish, then draw the hand
+                var sequencer = FindFirstObjectByType<RobotCardGameSequencer>(FindObjectsInactive.Exclude);
+                if (sequencer) yield return StartCoroutine(sequencer.ResumeUIPopInAndWait());
                 _deckManager.DrawActionHand();
             }
 
