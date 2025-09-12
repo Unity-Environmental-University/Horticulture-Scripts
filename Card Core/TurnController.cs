@@ -268,7 +268,7 @@ namespace _project.Scripts.Card_Core
                 return;
             }
 
-            // Otherwise continue with normal turn flow (no hard end on turn limit)
+            // Otherwise, continue with normal turn flow (no hard end on turn limit)
             currentTurn++;
             totalTurns++;
             SpreadAfflictions(plantControllers);
@@ -305,73 +305,50 @@ namespace _project.Scripts.Card_Core
                 // Skip if no afflictions or 50% chance
                 if (!controller.CurrentAfflictions.Any() || random.NextDouble() >= 0.5) continue;
 
-                var affliction = controller.CurrentAfflictions.First();
+                var afflictions = controller.CurrentAfflictions;
+                var count = afflictions.Count;
+                var startIndex = random.Next(count);
+                var didSpread = false;
 
-                if (affliction is PlantAfflictions.ThripsAffliction)
+                // Try up to two afflictions (random pick and simple fallback) to reduce bias
+                for (var attempt = 0; attempt < Mathf.Min(2, count); attempt++)
                 {
-                    // Spread ThripsAffliction to any plant that doesn't have it
-                    var targets = plantControllers.Where(p => !p.HasAffliction(affliction)).ToList();
+                    var affliction = afflictions[(startIndex + attempt) % count];
+
+                    // Build a list of targets
+                    List<PlantController> targets;
+                    if (affliction is PlantAfflictions.ThripsAffliction)
+                    {
+                        targets = plantControllers.Where(p => !p.HasAffliction(affliction)).ToList();
+                    }
+                    else
+                    {
+                        targets = new List<PlantController>(2);
+                        if (i > 0 && !plantControllers[i - 1].HasAffliction(affliction))
+                            targets.Add(plantControllers[i - 1]);
+                        if (i < plantControllers.Length - 1 && !plantControllers[i + 1].HasAffliction(affliction))
+                            targets.Add(plantControllers[i + 1]);
+                    }
+
+                    // Eligibility filters
+                    targets = targets
+                        .Where(t => !t.UsedTreatments.Any(tmt => tmt is PlantAfflictions.Panacea) &&
+                                    !t.HasHadAffliction(affliction))
+                        .ToList();
+
                     if (targets.Count == 0) continue;
 
                     var target = targets[random.Next(targets.Count)];
-
-                    // Don't spread to something treated with Panacea, or that had the affliction before
-                    if (target.UsedTreatments.Any(t => t is PlantAfflictions.Panacea) ||
-                        target.HasHadAffliction(affliction))
-                        continue;
-
-                    // Use a fresh instance to avoid shared state across plants
                     target.AddAffliction(affliction.Clone());
                     _scoreManager.CalculateTreatmentCost();
-                    StartCoroutine(PauseRoutine());
                     target.FlagShadersUpdate();
-
                     if (debugging)
-                        Debug.Log($"ThripsAffliction spread from {controller.name} to {target.name}.");
-                }
-                else
-                {
-                    var neighborOptions = new List<PlantController>();
-
-                    // Check left neighbor if exists
-                    if (i > 0)
-                    {
-                        var leftNeighbor = plantControllers[i - 1];
-                        // Add if a neighbor exists and doesn't have affliction
-                        if (leftNeighbor && !leftNeighbor.HasAffliction(affliction)) neighborOptions.Add(leftNeighbor);
-                    }
-
-                    // Check right neighbor if exists
-                    if (i < plantControllers.Length - 1)
-                    {
-                        var rightNeighbor = plantControllers[i + 1];
-                        // Add if a neighbor exists and doesn't have affliction
-                        if (rightNeighbor && !rightNeighbor.HasAffliction(affliction))
-                            neighborOptions.Add(rightNeighbor);
-                    }
-
-                    // Spread affliction to a random neighbor if any available
-                    if (neighborOptions.Count > 0)
-                    {
-                        var target = neighborOptions[random.Next(neighborOptions.Count)];
-                        if (target.HasAffliction(affliction)) continue;
-
-                        // Don't spread to something that's been given the Panacea
-                        if (!target.UsedTreatments.Any(t => t is PlantAfflictions.Panacea)
-                            && !target.HasHadAffliction(affliction))
-                        {
-                            target.AddAffliction(affliction.Clone());
-                            _scoreManager.CalculateTreatmentCost();
-                        }
-
-                        StartCoroutine(PauseRoutine());
-                        target.FlagShadersUpdate();
-                    }
+                        Debug.Log($"Affliction {affliction} spread from {controller.name} to {target.name}.");
+                    didSpread = true;
+                    break;
                 }
 
-                if (debugging)
-                    Debug.Log(
-                        $"Affliction {affliction} spread from {controller.name} to {plantControllers[i].name}.");
+                if (!didSpread && debugging) Debug.Log($"No valid spread targets for {controller.name} this tick.");
             }
         }
 
