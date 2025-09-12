@@ -1279,7 +1279,8 @@ namespace _project.Scripts.Card_Core
 
             // Create a DOTween sequence for staggered card appearances
             _currentDisplaySequence = DOTween.Sequence();
-            const float cardDelay = 0.1f; // Reduced delay for a smoother experience
+            // Scale delay so total fan-in animation stays quick even for large hands
+            var cardDelay = Mathf.Min(0.1f, totalCards > 0 ? 0.6f / totalCards : 0.1f);
 
             for (var i = 0; i < totalCards; i++)
             {
