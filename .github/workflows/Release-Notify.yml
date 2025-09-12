@@ -1,0 +1,24 @@
+name: Notify Teams on Release
+
+on:
+  release:
+    types: [published, prereleased]
+
+jobs:
+  notify:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Build release message
+        id: build_msg
+        run: |
+          echo "summary=${{ github.event.release.prerelease && '🧪 Pre-release' || '🚀 Release' }} ${{ github.event.release.tag_name }}" >> $GITHUB_OUTPUT
+          echo "body=**${{ github.event.release.name }}**%0A%0A${{ github.event.release.body }}%0A%0A**Assets:**%0A$(printf '%s\n' "${{ join(github.event.release.assets.*.browser_download_url, '%0A') }}")" >> $GITHUB_OUTPUT
+
+      - name: Post to Teams
+        uses: jdcargile/ms-teams-notification@v1.4
+        with:
+          github-token: ${{ github.token }}
+          ms-teams-webhook-uri: ${{ secrets.MS_TEAMS_WEBHOOK_URI }}
+          notification-summary: ${{ steps.build_msg.outputs.summary }}
+          notification-text: ${{ steps.build_msg.outputs.body }}
+          notification-color: ${{ github.event.release.prerelease && 'FFA500' || '28a745' }}
