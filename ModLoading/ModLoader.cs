@@ -59,6 +59,9 @@ namespace _project.Scripts.ModLoading
         {
             if (master?.deckManager == null) return;
 
+            // Ensure any previously registered bundles are unloaded (domain reload off / hot-reload)
+            try { ModAssets.UnloadAll(); } catch { /* ignore */ }
+
             LoadFromFolder(Path.Combine(Application.persistentDataPath, "Mods"), master);
             LoadFromFolder(Path.Combine(Application.streamingAssetsPath, "Mods"), master);
         }
