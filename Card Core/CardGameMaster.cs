@@ -4,6 +4,7 @@ using _project.Scripts.Audio;
 using _project.Scripts.Cinematics;
 using _project.Scripts.Core;
 using _project.Scripts.GameState;
+using _project.Scripts.Handlers;
 using _project.Scripts.ModLoading;
 using _project.Scripts.UI;
 using JetBrains.Annotations;
@@ -36,6 +37,7 @@ namespace _project.Scripts.Card_Core
         public CinematicDirector cinematicDirector;
         public PopUpController popUpController;
         public AudioSource playerHandAudioSource;
+        public TreatmentEfficacyHandler treatmentEfficacyHandler;
 
         // ReSharper disable once UnusedMember.Global
         public AudioSource robotAudioSource;

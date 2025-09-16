@@ -13,6 +13,7 @@ namespace _project.Scripts.Classes
         // Constants for treatment effectiveness
         private const int StandardCureAmount = 1;
         private const int PanaceaCureAmount = 999;
+        private const int DefaultEfficacy = 100;
 
         public interface IAffliction
         {
@@ -35,6 +36,7 @@ namespace _project.Scripts.Classes
             string Description { get; }
             int? InfectCureValue { get; set; }
             int? EggCureValue { get; set; }
+            int? Efficacy { get; set; }
 
             public void ApplyTreatment(PlantController plant)
             {
@@ -281,6 +283,12 @@ namespace _project.Scripts.Classes
             public int BeeValue => -1;
             private int _infectCureValue = StandardCureAmount;
             private int _eggCureValue = StandardCureAmount;
+            private int _efficacy = DefaultEfficacy; //TODO
+            public int? Efficacy
+            {
+                get => _efficacy;
+                set => _efficacy = value ?? 0;
+            }
             public int? InfectCureValue
             {
                 get => _infectCureValue;
@@ -301,6 +309,12 @@ namespace _project.Scripts.Classes
             public int BeeValue => -3;
             private int _infectCureValue = StandardCureAmount;
             private int _eggCureValue = StandardCureAmount;
+            private int _efficacy = DefaultEfficacy; //TODO
+            public int? Efficacy
+            {
+                get => _efficacy;
+                set => _efficacy = value ?? 0;
+            }
             public int? InfectCureValue
             {
                 get => _infectCureValue;
@@ -321,6 +335,12 @@ namespace _project.Scripts.Classes
             public int BeeValue => -4;
             private int _infectCureValue = 1;
             private int _eggCureValue;
+            private int _efficacy = DefaultEfficacy; //TODO
+            public int? Efficacy
+            {
+                get => _efficacy;
+                set => _efficacy = value ?? 0;
+            }
             public int? InfectCureValue
             {
                 get => _infectCureValue;
@@ -341,6 +361,12 @@ namespace _project.Scripts.Classes
             public int BeeValue => 0;
             private int _infectCureValue = StandardCureAmount;
             private int _eggCureValue = StandardCureAmount;
+            private int _efficacy = DefaultEfficacy; //TODO
+            public int? Efficacy
+            {
+                get => _efficacy;
+                set => _efficacy = value ?? 0;
+            }
             public int? InfectCureValue
             {
                 get => _infectCureValue;
@@ -361,6 +387,12 @@ namespace _project.Scripts.Classes
             public int BeeValue => -2; //TODO Get Bee Value
             private int _infectCureValue = StandardCureAmount;
             private int _eggCureValue = StandardCureAmount;
+            private int _efficacy = DefaultEfficacy; //TODO
+            public int? Efficacy
+            {
+                get => _efficacy;
+                set => _efficacy = value ?? 0;
+            }
             public int? InfectCureValue
             {
                 get => _infectCureValue;
@@ -382,6 +414,12 @@ namespace _project.Scripts.Classes
             public int BeeValue => -5; //TODO Get Bee Value
             private int _infectCureValue = StandardCureAmount;
             private int _eggCureValue = StandardCureAmount;
+            private int _efficacy = DefaultEfficacy; //TODO
+            public int? Efficacy
+            {
+                get => _efficacy;
+                set => _efficacy = value ?? 0;
+            }
             public int? InfectCureValue
             {
                 get => _infectCureValue;
@@ -402,6 +440,12 @@ namespace _project.Scripts.Classes
             public int BeeValue => 0;
             private int _infectCureValue = PanaceaCureAmount;
             private int _eggCureValue = PanaceaCureAmount;
+            private int _efficacy = DefaultEfficacy; //TODO
+            public int? Efficacy
+            {
+                get => _efficacy;
+                set => _efficacy = value ?? 0;
+            }
             public int? InfectCureValue
             {
                 get => _infectCureValue;
