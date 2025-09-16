@@ -187,12 +187,14 @@ namespace _project.Scripts.ModLoading
                 _baseTreatment = baseTreatment;
                 InfectCureValue = infectCure ?? baseTreatment.InfectCureValue;
                 EggCureValue = eggCure ?? baseTreatment.EggCureValue;
+                Efficacy = baseTreatment.Efficacy ?? 100;
             }
             
             public string Name => _baseTreatment.Name;
             public string Description => _baseTreatment.Description;
             public int? InfectCureValue { get; set; }
             public int? EggCureValue { get; set; }
+            public int? Efficacy { get; set; }
         }
 
         /// <summary>
@@ -220,21 +222,23 @@ namespace _project.Scripts.ModLoading
                 // Default fallback values
                 InfectCureValue = 0;
                 EggCureValue = 0;
+                Efficacy = 100; // Assume fully effective by default
             }
             
             public string Name { get; }
             public string Description { get; }
             public int? InfectCureValue { get; set; }
             public int? EggCureValue { get; set; }
-            
+            public int? Efficacy { get; set; }
+
             /// <summary>
-            /// Get effectiveness for a specific affliction by name
+            ///     Get effectiveness for a specific affliction by name
             /// </summary>
             public (int infectCure, int eggCure) GetEffectivenessFor(string afflictionName)
             {
-                if (_effectiveness.TryGetValue(afflictionName, out var eff))
-                    return (eff.infectCure, eff.eggCure);
-                return (0, 0); // No effect on unknown afflictions
+                return _effectiveness.TryGetValue(afflictionName, out var eff)
+                    ? (eff.infectCure, eff.eggCure)
+                    : (0, 0); // No effect on unknown afflictions
             }
             
             /// <summary>
