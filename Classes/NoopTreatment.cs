@@ -10,6 +10,7 @@ namespace _project.Scripts.Classes
         public string Description => "No effect";
         public int? InfectCureValue { get; set; } = 0;
         public int? EggCureValue { get; set; } = 0;
+        public int? Efficacy { get; set; } = 0;
     }
 }
 

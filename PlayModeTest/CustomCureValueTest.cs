@@ -1,6 +1,6 @@
-using NUnit.Framework;
 using _project.Scripts.Classes;
 using _project.Scripts.ModLoading;
+using NUnit.Framework;
 
 namespace _project.Scripts.PlayModeTest
 {
@@ -123,12 +123,14 @@ namespace _project.Scripts.PlayModeTest
                 _baseTreatment = baseTreatment;
                 InfectCureValue = infectCure ?? baseTreatment.InfectCureValue;
                 EggCureValue = eggCure ?? baseTreatment.EggCureValue;
+                Efficacy = baseTreatment.Efficacy ?? 100;
             }
             
             public string Name => _baseTreatment.Name;
             public string Description => _baseTreatment.Description;
             public int? InfectCureValue { get; set; }
             public int? EggCureValue { get; set; }
+            public int? Efficacy { get; set; }
         }
         
         /// <summary>
@@ -140,7 +142,7 @@ namespace _project.Scripts.PlayModeTest
         }
         
         /// <summary>
-        /// Helper method to create AfflictionEffectiveness - now public so we can access directly
+        /// Helper method to create AfflictionEffectiveness - now public, so we can access directly
         /// </summary>
         private ModLoader.AfflictionEffectiveness CreateAfflictionEffectiveness(string affliction, int infectCure, int eggCure)
         {

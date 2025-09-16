@@ -12,19 +12,12 @@ namespace _project.Scripts.PlayModeTest
     public class CardSerializationTest
     {
         // Cards with proper Value setters (can modify values)
-        private static readonly Type[] ModifiableValueCards = {
-            typeof(ColeusCard),
-            typeof(ChrysanthemumCard),
-            typeof(PepperCard),
-            typeof(CucumberCard),
-            typeof(HorticulturalOilBasic),
-            typeof(InsecticideBasic),
-            typeof(FungicideBasic),
-            typeof(SoapyWaterBasic),
-            typeof(SpinosadTreatment),
-            typeof(ImidaclopridTreatment),
-            typeof(Panacea)
-        };
+        // Discover all treatment cards dynamically so tests auto‑update when new treatments are added.
+        private static readonly Type[] ModifiableValueCards =
+            new[] { typeof(ColeusCard), typeof(ChrysanthemumCard), typeof(PepperCard), typeof(CucumberCard) }
+            .Concat(DiscoverTreatmentCardTypes())
+            .Distinct()
+            .ToArray();
         
         // Cards with read-only values (fixed values)
         private static readonly Type[] ReadOnlyValueCards = {
@@ -44,7 +37,10 @@ namespace _project.Scripts.PlayModeTest
         };
         
         // All card types
-        private static readonly Type[] AllCardTypes = ModifiableValueCards.Concat(ReadOnlyValueCards).Concat(new[] { typeof(FertilizerBasic) }).ToArray();
+        private static readonly Type[] AllCardTypes = ModifiableValueCards
+            .Concat(ReadOnlyValueCards)
+            .Concat(new[] { typeof(FertilizerBasic) })
+            .ToArray();
 
         [Test]
         public void TestAllCardTypesSerialization()
@@ -233,6 +229,41 @@ namespace _project.Scripts.PlayModeTest
 
             Assert.AreEqual(card.Value, deserializedCard.Value, 
                 $"Value modification not preserved for {card.GetType().Name}");
+        }
+
+        // Dynamically discover all ICard types that represent treatments so tests stay in sync
+        private static Type[] DiscoverTreatmentCardTypes()
+        {
+            var types = AppDomain.CurrentDomain.GetAssemblies()
+                .SelectMany(a =>
+                {
+                    try { return a.GetTypes(); }
+                    catch { return Array.Empty<Type>(); }
+                })
+                .Where(t => typeof(ICard).IsAssignableFrom(t)
+                            && t.IsClass
+                            && !t.IsAbstract
+                            && t.GetConstructor(Type.EmptyTypes) != null)
+                .ToArray();
+
+            var treatmentCardTypes = new List<Type>();
+
+            foreach (var t in types)
+            {
+                try
+                {
+                    if (Activator.CreateInstance(t) is ICard card && card.Treatment != null)
+                    {
+                        treatmentCardTypes.Add(t);
+                    }
+                }
+                catch
+                {
+                    // Ignore types that fail to instantiate in test environment
+                }
+            }
+
+            return treatmentCardTypes.ToArray();
         }
 
         // Utility method to create a card instance

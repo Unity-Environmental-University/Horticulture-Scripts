@@ -35,6 +35,7 @@ namespace _project.Scripts.PlayModeTest
             public string Description => "Cures all afflictions";
             public int? InfectCureValue { get; set; } = 999;
             public int? EggCureValue { get; set; } = 0;
+            public int? Efficacy { get; set; } = 100;
 
             public void ApplyTreatment(PlantController plant)
             {
@@ -414,6 +415,7 @@ namespace _project.Scripts.PlayModeTest
             public string Description => "Throws on apply";
             public int? InfectCureValue { get; set; } = 0;
             public int? EggCureValue { get; set; } = 0;
+            public int? Efficacy { get; set; } = 100;
 
             public void ApplyTreatment(PlantController plant)
             {
@@ -479,6 +481,7 @@ namespace _project.Scripts.PlayModeTest
             public string Description => "Removes all afflictions";
             public int? InfectCureValue { get; set; } = 999;
             public int? EggCureValue { get; set; } = 999;
+            public int? Efficacy { get; set; } = 100;
 
             public void ApplyTreatment(PlantController plant)
             {
