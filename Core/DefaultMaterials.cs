@@ -16,7 +16,7 @@ namespace _project.Scripts.Core
                 if (_white) return _white;
 
                 // Try to load a project-defined default first
-                var res = Resources.Load<Material>("Materials/Cards/DefaultWhite");
+                var res = Resources.Load<Material>($"Materials/Cards/DefaultWhite");
                 if (res)
                 {
                     _white = res;

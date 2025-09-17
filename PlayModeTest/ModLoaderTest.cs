@@ -1,8 +1,8 @@
+using _project.Scripts.Card_Core;
+using _project.Scripts.ModLoading;
 using NUnit.Framework;
 using UnityEngine;
 using UnityEngine.TestTools;
-using _project.Scripts.Card_Core;
-using _project.Scripts.ModLoading;
 
 namespace _project.Scripts.PlayModeTest
 {
@@ -64,7 +64,7 @@ namespace _project.Scripts.PlayModeTest
             ModAfflictionRegistry.Clear();
             
             // Create a test affliction
-            var testAffliction = new ModAffliction("TestPest", "A test pest", Color.red, null, null);
+            var testAffliction = new ModAffliction("TestPest", "A test pest", Color.red);
             
             // Register it
             ModAfflictionRegistry.Register("TestPest", testAffliction);
