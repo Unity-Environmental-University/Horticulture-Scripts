@@ -141,9 +141,16 @@ namespace _project.Scripts.Classes
             {
                 if (treatment is SoapyWaterTreatment or InsecticideTreatment or ImidaclopridTreatment or Panacea)
                 {
-                    var infectReduction = treatment.InfectCureValue ?? 0;
-                    var eggReduction = treatment.EggCureValue ?? 0;
-                    plant.ReduceAfflictionValues(this, infectReduction, eggReduction);
+                    var chance = CardGameMaster.Instance.treatmentEfficacyHandler.GetRelationalEfficacy(this, treatment);
+                    Debug.Log($"Treatment Efficacy: {chance}");
+                    if (Random.Range(0, 100) < chance)
+                    {
+                        var infectReduction = treatment.InfectCureValue ?? 0;
+                        var eggReduction = treatment.EggCureValue ?? 0;
+                        plant.ReduceAfflictionValues(this, infectReduction, eggReduction);
+                        Debug.Log("Treatment Successful");
+                    }
+                    else{Debug.Log("Failed to treat with MealyBugs");}
                 }
             }
 

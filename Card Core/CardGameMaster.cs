@@ -36,8 +36,8 @@ namespace _project.Scripts.Card_Core
         public SoundSystemMaster soundSystem;
         public CinematicDirector cinematicDirector;
         public PopUpController popUpController;
-        public AudioSource playerHandAudioSource;
         public TreatmentEfficacyHandler treatmentEfficacyHandler;
+        public AudioSource playerHandAudioSource;
 
         // ReSharper disable once UnusedMember.Global
         public AudioSource robotAudioSource;
