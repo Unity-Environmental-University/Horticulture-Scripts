@@ -25,13 +25,14 @@ namespace _project.Scripts.Handlers
 
     public class TreatmentEfficacyHandler : MonoBehaviour
     {
-        [SerializeField] private List<RelationalEfficacy> relationalEfficacies = new();
+        [SerializeField] private List<RelationalEfficacy> relationalEfficacys = new();
+        private const int DefaultEfficacy = 100;
 
         public int GetRelationalEfficacy(PlantAfflictions.IAffliction affliction, PlantAfflictions.ITreatment treatment)
         {
-            if (relationalEfficacies.Any(r => r.treatment == treatment && r.affliction == affliction))
+            if (relationalEfficacys.Any(r => r.treatment == treatment && r.affliction == affliction))
             {
-                var efficacy = relationalEfficacies
+                var efficacy = relationalEfficacys
                     .FirstOrDefault(r => r.treatment == treatment && r.affliction == affliction)
                     ?.efficacy;
                 if (efficacy != null)
@@ -43,10 +44,10 @@ namespace _project.Scripts.Handlers
             {
                 treatment = treatment,
                 affliction = affliction,
-                efficacy = treatment.Efficacy.Value
+                efficacy = Mathf.Clamp(treatment.Efficacy ?? DefaultEfficacy,0,100)
             };
             rel.SetNames(affliction, treatment);
-            relationalEfficacies.Add(rel);
+            relationalEfficacys.Add(rel);
             return rel.efficacy;
         }
     }
