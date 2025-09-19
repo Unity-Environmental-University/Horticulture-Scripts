@@ -1,4 +1,6 @@
 name: Notify Teams on Release
+permissions:
+  contents: read
 
 on:
   release:
