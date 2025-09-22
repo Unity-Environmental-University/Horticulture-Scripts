@@ -9,12 +9,13 @@ namespace _project.Scripts.Handlers
     [Serializable]
     public class RelationalEfficacy
     {
-        public PlantAfflictions.IAffliction affliction;
-        public PlantAfflictions.ITreatment treatment;
         public int efficacy;
-        
+
         public string afflictionName;
         public string treatmentName;
+        public PlantAfflictions.IAffliction affliction;
+        public PlantAfflictions.ITreatment treatment;
+
         public string SetNames(PlantAfflictions.IAffliction a, PlantAfflictions.ITreatment T)
         {
             afflictionName = a.Name;
@@ -25,27 +26,34 @@ namespace _project.Scripts.Handlers
 
     public class TreatmentEfficacyHandler : MonoBehaviour
     {
-        [SerializeField] private List<RelationalEfficacy> relationalEfficacys = new();
         private const int DefaultEfficacy = 100;
+        [SerializeField] private List<RelationalEfficacy> relationalEfficacys = new();
 
         public int GetRelationalEfficacy(PlantAfflictions.IAffliction affliction, PlantAfflictions.ITreatment treatment)
         {
-            if (relationalEfficacys.Any(r => r.treatment == treatment && r.affliction == affliction))
+            var afflictionName = affliction.Name;
+            var treatmentName = treatment.Name;
+
+            var existing = relationalEfficacys.FirstOrDefault(r =>
+                (string.Equals(r.afflictionName, afflictionName, StringComparison.Ordinal) &&
+                 string.Equals(r.treatmentName, treatmentName, StringComparison.Ordinal)) ||
+                (r.affliction == affliction && r.treatment == treatment));
+
+            if (existing != null)
             {
-                var efficacy = relationalEfficacys
-                    .FirstOrDefault(r => r.treatment == treatment && r.affliction == affliction)
-                    ?.efficacy;
-                if (efficacy != null)
-                    return (int)efficacy;
+                existing.affliction = affliction;
+                existing.treatment = treatment;
+                existing.SetNames(affliction, treatment);
+                return Mathf.Clamp(existing.efficacy, 0, 100);
             }
 
-            // ReSharper disable once PossibleInvalidOperationException
             var rel = new RelationalEfficacy
             {
                 treatment = treatment,
                 affliction = affliction,
-                efficacy = Mathf.Clamp(treatment.Efficacy ?? DefaultEfficacy,0,100)
+                efficacy = Mathf.Clamp(treatment.Efficacy ?? DefaultEfficacy, 0, 100)
             };
+
             rel.SetNames(affliction, treatment);
             relationalEfficacys.Add(rel);
             return rel.efficacy;

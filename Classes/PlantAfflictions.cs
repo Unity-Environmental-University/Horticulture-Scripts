@@ -15,6 +15,21 @@ namespace _project.Scripts.Classes
         private const int PanaceaCureAmount = 999;
         private const int DefaultEfficacy = 100;
 
+        private static int ResolveTreatmentEfficacy(IAffliction affliction, ITreatment treatment)
+        {
+            var handler = CardGameMaster.Instance?.treatmentEfficacyHandler;
+            var efficacy = handler
+                ? handler.GetRelationalEfficacy(affliction, treatment)
+                : treatment.Efficacy ?? DefaultEfficacy;
+            return Mathf.Clamp(efficacy, 0, 100);
+        }
+
+        private static bool TreatmentAttemptSucceeds(IAffliction affliction, ITreatment treatment)
+        {
+            var chance = ResolveTreatmentEfficacy(affliction, treatment);
+            return Random.Range(0, 100) < chance;
+        }
+
         public interface IAffliction
         {
             string Name { get; }
@@ -77,38 +92,47 @@ namespace _project.Scripts.Classes
 
             public void TreatWith(ITreatment treatment, PlantController plant)
             {
-                var infectReduction = 0;
-                var eggReduction = 0;
-                
+                var affectsAdults = treatment is InsecticideTreatment or Panacea;
+                var affectsLarvae = treatment is HorticulturalOilTreatment or Panacea;
+
+                if (!affectsAdults && !affectsLarvae)
+                {
+                    return;
+                }
+
                 // Get actual current values from plant (not internal flags)
                 var currentInfect = plant.GetInfectFrom(this);
                 var currentEggs = plant.GetEggsFrom(this);
-                
-                // Insecticide or Panacea: targets adults (reduces infect)
-                if (treatment is InsecticideTreatment or Panacea)
+
+                var infectReduction = affectsAdults && currentInfect > 0
+                    ? treatment.InfectCureValue ?? 0
+                    : 0;
+                var eggReduction = affectsLarvae && currentEggs > 0
+                    ? treatment.EggCureValue ?? 0
+                    : 0;
+
+                if (infectReduction <= 0 && eggReduction <= 0)
                 {
-                    if (currentInfect > 0) // Only treat if actual infect exists
-                    {
-                        _hasAdults = false;
-                        infectReduction = treatment.InfectCureValue ?? 0;
-                    }
-                }
-                
-                // Horticultural Oil or Panacea: targets larvae (reduces eggs)
-                if (treatment is HorticulturalOilTreatment or Panacea)
-                {
-                    if (currentEggs > 0) // Only treat if actual eggs exist
-                    {
-                        _hasLarvae = false;
-                        eggReduction = treatment.EggCureValue ?? 0;
-                    }
+                    return;
                 }
 
-                if (infectReduction > 0 || eggReduction > 0)
+                if (!TreatmentAttemptSucceeds(this, treatment))
                 {
-                    plant.ReduceAfflictionValues(this, infectReduction, eggReduction);
+                    return;
                 }
-                
+
+                if (infectReduction > 0)
+                {
+                    _hasAdults = false;
+                }
+
+                if (eggReduction > 0)
+                {
+                    _hasLarvae = false;
+                }
+
+                plant.ReduceAfflictionValues(this, infectReduction, eggReduction);
+
                 // Update internal flags based on remaining values after treatment
                 var remainingInfect = plant.GetInfectFrom(this);
                 var remainingEggs = plant.GetEggsFrom(this);
@@ -141,17 +165,14 @@ namespace _project.Scripts.Classes
             {
                 if (treatment is SoapyWaterTreatment or InsecticideTreatment or ImidaclopridTreatment or Panacea)
                 {
-                    var handler = CardGameMaster.Instance?.treatmentEfficacyHandler;
-                    var chance = handler != null
-                        ? handler.GetRelationalEfficacy(this, treatment)
-                        : Mathf.Clamp(treatment.Efficacy ?? DefaultEfficacy, 0, 100);
-                    
-                    if (Random.Range(0, 100) < chance)
+                    if (!TreatmentAttemptSucceeds(this, treatment))
                     {
-                        var infectReduction = treatment.InfectCureValue ?? 0;
-                        var eggReduction = treatment.EggCureValue ?? 0;
-                        plant.ReduceAfflictionValues(this, infectReduction, eggReduction);
+                        return;
                     }
+
+                    var infectReduction = treatment.InfectCureValue ?? 0;
+                    var eggReduction = treatment.EggCureValue ?? 0;
+                    plant.ReduceAfflictionValues(this, infectReduction, eggReduction);
                 }
             }
 
@@ -178,6 +199,11 @@ namespace _project.Scripts.Classes
             {
                 if (treatment is FungicideTreatment or Panacea)
                 {
+                    if (!TreatmentAttemptSucceeds(this, treatment))
+                    {
+                        return;
+                    }
+
                     var infectReduction = treatment.InfectCureValue ?? 0;
                     var eggReduction = treatment.EggCureValue ?? 0;
                     plant.ReduceAfflictionValues(this, infectReduction, eggReduction);
@@ -207,6 +233,11 @@ namespace _project.Scripts.Classes
                 if (treatment is HorticulturalOilTreatment or ImidaclopridTreatment or SpinosadTreatment
                     or InsecticideTreatment or Panacea)
                 {
+                    if (!TreatmentAttemptSucceeds(this, treatment))
+                    {
+                        return;
+                    }
+
                     var infectReduction = treatment.InfectCureValue ?? 0;
                     var eggReduction = treatment.EggCureValue ?? 0;
                     plant.ReduceAfflictionValues(this, infectReduction, eggReduction);
@@ -235,6 +266,11 @@ namespace _project.Scripts.Classes
             {
                 if (treatment is HorticulturalOilTreatment or Panacea)
                 {
+                    if (!TreatmentAttemptSucceeds(this, treatment))
+                    {
+                        return;
+                    }
+
                     var infectReduction = treatment.InfectCureValue ?? 0;
                     var eggReduction = treatment.EggCureValue ?? 0;
                     plant.ReduceAfflictionValues(this, infectReduction, eggReduction);
@@ -264,6 +300,11 @@ namespace _project.Scripts.Classes
             {
                 if (treatment is ImidaclopridTreatment or SpinosadTreatment or Panacea)
                 {
+                    if (!TreatmentAttemptSucceeds(this, treatment))
+                    {
+                        return;
+                    }
+
                     var infectReduction = treatment.InfectCureValue ?? 0;
                     var eggReduction = treatment.EggCureValue ?? 0;
                     plant.ReduceAfflictionValues(this, infectReduction, eggReduction);
