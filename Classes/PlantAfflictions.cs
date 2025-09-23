@@ -81,6 +81,7 @@ namespace _project.Scripts.Classes
 
         public class ThripsAffliction : IAffliction
         {
+            // ReSharper disable twice NotAccessedField.Local
             private bool _hasAdults = true;
             private bool _hasLarvae = true;
             public string Name => "Thrips";

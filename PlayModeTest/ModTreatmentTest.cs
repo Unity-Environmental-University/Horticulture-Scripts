@@ -1,5 +1,5 @@
-using NUnit.Framework;
 using _project.Scripts.ModLoading;
+using NUnit.Framework;
 using UnityEngine;
 
 namespace _project.Scripts.PlayModeTest
@@ -13,7 +13,7 @@ namespace _project.Scripts.PlayModeTest
         public void ModTreatment_GetEffectivenessFor_ReturnsCorrectValues()
         {
             // Create effectiveness array
-            var effectiveness = new ModLoader.AfflictionEffectiveness[]
+            var effectiveness = new[]
             {
                 new ModLoader.AfflictionEffectiveness { affliction = "Aphids", infectCure = 5, eggCure = 3 },
                 new ModLoader.AfflictionEffectiveness { affliction = "SpiderMites", infectCure = 2, eggCure = 1 }
@@ -61,7 +61,7 @@ namespace _project.Scripts.PlayModeTest
         [Test]
         public void ModTreatment_BasicProperties_Work()
         {
-            var effectiveness = new ModLoader.AfflictionEffectiveness[]
+            var effectiveness = new[]
             {
                 new ModLoader.AfflictionEffectiveness { affliction = "Test", infectCure = 1, eggCure = 1 }
             };

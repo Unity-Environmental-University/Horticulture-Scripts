@@ -69,7 +69,7 @@ namespace _project.Scripts.PlayModeTest
         [Test]
         public void ModTreatment_GetEffectivenessForKnownAffliction()
         {
-            var effectiveness = new ModLoader.AfflictionEffectiveness[]
+            var effectiveness = new[]
             {
                 CreateAfflictionEffectiveness("Aphids", 5, 3),
                 CreateAfflictionEffectiveness("SpiderMites", 2, 1)
@@ -85,7 +85,7 @@ namespace _project.Scripts.PlayModeTest
         [Test]
         public void ModTreatment_GetEffectivenessForUnknownAffliction()
         {
-            var effectiveness = new ModLoader.AfflictionEffectiveness[]
+            var effectiveness = new[]
             {
                 CreateAfflictionEffectiveness("Aphids", 5, 3)
             };

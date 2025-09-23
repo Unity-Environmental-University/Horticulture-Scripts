@@ -165,6 +165,7 @@ namespace _project.Scripts.ModLoading
         {
             if (weight > 0) return Mathf.Clamp(weight, 1, 10);
             
+            // ReSharper disable once RedundantSwitchExpressionArms
             return rarity?.ToLower() switch
             {
                 "common" => 5,
