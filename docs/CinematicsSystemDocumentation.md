@@ -390,6 +390,6 @@ if (debugging)
 ---
 
 **Version:** 1.0  
-**Last Updated:** August 2025  
+**Last Updated:** September 2025  
 **Namespace:** `_project.Scripts.Cinematics`  
-**Unity Version:** 6000.1.11f1+
+**Unity Version:** 6000.2.0f1+
