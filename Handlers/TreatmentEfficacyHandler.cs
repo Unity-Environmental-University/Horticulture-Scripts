@@ -10,6 +10,9 @@ namespace _project.Scripts.Handlers
     [Serializable]
     public class RelationalEfficacy
     {
+        private const int HeavyInteractionThreshold = 15;
+        private const int MediumInteractionThreshold = 10;
+        private const int MildInteractionThreshold = 5;
         public int efficacy;
         public int interactionCount;
 
@@ -27,24 +30,23 @@ namespace _project.Scripts.Handlers
 
         public void TouchEfficacy()
         {
-            switch (interactionCount)
+            var touchLevel = interactionCount switch
             {
-                case > 15:
-                    RollEfficacyDecrease(30);
-                    break;
-                case > 10:
-                    RollEfficacyDecrease(50);
-                    break;
-                case > 5:
-                    RollEfficacyDecrease(80);
-                    break;
-            }
+                > HeavyInteractionThreshold => 30,
+                > MediumInteractionThreshold => 50,
+                > MildInteractionThreshold => 80,
+                _ => (int?)null
+            };
+
+            if (!touchLevel.HasValue) return;
+
+            RollEfficacyDecrease(touchLevel.Value);
         }
 
         private void RollEfficacyDecrease(int touchLevel)
         {
             var chance = Random.Range(0, 100);
-            if (chance > touchLevel)
+            if (chance < touchLevel)
                 efficacy = Mathf.Max(1, efficacy - 10);
         }
     }
