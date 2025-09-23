@@ -12,9 +12,41 @@ jobs:
     steps:
       - name: Build release message
         id: build_msg
+        env:
+          SUMMARY_PREFIX: ${{ github.event.release.prerelease && '🧪 Pre-release' || '🚀 Release' }}
+          TAG_NAME: ${{ github.event.release.tag_name }}
+          RELEASE_NAME: ${{ github.event.release.name }}
+          RELEASE_BODY: ${{ github.event.release.body }}
+          RELEASE_ASSETS: ${{ join(github.event.release.assets.*.browser_download_url, '\n') }}
         run: |
-          echo "summary=${{ github.event.release.prerelease && '🧪 Pre-release' || '🚀 Release' }} ${{ github.event.release.tag_name }}" >> $GITHUB_OUTPUT
-          echo "body=**${{ github.event.release.name }}**%0A%0A${{ github.event.release.body }}%0A%0A**Assets:**%0A$(printf '%s\n' "${{ join(github.event.release.assets.*.browser_download_url, '%0A') }}")" >> $GITHUB_OUTPUT
+          python <<'PY'
+          import os
+
+          summary_prefix = os.getenv('SUMMARY_PREFIX', '').strip()
+          tag_name = os.getenv('TAG_NAME', '').strip()
+          release_name = os.getenv('RELEASE_NAME', '').strip()
+          release_body = os.getenv('RELEASE_BODY', '').strip()
+          release_assets = os.getenv('RELEASE_ASSETS', '').strip()
+
+          summary = f"{summary_prefix} {tag_name}".strip()
+
+          sections = [f"**{release_name}**"] if release_name else []
+          if release_body:
+              sections.append(release_body)
+          assets_block = "**Assets:**"
+          if release_assets:
+              assets_block = f"{assets_block}\n{release_assets}"
+          sections.append(assets_block)
+
+          body = "\n\n".join(sections)
+          # Escape percent first, then encode newlines to %0A for Teams formatting
+          body_encoded = body.replace('%', '%25').replace('\r\n', '\n').replace('\n', '%0A')
+
+          output_path = os.environ['GITHUB_OUTPUT']
+          with open(output_path, 'a', encoding='utf-8') as fh:
+              fh.write(f"summary={summary}\n")
+              fh.write(f"body={body_encoded}\n")
+          PY
 
       - name: Post to Teams
         uses: jdcargile/ms-teams-notification@v1.4
