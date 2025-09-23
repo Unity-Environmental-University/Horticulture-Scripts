@@ -6,8 +6,10 @@ using _project.Scripts.Stickers;
 using JetBrains.Annotations;
 using UnityEngine;
 using Random = UnityEngine.Random;
-// ReSharper disable UnusedMember.Global
+
 // ReSharper disable UnusedAutoPropertyAccessor.Global
+// ReSharper disable UnusedParameter.Global
+// ReSharper disable UnusedMember.Global
 
 namespace _project.Scripts.Classes
 {

@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using _project.Scripts.Core;
 
 namespace _project.Scripts.GameState
 {
@@ -55,7 +54,6 @@ namespace _project.Scripts.GameState
     [Serializable]
     public class PlantData
     {
-        public PlantType plantType;
         public CardData plantCard;
         public int locationIndex;
 

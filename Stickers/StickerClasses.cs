@@ -1,6 +1,9 @@
 using _project.Scripts.Classes;
 using UnityEngine;
 
+// ReSharper disable UnusedMember.Global
+// ReSharper disable ValueParameterNotUsed
+
 namespace _project.Scripts.Stickers
 {
     #region Declairation
@@ -9,8 +12,6 @@ namespace _project.Scripts.Stickers
     {
         string Name { get; }
         string Description => null;
-
-        // ReSharper disable once ValueParameterNotUsed
         int? Value
         {
             get => null;

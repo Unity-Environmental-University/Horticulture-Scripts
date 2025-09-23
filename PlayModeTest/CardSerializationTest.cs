@@ -116,7 +116,7 @@ namespace _project.Scripts.PlayModeTest
             }
         }
 
-        private void TestCardSerialization(Type cardType)
+        private static void TestCardSerialization(Type cardType)
         {
             // Create a card of the specified type
             var originalCard = TryCreateCard(cardType);
@@ -306,25 +306,24 @@ namespace _project.Scripts.PlayModeTest
             catch (NotImplementedException)
             {
                 // Some cards have read-only values and can't be deserialized with modified values
-                Debug.LogWarning($"Card type {cardData.cardTypeName} has read-only Value, creating fresh instance instead");
-                
+                Debug.LogWarning(
+                    $"Card type {cardData.cardTypeName} has read-only Value, creating fresh instance instead");
+
                 // Create fresh instance without value modification
                 var cardType = AppDomain.CurrentDomain.GetAssemblies()
                     .SelectMany(a => a.GetTypes())
                     .FirstOrDefault(t => t.Name == cardData.cardTypeName && typeof(ICard).IsAssignableFrom(t));
-                
-                if (cardType != null && Activator.CreateInstance(cardType) is ICard card)
+
+                if (cardType == null || Activator.CreateInstance(cardType) is not ICard card) return null;
                 {
                     // Try to restore stickers (only works for sticker-compatible cards)
-                    if (cardData.stickers != null && StickerCompatibleCards.Any(t => t.Name == cardData.cardTypeName))
-                    {
-                        foreach (var sticker in cardData.stickers
-                                     .Select(GameStateManager.DeserializeSticker)
-                                     .Where(sticker => sticker != null)) card.ApplySticker(sticker);
-                    }
+                    if (cardData.stickers == null || StickerCompatibleCards.All(t => t.Name != cardData.cardTypeName))
+                        return card;
+                    foreach (var sticker in cardData.stickers
+                                 .Select(GameStateManager.DeserializeSticker)
+                                 .Where(sticker => sticker != null)) card.ApplySticker(sticker);
                     return card;
                 }
-                return null;
             }
             catch (Exception ex)
             {

@@ -268,25 +268,23 @@ namespace _project.Scripts.Card_Core
             }
 
             // Fallback: temporary instance of prefab just to measure
-            if (prefab)
+            if (!prefab) return (0f, 0f);
+            var temp = Instantiate(prefab);
+            try
             {
-                var temp = Instantiate(prefab);
-                try
+                var rr = temp.GetComponentInChildren<Renderer>();
+                if (rr)
                 {
-                    var rr = temp.GetComponentInChildren<Renderer>();
-                    if (rr)
-                    {
-                        var sizeWorld = rr.bounds.size;
-                        var s2 = temp.transform.lossyScale;
-                        var lx2 = s2.x != 0 ? sizeWorld.x / s2.x : sizeWorld.x;
-                        var ly2 = s2.y != 0 ? sizeWorld.y / s2.y : sizeWorld.y;
-                        return (lx2, ly2);
-                    }
+                    var sizeWorld = rr.bounds.size;
+                    var s2 = temp.transform.lossyScale;
+                    var lx2 = s2.x != 0 ? sizeWorld.x / s2.x : sizeWorld.x;
+                    var ly2 = s2.y != 0 ? sizeWorld.y / s2.y : sizeWorld.y;
+                    return (lx2, ly2);
                 }
-                finally
-                {
-                    Destroy(temp);
-                }
+            }
+            finally
+            {
+                Destroy(temp);
             }
 
             return (0f, 0f);

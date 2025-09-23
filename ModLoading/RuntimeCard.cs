@@ -79,13 +79,9 @@ namespace _project.Scripts.ModLoading
                     if (fromBundle) return fromBundle;
                 }
 
-                if (!string.IsNullOrWhiteSpace(_prefabResourcePath))
-                {
-                    var fromResources = Resources.Load<GameObject>(_prefabResourcePath);
-                    if (fromResources) return fromResources;
-                }
-
-                return CardGameMaster.Instance?.actionCardPrefab;
+                if (string.IsNullOrWhiteSpace(_prefabResourcePath)) return CardGameMaster.Instance?.actionCardPrefab;
+                var fromResources = Resources.Load<GameObject>(_prefabResourcePath);
+                return fromResources ? fromResources : CardGameMaster.Instance?.actionCardPrefab;
             }
         }
 
@@ -93,11 +89,12 @@ namespace _project.Scripts.ModLoading
         {
             get
             {
-                if (!string.IsNullOrWhiteSpace(_bundleKey) && !string.IsNullOrWhiteSpace(_bundleMaterialName))
-                {
-                    var fromBundle = ModAssets.LoadFromBundle<Material>(_bundleKey, _bundleMaterialName);
-                    if (fromBundle) return fromBundle;
-                }
+                if (string.IsNullOrWhiteSpace(_bundleKey) || string.IsNullOrWhiteSpace(_bundleMaterialName))
+                    return !string.IsNullOrWhiteSpace(_materialResourcePath)
+                        ? Resources.Load<Material>(_materialResourcePath)
+                        : null;
+                var fromBundle = ModAssets.LoadFromBundle<Material>(_bundleKey, _bundleMaterialName);
+                if (fromBundle) return fromBundle;
 
                 return !string.IsNullOrWhiteSpace(_materialResourcePath)
                     ? Resources.Load<Material>(_materialResourcePath)

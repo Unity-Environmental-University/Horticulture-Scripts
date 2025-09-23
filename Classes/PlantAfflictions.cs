@@ -164,17 +164,16 @@ namespace _project.Scripts.Classes
 
             public void TreatWith(ITreatment treatment, PlantController plant)
             {
-                if (treatment is SoapyWaterTreatment or InsecticideTreatment or ImidaclopridTreatment or Panacea)
+                if (treatment is not (SoapyWaterTreatment or InsecticideTreatment or ImidaclopridTreatment
+                    or Panacea)) return;
+                if (!TreatmentAttemptSucceeds(this, treatment))
                 {
-                    if (!TreatmentAttemptSucceeds(this, treatment))
-                    {
-                        return;
-                    }
-
-                    var infectReduction = treatment.InfectCureValue ?? 0;
-                    var eggReduction = treatment.EggCureValue ?? 0;
-                    plant.ReduceAfflictionValues(this, infectReduction, eggReduction);
+                    return;
                 }
+
+                var infectReduction = treatment.InfectCureValue ?? 0;
+                var eggReduction = treatment.EggCureValue ?? 0;
+                plant.ReduceAfflictionValues(this, infectReduction, eggReduction);
             }
 
             public void TickDay(PlantController plant)
@@ -198,17 +197,15 @@ namespace _project.Scripts.Classes
 
             public void TreatWith(ITreatment treatment, PlantController plant)
             {
-                if (treatment is FungicideTreatment or Panacea)
+                if (treatment is not (FungicideTreatment or Panacea)) return;
+                if (!TreatmentAttemptSucceeds(this, treatment))
                 {
-                    if (!TreatmentAttemptSucceeds(this, treatment))
-                    {
-                        return;
-                    }
-
-                    var infectReduction = treatment.InfectCureValue ?? 0;
-                    var eggReduction = treatment.EggCureValue ?? 0;
-                    plant.ReduceAfflictionValues(this, infectReduction, eggReduction);
+                    return;
                 }
+
+                var infectReduction = treatment.InfectCureValue ?? 0;
+                var eggReduction = treatment.EggCureValue ?? 0;
+                plant.ReduceAfflictionValues(this, infectReduction, eggReduction);
             }
 
             public void TickDay(PlantController plant)
@@ -231,18 +228,16 @@ namespace _project.Scripts.Classes
 
             public void TreatWith(ITreatment treatment, PlantController plant)
             {
-                if (treatment is HorticulturalOilTreatment or ImidaclopridTreatment or SpinosadTreatment
-                    or InsecticideTreatment or Panacea)
+                if (treatment is not (HorticulturalOilTreatment or ImidaclopridTreatment or SpinosadTreatment
+                    or InsecticideTreatment or Panacea)) return;
+                if (!TreatmentAttemptSucceeds(this, treatment))
                 {
-                    if (!TreatmentAttemptSucceeds(this, treatment))
-                    {
-                        return;
-                    }
-
-                    var infectReduction = treatment.InfectCureValue ?? 0;
-                    var eggReduction = treatment.EggCureValue ?? 0;
-                    plant.ReduceAfflictionValues(this, infectReduction, eggReduction);
+                    return;
                 }
+
+                var infectReduction = treatment.InfectCureValue ?? 0;
+                var eggReduction = treatment.EggCureValue ?? 0;
+                plant.ReduceAfflictionValues(this, infectReduction, eggReduction);
             }
 
             public void TickDay(PlantController plant)
@@ -265,17 +260,15 @@ namespace _project.Scripts.Classes
             
             public void TreatWith(ITreatment treatment, PlantController plant)
             {
-                if (treatment is HorticulturalOilTreatment or Panacea)
+                if (treatment is not (HorticulturalOilTreatment or Panacea)) return;
+                if (!TreatmentAttemptSucceeds(this, treatment))
                 {
-                    if (!TreatmentAttemptSucceeds(this, treatment))
-                    {
-                        return;
-                    }
-
-                    var infectReduction = treatment.InfectCureValue ?? 0;
-                    var eggReduction = treatment.EggCureValue ?? 0;
-                    plant.ReduceAfflictionValues(this, infectReduction, eggReduction);
+                    return;
                 }
+
+                var infectReduction = treatment.InfectCureValue ?? 0;
+                var eggReduction = treatment.EggCureValue ?? 0;
+                plant.ReduceAfflictionValues(this, infectReduction, eggReduction);
             }
 
             public void TickDay(PlantController plant)
@@ -299,17 +292,15 @@ namespace _project.Scripts.Classes
             
             public void TreatWith(ITreatment treatment, PlantController plant)
             {
-                if (treatment is ImidaclopridTreatment or SpinosadTreatment or Panacea)
+                if (treatment is not (ImidaclopridTreatment or SpinosadTreatment or Panacea)) return;
+                if (!TreatmentAttemptSucceeds(this, treatment))
                 {
-                    if (!TreatmentAttemptSucceeds(this, treatment))
-                    {
-                        return;
-                    }
-
-                    var infectReduction = treatment.InfectCureValue ?? 0;
-                    var eggReduction = treatment.EggCureValue ?? 0;
-                    plant.ReduceAfflictionValues(this, infectReduction, eggReduction);
+                    return;
                 }
+
+                var infectReduction = treatment.InfectCureValue ?? 0;
+                var eggReduction = treatment.EggCureValue ?? 0;
+                plant.ReduceAfflictionValues(this, infectReduction, eggReduction);
             }
 
             public void TickDay(PlantController plant)

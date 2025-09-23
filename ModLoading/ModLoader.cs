@@ -282,14 +282,10 @@ namespace _project.Scripts.ModLoading
         private static PlantAfflictions.ITreatment CreateTreatment(CardJson def)
         {
             // New affliction-specific effectiveness system takes priority
-            if (def.effectiveness is { Length: > 0 })
-            {
-                var treatmentName = !string.IsNullOrEmpty(def.treatment) ? def.treatment : def.name;
-                return new ModTreatment(treatmentName, def.description, def.effectiveness);
-            }
-            
-            // Fallback to a legacy system for backward compatibility
-            return CreateLegacyTreatment(def.treatment, def.infectCure, def.eggCure);
+            if (def.effectiveness is not { Length: > 0 })
+                return CreateLegacyTreatment(def.treatment, def.infectCure, def.eggCure);
+            var treatmentName = !string.IsNullOrEmpty(def.treatment) ? def.treatment : def.name;
+            return new ModTreatment(treatmentName, def.description, def.effectiveness);
         }
         
         private static PlantAfflictions.ITreatment CreateLegacyTreatment(string name, int? infectCure = null, int? eggCure = null)

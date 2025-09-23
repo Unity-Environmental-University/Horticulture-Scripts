@@ -258,7 +258,6 @@ namespace _project.Scripts.GameState
 
                 list.Add(new PlantData
                 {
-                    plantType = plant.type,
                     plantCard = SerializeCard(plant.PlantCard),
                     locationIndex = i,
                     currentAfflictions = plant.cAfflictions,
