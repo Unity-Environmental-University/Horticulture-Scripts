@@ -72,7 +72,7 @@ namespace _project.Scripts.ModLoading
 
             LoadCards(folder, master);
             LoadStickers(folder, master);
-            LoadAfflictions(folder, master);
+            LoadAfflictions(folder);
         }
 
         /// <summary>
@@ -133,7 +133,7 @@ namespace _project.Scripts.ModLoading
         /// <summary>
         /// Load *.affliction.json files and register as ModAfflictions
         /// </summary>
-        private static void LoadAfflictions(string folder, CardGameMaster master)
+        private static void LoadAfflictions(string folder)
         {
             foreach (var json in Directory.GetFiles(folder, "*.affliction.json", SearchOption.AllDirectories))
             {

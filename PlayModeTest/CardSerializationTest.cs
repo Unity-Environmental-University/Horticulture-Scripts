@@ -144,7 +144,7 @@ namespace _project.Scripts.PlayModeTest
                 $"Value mismatch for {cardType.Name}");
         }
         
-        private void TestReadOnlyCardBasicSerialization(Type cardType, CardData cardData)
+        private static void TestReadOnlyCardBasicSerialization(Type cardType, CardData cardData)
         {
             // For read-only cards, just verify CardData structure is correct
             Assert.AreEqual(cardType.Name, cardData.cardTypeName, $"Card type name mismatch for {cardType.Name}");
@@ -155,7 +155,7 @@ namespace _project.Scripts.PlayModeTest
             Assert.AreEqual(freshCard.Value, cardData.value, $"CardData value doesn't match card value for {cardType.Name}");
         }
         
-        private void TestReadOnlyCardSerialization(Type cardType)
+        private static void TestReadOnlyCardSerialization(Type cardType)
         {
             // Create a card of the specified type
             var originalCard = TryCreateCard(cardType);
@@ -173,7 +173,7 @@ namespace _project.Scripts.PlayModeTest
             Assert.AreEqual(originalCard.Value, freshCard.Value, $"Fresh card value mismatch for {cardType.Name}");
         }
 
-        private void TestCardSerializationWithSingleSticker(Type cardType)
+        private static void TestCardSerializationWithSingleSticker(Type cardType)
         {
             var originalCard = TryCreateCard(cardType);
             Assert.IsNotNull(originalCard, $"Failed to create card of type {cardType.Name}");
@@ -194,7 +194,7 @@ namespace _project.Scripts.PlayModeTest
                 $"Sticker count mismatch for {cardType.Name}");
         }
 
-        private void TestCardSerializationWithMultipleStickers(Type cardType)
+        private static void TestCardSerializationWithMultipleStickers(Type cardType)
         {
             var originalCard = TryCreateCard(cardType);
             Assert.IsNotNull(originalCard, $"Failed to create card of type {cardType.Name}");
@@ -216,7 +216,7 @@ namespace _project.Scripts.PlayModeTest
                 $"Multiple sticker count mismatch for {cardType.Name}");
         }
 
-        private void TestCardValuePreservation(ICard card)
+        private static void TestCardValuePreservation(ICard card)
         {
             // Modify the original card's value
             card.ModifyValue(-2);
@@ -252,7 +252,7 @@ namespace _project.Scripts.PlayModeTest
             {
                 try
                 {
-                    if (Activator.CreateInstance(t) is ICard card && card.Treatment != null)
+                    if (Activator.CreateInstance(t) is ICard { Treatment: not null })
                     {
                         treatmentCardTypes.Add(t);
                     }
@@ -291,7 +291,6 @@ namespace _project.Scripts.PlayModeTest
                 {
                     stickerTypeName = s.GetType().Name,
                     name = s.Name,
-                    description = s.Description,
                     value = s.Value
                 }).ToList() ?? new List<StickerData>()
             };
@@ -319,11 +318,9 @@ namespace _project.Scripts.PlayModeTest
                     // Try to restore stickers (only works for sticker-compatible cards)
                     if (cardData.stickers != null && StickerCompatibleCards.Any(t => t.Name == cardData.cardTypeName))
                     {
-                        foreach (var stickerData in cardData.stickers)
-                        {
-                            var sticker = GameStateManager.DeserializeSticker(stickerData);
-                            if (sticker != null) card.ApplySticker(sticker);
-                        }
+                        foreach (var sticker in cardData.stickers
+                                     .Select(GameStateManager.DeserializeSticker)
+                                     .Where(sticker => sticker != null)) card.ApplySticker(sticker);
                     }
                     return card;
                 }

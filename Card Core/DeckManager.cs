@@ -75,7 +75,7 @@ namespace _project.Scripts.Card_Core
                 var stickerView = stickerViews[i];
                 
                 var totalSpan = (stickerCount - 1) * anglePerSticker;
-                var currentAngle = (i * anglePerSticker) - (totalSpan / 2f);
+                var currentAngle = i * anglePerSticker - totalSpan / 2f;
                 var angleInRadians = currentAngle * Mathf.Deg2Rad;
                 
                 var xOffset = Mathf.Sin(angleInRadians) * arcRadius;
@@ -842,7 +842,8 @@ namespace _project.Scripts.Card_Core
         /// <param name="effectiveSpacing">Spacing between cards</param>
         /// <param name="useOverlapLayout">Whether to use overlap layout or fan layout</param>
         /// <returns>Target position and rotation for the card</returns>
-        private (Vector3 position, Quaternion rotation) CalculateCardTransform(int cardIndex, int totalCards, float effectiveSpacing, bool useOverlapLayout)
+        private static (Vector3 position, Quaternion rotation) CalculateCardTransform(int cardIndex, int totalCards,
+            float effectiveSpacing, bool useOverlapLayout)
         {
             if (useOverlapLayout)
             {
@@ -1172,9 +1173,6 @@ namespace _project.Scripts.Card_Core
                 var tf = actionCardParent.GetChild(i);
                 var (targetPos, targetRot) = CalculateCardTransform(i, childCount, effectiveSpacing, useOverlapLayout);
 
-                // All cards should use the same consistent scale
-                var targetScale = cardScale;
-
                 // Add simultaneous animations for position, rotation, and scale
                 _currentHandSequence.Join(
                     tf.DOLocalMove(targetPos, duration)
@@ -1187,7 +1185,7 @@ namespace _project.Scripts.Card_Core
                         .SetLink(tf.gameObject, LinkBehaviour.KillOnDisable)
                 );
                 _currentHandSequence.Join(
-                    tf.DOScale(targetScale, duration)
+                    tf.DOScale(cardScale, duration)
                         .SetEase(Ease.OutQuart)
                         .SetLink(tf.gameObject, LinkBehaviour.KillOnDisable)
                 );

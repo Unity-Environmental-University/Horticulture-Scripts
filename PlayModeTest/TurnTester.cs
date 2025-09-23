@@ -512,20 +512,6 @@ namespace _project.Scripts.PlayModeTest
             // Ignore exceptions from UI updates during turn sequencing
             LogAssert.ignoreFailingMessages = true;
 
-            // Helper to count cards by name across deck, hand, and discard
-            static Dictionary<string, int> CountByName(IEnumerable<ICard> cards)
-            {
-                var map = new Dictionary<string, int>();
-                foreach (var c in cards)
-                {
-                    if (c == null) continue;
-                    var name = c.Name;
-                    map.TryAdd(name, 0);
-                    map[name] += 1;
-                }
-                return map;
-            }
-
             // Capture initial multiset of cards across deck + hand + discard
             var initialAll = new List<ICard>();
             initialAll.AddRange(_deckManager.GetActionDeck());
@@ -554,6 +540,22 @@ namespace _project.Scripts.PlayModeTest
             {
                 Assert.IsTrue(newCounts.ContainsKey(kvp.Key), $"Missing card '{kvp.Key}' after round");
                 Assert.AreEqual(kvp.Value, newCounts[kvp.Key], $"Count mismatch for '{kvp.Key}'");
+            }
+
+            yield break;
+
+            // Helper to count cards by name across deck, hand, and discard
+            static Dictionary<string, int> CountByName(IEnumerable<ICard> cards)
+            {
+                var map = new Dictionary<string, int>();
+                foreach (var c in cards)
+                {
+                    if (c == null) continue;
+                    var name = c.Name;
+                    map.TryAdd(name, 0);
+                    map[name] += 1;
+                }
+                return map;
             }
         }
 

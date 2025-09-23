@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using _project.Scripts.Card_Core;
 using _project.Scripts.Classes;
@@ -12,17 +13,14 @@ namespace _project.Scripts.ModLoading
     /// </summary>
     public class RuntimeCard : ICard
     {
-        private readonly string _name;
-        private readonly string _description;
         private int _value;
         private readonly string _prefabResourcePath;
         private readonly string _materialResourcePath;
         private string _bundleKey;
         private string _bundlePrefabName;
         private string _bundleMaterialName;
-        private readonly System.Func<PlantAfflictions.ITreatment> _treatmentFactory;
+        private readonly Func<PlantAfflictions.ITreatment> _treatmentFactory;
 
-        private readonly List<ISticker> _stickers = new();
         public int Weight { get; set; } = 1;
 
         public RuntimeCard(string name,
@@ -30,10 +28,10 @@ namespace _project.Scripts.ModLoading
                            int value,
                            string prefabResourcePath,
                            string materialResourcePath,
-                            System.Func<PlantAfflictions.ITreatment> treatmentFactory = null)
+                            Func<PlantAfflictions.ITreatment> treatmentFactory = null)
         {
-            _name = string.IsNullOrWhiteSpace(name) ? "ModCard" : name;
-            _description = description;
+            Name = string.IsNullOrWhiteSpace(name) ? "ModCard" : name;
+            Description = description;
             _value = value;
             _prefabResourcePath = prefabResourcePath;
             _materialResourcePath = materialResourcePath;
@@ -49,7 +47,7 @@ namespace _project.Scripts.ModLoading
                                              string bundleKey,
                                              string prefabAssetName,
                                              string materialAssetName,
-                                             System.Func<PlantAfflictions.ITreatment> treatmentFactory = null)
+                                             Func<PlantAfflictions.ITreatment> treatmentFactory = null)
         {
             var rc = new RuntimeCard(name, description, value, null, null, treatmentFactory)
             {
@@ -60,8 +58,9 @@ namespace _project.Scripts.ModLoading
             return rc;
         }
 
-        public string Name => _name;
-        public string Description => _description;
+        public string Name { get; }
+
+        public string Description { get; }
 
         public int? Value
         {
@@ -100,19 +99,16 @@ namespace _project.Scripts.ModLoading
                     if (fromBundle) return fromBundle;
                 }
 
-                if (!string.IsNullOrWhiteSpace(_materialResourcePath))
-                {
-                    return Resources.Load<Material>(_materialResourcePath);
-                }
-
-                return null;
+                return !string.IsNullOrWhiteSpace(_materialResourcePath)
+                    ? Resources.Load<Material>(_materialResourcePath)
+                    : null;
             }
         }
 
         public PlantAfflictions.ITreatment Treatment => _treatmentFactory?.Invoke();
         public PlantAfflictions.IAffliction Affliction => null;
 
-        public List<ISticker> Stickers => _stickers;
+        public List<ISticker> Stickers { get; } = new();
 
         public void Selected()
         {
@@ -127,15 +123,15 @@ namespace _project.Scripts.ModLoading
 
         public ICard Clone()
         {
-            var clone = new RuntimeCard(_name, _description, _value, _prefabResourcePath, _materialResourcePath, _treatmentFactory)
+            var clone = new RuntimeCard(Name, Description, _value, _prefabResourcePath, _materialResourcePath, _treatmentFactory)
             {
                 Weight = Weight,
                 _bundleKey = _bundleKey,
                 _bundlePrefabName = _bundlePrefabName,
                 _bundleMaterialName = _bundleMaterialName
             };
-            foreach (var sticker in _stickers)
-                clone._stickers.Add(sticker.Clone());
+            foreach (var sticker in Stickers)
+                clone.Stickers.Add(sticker.Clone());
             return clone;
         }
     }

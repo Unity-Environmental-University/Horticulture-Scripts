@@ -1,8 +1,9 @@
 using System;
-using UnityEngine;
+using System.Linq;
+using _project.Scripts.Card_Core;
 using _project.Scripts.Classes;
 using _project.Scripts.Core;
-using _project.Scripts.Card_Core;
+using UnityEngine;
 
 namespace _project.Scripts.ModLoading
 {
@@ -85,13 +86,8 @@ namespace _project.Scripts.ModLoading
             
             // Legacy treatments work based on treatment name vulnerability
             var treatmentName = treatment.GetType().Name.Replace("Treatment", "");
-            foreach (var vulnerableTo in _vulnerableToTreatments)
-            {
-                if (string.Equals(vulnerableTo, treatmentName, StringComparison.OrdinalIgnoreCase))
-                    return true;
-            }
-            
-            return false;
+            return _vulnerableToTreatments.Any(vulnerableTo =>
+                string.Equals(vulnerableTo, treatmentName, StringComparison.OrdinalIgnoreCase));
         }
         
         public void TickDay(PlantController plant)

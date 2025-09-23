@@ -81,7 +81,6 @@ namespace _project.Scripts.GameState
     {
         public string stickerTypeName;
         public string name;
-        public string description;
         public int? value;
     }
 

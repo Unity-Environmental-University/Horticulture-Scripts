@@ -14,10 +14,9 @@ namespace _project.Scripts.PlayModeTest
         {
             // Create a base treatment
             var baseTreatment = new PlantAfflictions.SoapyWaterTreatment();
-            var originalInfectCure = baseTreatment.InfectCureValue;
-            
+
             // Create wrapper with custom infectCure
-            var customInfectCure = 5;
+            const int customInfectCure = 5;
             var wrapper = CreateCustomTreatmentWrapper(baseTreatment, customInfectCure, null);
             
             // Assert the custom value is used
@@ -32,10 +31,9 @@ namespace _project.Scripts.PlayModeTest
         {
             // Create a base treatment  
             var baseTreatment = new PlantAfflictions.HorticulturalOilTreatment();
-            var originalEggCure = baseTreatment.EggCureValue;
-            
+
             // Create wrapper with custom eggCure
-            var customEggCure = 3;
+            const int customEggCure = 3;
             var wrapper = CreateCustomTreatmentWrapper(baseTreatment, null, customEggCure);
             
             // Assert the custom value is used
@@ -47,8 +45,8 @@ namespace _project.Scripts.PlayModeTest
         public void CustomTreatmentWrapper_OverridesBothValues()
         {
             var baseTreatment = new PlantAfflictions.InsecticideTreatment();
-            var customInfectCure = 4;
-            var customEggCure = 2;
+            const int customInfectCure = 4;
+            const int customEggCure = 2;
             
             var wrapper = CreateCustomTreatmentWrapper(baseTreatment, customInfectCure, customEggCure);
             
@@ -100,7 +98,7 @@ namespace _project.Scripts.PlayModeTest
         /// <summary>
         /// Helper method to create CustomTreatmentWrapper
         /// </summary>
-        private PlantAfflictions.ITreatment CreateCustomTreatmentWrapper(
+        private static PlantAfflictions.ITreatment CreateCustomTreatmentWrapper(
             PlantAfflictions.ITreatment baseTreatment, int? infectCure, int? eggCure)
         {
             // Since we can't easily access private CustomTreatmentWrapper via reflection,
@@ -136,7 +134,8 @@ namespace _project.Scripts.PlayModeTest
         /// <summary>
         /// Helper method to create ModTreatment
         /// </summary>
-        private ModLoader.ModTreatment CreateModTreatment(string name, string description, ModLoader.AfflictionEffectiveness[] effectiveness)
+        private static ModLoader.ModTreatment CreateModTreatment(string name, string description,
+            ModLoader.AfflictionEffectiveness[] effectiveness)
         {
             return new ModLoader.ModTreatment(name, description, effectiveness);
         }
@@ -144,7 +143,8 @@ namespace _project.Scripts.PlayModeTest
         /// <summary>
         /// Helper method to create AfflictionEffectiveness - now public, so we can access directly
         /// </summary>
-        private ModLoader.AfflictionEffectiveness CreateAfflictionEffectiveness(string affliction, int infectCure, int eggCure)
+        private static ModLoader.AfflictionEffectiveness CreateAfflictionEffectiveness(string affliction,
+            int infectCure, int eggCure)
         {
             return new ModLoader.AfflictionEffectiveness
             {

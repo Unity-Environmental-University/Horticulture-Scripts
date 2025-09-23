@@ -45,7 +45,7 @@ namespace _project.Scripts.Cinematics
         ///     Resume the paused UI pop-in animation, revealing UI elements (e.g., buttons) on-screen.
         ///     Safe to call multiple times; subsequent calls are ignored after first resume.
         /// </summary>
-        public void ResumeUIPopIn()
+        private void ResumeUIPopIn()
         {
             if (_uiResumed || !uiAnimator || string.IsNullOrEmpty(_clipName)) return;
             var state = uiAnimator[_clipName];

@@ -283,22 +283,6 @@ namespace _project.Scripts.Core
             FlagShadersUpdate();
         }
 
-        private void ReduceInfect(PlantAfflictions.IAffliction affliction, int amount)
-        {
-            if (PlantCard is not IPlantCard plantCardInterface) return;
-            var source = affliction?.Name ?? affliction?.GetType().Name ?? "Unknown";
-            plantCardInterface.Infect.ReduceInfect(source, Mathf.Max(0, amount));
-            FlagShadersUpdate();
-        }
-        
-        private void ReduceEggs(PlantAfflictions.IAffliction affliction, int amount)
-        {
-            if (PlantCard is not IPlantCard plantCardInterface) return;
-            var source = affliction?.Name ?? affliction?.GetType().Name ?? "Unknown";
-            plantCardInterface.Infect.ReduceEggs(source, Mathf.Max(0, amount));
-            FlagShadersUpdate();
-        }
-
         private void AddEggs(PlantAfflictions.IAffliction affliction, int amount)
         {
             if (PlantCard is not IPlantCard plantCardInterface) return;
@@ -328,7 +312,7 @@ namespace _project.Scripts.Core
             return 0;
         }
 
-        public void SetEggLevel(int eggLevel)
+        private void SetEggLevel(int eggLevel)
         {
             if (PlantCard is not IPlantCard plantCardInterface) return;
             plantCardInterface.EggLevel = Mathf.Max(0, eggLevel);

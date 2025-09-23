@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Reflection;
 using _project.Scripts.Classes;
 using UnityEngine;
@@ -326,8 +327,7 @@ namespace _project.Scripts.Card_Core
             var inputActionField =
                 reflection.GetField("_mouseClickAction", BindingFlags.NonPublic | BindingFlags.Instance);
             if (inputActionField == null) yield break;
-            var inputAction = inputActionField.GetValue(placedCardClick3D) as InputAction;
-            if (inputAction == null) yield break;
+            if (inputActionField.GetValue(placedCardClick3D) is not InputAction inputAction) yield break;
             inputAction.Disable();
             inputAction.Dispose();
             inputActionField.SetValue(placedCardClick3D, null);
@@ -443,7 +443,7 @@ namespace _project.Scripts.Card_Core
                     spotDataHolder.OnLocationCardPlaced(locationCard);
                 }
             }
-            catch (System.Exception e)
+            catch (Exception e)
             {
                 Debug.LogError($"Error notifying SpotDataHolder of card placement: {e.Message}");
             }
@@ -462,7 +462,7 @@ namespace _project.Scripts.Card_Core
                     spotDataHolder.OnLocationCardRemoved();
                 }
             }
-            catch (System.Exception e)
+            catch (Exception e)
             {
                 Debug.LogError($"Error notifying SpotDataHolder of card removal: {e.Message}");
             }

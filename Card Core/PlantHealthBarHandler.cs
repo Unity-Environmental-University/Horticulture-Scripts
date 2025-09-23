@@ -184,7 +184,7 @@ namespace _project.Scripts.Card_Core
             cache = targetCount;
         }
 
-        private void PrimeExistingIcons(GameObject parent, List<Transform> pool)
+        private static void PrimeExistingIcons(GameObject parent, List<Transform> pool)
         {
             pool.Clear();
             if (!parent) return;
@@ -254,7 +254,7 @@ namespace _project.Scripts.Card_Core
             }
         }
 
-        private (float sizeX, float sizeY) TryGetIconLocalSize(Transform icon, GameObject prefab)
+        private static (float sizeX, float sizeY) TryGetIconLocalSize(Transform icon, GameObject prefab)
         {
             // Prefer an existing active icon's renderer bounds
             var r = icon ? icon.GetComponentInChildren<Renderer>() : null;

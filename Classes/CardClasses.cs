@@ -128,7 +128,7 @@ namespace _project.Scripts.Classes
 
         public ICard Clone()
         {
-            var clone = new FertilizerBasic { Value = this.Value };
+            var clone = new FertilizerBasic { Value = Value };
             foreach (var sticker in Stickers) clone.Stickers.Add(sticker.Clone());
             return clone;
         }
@@ -188,7 +188,7 @@ namespace _project.Scripts.Classes
 
         public ICard Clone()
         {
-            var clone = new ColeusCard { EggLevel = this.EggLevel, Value = this.Value };
+            var clone = new ColeusCard { EggLevel = EggLevel, Value = Value };
             foreach (var kv in Infect.All)
             {
                 clone.Infect.SetInfect(kv.Key, kv.Value.infect);
@@ -224,7 +224,7 @@ namespace _project.Scripts.Classes
         public List<ISticker> Stickers { get; } = new();
 
         public ICard Clone() {
-            var clone = new ChrysanthemumCard { EggLevel = this.EggLevel, Value = this.Value };
+            var clone = new ChrysanthemumCard { EggLevel = EggLevel, Value = Value };
             foreach (var kv in Infect.All) {
                 clone.Infect.SetInfect(kv.Key, kv.Value.infect);
                 clone.Infect.SetEggs(kv.Key, kv.Value.eggs);
@@ -258,7 +258,7 @@ namespace _project.Scripts.Classes
         public List<ISticker> Stickers { get; } = new();
 
         public ICard Clone() {
-            var clone = new PepperCard { EggLevel = this.EggLevel, Value = this.Value };
+            var clone = new PepperCard { EggLevel = EggLevel, Value = Value };
             foreach (var kv in Infect.All) {
                 clone.Infect.SetInfect(kv.Key, kv.Value.infect);
                 clone.Infect.SetEggs(kv.Key, kv.Value.eggs);
@@ -292,7 +292,7 @@ namespace _project.Scripts.Classes
         public List<ISticker> Stickers { get; } = new();
 
         public ICard Clone() {
-            var clone = new CucumberCard { EggLevel = this.EggLevel, Value = this.Value };
+            var clone = new CucumberCard { EggLevel = EggLevel, Value = Value };
             foreach (var kv in Infect.All) {
                 clone.Infect.SetInfect(kv.Key, kv.Value.infect);
                 clone.Infect.SetEggs(kv.Key, kv.Value.eggs);
@@ -319,13 +319,13 @@ namespace _project.Scripts.Classes
         public int BaseInfectLevel
         {
             get => _baseInfectLevel;
-            set => _baseInfectLevel = Mathf.Max(0, value);
+            private set => _baseInfectLevel = Mathf.Max(0, value);
         }
 
         public int BaseEggLevel
         {
             get => _baseEggLevel;
-            set => _baseEggLevel = Mathf.Max(0, value);
+            private set => _baseEggLevel = Mathf.Max(0, value);
         }
 
         public List<ISticker> Stickers { get; } = new();
@@ -353,13 +353,13 @@ namespace _project.Scripts.Classes
         public int BaseInfectLevel
         {
             get => _baseInfectLevel;
-            set => _baseInfectLevel = Mathf.Max(0, value);
+            private set => _baseInfectLevel = Mathf.Max(0, value);
         }
 
         public int BaseEggLevel
         {
             get => _baseEggLevel;
-            set => _baseEggLevel = Mathf.Max(0, value);
+            private set => _baseEggLevel = Mathf.Max(0, value);
         }
 
         public List<ISticker> Stickers { get; } = new();
@@ -387,13 +387,13 @@ namespace _project.Scripts.Classes
         public int BaseInfectLevel
         {
             get => _baseInfectLevel;
-            set => _baseInfectLevel = Mathf.Max(0, value);
+            private set => _baseInfectLevel = Mathf.Max(0, value);
         }
 
         public int BaseEggLevel
         {
             get => _baseEggLevel;
-            set => _baseEggLevel = Mathf.Max(0, value);
+            private set => _baseEggLevel = Mathf.Max(0, value);
         }
 
         public List<ISticker> Stickers { get; } = new();
@@ -421,13 +421,13 @@ namespace _project.Scripts.Classes
         public int BaseInfectLevel
         {
             get => _baseInfectLevel;
-            set => _baseInfectLevel = Mathf.Max(0, value);
+            private set => _baseInfectLevel = Mathf.Max(0, value);
         }
 
         public int BaseEggLevel
         {
             get => _baseEggLevel;
-            set => _baseEggLevel = Mathf.Max(0, value);
+            private set => _baseEggLevel = Mathf.Max(0, value);
         }
 
         public List<ISticker> Stickers { get; } = new();
@@ -455,13 +455,13 @@ namespace _project.Scripts.Classes
         public int BaseInfectLevel
         {
             get => _baseInfectLevel;
-            set => _baseInfectLevel = Mathf.Max(0, value);
+            private set => _baseInfectLevel = Mathf.Max(0, value);
         }
 
         public int BaseEggLevel
         {
             get => _baseEggLevel;
-            set => _baseEggLevel = Mathf.Max(0, value);
+            private set => _baseEggLevel = Mathf.Max(0, value);
         }
 
         public List<ISticker> Stickers { get; } = new();
@@ -489,13 +489,13 @@ namespace _project.Scripts.Classes
         public int BaseInfectLevel
         {
             get => _baseInfectLevel;
-            set => _baseInfectLevel = Mathf.Max(0, value);
+            private set => _baseInfectLevel = Mathf.Max(0, value);
         }
 
         public int BaseEggLevel
         {
             get => _baseEggLevel;
-            set => _baseEggLevel = Mathf.Max(0, value);
+            private set => _baseEggLevel = Mathf.Max(0, value);
         }
 
         public List<ISticker> Stickers { get; } = new();
@@ -542,7 +542,7 @@ namespace _project.Scripts.Classes
         public void Selected() { if (CardGameMaster.Instance.debuggingCardClass) Debug.Log("Selected " + Name); }
         public void ModifyValue(int delta) => _value += delta;
         public ICard Clone() { 
-            var clone = new HorticulturalOilBasic { Value = this.Value };
+            var clone = new HorticulturalOilBasic { Value = Value };
             foreach (var sticker in Stickers) clone.Stickers.Add(sticker.Clone());
             return clone;
         }
@@ -574,7 +574,7 @@ namespace _project.Scripts.Classes
         public void Selected() { if (CardGameMaster.Instance.debuggingCardClass) Debug.Log("Selected " + Name); }
         public void ModifyValue(int delta) => _value += delta;
         public ICard Clone() { 
-            var clone = new InsecticideBasic { Value = this.Value };
+            var clone = new InsecticideBasic { Value = Value };
             foreach (var sticker in Stickers) clone.Stickers.Add(sticker.Clone());
             return clone;
         }
@@ -606,7 +606,7 @@ namespace _project.Scripts.Classes
         public void Selected() { if (CardGameMaster.Instance.debuggingCardClass) Debug.Log("Selected " + Name); }
         public void ModifyValue(int delta) => _value += delta;
         public ICard Clone() { 
-            var clone = new FungicideBasic { Value = this.Value };
+            var clone = new FungicideBasic { Value = Value };
             foreach (var sticker in Stickers) clone.Stickers.Add(sticker.Clone());
             return clone;
         }
@@ -638,7 +638,7 @@ namespace _project.Scripts.Classes
         public void Selected() { if (CardGameMaster.Instance.debuggingCardClass) Debug.Log("Selected " + Name); }
         public void ModifyValue(int delta) => _value += delta;
         public ICard Clone() { 
-            var clone = new SoapyWaterBasic { Value = this.Value };
+            var clone = new SoapyWaterBasic { Value = Value };
             foreach (var sticker in Stickers) clone.Stickers.Add(sticker.Clone());
             return clone;
         }
@@ -670,7 +670,7 @@ namespace _project.Scripts.Classes
         public void Selected() { if (CardGameMaster.Instance.debuggingCardClass) Debug.Log("Selected " + Name); }
         public void ModifyValue(int delta) => _value += delta;
         public ICard Clone() { 
-            var clone = new SpinosadTreatment { Value = this.Value };
+            var clone = new SpinosadTreatment { Value = Value };
             foreach (var sticker in Stickers) clone.Stickers.Add(sticker.Clone());
             return clone;
         }
@@ -702,7 +702,7 @@ namespace _project.Scripts.Classes
         public void Selected() { if (CardGameMaster.Instance.debuggingCardClass) Debug.Log("Selected " + Name); }
         public void ModifyValue(int delta) => _value += delta;
         public ICard Clone() { 
-            var clone = new ImidaclopridTreatment { Value = this.Value };
+            var clone = new ImidaclopridTreatment { Value = Value };
             foreach (var sticker in Stickers) clone.Stickers.Add(sticker.Clone());
             return clone;
         }
@@ -734,7 +734,7 @@ namespace _project.Scripts.Classes
         public void Selected() { if (CardGameMaster.Instance.debuggingCardClass) Debug.Log("Selected " + Name); }
         public void ModifyValue(int delta) => _value += delta;
         public ICard Clone() { 
-            var clone = new Panacea { Value = this.Value };
+            var clone = new Panacea { Value = Value };
             foreach (var sticker in Stickers) clone.Stickers.Add(sticker.Clone());
             return clone;
         }

@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 
 namespace _project.Scripts.ModLoading
@@ -33,12 +34,11 @@ namespace _project.Scripts.ModLoading
 
         public static void UnloadAll(bool unloadAllLoadedObjects = false)
         {
-            foreach (var kv in Bundles)
+            foreach (var b in Bundles.Select(kv => kv.Value).Where(b => b))
             {
-                var b = kv.Value;
-                if (!b) continue;
                 try { b.Unload(unloadAllLoadedObjects); } catch { /* ignore */ }
             }
+
             Bundles.Clear();
         }
 

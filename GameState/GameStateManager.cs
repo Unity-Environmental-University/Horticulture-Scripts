@@ -244,7 +244,6 @@ namespace _project.Scripts.GameState
             {
                 stickerTypeName = sticker.GetType().Name,
                 name = sticker.Name,
-                description = sticker.Description,
                 value = sticker.Value
             };
         }

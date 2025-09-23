@@ -1,3 +1,4 @@
+using System;
 using _project.Scripts.ModLoading;
 using NUnit.Framework;
 using UnityEngine;
@@ -50,7 +51,7 @@ namespace _project.Scripts.PlayModeTest
         [Test]
         public void ModTreatment_WithEmptyEffectiveness_HandlesGracefully()
         {
-            var effectiveness = new ModLoader.AfflictionEffectiveness[0];
+            var effectiveness = Array.Empty<ModLoader.AfflictionEffectiveness>();
             var treatment = new ModLoader.ModTreatment("Test", "Test", effectiveness);
             
             var (infectCure, eggCure) = treatment.GetEffectivenessFor("AnyPest");
