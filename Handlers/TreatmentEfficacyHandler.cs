@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using _project.Scripts.Classes;
 using UnityEngine;
+using Random = UnityEngine.Random;
 
 namespace _project.Scripts.Handlers
 {
@@ -10,6 +11,7 @@ namespace _project.Scripts.Handlers
     public class RelationalEfficacy
     {
         public int efficacy;
+        public int interactionCount;
 
         public string afflictionName;
         public string treatmentName;
@@ -21,6 +23,29 @@ namespace _project.Scripts.Handlers
             afflictionName = a.Name;
             treatmentName = T.Name;
             return $"{treatmentName} - {afflictionName}";
+        }
+
+        public void TouchEfficacy()
+        {
+            switch (interactionCount)
+            {
+                case > 15:
+                    RollEfficacyDecrease(30);
+                    break;
+                case > 10:
+                    RollEfficacyDecrease(50);
+                    break;
+                case > 5:
+                    RollEfficacyDecrease(80);
+                    break;
+            }
+        }
+
+        private void RollEfficacyDecrease(int touchLevel)
+        {
+            var chance = Random.Range(0, 100);
+            if (chance > touchLevel)
+                efficacy = Mathf.Max(1, efficacy - 10);
         }
     }
 
@@ -43,7 +68,9 @@ namespace _project.Scripts.Handlers
             {
                 existing.affliction = affliction;
                 existing.treatment = treatment;
+                existing.interactionCount++;
                 existing.SetNames(affliction, treatment);
+                existing.TouchEfficacy();
                 return Mathf.Clamp(existing.efficacy, 0, 100);
             }
 
@@ -51,6 +78,7 @@ namespace _project.Scripts.Handlers
             {
                 treatment = treatment,
                 affliction = affliction,
+                interactionCount = 1,
                 efficacy = Mathf.Clamp(treatment.Efficacy ?? DefaultEfficacy, 0, 100)
             };
 
