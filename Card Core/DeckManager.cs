@@ -1137,7 +1137,7 @@ namespace _project.Scripts.Card_Core
         private void AnimateHandReflow(float duration)
         {
             // Kill any existing hand animation sequence to prevent memory leaks
-            _currentHandSequence?.Kill();
+            SafeKillSequence(ref _currentHandSequence);
             
             updatingActionDisplay = true;
 
@@ -1265,7 +1265,7 @@ namespace _project.Scripts.Card_Core
         private void DisplayActionCardsSequence()
         {
             // Kill any existing display animation sequence to prevent memory leaks
-            _currentDisplaySequence?.Kill();
+            SafeKillSequence(ref _currentDisplaySequence);
             
             updatingActionDisplay = true;
 
@@ -1422,6 +1422,32 @@ namespace _project.Scripts.Card_Core
 
         #endregion
 
+        #region DOTween Sequence Management
+
+        /// <summary>
+        /// Safely kills a DOTween sequence with proper error handling and memory cleanup.
+        /// </summary>
+        /// <param name="sequence">The sequence to kill (passed by reference and set to null)</param>
+        private static void SafeKillSequence(ref Sequence sequence)
+        {
+            if (sequence == null) return;
+
+            try
+            {
+                sequence.Kill(true);
+            }
+            catch (Exception ex)
+            {
+                Debug.LogError($"Error killing DOTween sequence: {ex.Message}");
+            }
+            finally
+            {
+                sequence = null;
+            }
+        }
+
+        #endregion
+
         #region Unity Lifecycle
 
         /// <summary>
@@ -1429,8 +1455,8 @@ namespace _project.Scripts.Card_Core
         /// </summary>
         private void OnDestroy()
         {
-            _currentHandSequence?.Kill();
-            _currentDisplaySequence?.Kill();
+            SafeKillSequence(ref _currentHandSequence);
+            SafeKillSequence(ref _currentDisplaySequence);
         }
 
         #endregion

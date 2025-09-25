@@ -70,7 +70,6 @@ namespace _project.Scripts.Core
         private bool _needsShaderUpdate;
         private Renderer[] _renderers;
         private MaterialPropertyBlock _sharedPropertyBlock;
-        private bool _afflictionsChanged = true;
 
         public List<PlantAfflictions.IAffliction> CurrentAfflictions { get; } = new();
         public List<PlantAfflictions.ITreatment> CurrentTreatments { get; } = new();
@@ -89,11 +88,14 @@ namespace _project.Scripts.Core
         private void Start()
         {
             if (!TryGetComponent(out plantCardFunctions)) { }
-            
+
             if (!audioSource && TryGetComponent(out AudioSource foundSource))
                 audioSource = foundSource;
-            
+
             if (priceFlagText && PlantCard != null) priceFlagText.text = "$" + PlantCard.Value;
+
+            // Initialize debug lists for Unity Inspector
+            UpdateDebugLists();
         }
 
         private void Awake()
@@ -113,20 +115,23 @@ namespace _project.Scripts.Core
 
         private void Update()
         {
-            if (_afflictionsChanged)
-            {
-                cAfflictions = CurrentAfflictions.Select(a => a.Name).ToList();
-                cTreatments = CurrentTreatments.Select(a => a.Name).ToList();
-                pAfflictions = PriorAfflictions.Select(a => a.Name).ToList();
-                uTreatments = UsedTreatments.Select(a => a.Name).ToList();
-                _afflictionsChanged = false;
-            }
-            
             if (PlantCard is { Value: <= 0 }) KillPlant();
 
             if (!_needsShaderUpdate) return;
             UpdateShaders();
             _needsShaderUpdate = false;
+        }
+
+        /// <summary>
+        /// Updates the serialized string lists for Unity Inspector debugging.
+        /// Called only when afflictions or treatments actually change, not every frame.
+        /// </summary>
+        private void UpdateDebugLists()
+        {
+            cAfflictions = CurrentAfflictions.Select(a => a.Name).ToList();
+            cTreatments = CurrentTreatments.Select(a => a.Name).ToList();
+            pAfflictions = PriorAfflictions.Select(a => a.Name).ToList();
+            uTreatments = UsedTreatments.Select(a => a.Name).ToList();
         }
 
         /// <summary>
@@ -186,7 +191,7 @@ namespace _project.Scripts.Core
         public void RemoveAffliction(PlantAfflictions.IAffliction affliction)
         {
             if (!CurrentAfflictions.Remove(affliction)) return;
-            _afflictionsChanged = true;
+            UpdateDebugLists();
             switch (affliction)
             {
                 case PlantAfflictions.MildewAffliction:
@@ -221,7 +226,7 @@ namespace _project.Scripts.Core
             var rand = new Random();
             var randomValue = rand.NextDouble() * 0.5f + 0.5f;
             CurrentAfflictions.Add(affliction);
-            _afflictionsChanged = true;
+            UpdateDebugLists();
             switch (affliction)
             {
                 case PlantAfflictions.MildewAffliction:
