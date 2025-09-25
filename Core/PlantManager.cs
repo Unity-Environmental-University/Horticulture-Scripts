@@ -5,20 +5,20 @@ using UnityEngine;
 namespace _project.Scripts.Core
 {
     /// <summary>
-    /// Manages the collection of all plants in the scene and coordinates their daily processing.
+    ///     Manages the collection of all plants in the scene and coordinates their daily processing.
     /// </summary>
     public class PlantManager : MonoBehaviour
     {
         public readonly List<GameObject> cachedPlants = new();
 
         /// <summary>
-        /// Processes daily activities for all managed plants. Called once per game turn.
+        ///     Processes daily activities for all managed plants. Called once per game turn.
         /// </summary>
         public void TriggerPlantTreatments()
         {
             if (cachedPlants == null)
             {
-                Debug.LogWarning("CachedPlants is null, cannot trigger plant treatments");
+                Debug.LogError("CachedPlants is null, cannot trigger plant treatments");
                 return;
             }
 
@@ -30,7 +30,7 @@ namespace _project.Scripts.Core
                     continue;
                 }
 
-                var controller = plant.GetComponent<PlantController>();
+                plant.TryGetComponent<PlantController>(out var controller);
                 if (!controller)
                 {
                     Debug.LogWarning($"PlantController not found on {plant.name}, skipping");
