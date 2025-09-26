@@ -76,6 +76,8 @@ namespace _project.Scripts.Handlers
                 return Mathf.Clamp(existing.efficacy, 0, 100);
             }
 
+            // Return Early if incompatible
+            if (!affliction.CanBeTreatedBy(treatment)) return 0;
             var rel = new RelationalEfficacy
             {
                 treatment = treatment,

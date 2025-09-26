@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
 using _project.Scripts.Card_Core;
 using _project.Scripts.Core;
 using JetBrains.Annotations;
@@ -36,6 +37,7 @@ namespace _project.Scripts.Classes
             string Description { get; }
             public Color Color { get; }
             [CanBeNull] public Shader Shader { get; }
+            public List<ITreatment> AcceptableTreatments { get; }
             public void TreatWith(ITreatment treatment, PlantController plant);
             public void TickDay(PlantController plant);
 
@@ -43,6 +45,7 @@ namespace _project.Scripts.Classes
             public ICard GetCard() { return null; }
 
             public IAffliction Clone();
+            public bool CanBeTreatedBy(ITreatment treatment) { return false; }
         }
 
         public interface ITreatment
@@ -84,22 +87,37 @@ namespace _project.Scripts.Classes
             // ReSharper disable twice NotAccessedField.Local
             private bool _hasAdults = true;
             private bool _hasLarvae = true;
+
+            private static readonly List<ITreatment> Treatments = new()
+            {
+                new Panacea(),
+                new InsecticideTreatment(),
+                new HorticulturalOilTreatment()
+            };
+
             public string Name => "Thrips";
             public string Description => "";
             public Color Color => Color.black;
             public Shader Shader => Shader.Find($"Shader Graphs/Thrips");
 
+            public List<ITreatment> AcceptableTreatments => Treatments;
+
             public IAffliction Clone() { return new ThripsAffliction(); }
+
+            public bool CanBeTreatedBy(ITreatment treatment)
+            {
+                return Treatments.Any(t => t.GetType() == treatment.GetType());
+            }
 
             public void TreatWith(ITreatment treatment, PlantController plant)
             {
-                var affectsAdults = treatment is InsecticideTreatment or Panacea;
-                var affectsLarvae = treatment is HorticulturalOilTreatment or Panacea;
-
-                if (!affectsAdults && !affectsLarvae)
+                if (!CanBeTreatedBy(treatment))
                 {
                     return;
                 }
+
+                var affectsAdults = treatment is InsecticideTreatment or Panacea;
+                var affectsLarvae = treatment is HorticulturalOilTreatment or Panacea;
 
                 // Get actual current values from plant (not internal flags)
                 var currentInfect = plant.GetInfectFrom(this);
@@ -155,17 +173,31 @@ namespace _project.Scripts.Classes
 
         public class MealyBugsAffliction : IAffliction
         {
+            private static readonly List<ITreatment> Treatments = new()
+            {
+                new SoapyWaterTreatment(),
+                new InsecticideTreatment(),
+                new ImidaclopridTreatment(),
+                new Panacea()
+            };
+
             public string Name => "MealyBugs";
             public string Description => "";
             public Color Color => Color.red;
             public Shader Shader => Shader.Find($"Shader Graphs/MealyBugs");
 
+            public List<ITreatment> AcceptableTreatments => Treatments;
+
             public IAffliction Clone() { return new MealyBugsAffliction(); }
+
+            public bool CanBeTreatedBy(ITreatment treatment)
+            {
+                return Treatments.Any(t => t.GetType() == treatment.GetType());
+            }
 
             public void TreatWith(ITreatment treatment, PlantController plant)
             {
-                if (treatment is not (SoapyWaterTreatment or InsecticideTreatment or ImidaclopridTreatment
-                    or Panacea)) return;
+                if (!CanBeTreatedBy(treatment)) return;
                 if (!TreatmentAttemptSucceeds(this, treatment))
                 {
                     return;
@@ -188,16 +220,29 @@ namespace _project.Scripts.Classes
 
         public class MildewAffliction : IAffliction
         {
+            private static readonly List<ITreatment> Treatments = new()
+            {
+                new FungicideTreatment(),
+                new Panacea()
+            };
+
             public string Name => "Mildew";
             public string Description => "";
             public Color Color => Color.white;
             public Shader Shader => Shader.Find($"Shader Graphs/Mold");
 
+            public List<ITreatment> AcceptableTreatments => Treatments;
+
             public IAffliction Clone() { return new MildewAffliction(); }
+
+            public bool CanBeTreatedBy(ITreatment treatment)
+            {
+                return Treatments.Any(t => t.GetType() == treatment.GetType());
+            }
 
             public void TreatWith(ITreatment treatment, PlantController plant)
             {
-                if (treatment is not (FungicideTreatment or Panacea)) return;
+                if (!CanBeTreatedBy(treatment)) return;
                 if (!TreatmentAttemptSucceeds(this, treatment))
                 {
                     return;
@@ -220,16 +265,32 @@ namespace _project.Scripts.Classes
 
         public class AphidsAffliction : IAffliction
         {
+            private static readonly List<ITreatment> Treatments = new()
+            {
+                new HorticulturalOilTreatment(),
+                new ImidaclopridTreatment(),
+                new SpinosadTreatment(),
+                new InsecticideTreatment(),
+                new Panacea()
+            };
+
             public string Name => "Aphids";
             public string Description => "";
             public Color Color => Color.cyan;
             public Shader Shader => Shader.Find($"Shader Graphs/Aphids");
+
+            public List<ITreatment> AcceptableTreatments => Treatments;
+
             public IAffliction Clone() { return new AphidsAffliction(); }
+
+            public bool CanBeTreatedBy(ITreatment treatment)
+            {
+                return Treatments.Any(t => t.GetType() == treatment.GetType());
+            }
 
             public void TreatWith(ITreatment treatment, PlantController plant)
             {
-                if (treatment is not (HorticulturalOilTreatment or ImidaclopridTreatment or SpinosadTreatment
-                    or InsecticideTreatment or Panacea)) return;
+                if (!CanBeTreatedBy(treatment)) return;
                 if (!TreatmentAttemptSucceeds(this, treatment))
                 {
                     return;
@@ -252,15 +313,29 @@ namespace _project.Scripts.Classes
         
         public class SpiderMitesAffliction : IAffliction
         {
+            private static readonly List<ITreatment> Treatments = new()
+            {
+                new HorticulturalOilTreatment(),
+                new Panacea()
+            };
+
             public string Name => "Spider Mites";
             public string Description => "";
             public Color Color => Color.orange;
             public Shader Shader => null; //Shader.Find($"Shader Graphs/SpiderMites");
+
+            public List<ITreatment> AcceptableTreatments => Treatments;
+
             public IAffliction Clone() { return new SpiderMitesAffliction(); }
+
+            public bool CanBeTreatedBy(ITreatment treatment)
+            {
+                return Treatments.Any(t => t.GetType() == treatment.GetType());
+            }
             
             public void TreatWith(ITreatment treatment, PlantController plant)
             {
-                if (treatment is not (HorticulturalOilTreatment or Panacea)) return;
+                if (!CanBeTreatedBy(treatment)) return;
                 if (!TreatmentAttemptSucceeds(this, treatment))
                 {
                     return;
@@ -283,16 +358,30 @@ namespace _project.Scripts.Classes
         
         public class FungusGnatsAffliction : IAffliction
         {
+            private static readonly List<ITreatment> Treatments = new()
+            {
+                new ImidaclopridTreatment(),
+                new SpinosadTreatment(),
+                new Panacea()
+            };
+
             public string Name => "Fungus Gnats";
             public string Description => "";
             public Color Color => Color.deepPink;
             public Shader Shader => null; //Shader.Find($"Shader Graphs/FungusGnats");
 
+            public List<ITreatment> AcceptableTreatments => Treatments;
+
             public IAffliction Clone() { return new FungusGnatsAffliction(); }
+
+            public bool CanBeTreatedBy(ITreatment treatment)
+            {
+                return Treatments.Any(t => t.GetType() == treatment.GetType());
+            }
             
             public void TreatWith(ITreatment treatment, PlantController plant)
             {
-                if (treatment is not (ImidaclopridTreatment or SpinosadTreatment or Panacea)) return;
+                if (!CanBeTreatedBy(treatment)) return;
                 if (!TreatmentAttemptSucceeds(this, treatment))
                 {
                     return;

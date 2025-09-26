@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using System.Reflection;
 using System.Text.RegularExpressions;
 using _project.Scripts.Audio;
@@ -65,14 +66,26 @@ namespace _project.Scripts.PlayModeTest
         // Fake affliction for testing.
         private class FakeAffliction : PlantAfflictions.IAffliction
         {
+            private static readonly List<PlantAfflictions.ITreatment> Treatments = new()
+            {
+                new FakeTreatment()
+            };
+
             public string Name => "Test Affliction";
             public string Description => "Just a test";
             public Color Color => Color.gray;
             public Shader Shader => null;
+            public List<PlantAfflictions.ITreatment> AcceptableTreatments => Treatments;
             public PlantAfflictions.IAffliction Clone() { return new FakeAffliction(); }
+
+            public bool CanBeTreatedBy(PlantAfflictions.ITreatment treatment)
+            {
+                return Treatments.Any(t => t.GetType() == treatment.GetType());
+            }
 
             public void TreatWith(PlantAfflictions.ITreatment treatment, PlantController plant)
             {
+                if (!CanBeTreatedBy(treatment)) return;
                 plant.RemoveAffliction(this);
             }
 

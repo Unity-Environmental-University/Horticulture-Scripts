@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using _project.Scripts.Card_Core;
 using _project.Scripts.Classes;
@@ -12,6 +13,18 @@ namespace _project.Scripts.ModLoading
     /// </summary>
     public class ModAffliction : PlantAfflictions.IAffliction
     {
+        private static readonly Dictionary<string, Func<PlantAfflictions.ITreatment>> LegacyTreatmentFactories =
+            new(StringComparer.OrdinalIgnoreCase)
+            {
+                ["horticulturaloil"] = () => new PlantAfflictions.HorticulturalOilTreatment(),
+                ["fungicide"] = () => new PlantAfflictions.FungicideTreatment(),
+                ["insecticide"] = () => new PlantAfflictions.InsecticideTreatment(),
+                ["soapywater"] = () => new PlantAfflictions.SoapyWaterTreatment(),
+                ["spinosad"] = () => new PlantAfflictions.SpinosadTreatment(),
+                ["imidacloprid"] = () => new PlantAfflictions.ImidaclopridTreatment(),
+                ["panacea"] = () => new PlantAfflictions.Panacea()
+            };
+
         private readonly string[] _vulnerableToTreatments;
         private bool _hasAdults = true;
         private bool _hasLarvae = true;
@@ -23,13 +36,15 @@ namespace _project.Scripts.ModLoading
             Description = description ?? "";
             Color = color;
             Shader = !string.IsNullOrEmpty(shaderName) ? Shader.Find(shaderName) : null;
-            _vulnerableToTreatments = vulnerableToTreatments ?? Array.Empty<string>();
+            _vulnerableToTreatments = vulnerableToTreatments?.ToArray() ?? Array.Empty<string>();
+            AcceptableTreatments = BuildAcceptableTreatments(_vulnerableToTreatments);
         }
 
         public string Name { get; }
         public string Description { get; }
         public Color Color { get; }
         public Shader Shader { get; }
+        public List<PlantAfflictions.ITreatment> AcceptableTreatments { get; }
 
         public PlantAfflictions.IAffliction Clone()
         {
@@ -50,26 +65,38 @@ namespace _project.Scripts.ModLoading
             {
                 if (currentInfect > 0)
                 {
-                    _hasAdults = false;
                     infectReduction = treatment.InfectCureValue ?? 0;
                 }
 
                 if (currentEggs > 0)
                 {
-                    _hasLarvae = false;
                     eggReduction = treatment.EggCureValue ?? 0;
                 }
 
                 // Apply reductions to plant using public method
                 plant.ReduceAfflictionValues(this, infectReduction, eggReduction);
 
+                // Update remaining status from plant values after treatment resolves
+                var remainingInfect = plant.GetInfectFrom(this);
+                var remainingEggs = plant.GetEggsFrom(this);
+                _hasAdults = remainingInfect > 0;
+                _hasLarvae = remainingEggs > 0;
+
                 // Remove affliction if completely treated
-                if (!_hasAdults && !_hasLarvae) plant.RemoveAffliction(this);
+                if (!_hasAdults && !_hasLarvae)
+                {
+                    plant.RemoveAffliction(this);
+                }
             }
             else if (CardGameMaster.Instance?.debuggingCardClass == true)
             {
                 Debug.Log($"{treatment.Name} has no effect on {Name} (not vulnerable to this treatment type)");
             }
+        }
+
+        public bool CanBeTreatedBy(PlantAfflictions.ITreatment treatment)
+        {
+            return IsVulnerableTo(treatment);
         }
 
         public void TickDay(PlantController plant)
@@ -82,6 +109,34 @@ namespace _project.Scripts.ModLoading
         {
             // Mod afflictions don't have associated cards by default
             return null;
+        }
+
+        private static List<PlantAfflictions.ITreatment> BuildAcceptableTreatments(IEnumerable<string> treatmentNames)
+        {
+            var result = new List<PlantAfflictions.ITreatment>();
+
+            if (treatmentNames == null)
+            {
+                return result;
+            }
+
+            foreach (var originalName in treatmentNames)
+            {
+                if (string.IsNullOrWhiteSpace(originalName))
+                {
+                    continue;
+                }
+
+                var key = originalName.Replace(" ", string.Empty).ToLowerInvariant();
+                if (!LegacyTreatmentFactories.TryGetValue(key, out var factory))
+                {
+                    continue;
+                }
+
+                result.Add(factory());
+            }
+
+            return result;
         }
 
         private bool IsVulnerableTo(PlantAfflictions.ITreatment treatment)
