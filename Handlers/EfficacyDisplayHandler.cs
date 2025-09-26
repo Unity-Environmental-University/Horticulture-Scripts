@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 using _project.Scripts.Card_Core;
 using _project.Scripts.Classes;
 using _project.Scripts.Core;
@@ -12,7 +13,7 @@ namespace _project.Scripts.Handlers
         // Declarations
         [SerializeField] private TextMeshPro efficacyText;
         [SerializeField] private PlantController plantController;
-        private List<PlantAfflictions.IAffliction> _afflictions;
+        private readonly List<PlantAfflictions.IAffliction> _afflictions = new();
         private PlantAfflictions.ITreatment _treatment;
 
         public void UpdateInfo()
@@ -20,14 +21,21 @@ namespace _project.Scripts.Handlers
             var controller = TryGetPlantController();
             var treatment = TryGetTreatment();
 
-
-            if (controller != null && treatment != null)
+            if (controller == null || treatment == null)
             {
-                var afflictions = TryGetAfflictions();
-
-                // Pass in only the first one rn, will need to make this check if there is a valid relationship at some point
-                UpdateDisplay(afflictions[0], treatment);
+                UpdateDisplay(null, null);
+                return;
             }
+
+            var afflictions = TryGetAfflictions();
+            if (afflictions == null || afflictions.Count == 0)
+            {
+                UpdateDisplay(null, treatment);
+                return;
+            }
+
+            // Pass in only the first one rn, will need to make this check if there is a valid relationship at some point
+            UpdateDisplay(afflictions.First(), treatment);
         }
 
         private PlantController TryGetPlantController()
@@ -47,15 +55,16 @@ namespace _project.Scripts.Handlers
 
         private List<PlantAfflictions.IAffliction> TryGetAfflictions()
         {
-            var plant = plantController;
-            if (plant != null)
-                if (plant.CurrentAfflictions.Count > 0)
-                {
-                    foreach (var aff in plant.CurrentAfflictions) _afflictions.Add(aff);
-                    return _afflictions;
-                }
+            _afflictions.Clear();
 
-            if (!TryGetComponent(out PlantAfflictions.IAffliction affliction)) return null;
+            var plant = TryGetPlantController();
+            if (plant != null && plant.CurrentAfflictions is { Count: > 0 })
+            {
+                _afflictions.AddRange(plant.CurrentAfflictions);
+                return _afflictions;
+            }
+
+            if (!TryGetComponent(out PlantAfflictions.IAffliction affliction) || affliction == null) return null;
             _afflictions.Add(affliction);
             return _afflictions;
         }
@@ -81,7 +90,7 @@ namespace _project.Scripts.Handlers
 
         public void Clear()
         {
-            _afflictions = null;
+            _afflictions.Clear();
             _treatment = null;
             UpdateDisplay(null, null);
         }
