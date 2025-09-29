@@ -69,6 +69,7 @@ namespace _project.Scripts.Core
 
         private bool _needsShaderUpdate;
         private Renderer[] _renderers;
+        private readonly List<Material> _cachedMaterialList = new();
         private MaterialPropertyBlock _sharedPropertyBlock;
 
         public List<PlantAfflictions.IAffliction> CurrentAfflictions { get; } = new();
@@ -158,19 +159,16 @@ namespace _project.Scripts.Core
 
         private void UpdateShaders()
         {
-            List<Material> mats = new();
             foreach (var renderer1 in _renderers)
             {
                 if (!renderer1.CompareTag("Plant")) continue;
 
-                mats.Clear();
-                renderer1.GetMaterials(mats);
-                foreach (var material in mats)
-                {
-                    var targetShader = GetShader(renderer1);
-                    if (material.shader != targetShader)
-                        material.shader = targetShader;
-                }
+                var targetShader = GetShader(renderer1);
+
+                _cachedMaterialList.Clear();
+                renderer1.GetMaterials(_cachedMaterialList);
+                foreach (var material in _cachedMaterialList.Where(material => material.shader != targetShader))
+                    material.shader = targetShader;
 
                 _sharedPropertyBlock.SetFloat(_moldIntensityID, moldIntensity);
                 renderer1.SetPropertyBlock(_sharedPropertyBlock);
