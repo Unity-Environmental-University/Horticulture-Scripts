@@ -2,6 +2,8 @@
 using System.Collections;
 using System.Reflection;
 using _project.Scripts.Classes;
+using _project.Scripts.Core;
+using _project.Scripts.Handlers;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
@@ -23,6 +25,7 @@ namespace _project.Scripts.Card_Core
         public CardView placedCardView;
         private DeckManager _deckManager;
         private float _lastClickTime = -1f;
+        private EfficacyDisplayHandler _efficacyDisplay;
 
         private int _lastPlacementFrame = -1;
         private float _lastPlacementTime = -1f;
@@ -36,6 +39,47 @@ namespace _project.Scripts.Card_Core
         {
             _deckManager = CardGameMaster.Instance.deckManager;
             _scoreManager = CardGameMaster.Instance.scoreManager;
+        }
+
+        private EfficacyDisplayHandler GetEfficacyDisplay()
+        {
+            if (_efficacyDisplay) return _efficacyDisplay;
+
+            _efficacyDisplay = GetComponentInChildren<EfficacyDisplayHandler>(true);
+            if (_efficacyDisplay) return _efficacyDisplay;
+
+            if (transform.parent)
+                _efficacyDisplay = transform.parent.GetComponentInChildren<EfficacyDisplayHandler>(true);
+
+            return _efficacyDisplay;
+        }
+
+        private PlantController ResolvePlantForDisplay()
+        {
+            var root = transform.parent ? transform.parent : transform;
+            var plant = root.GetComponentInChildren<PlantController>(true);
+            return plant ? plant : root.GetComponentInParent<PlantController>();
+        }
+
+        public void RefreshEfficacyDisplay()
+        {
+            var handler = GetEfficacyDisplay();
+            if (!handler)
+                return;
+
+            handler.Clear();
+
+            if (placedCard?.Treatment == null)
+            {
+                handler.SetPlant(null);
+                handler.SetTreatment(null);
+                return;
+            }
+
+            var plant = ResolvePlantForDisplay();
+            handler.SetPlant(plant);
+            handler.SetTreatment(placedCard.Treatment);
+            handler.UpdateInfo();
         }
 
         private bool CanAcceptCard(ICard card)
@@ -158,6 +202,8 @@ namespace _project.Scripts.Card_Core
             placedCardClick3D = null;
             placedCardView = null;
 
+            RefreshEfficacyDisplay();
+
             if (currentCardClone != null)
                 Destroy(currentCardClone);
 
@@ -180,6 +226,8 @@ namespace _project.Scripts.Card_Core
             _scoreManager.CalculateTreatmentCost();
             
             NotifySpotDataHolder();
+
+            RefreshEfficacyDisplay();
         }
 
         private void ClearAllSelections()
@@ -230,6 +278,8 @@ namespace _project.Scripts.Card_Core
 
             var buttonRenderer = GetComponentInChildren<MeshRenderer>(true);
             if (buttonRenderer) buttonRenderer.enabled = true;
+
+            RefreshEfficacyDisplay();
         }
 
         public void ClearLocationCardByExpiry()
@@ -242,6 +292,8 @@ namespace _project.Scripts.Card_Core
 
             var buttonRenderer = GetComponentInChildren<MeshRenderer>(true);
             if (buttonRenderer) buttonRenderer.enabled = true;
+
+            RefreshEfficacyDisplay();
         }
 
         public void TakeSelectedCard()
@@ -312,6 +364,8 @@ namespace _project.Scripts.Card_Core
             _scoreManager.CalculateTreatmentCost();
             
             NotifySpotDataHolder();
+
+            RefreshEfficacyDisplay();
         }
 
         private IEnumerator ReenablePlacedCardClickWithInputActionFix()
@@ -419,6 +473,8 @@ namespace _project.Scripts.Card_Core
 
             var parentRenderer = transform.GetComponent<Renderer>();
             if (parentRenderer) parentRenderer.enabled = true;
+
+            RefreshEfficacyDisplay();
         }
 
         public void ToggleCardHolder(bool state)

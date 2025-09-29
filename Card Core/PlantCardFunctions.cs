@@ -132,6 +132,7 @@ namespace _project.Scripts.Card_Core
             cardHolder.placedCardView = null;
             cardHolder.placedCardClick3D = null;
             cardHolder.placedCard = null;
+            cardHolder.RefreshEfficacyDisplay();
             if (deckManager) StartCoroutine(deckManager.UpdateCardHolderRenders());
         }
     }

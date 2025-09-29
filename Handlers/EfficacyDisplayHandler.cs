@@ -16,12 +16,16 @@ namespace _project.Scripts.Handlers
         private readonly List<PlantAfflictions.IAffliction> _afflictions = new();
         private PlantAfflictions.ITreatment _treatment;
 
+        public void SetPlant(PlantController controller) => plantController = controller;
+        public void SetTreatment(PlantAfflictions.ITreatment treatment) => _treatment = treatment;
+
+        // ReSharper disable Unity.PerformanceAnalysis
         public void UpdateInfo()
         {
             var controller = TryGetPlantController();
             var treatment = TryGetTreatment();
 
-            if (controller == null || treatment == null)
+            if (!controller || treatment == null || controller.CurrentAfflictions == null || controller.CurrentAfflictions.Count == 0)
             {
                 UpdateDisplay(null, null);
                 return;
@@ -40,25 +44,52 @@ namespace _project.Scripts.Handlers
 
         private PlantController TryGetPlantController()
         {
-            if (plantController != null) return plantController;
-            if (TryGetComponent(out PlantController controller)) plantController = controller;
+            if (plantController) return plantController;
+
+            if (TryGetComponent(out PlantController controller))
+            {
+                plantController = controller;
+                return plantController;
+            }
+
+            controller = GetComponentInParent<PlantController>(true);
+            if (controller)
+            {
+                plantController = controller;
+                return plantController;
+            }
+
+            controller = GetComponentInChildren<PlantController>(true);
+            if (controller)
+            {
+                plantController = controller;
+                return plantController;
+            }
+
+            var holder = GetComponentInParent<PlacedCardHolder>();
+            if (!holder) return plantController;
+
+            var searchRoot = holder.transform.parent ? holder.transform.parent : holder.transform;
+            plantController = searchRoot.GetComponentInChildren<PlantController>(true);
 
             return plantController;
         }
 
         private PlantAfflictions.ITreatment TryGetTreatment()
         {
+            if (_treatment != null) return _treatment;
             if (!TryGetComponent(out PlantAfflictions.ITreatment treatment)) return null;
             _treatment = treatment;
             return _treatment;
         }
 
+        // ReSharper disable Unity.PerformanceAnalysis
         private List<PlantAfflictions.IAffliction> TryGetAfflictions()
         {
             _afflictions.Clear();
 
             var plant = TryGetPlantController();
-            if (plant != null && plant.CurrentAfflictions is { Count: > 0 })
+            if (plant && plant.CurrentAfflictions is { Count: > 0 })
             {
                 _afflictions.AddRange(plant.CurrentAfflictions);
                 return _afflictions;
@@ -71,21 +102,21 @@ namespace _project.Scripts.Handlers
 
         private void UpdateDisplay(PlantAfflictions.IAffliction affliction, PlantAfflictions.ITreatment treatment)
         {
-            if (efficacyText == null)
+            if (!efficacyText)
             {
                 Debug.LogWarning("EfficacyDisplayHandler requires a TextMeshPro reference.", this);
                 return;
             }
 
             var handler = CardGameMaster.Instance?.treatmentEfficacyHandler;
-            if (handler == null || affliction == null || treatment == null)
+            if (!handler || affliction == null || treatment == null)
             {
                 efficacyText.text = string.Empty;
                 return;
             }
 
             var efficacy = handler.GetRelationalEfficacy(affliction, treatment);
-            efficacyText.text = efficacy.ToString();
+            efficacyText.text = efficacy + "%";
         }
 
         public void Clear()
