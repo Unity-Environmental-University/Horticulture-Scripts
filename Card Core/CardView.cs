@@ -1,5 +1,6 @@
 using System.Linq;
 using _project.Scripts.Classes;
+using _project.Scripts.Core;
 using _project.Scripts.ModLoading;
 using TMPro;
 using UnityEngine;
@@ -35,7 +36,7 @@ namespace _project.Scripts.Card_Core
             if (card is RuntimeCard)
                 title += " [MOD]";
             titleText.text = title;
-            cardMaterial = card.Material ? card.Material : Core.DefaultMaterials.White;
+            cardMaterial = card.Material ? card.Material : DefaultMaterials.White;
             var cardRenderer = GetComponentInChildren<Renderer>(true);
             if (cardRenderer)
                 cardRenderer.material = cardMaterial;
@@ -90,8 +91,7 @@ namespace _project.Scripts.Card_Core
             {
                 clickedCard.selected = false;
                 StartCoroutine(clickedCard.AnimateCardBack());
-                _deckManager.selectedACardClick3D = null;
-                _deckManager.selectedACard = null;
+                _deckManager.ClearSelectedCard();
                 return;
             }
 
@@ -102,8 +102,7 @@ namespace _project.Scripts.Card_Core
                 StartCoroutine(selCard.AnimateCardBack());
             }
 
-            _deckManager.selectedACardClick3D = clickedCard;
-            _deckManager.selectedACard = _originalCard;
+            _deckManager.SetSelectedCard(clickedCard, _originalCard);
             _originalCard?.Selected();
             clickedCard.selected = true;
             CardGameMaster.Instance!.playerHandAudioSource.PlayOneShot(

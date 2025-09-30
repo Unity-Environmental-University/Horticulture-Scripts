@@ -190,6 +190,26 @@ namespace _project.Scripts.Card_Core
 
         public Click3D selectedACardClick3D;
         public ICard selectedACard;
+
+        public event Action<ICard> SelectedCardChanged;
+
+        public ICard SelectedCard => selectedACard;
+        public Click3D SelectedCardClick3D => selectedACardClick3D;
+
+        public void SetSelectedCard(Click3D source, ICard card, bool notify = true)
+        {
+            selectedACardClick3D = source;
+            selectedACard = card;
+            if (notify) SelectedCardChanged?.Invoke(card);
+        }
+
+        public void ClearSelectedCard(bool notify = true)
+        {
+            var hadSelection = selectedACardClick3D != null || selectedACard != null;
+            selectedACardClick3D = null;
+            selectedACard = null;
+            if (notify && hadSelection) SelectedCardChanged?.Invoke(null);
+        }
         public GameObject coleusPrefab;
         public GameObject chrysanthemumPrefab;
         public GameObject cucumberPrefab;
@@ -1039,8 +1059,7 @@ namespace _project.Scripts.Card_Core
             _actionHand.Remove(card);
             if (addToDiscard) AddCardToDiscard(card);
             if (card != selectedACard) return;
-            selectedACard = null;
-            selectedACardClick3D = null;
+            ClearSelectedCard();
         }
 
         /// Discards the currently selected action card from the action hand.
@@ -1050,12 +1069,13 @@ namespace _project.Scripts.Card_Core
         public void DiscardSelectedCard()
         {
             if (selectedACard == null) return;
+            var selectedView = selectedACardClick3D;
             _actionHand.Remove(selectedACard);
             AddCardToDiscard(selectedACard);
-            selectedACard = null;
+            ClearSelectedCard();
 
-            Destroy(selectedACardClick3D.gameObject);
-            selectedACardClick3D = null;
+            if (selectedView)
+                Destroy(selectedView.gameObject);
         }
 
         private void AddCardToDiscard(ICard card)

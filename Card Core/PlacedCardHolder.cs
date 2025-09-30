@@ -82,7 +82,7 @@ namespace _project.Scripts.Card_Core
             handler.UpdateInfo();
         }
 
-        private bool CanAcceptCard(ICard card)
+        public bool CanAcceptCard(ICard card)
         {
             if (card == null) return false;
             
@@ -211,9 +211,6 @@ namespace _project.Scripts.Card_Core
 
             RestoreCardToHandWithoutSelection(currentPlacedCard);
 
-            _deckManager.selectedACardClick3D = null;
-            _deckManager.selectedACard = null;
-
             var allHandCards = _deckManager.actionCardParent.GetComponentsInChildren<CardView>(true);
             foreach (var cardView in allHandCards)
             {
@@ -232,8 +229,7 @@ namespace _project.Scripts.Card_Core
 
         private void ClearAllSelections()
         {
-            _deckManager.selectedACardClick3D = null;
-            _deckManager.selectedACard = null;
+            _deckManager.ClearSelectedCard();
             var handCards = _deckManager.actionCardParent.GetComponentsInChildren<CardView>(true);
             foreach (var cardView in handCards)
             {
@@ -342,8 +338,7 @@ namespace _project.Scripts.Card_Core
 
             if (placedCardView != null) placedCardView.enabled = false;
 
-            _deckManager.selectedACardClick3D = null;
-            _deckManager.selectedACard = null;
+            _deckManager.ClearSelectedCard();
 
             var buttonRenderer = GetComponentInChildren<MeshRenderer>(true);
             if (buttonRenderer)

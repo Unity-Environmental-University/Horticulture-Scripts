@@ -2,10 +2,12 @@ using System;
 using System.Collections.Generic;
 using _project.Scripts.Audio;
 using _project.Scripts.Cinematics;
+using _project.Scripts.Classes;
 using _project.Scripts.Core;
 using _project.Scripts.GameState;
 using _project.Scripts.Handlers;
 using _project.Scripts.ModLoading;
+using _project.Scripts.Rendering;
 using _project.Scripts.UI;
 using JetBrains.Annotations;
 using TMPro;
@@ -38,6 +40,8 @@ namespace _project.Scripts.Card_Core
         public PopUpController popUpController;
         public TreatmentEfficacyHandler treatmentEfficacyHandler;
         public AudioSource playerHandAudioSource;
+
+        private readonly List<CardHolderOutlineBinding> _cardHolderOutlines = new();
 
         // ReSharper disable once UnusedMember.Global
         public AudioSource robotAudioSource;
@@ -114,6 +118,14 @@ namespace _project.Scripts.Card_Core
                 cardHolders = new List<PlacedCardHolder>();
             }
 
+            CacheCardHolderOutlines();
+
+            if (deckManager)
+            {
+                deckManager.SelectedCardChanged += HandleCardSelectionChanged;
+                HandleCardSelectionChanged(deckManager.SelectedCard);
+            }
+
             // Load user mods (cards/stickers) before deck initialization runs in Start()
             try
             {
@@ -157,6 +169,87 @@ namespace _project.Scripts.Card_Core
         public void SelfDestruct()
         {
             Destroy(gameObject);
+        }
+
+        private void OnDestroy()
+        {
+            if (deckManager)
+                deckManager.SelectedCardChanged -= HandleCardSelectionChanged;
+        }
+
+        private void CacheCardHolderOutlines()
+        {
+            _cardHolderOutlines.Clear();
+            if (cardHolders == null) return;
+
+            foreach (var holder in cardHolders)
+            {
+                if (!holder) continue;
+
+                var outline = holder.GetComponent<OutlineController>() ??
+                              holder.GetComponentInChildren<OutlineController>(true);
+                if (!outline) continue;
+
+                outline.SetOutline(false);
+                _cardHolderOutlines.Add(new CardHolderOutlineBinding(holder, outline));
+            }
+        }
+
+        private void HandleCardSelectionChanged(ICard card)
+        {
+            EnsureCardHolderOutlines();
+
+            var hasSelection = card != null;
+            for (var i = _cardHolderOutlines.Count - 1; i >= 0; i--)
+            {
+                var binding = _cardHolderOutlines[i];
+                if (!binding.Holder || !binding.Outline)
+                {
+                    _cardHolderOutlines.RemoveAt(i);
+                    continue;
+                }
+
+                var enable = hasSelection && binding.Holder.CanAcceptCard(card);
+                binding.Outline.SetOutline(enable);
+            }
+        }
+
+        private void EnsureCardHolderOutlines()
+        {
+            if (cardHolders == null) return;
+
+            for (var i = _cardHolderOutlines.Count - 1; i >= 0; i--)
+            {
+                var binding = _cardHolderOutlines[i];
+                if (binding.Holder && binding.Outline) continue;
+                _cardHolderOutlines.RemoveAt(i);
+            }
+
+            foreach (var holder in cardHolders)
+            {
+                if (!holder) continue;
+                var alreadyTracked = _cardHolderOutlines.Exists(binding => binding.Holder == holder);
+                if (alreadyTracked) continue;
+
+                var outline = holder.GetComponent<OutlineController>() ??
+                              holder.GetComponentInChildren<OutlineController>(true);
+                if (!outline) continue;
+
+                outline.SetOutline(false);
+                _cardHolderOutlines.Add(new CardHolderOutlineBinding(holder, outline));
+            }
+        }
+
+        private readonly struct CardHolderOutlineBinding
+        {
+            public CardHolderOutlineBinding(PlacedCardHolder holder, OutlineController outline)
+            {
+                Holder = holder;
+                Outline = outline;
+            }
+
+            public PlacedCardHolder Holder { get; }
+            public OutlineController Outline { get; }
         }
     }
 }

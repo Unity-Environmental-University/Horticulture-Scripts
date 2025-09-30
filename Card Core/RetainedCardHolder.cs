@@ -75,8 +75,7 @@ namespace _project.Scripts.Card_Core
                 r.enabled = false;
             selectedClick3D.isEnabled = false;
 
-            _deckManager.selectedACard = null;
-            _deckManager.selectedACardClick3D = null;
+            _deckManager.ClearSelectedCard();
 
             var buttonRenderer = GetComponentInChildren<MeshRenderer>(true);
             if (buttonRenderer)
@@ -99,8 +98,7 @@ namespace _project.Scripts.Card_Core
 
             if (_deckManager.selectedACard == HeldCard)
             {
-                _deckManager.selectedACardClick3D = null;
-                _deckManager.selectedACard = null;
+                _deckManager.ClearSelectedCard();
                 click3D.selected = false;
                 StartCoroutine(click3D.AnimateCardBack());
             }
@@ -117,8 +115,7 @@ namespace _project.Scripts.Card_Core
                 click3D.selected = true;
                 click3D.RefreshState();
 
-                _deckManager.selectedACard = HeldCard;
-                _deckManager.selectedACardClick3D = click3D;
+                _deckManager.SetSelectedCard(click3D, HeldCard);
                 CardGameMaster.Instance.playerHandAudioSource.PlayOneShot(
                     CardGameMaster.Instance.soundSystem.selectCard);
 

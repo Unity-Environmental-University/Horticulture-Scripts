@@ -649,8 +649,7 @@ namespace _project.Scripts.PlayModeTest
                 ?.SetValue(handCardView, treatmentCard);
 
             // Set this as the selected card in the deck manager (simulates player selecting a card)
-            _deckManager.selectedACard = treatmentCard;
-            _deckManager.selectedACardClick3D = handClick3D;
+            _deckManager.SetSelectedCard(handClick3D, treatmentCard, notify: false);
 
             // Verify initial state
             Assert.AreEqual(1, plant.CurrentAfflictions.Count, "Plant should start with 1 affliction");
