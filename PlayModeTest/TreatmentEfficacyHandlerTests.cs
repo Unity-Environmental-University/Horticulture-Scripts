@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Reflection;
 using _project.Scripts.Classes;
 using _project.Scripts.Core;
 using _project.Scripts.Handlers;
@@ -106,6 +107,37 @@ namespace _project.Scripts.PlayModeTest
             var repeat = handler.GetRelationalEfficacy(sameNameAffliction, sameNameTreatment);
 
             Assert.AreEqual(initial, repeat);
+
+            Object.DestroyImmediate(handlerGo);
+        }
+
+        [Test]
+        public void GetRelationalEfficacy_PreviewDoesNotMutateState()
+        {
+            var handlerGo = new GameObject(nameof(TreatmentEfficacyHandler));
+            var handler = handlerGo.AddComponent<TreatmentEfficacyHandler>();
+
+            var affliction = new TestAffliction("Leaf Spot", true);
+            var treatment = new TestTreatment("Standard Spray", 75);
+
+            var storageField = typeof(TreatmentEfficacyHandler)
+                .GetField("relationalEfficacies", BindingFlags.Instance | BindingFlags.NonPublic);
+            Assert.IsNotNull(storageField, "Expected to access relational efficacy cache via reflection for testing.");
+
+            var cache = (List<RelationalEfficacy>)storageField?.GetValue(handler);
+            Assert.IsNotNull(cache);
+
+            var preview = handler.GetRelationalEfficacy(affliction, treatment, false);
+            Assert.AreEqual(75, preview);
+            Assert.AreEqual(0, cache!.Count);
+
+            var actual = handler.GetRelationalEfficacy(affliction, treatment);
+            Assert.AreEqual(75, actual);
+            Assert.AreEqual(1, cache.Count);
+            Assert.AreEqual(1, cache[0].interactionCount);
+
+            handler.GetRelationalEfficacy(affliction, treatment, false);
+            Assert.AreEqual(1, cache[0].interactionCount);
 
             Object.DestroyImmediate(handlerGo);
         }

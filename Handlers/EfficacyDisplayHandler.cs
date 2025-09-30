@@ -128,7 +128,7 @@ namespace _project.Scripts.Handlers
                 return;
             }
 
-            var efficacy = handler.GetRelationalEfficacy(affliction, treatment);
+            var efficacy = handler.GetRelationalEfficacy(affliction, treatment, false);
             efficacyText.text = efficacy + "%";
         }
 

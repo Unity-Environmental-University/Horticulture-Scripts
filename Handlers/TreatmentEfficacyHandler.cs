@@ -64,7 +64,10 @@ namespace _project.Scripts.Handlers
         private const int DefaultEfficacy = 100;
         [SerializeField] private List<RelationalEfficacy> relationalEfficacies = new();
 
-        public int GetRelationalEfficacy(PlantAfflictions.IAffliction affliction, PlantAfflictions.ITreatment treatment)
+        public int GetRelationalEfficacy(
+            PlantAfflictions.IAffliction affliction,
+            PlantAfflictions.ITreatment treatment,
+            bool countInteraction = true)
         {
             if (affliction == null || treatment == null)
             {
@@ -84,20 +87,25 @@ namespace _project.Scripts.Handlers
             {
                 existing.affliction = affliction;
                 existing.treatment = treatment;
-                existing.interactionCount++;
                 existing.SetNames(affliction, treatment);
+                if (!countInteraction) return Mathf.Clamp(existing.efficacy, 0, 100);
+                existing.interactionCount++;
                 existing.TouchEfficacy();
                 return Mathf.Clamp(existing.efficacy, 0, 100);
             }
 
             // Return Early if incompatible
             if (!affliction.CanBeTreatedBy(treatment)) return 0;
+
+            var baseEfficacy = Mathf.Clamp(treatment.Efficacy ?? DefaultEfficacy, 0, 100);
+            if (!countInteraction) return baseEfficacy;
+
             var rel = new RelationalEfficacy
             {
                 treatment = treatment,
                 affliction = affliction,
                 interactionCount = 1,
-                efficacy = Mathf.Clamp(treatment.Efficacy ?? DefaultEfficacy, 0, 100)
+                efficacy = baseEfficacy
             };
 
             rel.SetNames(affliction, treatment);
