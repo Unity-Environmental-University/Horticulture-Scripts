@@ -15,6 +15,7 @@ namespace _project.Scripts.Card_Core
         private int _remainingDuration;
 
         private ILocationCard cLocationCard;
+        [SerializeField] private List<PlacedCardHolder> associatedCardHolders = new();
 
         private void Start()
         {
@@ -37,6 +38,19 @@ namespace _project.Scripts.Card_Core
         }
 
         public void InvalidatePlantCache() => _plantCacheDirty = true;
+
+        public void RegisterCardHolder(PlacedCardHolder holder)
+        {
+            if (!holder) return;
+            if (associatedCardHolders.Contains(holder)) return;
+            associatedCardHolders.Add(holder);
+        }
+
+        public void UnregisterCardHolder(PlacedCardHolder holder)
+        {
+            if (!holder) return;
+            associatedCardHolders.Remove(holder);
+        }
 
         public void OnLocationCardPlaced(ILocationCard locationCard)
         {
@@ -117,19 +131,7 @@ namespace _project.Scripts.Card_Core
             _effectActive = false;
             cLocationCard = null;
 
-            var holders = GetComponentsInChildren<PlacedCardHolder>(true);
-            if (transform.parent != null)
-            {
-                var parentHolders = transform.parent.GetComponentsInChildren<PlacedCardHolder>(true);
-                if (parentHolders is { Length: > 0 })
-                {
-                    var list = new List<PlacedCardHolder>(holders);
-                    foreach (var h in parentHolders)
-                        if (!list.Contains(h))
-                            list.Add(h);
-                    holders = list.ToArray();
-                }
-            }
+            var holders = BuildHolderSearchList();
 
             foreach (var holder in holders)
             {
@@ -137,6 +139,45 @@ namespace _project.Scripts.Card_Core
                 holder.ClearLocationCardByExpiry();
                 break;
             }
+        }
+
+        private List<PlacedCardHolder> BuildHolderSearchList()
+        {
+            var results = new List<PlacedCardHolder>();
+
+            for (var i = associatedCardHolders.Count - 1; i >= 0; i--)
+            {
+                var holder = associatedCardHolders[i];
+                if (!holder)
+                {
+                    associatedCardHolders.RemoveAt(i);
+                    continue;
+                }
+
+                if (!results.Contains(holder))
+                    results.Add(holder);
+            }
+
+            var localHolders = GetComponentsInChildren<PlacedCardHolder>(true);
+            foreach (var holder in localHolders)
+            {
+                if (!holder) continue;
+                if (!results.Contains(holder))
+                    results.Add(holder);
+            }
+
+            if (transform.parent != null)
+            {
+                var parentHolders = transform.parent.GetComponentsInChildren<PlacedCardHolder>(true);
+                foreach (var holder in parentHolders)
+                {
+                    if (!holder) continue;
+                    if (!results.Contains(holder))
+                        results.Add(holder);
+                }
+            }
+
+            return results;
         }
     }
 }

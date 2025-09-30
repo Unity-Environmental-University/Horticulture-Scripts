@@ -24,6 +24,7 @@ namespace _project.Scripts.Card_Core
         public Click3D placedCardClick3D;
         public CardView placedCardView;
         private DeckManager _deckManager;
+        [SerializeField] private SpotDataHolder spotDataHolder;
         private float _lastClickTime = -1f;
         private EfficacyDisplayHandler _efficacyDisplay;
 
@@ -39,6 +40,8 @@ namespace _project.Scripts.Card_Core
         {
             _deckManager = CardGameMaster.Instance.deckManager;
             _scoreManager = CardGameMaster.Instance.scoreManager;
+            if (spotDataHolder)
+                spotDataHolder.RegisterCardHolder(this);
         }
 
         private EfficacyDisplayHandler GetEfficacyDisplay()
@@ -504,18 +507,69 @@ namespace _project.Scripts.Card_Core
                 buttonRenderer.enabled = state;
         }
 
+        private SpotDataHolder ResolveSpotDataHolder()
+        {
+            if (spotDataHolder) return spotDataHolder;
+
+            spotDataHolder = GetComponentInParent<SpotDataHolder>();
+            if (spotDataHolder)
+            {
+                spotDataHolder.RegisterCardHolder(this);
+                return spotDataHolder;
+            }
+
+            spotDataHolder = GetComponentInChildren<SpotDataHolder>();
+            if (spotDataHolder)
+            {
+                spotDataHolder.RegisterCardHolder(this);
+                return spotDataHolder;
+            }
+
+            var plant = ResolvePlantForDisplay();
+            if (plant)
+            {
+                spotDataHolder = plant.GetComponentInParent<SpotDataHolder>() ??
+                                 plant.GetComponentInChildren<SpotDataHolder>(true);
+                if (spotDataHolder)
+                {
+                    spotDataHolder.RegisterCardHolder(this);
+                    return spotDataHolder;
+                }
+            }
+
+            var allSpotData = FindObjectsByType<SpotDataHolder>(FindObjectsInactive.Include,
+                FindObjectsSortMode.None);
+            if (allSpotData is not { Length: > 0 }) return spotDataHolder;
+            SpotDataHolder closest = null;
+            var closestDistance = float.MaxValue;
+            var referencePosition = plant ? plant.transform.position : transform.position;
+
+            foreach (var candidate in allSpotData)
+            {
+                if (!candidate) continue;
+                var distance = (candidate.transform.position - referencePosition).sqrMagnitude;
+                if (!(distance < closestDistance)) continue;
+                closestDistance = distance;
+                closest = candidate;
+            }
+
+            if (!closest) return spotDataHolder;
+            spotDataHolder = closest;
+            spotDataHolder.RegisterCardHolder(this);
+
+            return spotDataHolder;
+        }
+
         private void NotifySpotDataHolder()
         {
             try
             {
-                var spotDataHolder = GetComponentInParent<SpotDataHolder>();
-                if (spotDataHolder == null)
-                    spotDataHolder = GetComponentInChildren<SpotDataHolder>();
-
-                if (spotDataHolder != null && placedCard is ILocationCard locationCard)
-                {
-                    spotDataHolder.OnLocationCardPlaced(locationCard);
-                }
+                var target = ResolveSpotDataHolder();
+                if (target != null && placedCard is ILocationCard locationCard)
+                    target.OnLocationCardPlaced(locationCard);
+                else if (placedCard is ILocationCard)
+                    Debug.LogWarning(
+                        $"PlacedCardHolder {name} could not find a SpotDataHolder for location card placement.", this);
             }
             catch (Exception e)
             {
@@ -527,19 +581,19 @@ namespace _project.Scripts.Card_Core
         {
             try
             {
-                var spotDataHolder = GetComponentInParent<SpotDataHolder>();
-                if (spotDataHolder == null)
-                    spotDataHolder = GetComponentInChildren<SpotDataHolder>();
-
-                if (spotDataHolder != null)
-                {
-                    spotDataHolder.OnLocationCardRemoved();
-                }
+                var target = ResolveSpotDataHolder();
+                if (target != null) target.OnLocationCardRemoved();
             }
             catch (Exception e)
             {
                 Debug.LogError($"Error notifying SpotDataHolder of card removal: {e.Message}");
             }
+        }
+
+        private void OnDestroy()
+        {
+            if (spotDataHolder)
+                spotDataHolder.UnregisterCardHolder(this);
         }
     }
 }
