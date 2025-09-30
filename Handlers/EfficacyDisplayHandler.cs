@@ -10,39 +10,54 @@ namespace _project.Scripts.Handlers
 {
     public class EfficacyDisplayHandler : MonoBehaviour
     {
-        // Declarations
         [SerializeField] private TextMeshPro efficacyText;
         [SerializeField] private PlantController plantController;
         private readonly List<PlantAfflictions.IAffliction> _afflictions = new();
         private PlantAfflictions.ITreatment _treatment;
+        private TreatmentEfficacyHandler _efficacyHandler;
+        private bool _hasInitialized;
+
+        private void Awake() => CacheReferences();
+
+        private void CacheReferences()
+        {
+            if (_hasInitialized) return;
+
+            if (CardGameMaster.Instance) _efficacyHandler = CardGameMaster.Instance.treatmentEfficacyHandler;
+
+            if (!plantController) plantController = FindPlantController();
+
+            _hasInitialized = true;
+        }
 
         public void SetPlant(PlantController controller) => plantController = controller;
         public void SetTreatment(PlantAfflictions.ITreatment treatment) => _treatment = treatment;
 
-        // ReSharper disable Unity.PerformanceAnalysis
         public void UpdateInfo()
         {
-            var controller = TryGetPlantController();
-            var treatment = TryGetTreatment();
+            if (!_hasInitialized) CacheReferences();
 
-            if (!controller || treatment == null || controller.CurrentAfflictions == null || controller.CurrentAfflictions.Count == 0)
+            var controller = plantController ? plantController : FindPlantController();
+            var treatment = GetTreatment();
+
+            if (!controller || treatment == null || controller.CurrentAfflictions == null ||
+                controller.CurrentAfflictions.Count == 0)
             {
                 UpdateDisplay(null, null);
                 return;
             }
 
-            var afflictions = TryGetAfflictions();
+            var afflictions = GetCurrentAfflictions(controller);
             if (afflictions == null || afflictions.Count == 0)
             {
                 UpdateDisplay(null, treatment);
                 return;
             }
 
-            // Pass in only the first one rn, will need to make this check if there is a valid relationship at some point
             UpdateDisplay(afflictions.First(), treatment);
         }
 
-        private PlantController TryGetPlantController()
+        private PlantController FindPlantController()
         {
             if (plantController) return plantController;
 
@@ -75,20 +90,17 @@ namespace _project.Scripts.Handlers
             return plantController;
         }
 
-        private PlantAfflictions.ITreatment TryGetTreatment()
+        private PlantAfflictions.ITreatment GetTreatment()
         {
             if (_treatment != null) return _treatment;
-            if (!TryGetComponent(out PlantAfflictions.ITreatment treatment)) return null;
-            _treatment = treatment;
-            return _treatment;
+            TryGetComponent(out PlantAfflictions.ITreatment treatment);
+            return treatment;
         }
-
-        // ReSharper disable Unity.PerformanceAnalysis
-        private List<PlantAfflictions.IAffliction> TryGetAfflictions()
+        
+        private List<PlantAfflictions.IAffliction> GetCurrentAfflictions(PlantController plant)
         {
             _afflictions.Clear();
 
-            var plant = TryGetPlantController();
             if (plant && plant.CurrentAfflictions is { Count: > 0 })
             {
                 _afflictions.AddRange(plant.CurrentAfflictions);
@@ -108,7 +120,8 @@ namespace _project.Scripts.Handlers
                 return;
             }
 
-            var handler = CardGameMaster.Instance?.treatmentEfficacyHandler;
+            var handler = _efficacyHandler ? _efficacyHandler : CardGameMaster.Instance?.treatmentEfficacyHandler;
+
             if (!handler || affliction == null || treatment == null)
             {
                 efficacyText.text = string.Empty;

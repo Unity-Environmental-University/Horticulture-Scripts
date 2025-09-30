@@ -368,23 +368,46 @@ namespace _project.Scripts.Card_Core
             RefreshEfficacyDisplay();
         }
 
+        // WORKAROUND: Uses reflection to dispose internal InputAction and prevent Input System errors.
+        // Multiple frame delays allow Unity lifecycle and Input System to stabilize after card placement.
         private IEnumerator ReenablePlacedCardClickWithInputActionFix()
         {
             yield return null;
             yield return null;
             yield return new WaitForEndOfFrame();
 
-            if (placedCardClick3D == null) yield break;
+            if (!placedCardClick3D)
+            {
+                Debug.LogWarning("PlacedCardHolder: placedCardClick3D is null during re-enable", this);
+                yield break;
+            }
+
             placedCardClick3D.enabled = true;
             placedCardClick3D.isEnabled = true;
-            var reflection = placedCardClick3D.GetType();
-            var inputActionField =
-                reflection.GetField("_mouseClickAction", BindingFlags.NonPublic | BindingFlags.Instance);
-            if (inputActionField == null) yield break;
-            if (inputActionField.GetValue(placedCardClick3D) is not InputAction inputAction) yield break;
-            inputAction.Disable();
-            inputAction.Dispose();
-            inputActionField.SetValue(placedCardClick3D, null);
+
+            try
+            {
+                var reflection = placedCardClick3D.GetType();
+                var inputActionField = reflection.GetField("_mouseClickAction",
+                    BindingFlags.NonPublic | BindingFlags.Instance);
+
+                if (inputActionField == null)
+                {
+                    Debug.LogWarning("PlacedCardHolder: Could not find _mouseClickAction field via reflection. " +
+                                     "Input System API may have changed.", this);
+                    yield break;
+                }
+
+                if (inputActionField.GetValue(placedCardClick3D) is not InputAction inputAction) yield break;
+
+                inputAction.Disable();
+                inputAction.Dispose();
+                inputActionField.SetValue(placedCardClick3D, null);
+            }
+            catch (Exception ex)
+            {
+                Debug.LogError($"PlacedCardHolder: Reflection-based input action cleanup failed: {ex.Message}", this);
+            }
         }
 
         /// <summary>

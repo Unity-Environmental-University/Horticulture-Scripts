@@ -33,7 +33,7 @@ namespace _project.Scripts.Core
     /// </summary>
     /// <remarks>
     /// PlantController is the core component for plant management in the game. It integrates with:
-    /// - Card system for plant cards and their properties
+    /// - the Card system for plant cards and their properties
     /// - Affliction system for a pest/disease management
     /// - Treatment system for player interventions
     /// - Visual system for shaders, particles, and UI feedback
@@ -237,28 +237,25 @@ namespace _project.Scripts.Core
 
             var iCard = affliction.GetCard();
             var healthBarHandler = GetComponent<PlantHealthBarHandler>();
-            
+
             if (iCard is IAfflictionCard afflictionInterface)
             {
                 AddInfect(affliction, afflictionInterface.BaseInfectLevel);
                 if (afflictionInterface.BaseEggLevel > 0)
                     AddEggs(affliction, afflictionInterface.BaseEggLevel);
-                    
+
                 // Update health bar UI after both infect and eggs are added
-                if(healthBarHandler) healthBarHandler.SpawnHearts(this);
+                if (healthBarHandler) healthBarHandler.SpawnHearts(this);
             }
 
             Debug.LogWarning(name + " has " + CurrentAfflictions.Count + " afflictions. Current infect level is " +
-                      GetInfectLevel());
+                             GetInfectLevel());
             
-            
-            
-            if (debuffSystem && CardGameMaster.Instance != null) 
+            if (debuffSystem && CardGameMaster.Instance)
                 TurnController.QueuePlantEffect(
-                    plant: this,
-                    particle: debuffSystem,
-                    sound: CardGameMaster.Instance.soundSystem.GetInsectSound(affliction),
-                    delay: 0.3f);
+                    this,
+                    debuffSystem,
+                    CardGameMaster.Instance.soundSystem.GetInsectSound(affliction));
         }
 
         /// <summary>
@@ -333,31 +330,41 @@ namespace _project.Scripts.Core
         {
             if (affliction == null)
             {
-                Debug.LogWarning("Cannot reduce values for null affliction");
+                Debug.LogWarning("PlantController: Cannot reduce values for null affliction", this);
                 return;
             }
-            
-            if (PlantCard is not IPlantCard plantCardInterface) return;
-            
-            // Validate reduction amounts (clamp to non-negative)
+
+            if (CurrentAfflictions == null || !CurrentAfflictions.Contains(affliction))
+            {
+                Debug.LogWarning(
+                    $"PlantController: Affliction '{affliction.Name}' not present on plant '{gameObject.name}'", this);
+                return;
+            }
+
+            if (PlantCard is not IPlantCard plantCardInterface)
+            {
+                Debug.LogWarning("PlantController: PlantCard does not implement IPlantCard interface", this);
+                return;
+            }
+
             infectReduction = Mathf.Max(0, infectReduction);
             eggReduction = Mathf.Max(0, eggReduction);
-            
+
+            if (infectReduction == 0 && eggReduction == 0) return;
+
             var source = affliction.Name ?? affliction.GetType().Name;
-            
-            // Reduce infect and egg values
+
             if (infectReduction > 0)
                 plantCardInterface.Infect.ReduceInfect(source, infectReduction);
-                
+
             if (eggReduction > 0)
                 plantCardInterface.Infect.ReduceEggs(source, eggReduction);
-            
+
             FlagShadersUpdate();
-            
-            // Check if affliction should be removed (both infect and eggs are zero)
+
             var remainingInfect = plantCardInterface.Infect.GetInfect(source);
             var remainingEggs = plantCardInterface.Infect.GetEggs(source);
-            
+
             if (remainingInfect <= 0 && remainingEggs <= 0)
             {
                 RemoveAffliction(affliction);
@@ -391,7 +398,7 @@ namespace _project.Scripts.Core
 
         private void KillPlant()
         {
-            if (CardGameMaster.Instance != null)
+            if (CardGameMaster.Instance)
                 StartCoroutine(CardGameMaster.Instance.deckManager.ClearPlant(this));
         }
     }

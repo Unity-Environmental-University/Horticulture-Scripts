@@ -10,12 +10,20 @@ namespace _project.Scripts.Handlers
     [Serializable]
     public class RelationalEfficacy
     {
+        // IPM resistance thresholds - treatment becomes less effective with repeated use
         private const int HeavyInteractionThreshold = 15;
         private const int MediumInteractionThreshold = 10;
         private const int MildInteractionThreshold = 5;
+
+        private const int HeavyResistanceDecayChance = 30;  // 30% at heavy use
+        private const int MediumResistanceDecayChance = 50; // 50% at medium use
+        private const int MildResistanceDecayChance = 80;   // 80% at mild use
+
+        private const int EfficacyDecayAmount = 10;
+        private const int MinimumEfficacy = 1;
+
         public int efficacy;
         public int interactionCount;
-
         public string afflictionName;
         public string treatmentName;
         public PlantAfflictions.IAffliction affliction;
@@ -32,9 +40,9 @@ namespace _project.Scripts.Handlers
         {
             var touchLevel = interactionCount switch
             {
-                > HeavyInteractionThreshold => 30,
-                > MediumInteractionThreshold => 50,
-                > MildInteractionThreshold => 80,
+                > HeavyInteractionThreshold => HeavyResistanceDecayChance,
+                > MediumInteractionThreshold => MediumResistanceDecayChance,
+                > MildInteractionThreshold => MildResistanceDecayChance,
                 _ => (int?)null
             };
 
@@ -43,25 +51,31 @@ namespace _project.Scripts.Handlers
             RollEfficacyDecrease(touchLevel.Value);
         }
 
-        private void RollEfficacyDecrease(int touchLevel)
+        private void RollEfficacyDecrease(int decayChancePercentage)
         {
             var chance = Random.Range(0, 100);
-            if (chance < touchLevel)
-                efficacy = Mathf.Max(1, efficacy - 10);
+            if (chance < decayChancePercentage)
+                efficacy = Mathf.Max(MinimumEfficacy, efficacy - EfficacyDecayAmount);
         }
     }
 
     public class TreatmentEfficacyHandler : MonoBehaviour
     {
         private const int DefaultEfficacy = 100;
-        [SerializeField] private List<RelationalEfficacy> relationalEfficacys = new();
+        [SerializeField] private List<RelationalEfficacy> relationalEfficacies = new();
 
         public int GetRelationalEfficacy(PlantAfflictions.IAffliction affliction, PlantAfflictions.ITreatment treatment)
         {
+            if (affliction == null || treatment == null)
+            {
+                Debug.LogWarning("TreatmentEfficacyHandler: Cannot get efficacy for null affliction or treatment.");
+                return 0;
+            }
+
             var afflictionName = affliction.Name;
             var treatmentName = treatment.Name;
 
-            var existing = relationalEfficacys.FirstOrDefault(r =>
+            var existing = relationalEfficacies.FirstOrDefault(r =>
                 (string.Equals(r.afflictionName, afflictionName, StringComparison.Ordinal) &&
                  string.Equals(r.treatmentName, treatmentName, StringComparison.Ordinal)) ||
                 (r.affliction == affliction && r.treatment == treatment));
@@ -87,7 +101,7 @@ namespace _project.Scripts.Handlers
             };
 
             rel.SetNames(affliction, treatment);
-            relationalEfficacys.Add(rel);
+            relationalEfficacies.Add(rel);
             return rel.efficacy;
         }
     }
