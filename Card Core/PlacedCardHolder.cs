@@ -511,7 +511,7 @@ namespace _project.Scripts.Card_Core
         {
             if (spotDataHolder) return spotDataHolder;
 
-            spotDataHolder = GetComponentInParent<SpotDataHolder>();
+            spotDataHolder = GetComponent<SpotDataHolder>();
             if (spotDataHolder)
             {
                 spotDataHolder.RegisterCardHolder(this);
@@ -525,49 +525,50 @@ namespace _project.Scripts.Card_Core
                 return spotDataHolder;
             }
 
-            var plant = ResolvePlantForDisplay();
-            if (plant)
+            return EnsureSpotDataHolder();
+        }
+
+        private SpotDataHolder EnsureSpotDataHolder()
+        {
+            if (spotDataHolder)
             {
-                spotDataHolder = plant.GetComponentInParent<SpotDataHolder>() ??
-                                 plant.GetComponentInChildren<SpotDataHolder>(true);
-                if (spotDataHolder)
-                {
-                    spotDataHolder.RegisterCardHolder(this);
-                    return spotDataHolder;
-                }
+                spotDataHolder.RegisterCardHolder(this);
+                return spotDataHolder;
             }
 
-            var allSpotData = FindObjectsByType<SpotDataHolder>(FindObjectsInactive.Include,
-                FindObjectsSortMode.None);
-            if (allSpotData is not { Length: > 0 }) return spotDataHolder;
-            SpotDataHolder closest = null;
-            var closestDistance = float.MaxValue;
-            var referencePosition = plant ? plant.transform.position : transform.position;
+            SpotDataHolder candidate = null;
 
-            foreach (var candidate in allSpotData)
+            if (!candidate)
+                candidate = GetComponent<SpotDataHolder>();
+
+            if (!candidate)
+                candidate = gameObject.AddComponent<SpotDataHolder>();
+
+            if (candidate)
             {
-                if (!candidate) continue;
-                var distance = (candidate.transform.position - referencePosition).sqrMagnitude;
-                if (!(distance < closestDistance)) continue;
-                closestDistance = distance;
-                closest = candidate;
+                candidate.RegisterCardHolder(this);
+                candidate.InvalidatePlantCache();
+                candidate.RefreshAssociatedPlant();
+                spotDataHolder = candidate;
             }
-
-            if (!closest) return spotDataHolder;
-            spotDataHolder = closest;
-            spotDataHolder.RegisterCardHolder(this);
+            else
+            {
+                Debug.LogWarning($"PlacedCardHolder {name} could not create a SpotDataHolder.", this);
+            }
 
             return spotDataHolder;
         }
 
         private void NotifySpotDataHolder()
         {
+            if (placedCard is not ILocationCard locationCard) return;
+
             try
             {
                 var target = ResolveSpotDataHolder();
-                if (target != null && placedCard is ILocationCard locationCard)
+                if (target != null)
                     target.OnLocationCardPlaced(locationCard);
-                else if (placedCard is ILocationCard)
+                else
                     Debug.LogWarning(
                         $"PlacedCardHolder {name} could not find a SpotDataHolder for location card placement.", this);
             }
@@ -579,6 +580,8 @@ namespace _project.Scripts.Card_Core
 
         private void NotifySpotDataHolderRemoval()
         {
+            if (placedCard is not ILocationCard) return;
+
             try
             {
                 var target = ResolveSpotDataHolder();

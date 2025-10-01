@@ -8,14 +8,59 @@ namespace _project.Scripts.Card_Core
     public class RetainedCardHolder : MonoBehaviour
     {
         [SerializeField] private GameObject cardPrefab;
+        [Header("Card Type Restrictions")]
+        [SerializeField] private CardHolderType acceptedCardType = CardHolderType.ActionOnly;
         private DeckManager _deckManager;
         private GameObject cardGoClone;
-        public ICard HeldCard { get; set; }
+        private ICard _heldCard;
+        public ICard HeldCard
+        {
+            get => _heldCard;
+            set
+            {
+                if (value == null)
+                {
+                    _heldCard = null;
+                    return;
+                }
+
+                if (!CanAcceptCard(value))
+                {
+                    Debug.LogWarning(
+                        $"RetainedCardHolder of type {acceptedCardType} rejected card assignment: {value?.Name ?? "Unknown"}.");
+                    return;
+                }
+
+                _heldCard = value;
+            }
+        }
         public bool hasPaidForCard;
         public bool isCardLocked;
         private MeshRenderer _buttonRenderer;
 
         private bool HasCard => HeldCard != null;
+
+        public bool CanAcceptCard(ICard card)
+        {
+            if (card == null) return true;
+
+            return acceptedCardType switch
+            {
+                CardHolderType.ActionOnly => card is not ILocationCard,
+                CardHolderType.LocationOnly => card is ILocationCard,
+                _ => true
+            };
+        }
+
+        public void SetCardHolderType(CardHolderType cardType)
+        {
+            acceptedCardType = cardType;
+        }
+
+        public CardHolderType GetCardHolderType()
+        {
+            return acceptedCardType;
+        }
 
         private void Start()
         {
@@ -33,6 +78,13 @@ namespace _project.Scripts.Card_Core
             {
                 if (HasCard)
                     SelectHeldCard();
+                return;
+            }
+
+            if (!CanAcceptCard(selectedCard))
+            {
+                Debug.LogWarning(
+                    $"RetainedCardHolder of type {acceptedCardType} cannot accept card: {selectedCard?.Name ?? "Unknown"}.");
                 return;
             }
 
@@ -148,7 +200,26 @@ namespace _project.Scripts.Card_Core
             }
 
             var returnedCardView = returnedCardGo.GetComponent<CardView>();
-            HeldCard = returnedCardView?.GetCard();
+            var returnedCard = returnedCardView?.GetCard();
+
+            if (returnedCard == null)
+            {
+                Debug.LogWarning("RetainedCardHolder received a null card during reclaim; clearing held state.");
+                Destroy(returnedCardGo);
+                ClearHeldCard();
+                return;
+            }
+
+            if (!CanAcceptCard(returnedCard))
+            {
+                Debug.LogWarning(
+                    $"RetainedCardHolder of type {acceptedCardType} cannot accept returned card: {returnedCard?.Name ?? "Unknown"}.");
+                Destroy(returnedCardGo);
+                ClearHeldCard();
+                return;
+            }
+
+            HeldCard = returnedCard;
 
             if (cardPrefab == null)
             {
@@ -201,7 +272,15 @@ namespace _project.Scripts.Card_Core
         public void RestoreCardVisual()
         {
             if (HeldCard == null) return;
-            
+
+            if (!CanAcceptCard(HeldCard))
+            {
+                Debug.LogWarning(
+                    $"RetainedCardHolder of type {acceptedCardType} cannot restore card: {HeldCard?.Name ?? "Unknown"}.");
+                ClearHeldCard();
+                return;
+            }
+
             // Clear any existing visual first
             if (cardGoClone != null)
             {

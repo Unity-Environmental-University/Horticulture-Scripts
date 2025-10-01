@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using _project.Scripts.Classes;
 using _project.Scripts.Core;
 using UnityEngine;
@@ -8,19 +9,15 @@ namespace _project.Scripts.Card_Core
 {
     public class SpotDataHolder : MonoBehaviour
     {
+        [SerializeField] private List<PlacedCardHolder> associatedCardHolders = new();
         [SerializeField] private GameObject cardHolder;
         private PlantController _associatedPlant;
+        private ILocationCard cLocationCard;
         private bool _effectActive;
         private bool _plantCacheDirty = true;
         private int _remainingDuration;
-
-        private ILocationCard cLocationCard;
-        [SerializeField] private List<PlacedCardHolder> associatedCardHolders = new();
-
-        private void Start()
-        {
-            RefreshAssociatedPlant();
-        }
+        
+        private void Start() => RefreshAssociatedPlant();
 
         public void RefreshAssociatedPlant()
         {
@@ -56,15 +53,27 @@ namespace _project.Scripts.Card_Core
         {
             try
             {
-                // In turn-based system, clear previous effect and set new card
-                if (cLocationCard != null && _effectActive) _effectActive = false;
+                if (locationCard == null)
+                {
+                    Debug.LogWarning("SpotDataHolder received a null location card during placement.");
+                    return;
+                }
+
+                // Clear previous effect before applying new one
+                if (cLocationCard != null && _effectActive)
+                {
+                    TryRemoveLocationEffect(cLocationCard);
+                    _effectActive = false;
+                }
 
                 cLocationCard = locationCard;
+
                 InvalidatePlantCache();
-                RefreshAssociatedPlant();
+
+                // Apply immediate effect
+                TryApplyLocationEffect(locationCard);
 
                 // Activate the effect - it will apply on next ProcessTurn()
-                if (locationCard == null) return;
                 _remainingDuration = locationCard.EffectDuration;
                 _effectActive = true;
             }
@@ -81,9 +90,11 @@ namespace _project.Scripts.Card_Core
         {
             try
             {
-                // In turn-based system, deactivate the effect
-                if (cLocationCard != null && _effectActive) _effectActive = false;
+                if (cLocationCard == null) return;
 
+                TryRemoveLocationEffect(cLocationCard);
+
+                _effectActive = false;
                 cLocationCard = null;
             }
             catch (Exception e)
@@ -123,7 +134,7 @@ namespace _project.Scripts.Card_Core
             }
             
             if (cLocationCard.IsPermanent) return;
-            
+
             _remainingDuration--;
             if (_remainingDuration > 0) return;
 
@@ -131,11 +142,12 @@ namespace _project.Scripts.Card_Core
             _effectActive = false;
             cLocationCard = null;
 
+            TryRemoveLocationEffect(expired);
+
             var holders = BuildHolderSearchList();
 
-            foreach (var holder in holders)
+            foreach (var holder in holders.Where(holder => holder && holder.placedCard == expired))
             {
-                if (!holder || holder.placedCard != expired) continue;
                 holder.ClearLocationCardByExpiry();
                 break;
             }
@@ -166,7 +178,7 @@ namespace _project.Scripts.Card_Core
                     results.Add(holder);
             }
 
-            if (transform.parent != null)
+            if (transform.parent == null) return results;
             {
                 var parentHolders = transform.parent.GetComponentsInChildren<PlacedCardHolder>(true);
                 foreach (var holder in parentHolders)
@@ -178,6 +190,44 @@ namespace _project.Scripts.Card_Core
             }
 
             return results;
+        }
+
+        private void TryApplyLocationEffect(ILocationCard locationCard)
+        {
+            if (locationCard == null) return;
+
+            RefreshAssociatedPlant();
+            if (_associatedPlant == null)
+            {
+                Debug.LogWarning($"SpotDataHolder {name}: No plant available to apply location effect {locationCard.Name}.");
+                return;
+            }
+
+            try
+            {
+                locationCard.ApplyLocationEffect(_associatedPlant);
+            }
+            catch (Exception e)
+            {
+                Debug.LogError($"Error applying location effect {locationCard.Name}: {e.Message}");
+            }
+        }
+
+        private void TryRemoveLocationEffect(ILocationCard locationCard)
+        {
+            if (locationCard == null) return;
+
+            RefreshAssociatedPlant();
+            if (_associatedPlant == null) return;
+
+            try
+            {
+                locationCard.RemoveLocationEffect(_associatedPlant);
+            }
+            catch (Exception e)
+            {
+                Debug.LogError($"Error removing location effect {locationCard.Name}: {e.Message}");
+            }
         }
     }
 }
