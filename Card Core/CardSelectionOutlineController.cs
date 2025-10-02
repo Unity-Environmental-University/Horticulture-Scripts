@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using _project.Scripts.Classes;
 using _project.Scripts.Rendering;
@@ -7,25 +6,24 @@ using UnityEngine;
 namespace _project.Scripts.Card_Core
 {
     /// <summary>
-    /// Manages outline visual feedback for card holders based on card selection state.
-    /// Automatically highlights valid placement targets when a card is selected.
+    ///     Manages outline visual feedback for cardholders based on card selection state.
+    ///     Automatically highlights valid placement targets when a card is selected.
     /// </summary>
     public class CardSelectionOutlineController : MonoBehaviour
     {
+        private readonly List<CardHolderOutlineBinding> _cardHolderOutlines = new();
         private CardGameMaster _cardGameMaster;
         private DeckManager _deckManager;
-        private readonly List<CardHolderOutlineBinding> _cardHolderOutlines = new();
 
         private void Awake()
         {
             _cardGameMaster = GetComponent<CardGameMaster>();
             _deckManager = GetComponent<DeckManager>();
 
-            if (!_cardGameMaster || !_deckManager)
-            {
-                Debug.LogError($"CardSelectionOutlineController requires both CardGameMaster and DeckManager components on {gameObject.name}");
-                enabled = false;
-            }
+            if (_cardGameMaster && _deckManager) return;
+            Debug.LogError(
+                $"CardSelectionOutlineController requires both CardGameMaster and DeckManager components on {gameObject.name}");
+            enabled = false;
         }
 
         private void Start()
@@ -42,7 +40,8 @@ namespace _project.Scripts.Card_Core
         }
 
         /// <summary>
-        /// Scans for all PlacedCardHolder instances and caches their OutlineController components.
+        ///     Scans for all PlacedCardHolder instances and caches their OutlineController components.
+        ///     Ensures each OutlineController only affects its local card holder's renderers.
         /// </summary>
         private void CacheCardHolderOutlines()
         {
@@ -57,13 +56,15 @@ namespace _project.Scripts.Card_Core
                               holder.GetComponentInChildren<OutlineController>(true);
                 if (!outline) continue;
 
+                // Ensure the outline controller only affects this card holder's renderers, not the entire scene
+                EnsureLocalOutlineScope(outline);
                 outline.SetOutline(false);
                 _cardHolderOutlines.Add(new CardHolderOutlineBinding(holder, outline));
             }
         }
 
         /// <summary>
-        /// Handles card selection changes by updating outline visibility based on card compatibility.
+        ///     Handles card selection changes by updating outline visibility based on card compatibility.
         /// </summary>
         private void HandleCardSelectionChanged(ICard card)
         {
@@ -85,7 +86,7 @@ namespace _project.Scripts.Card_Core
         }
 
         /// <summary>
-        /// Ensures the outline cache is up-to-date by removing stale entries and adding new holders.
+        ///     Ensures the outline cache is up-to-date by removing stale entries and adding new holders.
         /// </summary>
         private void EnsureCardHolderOutlines()
         {
@@ -108,9 +109,33 @@ namespace _project.Scripts.Card_Core
                               holder.GetComponentInChildren<OutlineController>(true);
                 if (!outline) continue;
 
+                EnsureLocalOutlineScope(outline);
                 outline.SetOutline(false);
                 _cardHolderOutlines.Add(new CardHolderOutlineBinding(holder, outline));
             }
+        }
+
+        /// <summary>
+        ///     Configures an OutlineController to only affect local renderers, not the entire scene.
+        ///     Uses reflection to set private serialized fields if necessary.
+        /// </summary>
+        private static void EnsureLocalOutlineScope(OutlineController outline)
+        {
+            if (!outline) return;
+
+            // Use reflection to access and modify the searchEntireScene field
+            var outlineType = outline.GetType();
+            var searchEntireSceneField = outlineType.GetField("searchEntireScene",
+                System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+
+            if (searchEntireSceneField == null || searchEntireSceneField.GetValue(outline) is not bool currentValue ||
+                !currentValue) return;
+            searchEntireSceneField.SetValue(outline, false);
+
+            // Force re-initialization by setting _initialized to false
+            var initializedField = outlineType.GetField("_initialized",
+                System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+            initializedField?.SetValue(outline, false);
         }
 
         private readonly struct CardHolderOutlineBinding
