@@ -44,8 +44,29 @@ namespace _project.Scripts.Card_Core
 
         private void Awake()
         {
-            _deckManager = CardGameMaster.Instance.deckManager;
-            _scoreManager = CardGameMaster.Instance.scoreManager;
+            var master = CardGameMaster.Instance;
+            if (!master)
+            {
+                TryGetComponent(out master);
+                if (!master)
+                    master = FindFirstObjectByType<CardGameMaster>(FindObjectsInactive.Include);
+            }
+
+            if (master)
+            {
+                _deckManager = master.deckManager ? master.deckManager : master.GetComponent<DeckManager>();
+                _scoreManager = master.scoreManager ? master.scoreManager : master.GetComponent<ScoreManager>();
+            }
+
+            if (!_deckManager)
+                TryGetComponent(out _deckManager);
+            if (!_scoreManager)
+                TryGetComponent(out _scoreManager);
+
+            if (!_deckManager || !_scoreManager)
+                Debug.LogWarning(
+                    "[TurnController] Missing deck or score manager references during Awake; running with local fallbacks.");
+
             if (Instance && Instance != this)
             {
                 Destroy(gameObject);

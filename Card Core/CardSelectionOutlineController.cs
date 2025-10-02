@@ -1,5 +1,4 @@
 using System.Collections.Generic;
-using System.Linq;
 using _project.Scripts.Classes;
 using _project.Scripts.Rendering;
 using UnityEngine;
@@ -12,23 +11,36 @@ namespace _project.Scripts.Card_Core
     /// </summary>
     public class CardSelectionOutlineController : MonoBehaviour
     {
-        private readonly List<CardHolderOutlineBinding> _cardHolderOutlines = new();
+        private readonly List<CardHolderOutlineBinding> _placedCardHolderOutlines = new();
+
+        /// <summary>
+        ///     Cached reference to the RetainedCardHolder to avoid repeated scene searches.
+        /// </summary>
+        private RetainedCardHolder _cachedRetainedHolder;
+
         private CardGameMaster _cardGameMaster;
         private DeckManager _deckManager;
 
+        /// <summary>
+        ///     Tracks the outline controller for the singleton RetainedCardHolder instance.
+        /// </summary>
+        private RetainedCardHolderOutlineBinding _retainedCardHolderOutline;
+
         private void Awake()
         {
-            _cardGameMaster = GetComponent<CardGameMaster>();
-            _deckManager = GetComponent<DeckManager>();
-
-            if (_cardGameMaster && _deckManager) return;
-            Debug.LogError(
-                $"CardSelectionOutlineController requires both CardGameMaster and DeckManager components on {gameObject.name}");
-            enabled = false;
+            TryCacheDependencies();
         }
 
         private void Start()
         {
+            if (!TryCacheDependencies())
+            {
+                Debug.LogWarning(
+                    $"CardSelectionOutlineController missing required components on {gameObject.name}. Disabling outline updates.");
+                enabled = false;
+                return;
+            }
+
             CacheCardHolderOutlines();
             _deckManager.SelectedCardChanged += HandleCardSelectionChanged;
             HandleCardSelectionChanged(_deckManager.SelectedCard);
@@ -41,16 +53,28 @@ namespace _project.Scripts.Card_Core
         }
 
         /// <summary>
-        ///     Scans for all PlacedCardHolder instances and caches their OutlineController components.
+        ///     Scans for all PlacedCardHolder instances and the singleton RetainedCardHolder,
+        ///     caching their OutlineController components.
         ///     Ensures each OutlineController only affects its local cardholder's renderers.
         /// </summary>
         private void CacheCardHolderOutlines()
         {
-            _cardHolderOutlines.Clear();
+            _placedCardHolderOutlines.Clear();
             if (_cardGameMaster == null || _cardGameMaster.cardHolders == null) return;
 
             foreach (var holder in _cardGameMaster.cardHolders)
-                TryAddCardHolderOutline(holder);
+                TryAddPlacedCardHolderOutline(holder);
+
+            // Cache the RetainedCardHolder reference to avoid repeated scene searches
+            if (_cachedRetainedHolder == null)
+                _cachedRetainedHolder = FindFirstObjectByType<RetainedCardHolder>(FindObjectsInactive.Include);
+
+            if (_cachedRetainedHolder == null) return;
+            var outline = FindOutlineController(_cachedRetainedHolder);
+            if (outline == null) return;
+            EnsureLocalOutlineScope(outline);
+            outline.SetOutline(false);
+            _retainedCardHolderOutline = new RetainedCardHolderOutlineBinding(_cachedRetainedHolder, outline);
         }
 
         /// <summary>
@@ -60,19 +84,99 @@ namespace _project.Scripts.Card_Core
         {
             EnsureCardHolderOutlines();
 
-            var hasSelection = card != null;
-            for (var i = _cardHolderOutlines.Count - 1; i >= 0; i--)
+            if (card == null)
             {
-                var binding = _cardHolderOutlines[i];
+                DisableAllOutlines();
+                return;
+            }
+
+            UpdatePlacedCardHolderOutlines(card);
+            UpdateRetainedCardHolderOutline(card);
+        }
+
+        /// <summary>
+        ///     Disables all outlines when no card is selected.
+        /// </summary>
+        private void DisableAllOutlines()
+        {
+            // Iterate in reverse to safely remove items during iteration
+            for (var i = _placedCardHolderOutlines.Count - 1; i >= 0; i--)
+            {
+                var binding = _placedCardHolderOutlines[i];
                 if (!binding.Holder || !binding.Outline)
                 {
-                    _cardHolderOutlines.RemoveAt(i);
+                    _placedCardHolderOutlines.RemoveAt(i);
                     continue;
                 }
 
-                var enable = hasSelection && binding.Holder.CanAcceptCard(card);
-                binding.Outline.SetOutline(enable);
+                binding.Outline.SetOutline(false);
             }
+
+            var retainedOutline = _retainedCardHolderOutline.Outline;
+            if (retainedOutline)
+                retainedOutline.SetOutline(false);
+        }
+
+        /// <summary>
+        ///     Updates PlacedCardHolder outlines based on card compatibility.
+        /// </summary>
+        private void UpdatePlacedCardHolderOutlines(ICard card)
+        {
+            if (card == null) return;
+
+            // Iterate in reverse to safely remove items during iteration
+            for (var i = _placedCardHolderOutlines.Count - 1; i >= 0; i--)
+            {
+                var binding = _placedCardHolderOutlines[i];
+                var holder = binding.Holder;
+                var outline = binding.Outline;
+
+                if (!holder || !outline)
+                {
+                    _placedCardHolderOutlines.RemoveAt(i);
+                    continue;
+                }
+
+                var enable = holder.CanAcceptCard(card);
+                outline.SetOutline(enable);
+            }
+        }
+
+        /// <summary>
+        ///     Updates RetainedCardHolder outline based on card compatibility and availability.
+        /// </summary>
+        private void UpdateRetainedCardHolderOutline(ICard card)
+        {
+            if (card == null) return;
+
+            var holder = _retainedCardHolderOutline.Holder;
+            var outline = _retainedCardHolderOutline.Outline;
+
+            if (holder && outline)
+            {
+                var enable = holder.HeldCard == null && holder.CanAcceptCard(card);
+                outline.SetOutline(enable);
+            }
+            else if (holder || outline)
+            {
+                // Partial destruction detected - clear the binding
+                _retainedCardHolderOutline = default;
+                _cachedRetainedHolder = null;
+            }
+        }
+
+        /// <summary>
+        ///     Attempts to cache the CardGameMaster and DeckManager dependencies; returns true when both are present.
+        /// </summary>
+        private bool TryCacheDependencies()
+        {
+            if (!_cardGameMaster)
+                TryGetComponent(out _cardGameMaster);
+
+            if (!_deckManager)
+                TryGetComponent(out _deckManager);
+
+            return _cardGameMaster && _deckManager;
         }
 
         /// <summary>
@@ -82,37 +186,77 @@ namespace _project.Scripts.Card_Core
         {
             if (!_cardGameMaster || _cardGameMaster.cardHolders == null) return;
 
-            // Remove stale entries
-            for (var i = _cardHolderOutlines.Count - 1; i >= 0; i--)
+            // Iterate in reverse to safely remove items during iteration
+            for (var i = _placedCardHolderOutlines.Count - 1; i >= 0; i--)
             {
-                var binding = _cardHolderOutlines[i];
+                var binding = _placedCardHolderOutlines[i];
                 if (!binding.Holder || !binding.Outline)
-                    _cardHolderOutlines.RemoveAt(i);
+                    _placedCardHolderOutlines.RemoveAt(i);
             }
 
-            // Add new holders
-            foreach (var holder in from holder in _cardGameMaster.cardHolders
-                     where holder
-                     let alreadyTracked = _cardHolderOutlines.Exists(b => b.Holder == holder)
-                     where !alreadyTracked
-                     select holder)
-                TryAddCardHolderOutline(holder);
+            // Add new PlacedCardHolders (optimized to avoid LINQ allocations)
+            foreach (var holder in _cardGameMaster.cardHolders)
+            {
+                if (!holder) continue;
+
+                var alreadyTracked = false;
+                foreach (var binding in _placedCardHolderOutlines)
+                    if (binding.Holder == holder)
+                    {
+                        alreadyTracked = true;
+                        break;
+                    }
+
+                if (!alreadyTracked)
+                    TryAddPlacedCardHolderOutline(holder);
+            }
+
+            // Ensure RetainedCardHolder is tracked
+            if (_retainedCardHolderOutline.Holder && _retainedCardHolderOutline.Outline) return;
+
+            // Handle partial destruction - clear binding if one component is null
+            if (_retainedCardHolderOutline.Holder || _retainedCardHolderOutline.Outline)
+            {
+                _retainedCardHolderOutline = default;
+                _cachedRetainedHolder = null;
+            }
+
+            // Use cached reference to avoid repeated scene searches
+            if (!_cachedRetainedHolder)
+                _cachedRetainedHolder = FindFirstObjectByType<RetainedCardHolder>(FindObjectsInactive.Include);
+
+            if (!_cachedRetainedHolder) return;
+            var outline = FindOutlineController(_cachedRetainedHolder);
+            if (!outline) return;
+            EnsureLocalOutlineScope(outline);
+            outline.SetOutline(false);
+            _retainedCardHolderOutline = new RetainedCardHolderOutlineBinding(_cachedRetainedHolder, outline);
         }
 
         /// <summary>
-        ///     Attempts to add a cardholder to the outline cache if it has an OutlineController.
+        ///     Attempts to add a PlacedCardHolder to the outline cache if it has an OutlineController.
         /// </summary>
-        private void TryAddCardHolderOutline(PlacedCardHolder holder)
+        private void TryAddPlacedCardHolderOutline(PlacedCardHolder holder)
         {
             if (!holder) return;
 
-            var outline = holder.GetComponent<OutlineController>() ??
-                          holder.GetComponentInChildren<OutlineController>(true);
+            var outline = FindOutlineController(holder);
             if (!outline) return;
 
             EnsureLocalOutlineScope(outline);
             outline.SetOutline(false);
-            _cardHolderOutlines.Add(new CardHolderOutlineBinding(holder, outline));
+            _placedCardHolderOutlines.Add(new CardHolderOutlineBinding(holder, outline));
+        }
+
+        /// <summary>
+        ///     Finds an OutlineController on the given component or its children.
+        /// </summary>
+        private static OutlineController FindOutlineController(Component component)
+        {
+            if (!component) return null;
+
+            return component.GetComponent<OutlineController>() ??
+                   component.GetComponentInChildren<OutlineController>(true);
         }
 
         /// <summary>
@@ -133,6 +277,21 @@ namespace _project.Scripts.Card_Core
             }
 
             public PlacedCardHolder Holder { get; }
+            public OutlineController Outline { get; }
+        }
+
+        /// <summary>
+        ///     Binds a RetainedCardHolder component to its associated OutlineController.
+        /// </summary>
+        private readonly struct RetainedCardHolderOutlineBinding
+        {
+            public RetainedCardHolderOutlineBinding(RetainedCardHolder holder, OutlineController outline)
+            {
+                Holder = holder;
+                Outline = outline;
+            }
+
+            public RetainedCardHolder Holder { get; }
             public OutlineController Outline { get; }
         }
     }
