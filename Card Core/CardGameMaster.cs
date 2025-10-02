@@ -24,6 +24,7 @@ namespace _project.Scripts.Card_Core
     [RequireComponent(typeof(DeckManager))]
     [RequireComponent(typeof(ScoreManager))]
     [RequireComponent(typeof(TurnController))]
+    [RequireComponent(typeof(CardSelectionOutlineController))]
     public class CardGameMaster : MonoBehaviour
     {
         [Space(20)] public bool isInspecting;
@@ -38,10 +39,10 @@ namespace _project.Scripts.Card_Core
         public SoundSystemMaster soundSystem;
         public CinematicDirector cinematicDirector;
         public PopUpController popUpController;
+        public CardSelectionOutlineController selOutlineController;
         public TreatmentEfficacyHandler treatmentEfficacyHandler;
         public AudioSource playerHandAudioSource;
-
-        private readonly List<CardHolderOutlineBinding> _cardHolderOutlines = new();
+        public SaveManager saveManager;
 
         // ReSharper disable once UnusedMember.Global
         public AudioSource robotAudioSource;
@@ -92,6 +93,7 @@ namespace _project.Scripts.Card_Core
             if (!turnController) turnController = GetComponent<TurnController>();
             if (!cinematicDirector) cinematicDirector = GetComponent<CinematicDirector>();
             if (!soundSystem) soundSystem = GetComponent<SoundSystemMaster>();
+            saveManager ??= new SaveManager();
 
             var missing = new List<string>();
             if (!scoreManager) missing.Add(nameof(scoreManager));
@@ -118,14 +120,6 @@ namespace _project.Scripts.Card_Core
                 cardHolders = new List<PlacedCardHolder>();
             }
 
-            CacheCardHolderOutlines();
-
-            if (deckManager)
-            {
-                deckManager.SelectedCardChanged += HandleCardSelectionChanged;
-                HandleCardSelectionChanged(deckManager.SelectedCard);
-            }
-
             // Load user mods (cards/stickers) before deck initialization runs in Start()
             try
             {
@@ -134,30 +128,6 @@ namespace _project.Scripts.Card_Core
             catch (Exception e)
             {
                 Debug.LogWarning($"Mod loading failed: {e.Message}");
-            }
-        }
-        
-        public void Save()
-        {
-            try
-            {
-                GameStateManager.SaveGame();
-            }
-            catch (Exception e)
-            {
-                Debug.LogError($"Failed to save game: {e.Message}");
-            }
-        }
-
-        public void Load()
-        {
-            try
-            {
-                GameStateManager.LoadGame();
-            }
-            catch (Exception e)
-            {
-                Debug.LogError($"Failed to load game: {e.Message}");
             }
         }
 
@@ -169,87 +139,6 @@ namespace _project.Scripts.Card_Core
         public void SelfDestruct()
         {
             Destroy(gameObject);
-        }
-
-        private void OnDestroy()
-        {
-            if (deckManager)
-                deckManager.SelectedCardChanged -= HandleCardSelectionChanged;
-        }
-
-        private void CacheCardHolderOutlines()
-        {
-            _cardHolderOutlines.Clear();
-            if (cardHolders == null) return;
-
-            foreach (var holder in cardHolders)
-            {
-                if (!holder) continue;
-
-                var outline = holder.GetComponent<OutlineController>() ??
-                              holder.GetComponentInChildren<OutlineController>(true);
-                if (!outline) continue;
-
-                outline.SetOutline(false);
-                _cardHolderOutlines.Add(new CardHolderOutlineBinding(holder, outline));
-            }
-        }
-
-        private void HandleCardSelectionChanged(ICard card)
-        {
-            EnsureCardHolderOutlines();
-
-            var hasSelection = card != null;
-            for (var i = _cardHolderOutlines.Count - 1; i >= 0; i--)
-            {
-                var binding = _cardHolderOutlines[i];
-                if (!binding.Holder || !binding.Outline)
-                {
-                    _cardHolderOutlines.RemoveAt(i);
-                    continue;
-                }
-
-                var enable = hasSelection && binding.Holder.CanAcceptCard(card);
-                binding.Outline.SetOutline(enable);
-            }
-        }
-
-        private void EnsureCardHolderOutlines()
-        {
-            if (cardHolders == null) return;
-
-            for (var i = _cardHolderOutlines.Count - 1; i >= 0; i--)
-            {
-                var binding = _cardHolderOutlines[i];
-                if (binding.Holder && binding.Outline) continue;
-                _cardHolderOutlines.RemoveAt(i);
-            }
-
-            foreach (var holder in cardHolders)
-            {
-                if (!holder) continue;
-                var alreadyTracked = _cardHolderOutlines.Exists(binding => binding.Holder == holder);
-                if (alreadyTracked) continue;
-
-                var outline = holder.GetComponent<OutlineController>() ??
-                              holder.GetComponentInChildren<OutlineController>(true);
-                if (!outline) continue;
-
-                outline.SetOutline(false);
-                _cardHolderOutlines.Add(new CardHolderOutlineBinding(holder, outline));
-            }
-        }
-
-        private readonly struct CardHolderOutlineBinding
-        {
-            public CardHolderOutlineBinding(PlacedCardHolder holder, OutlineController outline)
-            {
-                Holder = holder;
-                Outline = outline;
-            }
-
-            public PlacedCardHolder Holder { get; }
-            public OutlineController Outline { get; }
         }
     }
 }
