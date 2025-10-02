@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 using _project.Scripts.Classes;
 using _project.Scripts.Rendering;
 using UnityEngine;
@@ -41,26 +42,15 @@ namespace _project.Scripts.Card_Core
 
         /// <summary>
         ///     Scans for all PlacedCardHolder instances and caches their OutlineController components.
-        ///     Ensures each OutlineController only affects its local card holder's renderers.
+        ///     Ensures each OutlineController only affects its local cardholder's renderers.
         /// </summary>
         private void CacheCardHolderOutlines()
         {
             _cardHolderOutlines.Clear();
-            if (_cardGameMaster?.cardHolders == null) return;
+            if (_cardGameMaster == null || _cardGameMaster.cardHolders == null) return;
 
             foreach (var holder in _cardGameMaster.cardHolders)
-            {
-                if (!holder) continue;
-
-                var outline = holder.GetComponent<OutlineController>() ??
-                              holder.GetComponentInChildren<OutlineController>(true);
-                if (!outline) continue;
-
-                // Ensure the outline controller only affects this card holder's renderers, not the entire scene
-                EnsureLocalOutlineScope(outline);
-                outline.SetOutline(false);
-                _cardHolderOutlines.Add(new CardHolderOutlineBinding(holder, outline));
-            }
+                TryAddCardHolderOutline(holder);
         }
 
         /// <summary>
@@ -90,52 +80,48 @@ namespace _project.Scripts.Card_Core
         /// </summary>
         private void EnsureCardHolderOutlines()
         {
-            if (_cardGameMaster?.cardHolders == null) return;
+            if (!_cardGameMaster || _cardGameMaster.cardHolders == null) return;
 
+            // Remove stale entries
             for (var i = _cardHolderOutlines.Count - 1; i >= 0; i--)
             {
                 var binding = _cardHolderOutlines[i];
-                if (binding.Holder && binding.Outline) continue;
-                _cardHolderOutlines.RemoveAt(i);
+                if (!binding.Holder || !binding.Outline)
+                    _cardHolderOutlines.RemoveAt(i);
             }
 
-            foreach (var holder in _cardGameMaster.cardHolders)
-            {
-                if (!holder) continue;
-                var alreadyTracked = _cardHolderOutlines.Exists(binding => binding.Holder == holder);
-                if (alreadyTracked) continue;
+            // Add new holders
+            foreach (var holder in from holder in _cardGameMaster.cardHolders
+                     where holder
+                     let alreadyTracked = _cardHolderOutlines.Exists(b => b.Holder == holder)
+                     where !alreadyTracked
+                     select holder)
+                TryAddCardHolderOutline(holder);
+        }
 
-                var outline = holder.GetComponent<OutlineController>() ??
-                              holder.GetComponentInChildren<OutlineController>(true);
-                if (!outline) continue;
+        /// <summary>
+        ///     Attempts to add a cardholder to the outline cache if it has an OutlineController.
+        /// </summary>
+        private void TryAddCardHolderOutline(PlacedCardHolder holder)
+        {
+            if (!holder) return;
 
-                EnsureLocalOutlineScope(outline);
-                outline.SetOutline(false);
-                _cardHolderOutlines.Add(new CardHolderOutlineBinding(holder, outline));
-            }
+            var outline = holder.GetComponent<OutlineController>() ??
+                          holder.GetComponentInChildren<OutlineController>(true);
+            if (!outline) return;
+
+            EnsureLocalOutlineScope(outline);
+            outline.SetOutline(false);
+            _cardHolderOutlines.Add(new CardHolderOutlineBinding(holder, outline));
         }
 
         /// <summary>
         ///     Configures an OutlineController to only affect local renderers, not the entire scene.
-        ///     Uses reflection to set private serialized fields if necessary.
         /// </summary>
         private static void EnsureLocalOutlineScope(OutlineController outline)
         {
             if (!outline) return;
-
-            // Use reflection to access and modify the searchEntireScene field
-            var outlineType = outline.GetType();
-            var searchEntireSceneField = outlineType.GetField("searchEntireScene",
-                System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
-
-            if (searchEntireSceneField == null || searchEntireSceneField.GetValue(outline) is not bool currentValue ||
-                !currentValue) return;
-            searchEntireSceneField.SetValue(outline, false);
-
-            // Force re-initialization by setting _initialized to false
-            var initializedField = outlineType.GetField("_initialized",
-                System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
-            initializedField?.SetValue(outline, false);
+            outline.SetLocalScope();
         }
 
         private readonly struct CardHolderOutlineBinding

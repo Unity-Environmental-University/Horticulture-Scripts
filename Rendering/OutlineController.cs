@@ -28,7 +28,10 @@ namespace _project.Scripts.Rendering
         private MaterialPropertyBlock _propertyBlock;
         private int _propertyId = DefaultPropertyId;
 
-        private void Awake() => Initialize();
+        private void Awake()
+        {
+            Initialize();
+        }
 
         private void OnEnable()
         {
@@ -52,11 +55,27 @@ namespace _project.Scripts.Rendering
             Apply(isEnabled);
         }
 
-        public void ToggleOutline() => SetOutline(!outlineEnabled);
-
-        public void SetTargets(params Renderer[] renderers)
+        /// <summary>
+        ///     Configures this OutlineController to only affect renderers in the local GameObject hierarchy.
+        /// </summary>
+        public void SetLocalScope()
         {
-            explicitTargets = renderers;
+            if (!searchEntireScene) return; // Already local
+
+            searchEntireScene = false;
+            _initialized = false;
+            Initialize();
+            Apply(outlineEnabled);
+        }
+
+        /// <summary>
+        ///     Configures this OutlineController to affect all renderers in the scene.
+        /// </summary>
+        public void SetGlobalScope()
+        {
+            if (searchEntireScene) return; // Already global
+
+            searchEntireScene = true;
             _initialized = false;
             Initialize();
             Apply(outlineEnabled);
