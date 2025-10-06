@@ -106,7 +106,11 @@ namespace _project.Scripts.Card_Core
             new AphidsCard(),
             new MealyBugsCard(),
             new ThripsCard(),
-            new MildewCard()
+            new MildewCard(),
+            
+            // cards w/o shaders
+            new FungusGnatsCard(),
+            new SpiderMitesCard()
         };
 
         private static readonly List<ICard> PrototypePlantsDeck = new()
@@ -130,7 +134,11 @@ namespace _project.Scripts.Card_Core
             new Panacea(),
             new Panacea(),
             new FertilizerBasic(),
-            new FertilizerBasic()
+            new FertilizerBasic(),
+            
+            // cards w/o materials
+            new ImidaclopridTreatment(),
+            new SpinosadTreatment()
         };
 
         private readonly List<ICard> _tutorialActionDeck = new()

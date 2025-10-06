@@ -49,6 +49,7 @@ namespace _project.Scripts.Core
 
         [SerializeField] private ParticleSystem buffSystem;
         [SerializeField] private ParticleSystem thripsFX;
+        [SerializeField] private ParticleSystem gnatsFX;
         
         [SerializeField] public List<string> cAfflictions = new();
         [SerializeField] public List<string> cTreatments = new();
@@ -198,6 +199,9 @@ namespace _project.Scripts.Core
                 case PlantAfflictions.ThripsAffliction:
                     if (thripsFX) thripsFX.Stop();
                     break;
+                case PlantAfflictions.FungusGnatsAffliction:
+                    if (gnatsFX) gnatsFX.Stop();
+                    break;
             }
 
             // Note: Infect/egg reduction is now handled by treatments, not by removal
@@ -232,6 +236,9 @@ namespace _project.Scripts.Core
                     break;
                 case PlantAfflictions.ThripsAffliction:
                     if (thripsFX) thripsFX.Play();
+                    break;
+                case PlantAfflictions.FungusGnatsAffliction:
+                    if (gnatsFX) gnatsFX.Play();
                     break;
             }
 
