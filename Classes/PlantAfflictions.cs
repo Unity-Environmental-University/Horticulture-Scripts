@@ -322,7 +322,7 @@ namespace _project.Scripts.Classes
             public string Name => "Spider Mites";
             public string Description => "";
             public Color Color => Color.orange;
-            public Shader Shader => null; //Shader.Find($"Shader Graphs/SpiderMites");
+            public Shader Shader => Shader.Find($"Shader Graphs/SpiderMites");
 
             public List<ITreatment> AcceptableTreatments => Treatments;
 
@@ -368,7 +368,7 @@ namespace _project.Scripts.Classes
             public string Name => "Fungus Gnats";
             public string Description => "";
             public Color Color => Color.deepPink;
-            public Shader Shader => null; //Shader.Find($"Shader Graphs/FungusGnats");
+            public Shader Shader => Shader.Find($"Shader Graphs/FungusGnats");
 
             public List<ITreatment> AcceptableTreatments => Treatments;
 
