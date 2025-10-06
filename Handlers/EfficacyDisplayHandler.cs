@@ -96,7 +96,7 @@ namespace _project.Scripts.Handlers
             TryGetComponent(out PlantAfflictions.ITreatment treatment);
             return treatment;
         }
-        
+
         private List<PlantAfflictions.IAffliction> GetCurrentAfflictions(PlantController plant)
         {
             _afflictions.Clear();
@@ -125,11 +125,14 @@ namespace _project.Scripts.Handlers
             if (!handler || affliction == null || treatment == null)
             {
                 efficacyText.text = string.Empty;
+                efficacyText.color = Color.white;
                 return;
             }
 
             var efficacy = handler.GetRelationalEfficacy(affliction, treatment, false);
+            var efficacyColor = efficacy switch{ < 50 => Color.red, < 75 => Color.yellow, _ => Color.green };
             efficacyText.text = efficacy + "%";
+            efficacyText.color = efficacyColor;
         }
 
         public void Clear()
