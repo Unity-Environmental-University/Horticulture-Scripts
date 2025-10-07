@@ -27,6 +27,15 @@ namespace _project.Scripts.Card_Core
         [SerializeField] private SpotDataHolder spotDataHolder;
         private float _lastClickTime = -1f;
         private EfficacyDisplayHandler _efficacyDisplay;
+        [Header("Placement Visuals")]
+        [SerializeField] private Vector3 placedCardScaleMultiplier = Vector3.one;
+        [Tooltip("Local-space rotation offset to apply after the default lay-flat rotation (-90,0,0)")]
+        [SerializeField] private Vector3 placedCardRotationOffsetEuler = Vector3.zero;
+        [Tooltip("Local-space offset applied to the placed clone to avoid clipping into the holder surface.")]
+        [SerializeField] private Vector3 placedCardPositionOffsetLocal = new Vector3(0f, 0.002f, 0f);
+        [Header("Hover Behavior")]
+        [Tooltip("Disable hover pop animation for cloned cards placed in this holder.")]
+        [SerializeField] private bool disableHoverOnPlacedCard = true;
 
         private int _lastPlacementFrame = -1;
         private float _lastPlacementTime = -1f;
@@ -310,26 +319,51 @@ namespace _project.Scripts.Card_Core
             var selectedCard = _deckManager.selectedACardClick3D;
 
             // Properly disable the original card's Click3D component to prevent duplicate clicks
+            var sourceLocalScale = selectedCard.transform.localScale;
+            var sourceLossyScale = selectedCard.transform.lossyScale;
+            var parentForPlacement = transform;
+            var parentLossyScale = parentForPlacement.lossyScale;
+            var resolvedLocalScale = new Vector3(
+                !Mathf.Approximately(parentLossyScale.x, 0f) ? sourceLossyScale.x / parentLossyScale.x : sourceLocalScale.x,
+                !Mathf.Approximately(parentLossyScale.y, 0f) ? sourceLossyScale.y / parentLossyScale.y : sourceLocalScale.y,
+                !Mathf.Approximately(parentLossyScale.z, 0f) ? sourceLossyScale.z / parentLossyScale.z : sourceLocalScale.z
+            );
+
+            // Default lay-flat rotation with optional tweak
+            var resolvedLocalRotation = Quaternion.Euler(-90f, 0f, 0f) * Quaternion.Euler(placedCardRotationOffsetEuler);
+
             selectedCard.DisableClick3D();
             selectedCard.enabled = false;
             Cgm.playerHandAudioSource.PlayOneShot(Cgm.soundSystem.placeCard);
 
-            var cardClone = Instantiate(selectedCard.gameObject, transform);
+            var cardClone = Instantiate(selectedCard.gameObject, parentForPlacement);
 
             var cardViewClone = cardClone.GetComponent<CardView>();
             if (cardViewClone)
                 cardViewClone.Setup(_deckManager.selectedACard);
 
-            cardClone.transform.SetParent(transform, false);
-            cardClone.transform.localPosition = Vector3.zero;
-            cardClone.transform.localRotation = Quaternion.Euler(-90f, 0f, 0f);
-            cardClone.transform.localScale = Vector3.one * 0.9f;
+            cardClone.transform.SetParent(parentForPlacement, false);
+            // Place relative to holder using configured offsets
+            cardClone.transform.localPosition = placedCardPositionOffsetLocal;
+            cardClone.transform.localRotation = resolvedLocalRotation;
+            cardClone.transform.localScale = Vector3.Scale(resolvedLocalScale, placedCardScaleMultiplier);
             placedCard = _deckManager.selectedACard;
             placedCardClick3D = cardClone.GetComponent<Click3D>();
             placedCardView = cardClone.GetComponent<CardView>();
 
             if (placedCardClick3D != null)
             {
+                placedCardClick3D.handItem = true;
+                if (disableHoverOnPlacedCard)
+                {
+                    placedCardClick3D.scaleUp = 1f;
+                    placedCardClick3D.popHeight = 0f;
+                }
+                placedCardClick3D.StopAllCoroutines();
+                placedCardClick3D.UpdateOriginalTransform(
+                    cardClone.transform.localScale,
+                    cardClone.transform.localPosition);
+                placedCardClick3D.RefreshState();
                 placedCardClick3D.onClick3D.RemoveAllListeners();
                 placedCardClick3D.onClick3D.AddListener(OnPlacedCardClicked);
                 placedCardClick3D.enabled = false;
@@ -343,9 +377,9 @@ namespace _project.Scripts.Card_Core
 
             _deckManager.ClearSelectedCard();
 
-            var buttonRenderer = GetComponentInChildren<MeshRenderer>(true);
-            if (buttonRenderer)
-                buttonRenderer.enabled = false;
+            // var buttonRenderer = GetComponentInChildren<MeshRenderer>(true);
+            // if (buttonRenderer)
+            //     buttonRenderer.enabled = false;
             var cardRenderers = selectedCard.GetComponentsInChildren<Renderer>();
             if (cardRenderers == null) return;
             foreach (var renderer1 in cardRenderers) renderer1.enabled = false;
@@ -519,13 +553,10 @@ namespace _project.Scripts.Card_Core
             }
 
             spotDataHolder = GetComponentInChildren<SpotDataHolder>();
-            if (spotDataHolder)
-            {
-                spotDataHolder.RegisterCardHolder(this);
-                return spotDataHolder;
-            }
+            if (!spotDataHolder) return EnsureSpotDataHolder();
+            spotDataHolder.RegisterCardHolder(this);
+            return spotDataHolder;
 
-            return EnsureSpotDataHolder();
         }
 
         private SpotDataHolder EnsureSpotDataHolder()
@@ -536,10 +567,7 @@ namespace _project.Scripts.Card_Core
                 return spotDataHolder;
             }
 
-            SpotDataHolder candidate = null;
-
-            if (!candidate)
-                candidate = GetComponent<SpotDataHolder>();
+            var candidate = GetComponent<SpotDataHolder>();
 
             if (!candidate)
                 candidate = gameObject.AddComponent<SpotDataHolder>();
