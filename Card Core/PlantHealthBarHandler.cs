@@ -117,15 +117,11 @@ namespace _project.Scripts.Card_Core
             {
                 plantController = GetComponentInParent<PlantController>();
             }
-
-            if (config == null && plantController && plantController.TryGetComponent(out PlantHealthBarConfig controllerConfig))
-            {
-                config = controllerConfig;
-            }
+            
 
             if (config == null)
             {
-                config = GetComponentInParent<PlantHealthBarConfig>();
+                config = CardGameMaster.Instance.healthBarConfig;
             }
 
             if (config == null)
