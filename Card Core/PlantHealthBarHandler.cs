@@ -1,16 +1,38 @@
 using System.Collections.Generic;
 using System.Linq;
+using _project.Scripts.Classes;
 using _project.Scripts.Core;
 using UnityEngine;
 
 namespace _project.Scripts.Card_Core
 {
+    /// <summary>
+    /// Manages visual health bar icons representing plant infections and eggs from various pest afflictions.
+    /// Displays color-coded icons for different affliction types with object pooling for performance.
+    /// </summary>
     public class PlantHealthBarHandler : MonoBehaviour
     {
+        /// <summary>
+        /// Reference to the plant controller this health bar represents.
+        /// If not assigned, will be found via GetComponentInParent in Start().
+        /// </summary>
         [SerializeField] private PlantController plantController;
-        public GameObject heartPrefab;
-        public GameObject eggPrefab;
+
+        /// <summary>
+        /// Shared configuration containing materials and prefabs for all health bar handlers.
+        /// Assign directly or place a PlantHealthBarConfig component on the PlantController hierarchy.
+        /// </summary>
+        [Header("Configuration")]
+        [SerializeField] private PlantHealthBarConfig config;
+
+        /// <summary>
+        /// Parent GameObject for infection icons.
+        /// </summary>
         public GameObject infectBarParent;
+
+        /// <summary>
+        /// Parent GameObject for egg icons.
+        /// </summary>
         public GameObject eggBarParent;
 
         [Header("Behavior")]
@@ -62,26 +84,101 @@ namespace _project.Scripts.Card_Core
         [SerializeField]
         private float anchorHeightOffset = 0.05f;
 
-        private readonly List<Transform> _eggIcons = new();
+        /// <summary>
+        /// Tracks metadata for each health bar icon
+        /// </summary>
+        private class IconData
+        {
+            public Transform IconTransform { get; }
+            public Renderer CachedRenderer { get; }
+            public string AfflictionSource { get; set; }
 
-        private readonly List<Transform> _infectIcons = new();
-        private int _lastEggCount = -1;
-        private int _lastInfectCount = -1;
+            public IconData(Transform transform, Renderer renderer, string source = null)
+            {
+                IconTransform = transform;
+                CachedRenderer = renderer;
+                AfflictionSource = source;
+            }
+        }
+
+        private readonly List<IconData> _eggIcons = new();
+        private readonly List<IconData> _infectIcons = new();
+        private int _lastEggTotal = -1;
+        private int _lastInfectTotal = -1;
+        private readonly Dictionary<string, (int infect, int eggs)> _lastAfflictionState = new();
         private Renderer[] _plantRenderers;
-        private Camera camera1;
+        private Camera _mainCamera;
+        private IPlantCard _plantCardInterface;
+        private Dictionary<string, Material> _afflictionMaterials;
+
+        private void Awake()
+        {
+            if (plantController == null)
+            {
+                plantController = GetComponentInParent<PlantController>();
+            }
+
+            if (config == null && plantController && plantController.TryGetComponent(out PlantHealthBarConfig controllerConfig))
+            {
+                config = controllerConfig;
+            }
+
+            if (config == null)
+            {
+                config = GetComponentInParent<PlantHealthBarConfig>();
+            }
+
+            if (config == null)
+            {
+                Debug.LogError($"[PlantHealthBarHandler] No PlantHealthBarConfig assigned on {gameObject.name}. Assign it directly or place PlantHealthBarConfig on the PlantController.");
+                enabled = false;
+                return;
+            }
+
+            if (!config.IsValid())
+            {
+                Debug.LogError($"[PlantHealthBarHandler] PlantHealthBarConfig is invalid on {gameObject.name}. Component will not function.");
+                enabled = false;
+                return;
+            }
+
+            // Initialize affliction-to-material mapping from config
+            _afflictionMaterials = new Dictionary<string, Material>
+            {
+                ["Aphids"] = config.aphidsMaterial,
+                ["MealyBugs"] = config.mealybugsMaterial,
+                ["Thrips"] = config.thripsMaterial,
+                ["Mildew"] = config.mildewMaterial,
+                ["Fungus Gnats"] = config.gnatsMaterial,
+                ["Spider Mites"] = config.spiderMitesMaterial
+            };
+        }
 
         private void Start()
         {
-            camera1 = Camera.main;
-            plantController = GetComponentInParent<PlantController>();
+            _mainCamera = Camera.main;
+            if (_mainCamera == null)
+                Debug.LogWarning(
+                    $"[PlantHealthBarHandler] Main camera not found on {gameObject.name}. Billboard/face camera features will not work.");
 
-            if (!plantController) return;
+            if (plantController == null) plantController = GetComponentInParent<PlantController>();
+
+            if (plantController == null)
+            {
+                Debug.LogError(
+                    $"[PlantHealthBarHandler] No PlantController found on {gameObject.name} or its parents. Component will not function.");
+                enabled = false;
+                return;
+            }
 
             // Cache plant renderers (tagged "Plant" like PlantController does)
             _plantRenderers = plantController
                 .GetComponentsInChildren<Renderer>(true)
                 .Where(r => r.CompareTag("Plant"))
                 .ToArray();
+
+            // Cache the IPlantCard interface for performance
+            _plantCardInterface = plantController?.PlantCard as IPlantCard;
 
             // Prime pools with any existing children in the bar parents (so designers can place a few by hand)
             PrimeExistingIcons(infectBarParent, _infectIcons);
@@ -90,37 +187,70 @@ namespace _project.Scripts.Card_Core
             SpawnHearts(plantController);
         }
 
+        /// <summary>
+        /// Gets the appropriate material for a given affliction source.
+        /// </summary>
+        /// <param name="afflictionSource">The name of the affliction (e.g., "Aphids", "Thrips")</param>
+        /// <param name="isEgg">True if this is for an egg icon, false for infection icon</param>
+        /// <returns>The material to apply, or null if no match found</returns>
+        private Material GetMaterialForAffliction(string afflictionSource, bool isEgg)
+        {
+            return isEgg ? config.eggsMaterial : _afflictionMaterials.GetValueOrDefault(afflictionSource);
+        }
+
         private void Update()
         {
-            if (!plantController) return;
-            var currentInf = plantController.GetInfectLevel();
-            var currentEgg = plantController.GetEggLevel();
+            if (_plantCardInterface == null) return;
 
-            if (currentInf == _lastInfectCount && currentEgg == _lastEggCount) return;
-            // Sync UI to new values
-            SyncBar(infectBarParent, heartPrefab, currentInf, ref _lastInfectCount, _infectIcons);
-            SyncBar(eggBarParent, eggPrefab, currentEgg, ref _lastEggCount, _eggIcons);
+            var infectData = _plantCardInterface.Infect;
+            var currentInfectTotal = infectData.InfectTotal;
+            var currentEggTotal = infectData.EggTotal;
+            var totalsChanged = currentInfectTotal != _lastInfectTotal || currentEggTotal != _lastEggTotal;
+
+            var mixChanged = false;
+            if (!totalsChanged)
+            {
+                var state = infectData.All.ToList();
+                if (state.Count != _lastAfflictionState.Count)
+                {
+                    mixChanged = true;
+                }
+                else
+                {
+                    foreach (var kvp in state)
+                    {
+                        var currentCounts = (kvp.Value.infect, kvp.Value.eggs);
+                        if (!_lastAfflictionState.TryGetValue(kvp.Key, out var previousCounts) ||
+                            previousCounts != currentCounts)
+                        {
+                            mixChanged = true;
+                            break;
+                        }
+                    }
+                }
+            }
+
+            if (!totalsChanged && !mixChanged) return;
+            SyncBarsFromPlant();
         }
 
         private void LateUpdate()
         {
             if (!plantController) return;
-
-            // Simple billboard behavior to face the main camera
-            if (faceCamera && camera1)
+            
+            if (faceCamera && _mainCamera)
             {
-                var cam = camera1.transform;
+                var cam = _mainCamera.transform;
                 var rotTarget = billboardTransform ? billboardTransform : transform;
-                // Avoid rotating the entire plant root by accident
+                
                 if (!plantController || rotTarget != plantController.transform)
                     rotTarget.rotation =
                         Quaternion.LookRotation((rotTarget.position - cam.position).normalized, Vector3.up);
             }
-
-            // Anchor above renderer bounds if desired
+            
             if (!anchorToPlantBounds) return;
             var posTarget = anchorTransform ? anchorTransform : transform;
-            // Avoid moving the entire plant root by accident
+            
             if (plantController && posTarget == plantController.transform) return;
             var hasBounds = TryGetPlantBounds(out var bounds);
             if (!hasBounds) return;
@@ -128,63 +258,172 @@ namespace _project.Scripts.Card_Core
             posTarget.position = top;
         }
 
+        /// <summary>
+        /// Initializes and spawns health bar icons for the given plant.
+        /// Called during Start() to set up the initial health bar state.
+        /// </summary>
+        /// <param name="plant">The plant controller to visualize health for</param>
         public void SpawnHearts(PlantController plant)
         {
-            var infLevel = plant.GetInfectLevel();
-            var eggLevel = plant.GetEggLevel();
-            SyncBar(infectBarParent, heartPrefab, infLevel, ref _lastInfectCount, _infectIcons);
-            SyncBar(eggBarParent, eggPrefab, eggLevel, ref _lastEggCount, _eggIcons);
+            SyncBarsFromPlant();
         }
 
-        private void SyncBar(GameObject barParent, GameObject prefab, int targetCount, ref int cache,
-            List<Transform> pool)
+        /// <summary>
+        /// Syncs both infection and egg bars based on current plant affliction data.
+        /// </summary>
+        private void SyncBarsFromPlant()
+        {
+            if (_plantCardInterface == null)
+                return;
+
+            var infectData = _plantCardInterface.Infect;
+
+            // Build lists of icons with their affliction sources
+            var infectIconsToShow = new List<IconData>();
+            var eggIconsToShow = new List<IconData>();
+            _lastAfflictionState.Clear();
+
+            foreach (var (source, data) in infectData.All)
+            {
+                _lastAfflictionState[source] = (data.infect, data.eggs);
+
+                // Add infection icons
+                for (var i = 0; i < data.infect; i++)
+                {
+                    infectIconsToShow.Add(new IconData(null, null, source));
+                }
+
+                // Add egg icons
+                for (var i = 0; i < data.eggs; i++)
+                {
+                    eggIconsToShow.Add(new IconData(null, null, source));
+                }
+            }
+
+            // Sync the bars with affliction-specific materials
+            SyncBarWithMaterials(infectBarParent, config.heartPrefab, infectIconsToShow, _infectIcons, false);
+            SyncBarWithMaterials(eggBarParent, config.eggPrefab, eggIconsToShow, _eggIcons, true);
+            _lastInfectTotal = infectData.InfectTotal;
+            _lastEggTotal = infectData.EggTotal;
+        }
+
+        /// <summary>
+        /// Syncs a bar by creating/reusing icons and assigning materials based on affliction sources.
+        /// </summary>
+        /// <param name="barParent">Parent GameObject for the icons</param>
+        /// <param name="prefab">Prefab to instantiate for each icon</param>
+        /// <param name="iconsToShow">List of IconData specifying what icons to show and their affliction sources</param>
+        /// <param name="pool">Pool of existing IconData for reuse</param>
+        /// <param name="isEgg">True if syncing eggs, false if syncing infections</param>
+        private void SyncBarWithMaterials(GameObject barParent, GameObject prefab, List<IconData> iconsToShow,
+            List<IconData> pool, bool isEgg)
         {
             if (!barParent || !prefab) return;
             var t = barParent.transform;
+            var targetCount = iconsToShow.Count;
+
             if (usePooling)
             {
                 // Ensure we have enough pooled items
-                for (var i = pool.Count; i < targetCount; i++)
+                while (pool.Count < targetCount)
                 {
                     var go = Instantiate(prefab, t, false);
-                    var tr = go.transform;
-                    pool.Add(tr);
+                    var iconRenderer = go.GetComponentInChildren<Renderer>();
+                    pool.Add(new IconData(go.transform, iconRenderer));
                 }
 
-                // Toggle active based on targetCount
-                for (var i = 0; i < pool.Count; i++)
+                // Assign affliction sources and materials to icons
+                for (var i = 0; i < targetCount; i++)
                 {
-                    var shouldBeActive = i < targetCount;
-                    var tr = pool[i];
-                    if (tr && tr.gameObject.activeSelf != shouldBeActive)
-                        tr.gameObject.SetActive(shouldBeActive);
+                    var iconData = pool[i];
+                    var targetData = iconsToShow[i];
+
+                    iconData.AfflictionSource = targetData.AfflictionSource;
+
+                    // Apply material based on affliction source (use sharedMaterial to avoid instance leaks)
+                    var material = GetMaterialForAffliction(targetData.AfflictionSource, isEgg);
+                    if (!material)
+                    {
+                        Debug.LogWarning($"[PlantHealthBarHandler] No material found for affliction '{targetData.AfflictionSource}' (isEgg: {isEgg}) on {gameObject.name}");
+                    }
+                    else if (iconData.CachedRenderer)
+                    {
+                        iconData.CachedRenderer.sharedMaterial = material;
+                    }
+
+                    // Ensure icon is active
+                    if (iconData.IconTransform && !iconData.IconTransform.gameObject.activeSelf)
+                        iconData.IconTransform.gameObject.SetActive(true);
                 }
 
-                // Always layout to avoid overlapping
-                LayoutIcons(pool, targetCount, prefab);
+                // Deactivate excess icons
+                for (var i = targetCount; i < pool.Count; i++)
+                {
+                    var iconData = pool[i];
+                    if (iconData?.IconTransform && iconData.IconTransform.gameObject.activeSelf)
+                        iconData.IconTransform.gameObject.SetActive(false);
+                }
+
+                // Layout icons
+                LayoutIconsFromData(pool, targetCount, prefab);
             }
             else
             {
-                // Fallback to the original instantiate/destroy path
+                // Non-pooling fallback: simple instantiate/destroy with material assignment
                 var current = t.childCount;
-                if (current < targetCount)
-                    for (var i = current; i < targetCount; i++)
-                        Instantiate(prefab, t, false);
-                else if (current > targetCount)
-                    for (var i = current - 1; i >= targetCount; i--)
+
+                // Destroy excess children
+                while (current > targetCount)
+                {
+                    current--;
+                    var child = t.GetChild(current);
+                    if (child) Destroy(child.gameObject);
+                }
+
+                // Create new children or update existing ones
+                for (var i = 0; i < targetCount; i++)
+                {
+                    Transform childTransform;
+                    if (i < t.childCount)
                     {
-                        var child = t.GetChild(i);
-                        if (child) Destroy(child.gameObject);
+                        childTransform = t.GetChild(i);
+                    }
+                    else
+                    {
+                        var go = Instantiate(prefab, t, false);
+                        childTransform = go.transform;
                     }
 
-                // Layout children even when not pooling
+                    // Apply material (use sharedMaterial to avoid instance leaks)
+                    var targetData = iconsToShow[i];
+                    var material = GetMaterialForAffliction(targetData.AfflictionSource, isEgg);
+                    if (!material)
+                    {
+                        Debug.LogWarning($"[PlantHealthBarHandler] No material found for affliction '{targetData.AfflictionSource}' (isEgg: {isEgg}) on {gameObject.name}");
+                        continue;
+                    }
+                    if (!childTransform) continue;
+
+                    var iconRenderer = childTransform.GetComponentInChildren<Renderer>();
+                    if (iconRenderer)
+                    {
+                        iconRenderer.sharedMaterial = material;
+                    }
+                }
+
+                // Layout children
                 LayoutChildren(t, targetCount, prefab);
             }
-
-            cache = targetCount;
         }
 
-        private static void PrimeExistingIcons(GameObject parent, List<Transform> pool)
+
+        /// <summary>
+        /// Populates the icon pool with existing child icons from the parent GameObject.
+        /// Allows designers to pre-place icons in the scene hierarchy.
+        /// </summary>
+        /// <param name="parent">Parent GameObject containing pre-existing icons</param>
+        /// <param name="pool">Icon pool to populate with existing children</param>
+        private static void PrimeExistingIcons(GameObject parent, List<IconData> pool)
         {
             pool.Clear();
             if (!parent) return;
@@ -192,18 +431,28 @@ namespace _project.Scripts.Card_Core
             for (var i = 0; i < t.childCount; i++)
             {
                 var child = t.GetChild(i);
-                if (child) pool.Add(child);
+                if (!child) continue;
+                var iconRenderer = child.GetComponentInChildren<Renderer>();
+                pool.Add(new IconData(child, iconRenderer));
             }
         }
 
-        private void LayoutIcons(List<Transform> pool, int targetCount, GameObject prefab)
+        /// <summary>
+        /// Positions icons from an IconData list in a grid layout with configurable spacing and wrapping.
+        /// Used by material-aware syncing to arrange affliction-specific icons.
+        /// </summary>
+        /// <param name="pool">Pool of IconData containing transforms to position</param>
+        /// <param name="targetCount">Number of icons to layout (starting from index 0)</param>
+        /// <param name="prefab">Prefab reference for auto-spacing calculations</param>
+        private void LayoutIconsFromData(List<IconData> pool, int targetCount, GameObject prefab)
         {
             // Gather active icons up to targetCount
             var actives = new List<Transform>(targetCount);
             for (var i = 0; i < pool.Count && actives.Count < targetCount; i++)
             {
-                var tr = pool[i];
-                if (tr && tr.gameObject.activeSelf) actives.Add(tr);
+                var iconData = pool[i];
+                if (iconData?.IconTransform && iconData.IconTransform.gameObject.activeSelf)
+                    actives.Add(iconData.IconTransform);
             }
 
             if (actives.Count == 0) return;
@@ -254,6 +503,15 @@ namespace _project.Scripts.Card_Core
             }
         }
 
+
+        /// <summary>
+        /// Attempts to determine the local-space size of an icon for automatic spacing calculations.
+        /// First tries to use an existing icon's renderer bounds,
+        /// then falls back to instantiating the prefab temporarily.
+        /// </summary>
+        /// <param name="icon">Existing icon transform to measure (can be null)</param>
+        /// <param name="prefab">Prefab to temporarily instantiate if icon is null or has no renderer</param>
+        /// <returns>Tuple of (width, height) in local space, or (0, 0) if size cannot be determined</returns>
         private static (float sizeX, float sizeY) TryGetIconLocalSize(Transform icon, GameObject prefab)
         {
             // Prefer an existing active icon's renderer bounds
@@ -290,6 +548,13 @@ namespace _project.Scripts.Card_Core
             return (0f, 0f);
         }
 
+        /// <summary>
+        /// Positions child transforms in a simple horizontal row layout.
+        /// Used as fallback when not using object pooling.
+        /// </summary>
+        /// <param name="parent">Parent transform containing children to layout</param>
+        /// <param name="targetCount">Number of children to position</param>
+        /// <param name="prefab">Prefab reference for auto-spacing calculations</param>
         private void LayoutChildren(Transform parent, int targetCount, GameObject prefab)
         {
             // Collect active children up to targetCount
@@ -321,6 +586,12 @@ namespace _project.Scripts.Card_Core
             }
         }
 
+        /// <summary>
+        /// Calculates the combined bounds of all plant renderers.
+        /// Used for anchoring the health bar above the plant.
+        /// </summary>
+        /// <param name="bounds">Output: Combined bounds of all plant renderers</param>
+        /// <returns>True if at least one valid renderer was found, false otherwise</returns>
         private bool TryGetPlantBounds(out Bounds bounds)
         {
             bounds = default;
