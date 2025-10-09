@@ -487,7 +487,7 @@ namespace _project.Scripts.Card_Core
 
                 // Notify SpotDataHolder that a plant was added
                 var spotDataHolder = plantLocation.GetComponentInChildren<SpotDataHolder>();
-                if (spotDataHolder != null)
+                if (spotDataHolder)
                 {
                     spotDataHolder.InvalidatePlantCache();
                     spotDataHolder.RefreshAssociatedPlant();
@@ -529,16 +529,21 @@ namespace _project.Scripts.Card_Core
             // Notify SpotDataHolders that plants were removed
             foreach (var spotDataHolder in plantLocations
                          .Select(location => location.GetComponentInChildren<SpotDataHolder>())
-                         .Where(holder => holder != null))
+                         .Where(holder => holder))
             {
                 spotDataHolder.InvalidatePlantCache();
                 spotDataHolder.RefreshAssociatedPlant();
             }
 
-            // hide all cardholders
+            // Hide cardholders only if they are NOT currently holding a card
             foreach (var holder in plantLocations
                          .Select(location => location.GetComponentsInChildren<PlacedCardHolder>(true))
-                         .SelectMany(cardHolders => cardHolders)) holder.ToggleCardHolder(false);
+                         .SelectMany(cardHolders => cardHolders))
+            {
+                if (!holder) continue;
+                if (holder.HoldingCard) continue; // Keep visible if a persistent card is present
+                holder.ToggleCardHolder(false);
+            }
 
             _plantHand.DeckRandomDraw();
 
@@ -569,7 +574,11 @@ namespace _project.Scripts.Card_Core
 
             var cardHolders = location.GetComponentsInChildren<PlacedCardHolder>(true);
             foreach (var holder in cardHolders)
+            {
+                if (!holder) continue;
+                if (holder.HoldingCard) continue; // Keep visible if a persistent card is present
                 holder.ToggleCardHolder(false);
+            }
         }
 
         /// Determines the appropriate prefab GameObject to instantiate for a given card.
@@ -1166,20 +1175,22 @@ namespace _project.Scripts.Card_Core
         {
             // Kill any existing hand animation sequence to prevent memory leaks
             SafeKillSequence(ref _currentHandSequence);
-            
+
             updatingActionDisplay = true;
 
-            // Capture current children as the visuals we will reflow
-            var childCount = actionCardParent.childCount;
-            if (childCount == 0)
+            try
             {
-                updatingActionDisplay = false;
-                _currentHandSequence = null;
-                return;
-            }
+                // Capture current children as the visuals we will reflow
+                var childCount = actionCardParent.childCount;
+                if (childCount == 0)
+                {
+                    updatingActionDisplay = false;
+                    _currentHandSequence = null;
+                    return;
+                }
 
-            // Calculate optimal layout for hand size
-            var (effectiveSpacing, cardScale, useOverlapLayout) = CalculateHandLayout(childCount);
+                // Calculate optimal layout for hand size
+                var (effectiveSpacing, cardScale, useOverlapLayout) = CalculateHandLayout(childCount);
 
             // Temporarily disable Click3D interactions during animation to prevent conflicts
             var click3DComponents = new Click3D[childCount];
@@ -1238,26 +1249,33 @@ namespace _project.Scripts.Card_Core
                         click3D.enabled = true;
                     }
                 }
-                catch (Exception ex)
-                {
-                    Debug.LogWarning($"Error in hand reflow completion: {ex.Message}");
-                    
-                    // Re-enable all Click3D components in case of error
-                    foreach (var t in click3DComponents)
+                    catch (Exception ex)
                     {
-                        if (t) t.enabled = true;
-                    }
-                }
-                finally
-                {
-                    // Always reset state, even if there was an error
-                    updatingActionDisplay = false;
-                    _currentHandSequence = null;
-                }
-            });
+                        Debug.LogWarning($"Error in hand reflow completion: {ex.Message}");
 
-            // Start the animation sequence
-            _currentHandSequence.Play();
+                        // Re-enable all Click3D components in case of error
+                        foreach (var t in click3DComponents)
+                        {
+                            if (t) t.enabled = true;
+                        }
+                    }
+                    finally
+                    {
+                        // Always reset state, even if there was an error
+                        updatingActionDisplay = false;
+                        _currentHandSequence = null;
+                    }
+                });
+
+                // Start the animation sequence
+                _currentHandSequence.Play();
+            }
+            catch (Exception ex)
+            {
+                Debug.LogError($"Error creating hand reflow animation: {ex.Message}");
+                SafeKillSequence(ref _currentHandSequence);
+                updatingActionDisplay = false;
+            }
         }
 
         /// Clears the action hand, deck, and discard the pile by removing all cards from these lists.
@@ -1294,14 +1312,16 @@ namespace _project.Scripts.Card_Core
         {
             // Kill any existing display animation sequence to prevent memory leaks
             SafeKillSequence(ref _currentDisplaySequence);
-            
+
             updatingActionDisplay = true;
 
-            var cardsToDisplay = new List<ICard>(_actionHand);
-            var totalCards = _actionHand.Count;
-            
-            // Calculate optimal layout for hand size
-            var (effectiveSpacing, cardScale, useOverlapLayout) = CalculateHandLayout(totalCards);
+            try
+            {
+                var cardsToDisplay = new List<ICard>(_actionHand);
+                var totalCards = _actionHand.Count;
+
+                // Calculate optimal layout for hand size
+                var (effectiveSpacing, cardScale, useOverlapLayout) = CalculateHandLayout(totalCards);
 
             // Create a DOTween sequence for staggered card appearances
             _currentDisplaySequence = DOTween.Sequence();
@@ -1368,14 +1388,21 @@ namespace _project.Scripts.Card_Core
                 }
             }
 
-            // Set completion callback
-            _currentDisplaySequence.OnComplete(() =>
-            {
-                updatingActionDisplay = false;
-                _currentDisplaySequence = null;
-            });
+                // Set completion callback
+                _currentDisplaySequence.OnComplete(() =>
+                {
+                    updatingActionDisplay = false;
+                    _currentDisplaySequence = null;
+                });
 
-            _currentDisplaySequence.Play();
+                _currentDisplaySequence.Play();
+            }
+            catch (Exception ex)
+            {
+                Debug.LogError($"Error creating display card sequence: {ex.Message}");
+                SafeKillSequence(ref _currentDisplaySequence);
+                updatingActionDisplay = false;
+            }
         }
 
         public void RedrawCards()

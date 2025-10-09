@@ -284,8 +284,9 @@ namespace _project.Scripts.Card_Core
             placedCardClick3D = null;
             placedCardView = null;
 
-            var buttonRenderer = GetComponentInChildren<MeshRenderer>(true);
-            if (buttonRenderer) buttonRenderer.enabled = true;
+            // Normalize visibility based on plant presence when no card is held
+            var plant = ResolvePlantForDisplay();
+            ToggleCardHolder(plant != null);
 
             RefreshEfficacyDisplay();
         }
@@ -298,8 +299,10 @@ namespace _project.Scripts.Card_Core
             placedCardClick3D = null;
             placedCard = null;
 
-            var buttonRenderer = GetComponentInChildren<MeshRenderer>(true);
-            if (buttonRenderer) buttonRenderer.enabled = true;
+            // When a location card expires, return the holder to its normal visibility:
+            // show if a plant is present; hide if not.
+            var plant = ResolvePlantForDisplay();
+            ToggleCardHolder(plant != null);
 
             RefreshEfficacyDisplay();
         }
@@ -523,11 +526,9 @@ namespace _project.Scripts.Card_Core
             var playerAudio = CardGameMaster.Instance.playerHandAudioSource;
             playerAudio.PlayOneShot(CardGameMaster.Instance.soundSystem.unplaceCard);
 
-            var buttonRenderer = GetComponentInChildren<MeshRenderer>(true);
-            if (buttonRenderer) buttonRenderer.enabled = true;
-
-            var parentRenderer = transform.GetComponent<Renderer>();
-            if (parentRenderer) parentRenderer.enabled = true;
+            // Normalize visibility based on plant presence when no card is held
+            var plant = ResolvePlantForDisplay();
+            ToggleCardHolder(plant != null);
 
             RefreshEfficacyDisplay();
         }

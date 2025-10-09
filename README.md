@@ -21,6 +21,27 @@
 
 ## Documentation
 
-- Classes System: `docs/CLASSES_SYSTEM_DOCUMENTATION.md`
-- Cinematics System: `docs/CINEMATICS_SYSTEM_DOCUMENTATION.md`
+- Classes System: `docs/ClassesSystemDocumentation.md`
+- Cinematics System: `docs/CinematicsSystemDocumentation.md`
 - Audio System: `docs/AudioSystemDocumentation.md`
+- Game State System: `docs/GameStateSystemDocumentation.md`
+- Mod Loading System: `docs/ModLoadingSystemDocumentation.md`
+- Modding Guide: `docs/ModdingGuide.md`
+
+## Testing
+
+- Headless Play Mode (macOS):
+  - `/Applications/Unity/Hub/Editor/<version>/Unity.app/Contents/MacOS/Unity -projectPath <Unity-project> -runTests -testPlatform PlayMode -logFile - -testResults results.xml`
+- Headless Play Mode (Windows):
+  - `"C:\\Program Files\\Unity\\Hub\\Editor\\<version>\\Editor\\Unity.exe" -projectPath <path> -runTests -testPlatform PlayMode -logFile - -testResults results.xml`
+- In-Editor: Window > General > Test Runner (PlayMode). Re-run relevant suites after every change.
+
+## Gameplay Behavior
+
+- Card Holder Visibility
+  - Placed card holders stay visible if they currently hold a card (including location/persistent cards), even when no plant is present and between rounds.
+  - When a location card expires or a card is removed, holders return to normal visibility: visible if a plant is present, hidden if not.
+  - Relevant code paths:
+    - `Card Core/DeckManager.cs`: `ClearAllPlants`, `ClearPlant` (respect `HoldingCard` when hiding holders)
+    - `Card Core/PlacedCardHolder.cs`: `ClearLocationCardByExpiry`, `ClearHolder`, `GiveBackCard` (normalize visibility by plant presence)
+  - Tests: `PlayModeTest/CardHolderVisibilityTests.cs`

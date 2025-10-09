@@ -31,7 +31,8 @@ namespace _project.Scripts.Card_Core
         [DontSerialize] public bool tutorialCompleted;
 
         public Func<bool> readyToPlay;
-        private static readonly Queue<PlantEffectRequest> PlantEffectQueue = new(); 
+        private static readonly Queue<PlantEffectRequest> PlantEffectQueue = new();
+        private static readonly object PlantEffectQueueLock = new();
         private DeckManager _deckManager;
         private ScoreManager _scoreManager;
         private Coroutine plantEffectCoroutine;
@@ -473,20 +474,38 @@ namespace _project.Scripts.Card_Core
         {
             if (GameStateManager.SuppressQueuedEffects)
                 return;
-            PlantEffectQueue.Enqueue(new PlantEffectRequest(plant, particle, sound, delay));
+
+            lock (PlantEffectQueueLock)
+            {
+                PlantEffectQueue.Enqueue(new PlantEffectRequest(plant, particle, sound, delay));
+            }
         }
 
         private void TryPlayQueuedEffects()
         {
-            if (plantEffectCoroutine == null && PlantEffectQueue.Count > 0)
-                plantEffectCoroutine = StartCoroutine(PlayQueuedPlantEffects());
+            lock (PlantEffectQueueLock)
+            {
+                if (plantEffectCoroutine == null && PlantEffectQueue.Count > 0)
+                    plantEffectCoroutine = StartCoroutine(PlayQueuedPlantEffects());
+            }
         }
 
         private IEnumerator PlayQueuedPlantEffects()
         {
-            while (PlantEffectQueue.Count > 0)
+            while (true)
             {
-                var request = PlantEffectQueue.Dequeue();
+                PlantEffectRequest request;
+                bool hasRequest;
+
+                lock (PlantEffectQueueLock)
+                {
+                    hasRequest = PlantEffectQueue.Count > 0;
+                    request = hasRequest ? PlantEffectQueue.Dequeue() : null;
+                }
+
+                if (!hasRequest)
+                    break;
+
                 if (request.plant)
                 {
                     if (request.particle)
@@ -504,16 +523,22 @@ namespace _project.Scripts.Card_Core
                 yield return new WaitForSeconds(request.delay);
             }
 
-            plantEffectCoroutine = null;
+            lock (PlantEffectQueueLock)
+            {
+                plantEffectCoroutine = null;
+            }
         }
 
         public void ClearEffectQueue()
         {
-            while (PlantEffectQueue.Count > 0)
+            lock (PlantEffectQueueLock)
             {
-                var request = PlantEffectQueue.Dequeue();
-                if (request.particle)
-                    request.particle.Stop();
+                while (PlantEffectQueue.Count > 0)
+                {
+                    var request = PlantEffectQueue.Dequeue();
+                    if (request.particle)
+                        request.particle.Stop();
+                }
             }
 
             plantEffectCoroutine = null;
@@ -547,5 +572,22 @@ namespace _project.Scripts.Card_Core
         }
 
         private void GameLost() { lostGameObjects.SetActive(true); }
+
+        /// <summary>
+        /// Cleanup coroutines and queues on component destruction to prevent memory leaks
+        /// </summary>
+        private void OnDestroy()
+        {
+            Coroutine coroutineToStop = null;
+
+            lock (PlantEffectQueueLock)
+            {
+                coroutineToStop = plantEffectCoroutine;
+                plantEffectCoroutine = null;
+                PlantEffectQueue.Clear();
+            }
+
+            if (coroutineToStop != null) StopCoroutine(coroutineToStop);
+        }
     }
 }

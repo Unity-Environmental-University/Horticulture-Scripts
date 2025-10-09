@@ -1,3 +1,6 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 
 namespace _project.Scripts.Card_Core
@@ -9,33 +12,18 @@ namespace _project.Scripts.Card_Core
     [DisallowMultipleComponent]
     public class PlantHealthBarConfig : MonoBehaviour
     {
-        [Header("Icon Prefabs")] 
-        [Tooltip("Prefab used for infection/heart icons")]
+        [Header("Icon Prefabs")] [Tooltip("Prefab used for infection/heart icons")]
         public GameObject heartPrefab;
 
         [Tooltip("Prefab used for egg icons")] public GameObject eggPrefab;
 
-        [Header("Affliction Materials")] 
-        [Tooltip("Material for Aphids infection icons")]
-        public Material aphidsMaterial;
-
-        [Tooltip("Material for MealyBugs infection icons")]
-        public Material mealybugsMaterial;
-
-        [Tooltip("Material for Thrips infection icons")]
-        public Material thripsMaterial;
-
-        [Tooltip("Material for Mildew infection icons")]
-        public Material mildewMaterial;
-
-        [Tooltip("Material for Fungus Gnats infection icons")]
-        public Material gnatsMaterial;
-
-        [Tooltip("Material for Spider Mites infection icons")]
-        public Material spiderMitesMaterial;
-
         [Tooltip("Material for all egg icons")]
         public Material eggsMaterial;
+
+        [Header("Affliction Materials")]
+        [Tooltip("Maps affliction names to materials for health bar icons. Required entries: Aphids, MealyBugs, Thrips, Mildew, Fungus Gnats, Spider Mites.")]
+        [SerializeField]
+        private List<AfflictionMaterialMapping> afflictionMaterials = new();
 
 #if UNITY_EDITOR
         private void OnValidate()
@@ -50,59 +38,81 @@ namespace _project.Scripts.Card_Core
         /// <returns>True if configuration is valid, false otherwise.</returns>
         public bool IsValid()
         {
-            if (heartPrefab == null)
+            var ok = true;
+            if (!heartPrefab)
             {
                 Debug.LogError("[PlantHealthBarConfig] Heart prefab is not assigned!", this);
-                return false;
+                ok = false;
             }
 
-            if (eggPrefab == null)
+            if (!eggPrefab)
             {
                 Debug.LogError("[PlantHealthBarConfig] Egg prefab is not assigned!", this);
-                return false;
+                ok = false;
             }
 
-            var missingMaterials = 0;
-            if (aphidsMaterial == null)
+            if (!eggsMaterial)
             {
-                Debug.LogWarning("[PlantHealthBarConfig] Aphids material is not assigned!", this);
-                missingMaterials++;
+                Debug.LogError("[PlantHealthBarConfig] Eggs material is not assigned!", this);
+                ok = false;
             }
 
-            if (mealybugsMaterial == null)
+            // Validate affliction materials list (optional)
+            if (afflictionMaterials is not { Count: > 0 }) return ok;
+            var seen = new HashSet<string>(StringComparer.Ordinal);
+            foreach (var m in afflictionMaterials)
             {
-                Debug.LogWarning("[PlantHealthBarConfig] MealyBugs material is not assigned!", this);
-                missingMaterials++;
+                if (string.IsNullOrWhiteSpace(m.afflictionName))
+                {
+                    Debug.LogWarning("[PlantHealthBarConfig] AfflictionMaterials contains an entry with an empty name.",
+                        this);
+                    continue;
+                }
+
+                if (!seen.Add(m.afflictionName))
+                    Debug.LogWarning($"[PlantHealthBarConfig] Duplicate affliction name '{m.afflictionName}' in list.",
+                        this);
+                if (!m.material)
+                    Debug.LogWarning($"[PlantHealthBarConfig] Material not assigned for '{m.afflictionName}'.", this);
             }
 
-            if (thripsMaterial == null)
-            {
-                Debug.LogWarning("[PlantHealthBarConfig] Thrips material is not assigned!", this);
-                missingMaterials++;
-            }
+            return ok;
+        }
 
-            if (mildewMaterial == null)
-            {
-                Debug.LogWarning("[PlantHealthBarConfig] Mildew material is not assigned!", this);
-                missingMaterials++;
-            }
+        /// <summary>
+        ///     Builds an affliction name -> material map from the configured affliction materials list.
+        /// </summary>
+        public Dictionary<string, Material> BuildAfflictionMaterialMap()
+        {
+            // Use case-sensitive matching to enforce consistent affliction naming conventions
+            var map = new Dictionary<string, Material>(StringComparer.Ordinal);
 
-            if (gnatsMaterial == null)
-            {
-                Debug.LogWarning("[PlantHealthBarConfig] Gnats material is not assigned!", this);
-                missingMaterials++;
-            }
+            if (afflictionMaterials == null) return map;
+            foreach (var m in afflictionMaterials.Where(m =>
+                         !string.IsNullOrWhiteSpace(m.afflictionName) && m.material))
+                map[m.afflictionName] = m.material;
 
-            if (spiderMitesMaterial == null)
-            {
-                Debug.LogWarning("[PlantHealthBarConfig] Spider Mites material is not assigned!", this);
-                missingMaterials++;
-            }
+            return map;
+        }
 
-            if (eggsMaterial != null) return missingMaterials == 0;
-            Debug.LogWarning("[PlantHealthBarConfig] Eggs material is not assigned!", this);
+        /// <summary>
+        ///     Maps an affliction name to its corresponding material for health bar icon rendering.
+        /// </summary>
+        [Serializable]
+        public class AfflictionMaterialMapping
+        {
+            /// <summary>
+            ///     The name of the affliction (e.g., "Aphids", "Thrips", "Spider Mites").
+            ///     Must exactly match the Name property of the affliction class (case-sensitive).
+            /// </summary>
+            [Tooltip("Affliction name must exactly match the affliction's Name property (case-sensitive). Example: 'Aphids', 'Spider Mites'")]
+            public string afflictionName;
 
-            return false;
+            /// <summary>
+            ///     The material to apply to health bar icons for this affliction type.
+            /// </summary>
+            [Tooltip("Material displayed on infection icons for this affliction")]
+            public Material material;
         }
     }
 }

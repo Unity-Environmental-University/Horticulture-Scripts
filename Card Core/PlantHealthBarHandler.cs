@@ -118,7 +118,6 @@ namespace _project.Scripts.Card_Core
                 plantController = GetComponentInParent<PlantController>();
             }
             
-
             if (config == null)
             {
                 config = CardGameMaster.Instance.healthBarConfig;
@@ -138,16 +137,8 @@ namespace _project.Scripts.Card_Core
                 return;
             }
 
-            // Initialize affliction-to-material mapping from config
-            _afflictionMaterials = new Dictionary<string, Material>
-            {
-                ["Aphids"] = config.aphidsMaterial,
-                ["MealyBugs"] = config.mealybugsMaterial,
-                ["Thrips"] = config.thripsMaterial,
-                ["Mildew"] = config.mildewMaterial,
-                ["Fungus Gnats"] = config.gnatsMaterial,
-                ["Spider Mites"] = config.spiderMitesMaterial
-            };
+            // Initialize affliction-to-material mapping from config (data-driven, with legacy fallback)
+            _afflictionMaterials = config.BuildAfflictionMaterialMap();
         }
 
         private void Start()
