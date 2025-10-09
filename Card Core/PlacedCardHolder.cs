@@ -181,8 +181,6 @@ namespace _project.Scripts.Card_Core
             }
 
             ClearHolder();
-            
-            NotifySpotDataHolderRemoval();
 
             _scoreManager.CalculateTreatmentCost();
         }
@@ -275,8 +273,11 @@ namespace _project.Scripts.Card_Core
             }
         }
 
-        private void ClearHolder()
+        public void ClearHolder()
         {
+            if (placedCard is ILocationCard)
+                NotifySpotDataHolderRemoval();
+
             if (placedCardClick3D != null)
                 Destroy(placedCardClick3D.gameObject);
 
@@ -332,7 +333,7 @@ namespace _project.Scripts.Card_Core
                 !Mathf.Approximately(parentLossyScale.z, 0f) ? sourceLossyScale.z / parentLossyScale.z : sourceLocalScale.z
             );
 
-            // Default lay-flat rotation with optional tweak
+            // Default lay-flat rotation with an optional tweak
             var resolvedLocalRotation = Quaternion.Euler(-90f, 0f, 0f) * Quaternion.Euler(placedCardRotationOffsetEuler);
 
             selectedCard.DisableClick3D();
@@ -346,7 +347,7 @@ namespace _project.Scripts.Card_Core
                 cardViewClone.Setup(_deckManager.selectedACard);
 
             cardClone.transform.SetParent(parentForPlacement, false);
-            // Place relative to holder using configured offsets
+            // Place relative to the holder using configured offsets
             cardClone.transform.localPosition = placedCardPositionOffsetLocal;
             cardClone.transform.localRotation = resolvedLocalRotation;
             cardClone.transform.localScale = Vector3.Scale(resolvedLocalScale, placedCardScaleMultiplier);
@@ -403,7 +404,7 @@ namespace _project.Scripts.Card_Core
             RefreshEfficacyDisplay();
         }
 
-        // WORKAROUND: Uses reflection to dispose internal InputAction and prevent Input System errors.
+        // WORKAROUND: Uses reflection to dispose of internal InputAction and prevent Input System errors.
         // Multiple frame delays allow Unity lifecycle and Input System to stabilize after card placement.
         private IEnumerator ReenablePlacedCardClickWithInputActionFix()
         {

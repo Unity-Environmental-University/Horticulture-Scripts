@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
+using Debug = UnityEngine.Debug;
 
 namespace _project.Scripts.Card_Core
 {
@@ -35,25 +36,13 @@ namespace _project.Scripts.Card_Core
         /// <summary>
         ///     Validates that all required materials and prefabs are assigned.
         /// </summary>
-        /// <returns>True if configuration is valid, false otherwise.</returns>
+        /// <returns>True if the configuration is valid, false otherwise.</returns>
         public bool IsValid()
         {
             var ok = true;
-            if (!heartPrefab)
+            if (!heartPrefab || !eggPrefab || !eggsMaterial)
             {
-                Debug.LogError("[PlantHealthBarConfig] Heart prefab is not assigned!", this);
-                ok = false;
-            }
-
-            if (!eggPrefab)
-            {
-                Debug.LogError("[PlantHealthBarConfig] Egg prefab is not assigned!", this);
-                ok = false;
-            }
-
-            if (!eggsMaterial)
-            {
-                Debug.LogError("[PlantHealthBarConfig] Eggs material is not assigned!", this);
+                Debug.LogWarning("[PlantHealthBarConfig] Required prefabs not assigned.", this);
                 ok = false;
             }
 

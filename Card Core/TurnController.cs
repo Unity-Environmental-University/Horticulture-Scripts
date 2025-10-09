@@ -567,6 +567,11 @@ namespace _project.Scripts.Card_Core
             currentTutorialTurn = 0;
             currentRound = 0;
             tutorialCompleted = false;
+            var holders = CardGameMaster.Instance.cardHolders;
+            if (holders != null)
+                foreach (var holder in holders.Where(holder => holder))
+                    holder.ClearHolder();
+
             StartCoroutine(BeginTurnSequence());
             _scoreManager.ResetMoneys();
         }
@@ -578,7 +583,7 @@ namespace _project.Scripts.Card_Core
         /// </summary>
         private void OnDestroy()
         {
-            Coroutine coroutineToStop = null;
+            Coroutine coroutineToStop;
 
             lock (PlantEffectQueueLock)
             {
