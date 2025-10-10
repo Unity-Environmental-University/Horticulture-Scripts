@@ -36,7 +36,6 @@ namespace _project.Scripts.Card_Core
         private DeckManager _deckManager;
         private ScoreManager _scoreManager;
         private Coroutine plantEffectCoroutine;
-        private readonly List<Coroutine> _pauseCoroutines = new();
 
         private const int TutorialTurnCount = 5;
         private const int TutorialMoneyGoal = 500;
@@ -241,8 +240,7 @@ namespace _project.Scripts.Card_Core
                 }
 
                 // Add a single pause coroutine after processing all plants to avoid Race Condition
-                var pauseCoroutine = StartCoroutine(PauseRoutine());
-                _pauseCoroutines.Add(pauseCoroutine);
+                StartCoroutine(PauseRoutine());
 
                 // Process location card effects for each spot
                 var spotDataHolders = FindObjectsByType<SpotDataHolder>(FindObjectsSortMode.None);
@@ -589,13 +587,6 @@ namespace _project.Scripts.Card_Core
         /// </summary>
         private void OnDestroy()
         {
-            // Stop and clear all pause coroutines
-            foreach (var pauseCoroutine in _pauseCoroutines.Where(pauseCoroutine => pauseCoroutine != null))
-            {
-                StopCoroutine(pauseCoroutine);
-            }
-            _pauseCoroutines.Clear();
-
             // Stop and clear plant effect coroutine and queue
             Coroutine coroutineToStop;
             lock (PlantEffectQueueLock)
