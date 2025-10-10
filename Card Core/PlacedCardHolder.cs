@@ -538,7 +538,11 @@ namespace _project.Scripts.Card_Core
         {
             var buttonRenderer = GetComponentInChildren<MeshRenderer>(true);
             var click3D = gameObject.GetComponentInChildren<Click3D>(true);
-            click3D.isEnabled = state;
+            if (click3D)
+            {
+                click3D.isEnabled = state;
+                click3D.enabled = state;
+            }
             if (buttonRenderer)
                 buttonRenderer.enabled = state;
         }

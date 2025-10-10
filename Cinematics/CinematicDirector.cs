@@ -17,7 +17,12 @@ namespace _project.Scripts.Cinematics
                 Director = FindFirstObjectByType<PlayableDirector>();
             var gm = CardGameMaster.Instance;
             if (gm?.turnController != null)
-                gm.turnController.readyToPlay = () => Director != null && Director.state != PlayState.Playing;
+                gm.turnController.readyToPlay = () =>
+                {
+                    if (!Director)
+                        return true;
+                    return Director.state != PlayState.Playing;
+                };
         }
 
         private void Start()

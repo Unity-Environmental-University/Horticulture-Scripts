@@ -37,7 +37,13 @@ namespace _project.Scripts.Cinematics
             // Wait until the Timeline has concluded; do NOT resume the UI yet.
             var turnController = CardGameMaster.Instance.turnController;
             yield return new WaitUntil(turnController.readyToPlay =
-                () => CinematicDirector.Director.state != PlayState.Playing);
+                () =>
+                {
+                    var director = CinematicDirector.Director;
+                    if (!director)
+                        return true;
+                    return director.state != PlayState.Playing;
+                });
             robotController.currentLookTarget = player;
         }
 

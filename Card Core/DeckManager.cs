@@ -827,7 +827,17 @@ namespace _project.Scripts.Card_Core
         /// Afflictions that fail to assign due to missing related data will log a warning.
         private void ApplyAfflictionDeck()
         {
-            var availablePlants = plantLocations
+            var validLocations = plantLocations?
+                .Where(location => location)
+                .ToList();
+
+            if (validLocations == null || validLocations.Count == 0)
+            {
+                if (debug) Debug.LogWarning("[DeckManager] No plant locations available; skipping affliction application.");
+                return;
+            }
+
+            var availablePlants = validLocations
                 .Select(location => location.GetComponentInChildren<PlantController>(true))
                 .Where(controller => controller)
                 .ToList();
