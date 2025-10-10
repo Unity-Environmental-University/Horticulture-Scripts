@@ -21,11 +21,15 @@ Location: `Assets/_project/Scripts/Classes/`
 
 ```
 CardClasses
-├── ICard (contract)
-├── CardHand (deck/hand)
-├── Plant Cards (Coleus, Chrysanthemum, Pepper, Cucumber)
-├── Disease Cards (Aphids, MealyBugs, Thrips, Mildew, SpiderMites, FungusGnats)
-└── Action Cards (Oil, Insecticide, Fungicide, Soapy, Spinosad, Imidacloprid, Panacea)
+├── ICard (base contract)
+├── IPlantCard (plant-specific contract)
+├── IAfflictionCard (affliction-specific contract)
+├── ILocationCard (location-specific contract)
+├── CardHand (deck/hand management)
+├── Plant Cards (ColeusCard, ChrysanthemumCard, PepperCard, CucumberCard)
+├── Affliction Cards (AphidsCard, MealyBugsCard, ThripsCard, MildewCard, SpiderMitesCard, FungusGnatsCard)
+├── Treatment Cards (HorticulturalOilBasic, InsecticideBasic, FungicideBasic, SoapyWaterBasic, SpinosadTreatment, ImidaclopridTreatment, Panacea)
+└── Location Cards (FertilizerBasic)
 
 PlantAfflictions : MonoBehaviour
 ├── IAffliction (contract) + implementations
@@ -41,9 +45,12 @@ PlantEffectClasses
 ## Core Components
 
 ### ICard and Card Types (CardClasses.cs)
-- ICard: `Name`, optional `Description`, nullable `Value`, optional `Affliction`/`Treatment`, `Prefab`, `Material`, `List<ISticker> Stickers`; `Clone()`, `Selected()`, `ApplySticker()`, `ModifyValue(int)`.
-- CardHand: holds `Deck` and `PrototypeDeck`; `DrawCards(int)`, `DeckRandomDraw()` duplicates each prototype 1–4x.
-- Cards: plant, disease, and action/treatment cards map directly to gameplay entities and UI materials.
+- ICard: Base contract with `Name`, optional `Description`, nullable `Value`, optional `Affliction`/`Treatment`, `Prefab`, `Material`, `List<ISticker> Stickers`; `Clone()`, `Selected()`, `ApplySticker()`, `ModifyValue(int)`.
+- IPlantCard: Extends ICard for plant-specific cards with `InfectLevel` and `EggLevel` properties.
+- IAfflictionCard: Extends ICard for affliction cards with `BaseInfectLevel` and `BaseEggLevel` properties.
+- ILocationCard: Extends ICard for location effects with `EffectDuration`, `IsPermanent`, `EffectType`, and location effect methods.
+- CardHand: Manages `Deck` and `PrototypeDeck`; `DrawCards(int)`, `DeckRandomDraw()` duplicates each prototype 1–4x.
+- Cards: Plant cards, affliction cards, treatment cards, and location cards map to gameplay entities and UI materials.
 
 ### Afflictions & Treatments (PlantAfflictions.cs)
 - IAffliction: `Name`, `Description`, `Color`, optional `Shader`, `TreatWith(ITreatment, PlantController)`, `TickDay(PlantController)`, `GetCard()`, `Clone()`.
@@ -127,6 +134,6 @@ f.SetValue(card, 7);
 
 ---
 
-Version: 1.0
-Last Updated: August 2025
+Version: 1.1
+Last Updated: October 2025
 Namespaces: `_project.Scripts.Classes`
