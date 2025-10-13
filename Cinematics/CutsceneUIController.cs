@@ -5,7 +5,16 @@ namespace _project.Scripts.Cinematics
 {
     public class CutsceneUIController : MonoBehaviour
     {
-        private void OnEnable() => CardGameMaster.Instance.uiInputModule.enabled = true;
-        private void OnDisable() => CardGameMaster.Instance.uiInputModule.enabled = false;
+        private void OnEnable()
+        {
+            var module = CardGameMaster.Instance?.uiInputModule;
+            if (module != null) module.enabled = true;
+        }
+
+        private void OnDisable()
+        {
+            var module = CardGameMaster.Instance?.uiInputModule;
+            if (module != null) module.enabled = false;
+        }
     }
 }
