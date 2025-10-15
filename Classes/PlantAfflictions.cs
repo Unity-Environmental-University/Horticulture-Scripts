@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
+using _project.Scripts.Analytics;
 using _project.Scripts.Card_Core;
 using _project.Scripts.Core;
 using JetBrains.Annotations;
@@ -38,7 +39,7 @@ namespace _project.Scripts.Classes
             public Color Color { get; }
             [CanBeNull] public Shader Shader { get; }
             public List<ITreatment> AcceptableTreatments { get; }
-            public void TreatWith(ITreatment treatment, PlantController plant);
+            public bool TreatWith(ITreatment treatment, PlantController plant);
             public void TickDay(PlantController plant);
 
             [CanBeNull]
@@ -72,9 +73,10 @@ namespace _project.Scripts.Classes
 
                 foreach (var item in afflictions)
                 {
-                    item.TreatWith(this, plant);
-                    if (CardGameMaster.Instance == null || !CardGameMaster.Instance.debuggingCardClass) continue;
-                    if (CardGameMaster.Instance.debuggingCardClass)
+                    var success = item.TreatWith(this, plant);
+                    TreatmentAnalytics.RecordTreatment(plant.name, item.Name, Name, success);
+
+                    if (CardGameMaster.Instance != null && CardGameMaster.Instance.debuggingCardClass)
                         Debug.Log($"Applied treatment to affliction: {item.Name}");
                 }
             }
@@ -109,11 +111,11 @@ namespace _project.Scripts.Classes
                 return Treatments.Any(t => t.GetType() == treatment.GetType());
             }
 
-            public void TreatWith(ITreatment treatment, PlantController plant)
+            public bool TreatWith(ITreatment treatment, PlantController plant)
             {
                 if (!CanBeTreatedBy(treatment))
                 {
-                    return;
+                    return false;
                 }
 
                 var affectsAdults = treatment is InsecticideTreatment or Panacea;
@@ -132,12 +134,12 @@ namespace _project.Scripts.Classes
 
                 if (infectReduction <= 0 && eggReduction <= 0)
                 {
-                    return;
+                    return false;
                 }
 
                 if (!TreatmentAttemptSucceeds(this, treatment))
                 {
-                    return;
+                    return false;
                 }
 
                 if (infectReduction > 0)
@@ -157,6 +159,7 @@ namespace _project.Scripts.Classes
                 var remainingEggs = plant.GetEggsFrom(this);
                 _hasAdults = remainingInfect > 0;
                 _hasLarvae = remainingEggs > 0;
+                return true;
             }
 
             public void TickDay(PlantController plant)
@@ -195,17 +198,18 @@ namespace _project.Scripts.Classes
                 return Treatments.Any(t => t.GetType() == treatment.GetType());
             }
 
-            public void TreatWith(ITreatment treatment, PlantController plant)
+            public bool TreatWith(ITreatment treatment, PlantController plant)
             {
-                if (!CanBeTreatedBy(treatment)) return;
+                if (!CanBeTreatedBy(treatment)) return false;
                 if (!TreatmentAttemptSucceeds(this, treatment))
                 {
-                    return;
+                    return false;
                 }
 
                 var infectReduction = treatment.InfectCureValue ?? 0;
                 var eggReduction = treatment.EggCureValue ?? 0;
                 plant.ReduceAfflictionValues(this, infectReduction, eggReduction);
+                return true;
             }
 
             public void TickDay(PlantController plant)
@@ -240,17 +244,18 @@ namespace _project.Scripts.Classes
                 return Treatments.Any(t => t.GetType() == treatment.GetType());
             }
 
-            public void TreatWith(ITreatment treatment, PlantController plant)
+            public bool TreatWith(ITreatment treatment, PlantController plant)
             {
-                if (!CanBeTreatedBy(treatment)) return;
+                if (!CanBeTreatedBy(treatment)) return false;
                 if (!TreatmentAttemptSucceeds(this, treatment))
                 {
-                    return;
+                    return false;
                 }
 
                 var infectReduction = treatment.InfectCureValue ?? 0;
                 var eggReduction = treatment.EggCureValue ?? 0;
                 plant.ReduceAfflictionValues(this, infectReduction, eggReduction);
+                return true;
             }
 
             public void TickDay(PlantController plant)
@@ -288,17 +293,18 @@ namespace _project.Scripts.Classes
                 return Treatments.Any(t => t.GetType() == treatment.GetType());
             }
 
-            public void TreatWith(ITreatment treatment, PlantController plant)
+            public bool TreatWith(ITreatment treatment, PlantController plant)
             {
-                if (!CanBeTreatedBy(treatment)) return;
+                if (!CanBeTreatedBy(treatment)) return false;
                 if (!TreatmentAttemptSucceeds(this, treatment))
                 {
-                    return;
+                    return false;
                 }
 
                 var infectReduction = treatment.InfectCureValue ?? 0;
                 var eggReduction = treatment.EggCureValue ?? 0;
                 plant.ReduceAfflictionValues(this, infectReduction, eggReduction);
+                return true;
             }
 
             public void TickDay(PlantController plant)
@@ -333,17 +339,18 @@ namespace _project.Scripts.Classes
                 return Treatments.Any(t => t.GetType() == treatment.GetType());
             }
             
-            public void TreatWith(ITreatment treatment, PlantController plant)
+            public bool TreatWith(ITreatment treatment, PlantController plant)
             {
-                if (!CanBeTreatedBy(treatment)) return;
+                if (!CanBeTreatedBy(treatment)) return false;
                 if (!TreatmentAttemptSucceeds(this, treatment))
                 {
-                    return;
+                    return false;
                 }
 
                 var infectReduction = treatment.InfectCureValue ?? 0;
                 var eggReduction = treatment.EggCureValue ?? 0;
                 plant.ReduceAfflictionValues(this, infectReduction, eggReduction);
+                return true;
             }
 
             public void TickDay(PlantController plant)
@@ -379,17 +386,18 @@ namespace _project.Scripts.Classes
                 return Treatments.Any(t => t.GetType() == treatment.GetType());
             }
             
-            public void TreatWith(ITreatment treatment, PlantController plant)
+            public bool TreatWith(ITreatment treatment, PlantController plant)
             {
-                if (!CanBeTreatedBy(treatment)) return;
+                if (!CanBeTreatedBy(treatment)) return false;
                 if (!TreatmentAttemptSucceeds(this, treatment))
                 {
-                    return;
+                    return false;
                 }
 
                 var infectReduction = treatment.InfectCureValue ?? 0;
                 var eggReduction = treatment.EggCureValue ?? 0;
                 plant.ReduceAfflictionValues(this, infectReduction, eggReduction);
+                return true;
             }
 
             public void TickDay(PlantController plant)

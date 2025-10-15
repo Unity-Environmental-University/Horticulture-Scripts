@@ -83,10 +83,11 @@ namespace _project.Scripts.PlayModeTest
                 return Treatments.Any(t => t.GetType() == treatment.GetType());
             }
 
-            public void TreatWith(PlantAfflictions.ITreatment treatment, PlantController plant)
+            public bool TreatWith(PlantAfflictions.ITreatment treatment, PlantController plant)
             {
-                if (!CanBeTreatedBy(treatment)) return;
+                if (!CanBeTreatedBy(treatment)) return false;
                 plant.RemoveAffliction(this);
+                return true;
             }
 
             public void TickDay(PlantController plant) { }

@@ -35,7 +35,7 @@ namespace _project.Scripts.PlayModeTest
                 return _canTreat;
             }
 
-            public void TreatWith(PlantAfflictions.ITreatment treatment, PlantController plant) { }
+            public bool TreatWith(PlantAfflictions.ITreatment treatment, PlantController plant) { return _canTreat; }
 
             public void TickDay(PlantController plant) { }
 

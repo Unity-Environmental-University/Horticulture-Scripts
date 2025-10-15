@@ -51,7 +51,7 @@ namespace _project.Scripts.ModLoading
             return new ModAffliction(Name, Description, Color, Shader?.name, _vulnerableToTreatments);
         }
 
-        public void TreatWith(PlantAfflictions.ITreatment treatment, PlantController plant)
+        public bool TreatWith(PlantAfflictions.ITreatment treatment, PlantController plant)
         {
             var infectReduction = 0;
             var eggReduction = 0;
@@ -87,11 +87,15 @@ namespace _project.Scripts.ModLoading
                 {
                     plant.RemoveAffliction(this);
                 }
+
+                return true;
             }
             else if (CardGameMaster.Instance?.debuggingCardClass == true)
             {
                 Debug.Log($"{treatment.Name} has no effect on {Name} (not vulnerable to this treatment type)");
             }
+
+            return false;
         }
 
         public bool CanBeTreatedBy(PlantAfflictions.ITreatment treatment)
