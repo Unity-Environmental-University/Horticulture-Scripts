@@ -6,10 +6,13 @@
 Git-Setup.bat
 Git-Setup.sh
 
-# Don't Upload files with Keys
+# Don't Upload files with Sensitive Information
 Data/HardwareDataCollector.cs
 Data/UnityServicesInitializer.cs
 Data/PrivateData.cs
+
+# DebugTools
+Data/CardGameEditorTweaks.cs
 
 # Un-Needed Files
 Scripts.asmdef
