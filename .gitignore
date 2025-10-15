@@ -6,10 +6,8 @@
 Git-Setup.bat
 Git-Setup.sh
 
-# Don't Upload files with Sensitive Information
-Data/HardwareDataCollector.cs
-Data/UnityServicesInitializer.cs
-Data/PrivateData.cs
+# Analytics handling & Event Data
+Analytics/*
 
 # DebugTools
 Data/CardGameEditorTweaks.cs

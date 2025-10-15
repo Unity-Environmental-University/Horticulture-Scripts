@@ -18,7 +18,7 @@ namespace _project.Scripts.Data
     /// </summary>
     public class SiteDataFetcher : MonoBehaviour
     {
-        private const string URL = PrivateData.RawGithubContent;
+        private const string URL = WebData.RawGithubContent;
         [SerializeField] private TextMeshProUGUI plantSummary;
         [SerializeField] private TextMeshProUGUI afflictionSummary;
         [SerializeField] private GameObject userInterface;
