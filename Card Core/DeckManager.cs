@@ -1474,7 +1474,9 @@ namespace _project.Scripts.Card_Core
             ScoreManager.SubtractMoneys(redrawCost);
             ScoreManager.UpdateMoneysText();
 
-            AnalyticsFunctions.RecordRedraw(cardsDiscarded, cardsDrawn, ScoreManager.GetMoneys());
+            AnalyticsFunctions.RecordRedraw(cardsDiscarded, cardsDrawn, ScoreManager.GetMoneys(),
+                CardGameMaster.Instance.turnController.currentRound,
+                CardGameMaster.Instance.turnController.currentTurn);
         }
 
         /// <summary>
