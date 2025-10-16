@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using _project.Scripts.Analytics;
 using _project.Scripts.Classes;
 using _project.Scripts.Core;
 using _project.Scripts.GameState;
@@ -1425,9 +1426,17 @@ namespace _project.Scripts.Card_Core
                 return;
             }
 
+            var cardsDiscarded = "";
+            var cardsDrawn = "";
+
             // Create a temporary list to avoid modifying _actionHand while iterating
             var cardsToDiscard = new List<ICard>(_actionHand);
-            foreach (var card in cardsToDiscard) DiscardActionCard(card, true);
+            foreach (var card in cardsToDiscard)
+            {
+                cardsDiscarded +=  card.Name + ",";
+                DiscardActionCard(card, true);
+            }
+            
 
             _actionHand.Clear();
 
@@ -1457,12 +1466,15 @@ namespace _project.Scripts.Card_Core
                 var drawnCard = _actionDeck[0];
                 _actionDeck.RemoveAt(0);
                 _actionHand.Add(drawnCard);
+                cardsDrawn += drawnCard.Name + ",";
             }
 
             DisplayActionCardsSequence();
             if (debug) Debug.Log("Action Hand: " + string.Join(", ", _actionHand.ConvertAll(card => card.Name)));
             ScoreManager.SubtractMoneys(redrawCost);
             ScoreManager.UpdateMoneysText();
+
+            AnalyticsFunctions.RecordRedraw(cardsDiscarded, cardsDrawn, ScoreManager.GetMoneys());
         }
 
         /// <summary>

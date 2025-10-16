@@ -74,7 +74,7 @@ namespace _project.Scripts.Classes
                 foreach (var item in afflictions)
                 {
                     var success = item.TreatWith(this, plant);
-                    TreatmentAnalytics.RecordTreatment(plant.name, item.Name, Name, success);
+                    AnalyticsFunctions.RecordTreatment(plant.name, item.Name, Name, success);
 
                     if (CardGameMaster.Instance != null && CardGameMaster.Instance.debuggingCardClass)
                         Debug.Log($"Applied treatment to affliction: {item.Name}");
