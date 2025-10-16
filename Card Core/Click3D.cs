@@ -37,6 +37,10 @@ namespace _project.Scripts.Card_Core
 
         [Tooltip("Default: 0.2 -- How high the card goes")]
         public float popHeight = 0.2f;
+        
+        public Material litMaterial;
+        [SerializeField] private bool isMenuSign;
+        private Material baseMaterial;
 
         [DontSerialize] public bool selected;
         [DontSerialize] public bool isEnabled;
@@ -66,6 +70,7 @@ namespace _project.Scripts.Card_Core
             }
             
             isEnabled = true;
+            baseMaterial = GetComponent<Renderer>().material;
 
             if (SceneManager.GetActiveScene().name != "CardGame") Destroy(this);
             if (GetComponent<CardView>() && !cardView) cardView = GetComponent<CardView>();
@@ -122,6 +127,15 @@ namespace _project.Scripts.Card_Core
         {
             if (!isEnabled || Click3DGloballyDisabled) return;
             
+            if (isMenuSign)
+            {
+                var component = GetComponent<Renderer>();
+                if (component != null && litMaterial != null)
+                {
+                    component.material = litMaterial;
+                }
+            }
+
             if (!handItem && !isSticker)
             {
                 mouseOver = true;
@@ -150,6 +164,16 @@ namespace _project.Scripts.Card_Core
 
             var plant = GetComponentInParent<PlantController>();
             if (plant) plant.FlagShadersUpdate();
+
+            // Handle menu sign material swap back (independent of other hover behaviors)
+            if (isMenuSign)
+            {
+                var component = GetComponent<Renderer>();
+                if (component != null && baseMaterial != null)
+                {
+                    component.material = baseMaterial;
+                }
+            }
 
             if (!handItem && !isSticker)
             {
