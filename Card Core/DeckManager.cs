@@ -862,6 +862,25 @@ namespace _project.Scripts.Card_Core
 
                     plantController.AddAffliction(affliction);
 
+                    // Record affliction applied analytics
+                    try
+                    {
+                        var cgm = CardGameMaster.Instance;
+                        if (cgm?.turnController != null)
+                        {
+                            AnalyticsFunctions.RecordAffliction(
+                                plantController.PlantCard?.Name ?? plantController.name,
+                                affliction.Name,
+                                cgm.turnController.currentRound,
+                                cgm.turnController.currentTurn
+                            );
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        Debug.LogWarning($"Analytics error in RecordAffliction: {ex.Message}");
+                    }
+
                     if (affliction is PlantAfflictions.MildewAffliction)
                     {
                         var intensity = Random.Range(MinMoldIntensity, MaxMoldIntensity);

@@ -7,7 +7,7 @@ Git-Setup.bat
 Git-Setup.sh
 
 # Analytics handling & Event Data
-Analytics/*
+Analytics/Private/*
 
 # DebugTools
 Data/CardGameEditorTweaks.cs

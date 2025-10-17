@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using _project.Scripts.Analytics;
 using _project.Scripts.Cinematics;
 using _project.Scripts.Classes;
 using _project.Scripts.Core;
@@ -139,6 +140,27 @@ namespace _project.Scripts.Card_Core
                 yield return StartCoroutine(_deckManager.PlacePlants());
             }
 
+            // Record round start analytics (after plants are placed for accurate count)
+            try
+            {
+                var plantCount = _deckManager.plantLocations.Count(loc =>
+                    loc.GetComponentInChildren<PlantController>(true) != null);
+                var isTutorial = level == 0 && CardGameMaster.IsSequencingEnabled &&
+                                 currentTutorialTurn < TutorialTurnCount;
+
+                AnalyticsFunctions.RecordRoundStart(
+                    currentRound,
+                    plantCount,
+                    ScoreManager.GetMoneys(),
+                    moneyGoal,
+                    isTutorial
+                );
+            }
+            catch (Exception ex)
+            {
+                Debug.LogWarning($"[Analytics] RecordRoundStart error: {ex.Message}");
+            }
+
             if (level == 0 && CardGameMaster.IsSequencingEnabled &&
                 currentTutorialTurn < TutorialTurnCount)
             {
@@ -165,6 +187,27 @@ namespace _project.Scripts.Card_Core
                 // Reveal UI, wait for pop-in to finish, then draw the hand
                 var sequencer = FindFirstObjectByType<RobotCardGameSequencer>(FindObjectsInactive.Exclude);
                 if (sequencer) yield return StartCoroutine(sequencer.ResumeUIPopInAndWait());
+
+                // Record turn start analytics before drawing action hand
+                try
+                {
+                    var afflictedCount = _deckManager.plantLocations
+                        .Select(loc => loc.GetComponentInChildren<PlantController>(true))
+                        .Count(p => p != null && p.CurrentAfflictions.Count > 0);
+
+                    AnalyticsFunctions.RecordTurnStart(
+                        currentRound,
+                        currentTurn,
+                        _deckManager.cardsDrawnPerTurn,
+                        ScoreManager.GetMoneys(),
+                        afflictedCount
+                    );
+                }
+                catch (Exception ex)
+                {
+                    Debug.LogWarning($"[Analytics] RecordTurnStart error: {ex.Message}");
+                }
+
                 _deckManager.DrawActionHand();
             }
 
@@ -297,6 +340,21 @@ namespace _project.Scripts.Card_Core
             currentTurn++;
             totalTurns++;
             SpreadAfflictions(plantControllers);
+
+            // Record turn end analytics
+            try
+            {
+                AnalyticsFunctions.RecordTurnEnd(
+                    currentRound,
+                    currentTurn,
+                    ScoreManager.GetMoneys()
+                );
+            }
+            catch (Exception ex)
+            {
+                Debug.LogWarning($"[Analytics] RecordTurnEnd error: {ex.Message}");
+            }
+
             _deckManager.DrawActionHand();
             // Re-enable after scheduling next hand; UI stays disabled while updatingActionDisplay is true
             canClickEnd = true;
@@ -407,6 +465,7 @@ namespace _project.Scripts.Card_Core
         private IEnumerator EndRound(float delayTime = 2f, bool advanceTutorial = false)
         {
             canClickEnd = false;
+            var roundTurnCount = currentTurn; // Save turn count before reset
             currentTurn = 0;
             totalTurns++;
             var ppVol = CardGameMaster.Instance.postProcessVolume.gameObject;
@@ -423,6 +482,32 @@ namespace _project.Scripts.Card_Core
             var score = _scoreManager.CalculateScore();
             if (_scoreManager) _scoreManager.treatmentCost = 0;
 
+            // Count plant health status and record round end analytics
+            try
+            {
+                var plantControllers = _deckManager.plantLocations
+                    .Select(loc => loc.GetComponentInChildren<PlantController>(true))
+                    .Where(p => p != null)
+                    .ToArray();
+
+                var plantsHealthy = plantControllers.Count(p => p.CurrentAfflictions.Count == 0);
+                var plantsDead = _deckManager.plantLocations.Count - plantControllers.Length;
+
+                AnalyticsFunctions.RecordRoundEnd(
+                    currentRound,
+                    roundTurnCount,  // Use saved value instead of currentTurn (which is now 0)
+                    ScoreManager.GetMoneys() + score,
+                    score,
+                    plantsHealthy,
+                    plantsDead,
+                    score > 0
+                );
+            }
+            catch (Exception ex)
+            {
+                Debug.LogWarning($"[Analytics] RecordRoundEnd error: {ex.Message}");
+            }
+
             // If money goal reached at end-of-round, end the level immediately (except during tutorial steps)
             var isTutorialStep = level == 0 && CardGameMaster.IsSequencingEnabled && currentTutorialTurn < TutorialTurnCount;
             if (!isTutorialStep && ScoreManager.GetMoneys() >= moneyGoal)
@@ -436,13 +521,13 @@ namespace _project.Scripts.Card_Core
 
             if (debugging) Debug.Log("Score: " + score);
 
-            var plantControllers = _deckManager.plantLocations
+            var pControllers = _deckManager.plantLocations
                 .SelectMany(location => location.GetComponentsInChildren<PlantController>(false))
                 .ToArray();
 
-            if (debugging) Debug.Log($"Found {plantControllers.Length} PlantControllers in PlantLocation.");
+            if (debugging) Debug.Log($"Found {pControllers.Length} PlantControllers in PlantLocation.");
 
-            foreach (var controller in plantControllers)
+            foreach (var controller in pControllers)
             {
                 controller.plantCardFunctions.ApplyQueuedTreatments();
                 controller.FlagShadersUpdate();
