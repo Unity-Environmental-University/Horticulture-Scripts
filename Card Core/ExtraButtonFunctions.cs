@@ -34,13 +34,13 @@ namespace _project.Scripts.Card_Core
             }
             else if (isRedrawButton)
             {
-                _buttonText.text = _turnController.newRoundReady ? "" : "Redraw -$3";
+                _buttonText.text = _turnController.newRoundReady ? "" : "Redraw -$" +_deckManager.redrawCost;
 
                 var canAffordRedraw = _deckManager.redrawCost <= ScoreManager.GetMoneys();
                 var shouldEnable = canAffordRedraw && !_turnController.newRoundReady;
 
                 _click3D.isEnabled = shouldEnable;
-                if (!shouldEnable) _click3D.mouseOver = false; // force hover off
+                if (!shouldEnable) _click3D.mouseOver = false;
 
                 _click3D.RefreshState();
                 return;

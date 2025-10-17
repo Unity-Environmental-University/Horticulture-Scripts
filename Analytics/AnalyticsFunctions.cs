@@ -65,7 +65,7 @@ namespace _project.Scripts.Analytics
             AnalyticsService.Instance.RecordEvent(ev);
         }
 
-        public static void RecordRoundEnd(int round, int totalTurns, int finalScore, int scoreGained,
+        public static void RecordRoundEnd(int round, int totalTurns, int finalScore, int scoreDelta,
             int plantsHealthy, int plantsDead, bool roundWon)
         {
             if (AnalyticsService.Instance == null) return;
@@ -75,7 +75,7 @@ namespace _project.Scripts.Analytics
                 CurrentRound = round,
                 TotalTurns = totalTurns,
                 FinalScore = finalScore,
-                ScoreGained = scoreGained,
+                ScoreDelta = scoreDelta,
                 PlantsHealthy = plantsHealthy,
                 PlantsDead = plantsDead,
                 RoundWon = roundWon

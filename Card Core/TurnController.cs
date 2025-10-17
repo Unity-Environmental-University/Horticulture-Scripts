@@ -128,6 +128,7 @@ namespace _project.Scripts.Card_Core
                 _scoreManager.ResetMoneys();
                 currentRound = 1;
                 tutorialCompleted = true;
+                _deckManager.ResetActionDeckAfterTutorial();
             }
             
             if (level == 0 && CardGameMaster.IsSequencingEnabled &&
@@ -341,18 +342,20 @@ namespace _project.Scripts.Card_Core
                 StartCoroutine(EndRound(advanceTutorial: true));
                 return;
             }
-
+            
+            var completedTurn = currentTurn;
+            
             // Otherwise, continue with normal turn flow (no hard end on turn limit)
             currentTurn++;
             totalTurns++;
             SpreadAfflictions(plantControllers);
 
-            // Record turn end analytics
+            // Record turn end analytics before counters advance
             try
             {
                 AnalyticsFunctions.RecordTurnEnd(
                     currentRound,
-                    currentTurn,
+                    completedTurn,
                     ScoreManager.GetMoneys()
                 );
             }
@@ -361,7 +364,15 @@ namespace _project.Scripts.Card_Core
                 Debug.LogWarning($"[Analytics] RecordTurnEnd error: {ex.Message}");
             }
 
-            _deckManager.DrawActionHand();
+            var isTutorialStep = level == 0 && CardGameMaster.IsSequencingEnabled && currentTutorialTurn < TutorialTurnCount;
+            if (isTutorialStep)
+            {
+                _deckManager.DrawTutorialActionHand();
+            }
+            else
+            {
+                _deckManager.DrawActionHand();
+            }
             // Re-enable after scheduling next hand; UI stays disabled while updatingActionDisplay is true
             canClickEnd = true;
 
@@ -485,8 +496,10 @@ namespace _project.Scripts.Card_Core
 
             yield return new WaitForSeconds(delayTime);
 
+            var scoreBeforeRound = ScoreManager.GetMoneys();
             var score = _scoreManager.CalculateScore();
             if (_scoreManager) _scoreManager.treatmentCost = 0;
+            var scoreDelta = score - scoreBeforeRound;
 
             // Count plant health status and record round end analytics
             try
@@ -502,11 +515,11 @@ namespace _project.Scripts.Card_Core
                 AnalyticsFunctions.RecordRoundEnd(
                     currentRound,
                     roundTurnCount,  // Use saved value instead of currentTurn (which is now 0)
-                    ScoreManager.GetMoneys() + score,
                     score,
+                    scoreDelta,
                     plantsHealthy,
                     plantsDead,
-                    score > 0
+                    scoreDelta > 0
                 );
             }
             catch (Exception ex)
@@ -666,6 +679,7 @@ namespace _project.Scripts.Card_Core
                 foreach (var holder in holders.Where(holder => holder))
                     holder.ClearHolder();
 
+            _deckManager.ResetActionDeckAfterTutorial();
             StartCoroutine(BeginTurnSequence());
             _scoreManager.ResetMoneys();
         }

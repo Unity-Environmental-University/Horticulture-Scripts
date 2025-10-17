@@ -184,6 +184,7 @@ namespace _project.Scripts.Card_Core
         private readonly CardHand _afflictionHand = new("Afflictions Hand", AfflictionsDeck, PrototypeAfflictionsDeck);
         private readonly CardHand _plantHand = new("Plants Hand", PlantDeck, PrototypePlantsDeck);
         private readonly List<ICard> _actionHand = new();
+        private bool _usingTutorialActionDeck;
 
         public List<Transform> plantLocations;
         public Transform actionCardParent;
@@ -772,19 +773,30 @@ namespace _project.Scripts.Card_Core
             CardGameMaster.Instance.scoreManager.CalculateTreatmentCost();
         }
 
+        private void EnsureTutorialActionDeck()
+        {
+            if (_usingTutorialActionDeck) return;
+
+            _usingTutorialActionDeck = true;
+
+            ClearSelectedCard();
+            _actionHand.Clear();
+            _actionDeck.Clear();
+            _actionDiscardPile.Clear();
+
+            if (actionCardParent)
+                ClearActionCardVisuals();
+
+            foreach (var card in _tutorialActionDeck)
+                _actionDeck.Add(card.Clone());
+        }
+
         public void DrawTutorialActionHand()
         {
             if (updatingActionDisplay) return;
 
-            _actionHand.Clear();
-
-            for (var i = 0; i < cardsDrawnPerTurn; i++)
-                _actionHand.Add(_tutorialActionDeck[i % _tutorialActionDeck.Count].Clone());
-
-            // Clear all existing visualized cards
-            ClearActionCardVisuals();
-
-            DisplayActionCardsSequence();
+            EnsureTutorialActionDeck();
+            DrawActionHand();
 
             if (debug)
                 Debug.Log($"Tutorial Action Hand: {string.Join(", ", _actionHand.ConvertAll(card => card.Name))}");
@@ -1127,6 +1139,12 @@ namespace _project.Scripts.Card_Core
 
         private void AddCardToDiscard(ICard card)
         {
+            if (_usingTutorialActionDeck)
+            {
+                _actionDeck.Add(card);
+                return;
+            }
+
             _actionDiscardPile.Add(card);
         }
 
@@ -1135,6 +1153,27 @@ namespace _project.Scripts.Card_Core
             _actionHand.Add(card);
         }
 
+        /// <summary>
+        /// Resets the action deck to its standard configuration after tutorial play.
+        /// Clears tutorial-specific state, rebuilds the prototype action deck, and removes lingering visuals.
+        /// </summary>
+        public void ResetActionDeckAfterTutorial()
+        {
+            if (!_usingTutorialActionDeck) return;
+
+            _usingTutorialActionDeck = false;
+
+            ClearSelectedCard();
+            _actionHand.Clear();
+
+            if (actionCardParent)
+                ClearActionCardVisuals();
+
+            _actionDeck.Clear();
+            _actionDiscardPile.Clear();
+
+            InitializeActionDeck();
+        }
 
         /// <summary>
         /// Adds the specified card to the internal action hand list and, if visual assets are available,

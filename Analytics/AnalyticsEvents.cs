@@ -51,7 +51,7 @@ namespace _project.Scripts.Analytics
         public int CurrentRound { set => SetParameter("currentRound", value); }
         public int TotalTurns { set => SetParameter("totalTurns", value); }
         public int FinalScore { set => SetParameter("finalScore", value); }
-        public int ScoreGained { set => SetParameter("scoreGained", value); }
+        public int ScoreDelta { set => SetParameter("scoreDelta", value); }
         public int PlantsHealthy { set => SetParameter("plantsHealthy", value); }
         public int PlantsDead { set => SetParameter("plantsDead", value); }
         public bool RoundWon { set => SetParameter("roundWon", value); }

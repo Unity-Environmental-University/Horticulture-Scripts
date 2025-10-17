@@ -526,6 +526,10 @@ namespace _project.Scripts.PlayModeTest
             // Ignore exceptions from UI updates during turn sequencing
             LogAssert.ignoreFailingMessages = true;
 
+            // Force non-tutorial mode to test regular action deck mechanics
+            _turnController.level = 1;
+            _turnController.tutorialCompleted = true;
+
             // Capture initial multiset of cards across deck + hand + discard
             var initialAll = new List<ICard>();
             initialAll.AddRange(_deckManager.GetActionDeck());
@@ -555,22 +559,62 @@ namespace _project.Scripts.PlayModeTest
                 Assert.IsTrue(newCounts.ContainsKey(kvp.Key), $"Missing card '{kvp.Key}' after round");
                 Assert.AreEqual(kvp.Value, newCounts[kvp.Key], $"Count mismatch for '{kvp.Key}'");
             }
+        }
 
-            yield break;
+        [UnityTest]
+        public IEnumerator ActionDeck_Tutorial_IsConsistentBetweenRounds()
+        {
+            // Ignore exceptions from UI updates during turn sequencing
+            LogAssert.ignoreFailingMessages = true;
 
-            // Helper to count cards by name across deck, hand, and discard
-            static Dictionary<string, int> CountByName(IEnumerable<ICard> cards)
+            // Reset tutorial flags to ensure tutorial deck usage
+            _turnController.level = 0;
+            _turnController.tutorialCompleted = false;
+            _turnController.currentTutorialTurn = 0;
+
+            // Initialize the tutorial action deck state up front
+            _deckManager.DrawTutorialActionHand();
+            yield return null;
+            yield return new WaitWhile(() => _deckManager.updatingActionDisplay);
+
+            var initialAll = new List<ICard>();
+            initialAll.AddRange(_deckManager.GetActionDeck());
+            initialAll.AddRange(_deckManager.GetActionHand());
+            initialAll.AddRange(_deckManager.GetDiscardPile());
+            var initialCounts = CountByName(initialAll);
+
+            var retainedGo = new GameObject("RetainedSlot_Tutorial");
+            retainedGo.AddComponent<RetainedCardHolder>();
+
+            _turnController.EndTurn();
+            yield return new WaitForSeconds(3f);
+
+            var newAll = new List<ICard>();
+            newAll.AddRange(_deckManager.GetActionDeck());
+            newAll.AddRange(_deckManager.GetActionHand());
+            newAll.AddRange(_deckManager.GetDiscardPile());
+            var newCounts = CountByName(newAll);
+
+            Assert.AreEqual(initialCounts.Count, newCounts.Count, "Card type count changed between tutorial rounds");
+            foreach (var kvp in initialCounts)
             {
-                var map = new Dictionary<string, int>();
-                foreach (var c in cards)
-                {
-                    if (c == null) continue;
-                    var name = c.Name;
-                    map.TryAdd(name, 0);
-                    map[name] += 1;
-                }
-                return map;
+                Assert.IsTrue(newCounts.ContainsKey(kvp.Key), $"Missing card '{kvp.Key}' after tutorial round");
+                Assert.AreEqual(kvp.Value, newCounts[kvp.Key], $"Count mismatch for '{kvp.Key}' in tutorial round");
             }
+        }
+
+        private static Dictionary<string, int> CountByName(IEnumerable<ICard> cards)
+        {
+            var map = new Dictionary<string, int>();
+            foreach (var c in cards)
+            {
+                if (c == null) continue;
+                var name = c.Name;
+                map.TryAdd(name, 0);
+                map[name] += 1;
+            }
+
+            return map;
         }
 
         /// <summary>
