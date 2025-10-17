@@ -113,12 +113,18 @@ namespace _project.Scripts.Card_Core
 
             yield return new WaitForSeconds(2f);
 
-            if (level == 0 && CardGameMaster.IsSequencingEnabled && currentTutorialTurn >= TutorialTurnCount && !tutorialCompleted)
+            if (level == 0 && CardGameMaster.IsSequencingEnabled && currentTutorialTurn >= TutorialTurnCount &&
+                !tutorialCompleted)
             {
                 if (debugging)
                     Debug.Log("[TurnController] Tutorial complete! Transitioning to the regular game...");
-                CardGameMaster.Instance.popUpController.ActivatePopUpPanel(null, "Tutorial Complete! Press Continue to proceed to the regular game...");
+                CardGameMaster.Instance.popUpController.ActivatePopUpPanel(null,
+                    "Tutorial Complete! Press Continue to proceed to the regular game...");
                 yield return new WaitForSeconds(2f);
+                var cardHolders = CardGameMaster.Instance.cardHolders;
+                if (cardHolders != null)
+                    foreach (var h in cardHolders.Where(holder => holder))
+                        h.ClearHolder();
                 _scoreManager.ResetMoneys();
                 currentRound = 1;
                 tutorialCompleted = true;
