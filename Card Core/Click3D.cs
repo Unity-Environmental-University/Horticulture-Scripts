@@ -40,7 +40,6 @@ namespace _project.Scripts.Card_Core
         
         public Material litMaterial;
         [SerializeField] private bool isMenuSign;
-        private Material baseMaterial;
 
         [DontSerialize] public bool selected;
         [DontSerialize] public bool isEnabled;
@@ -70,7 +69,6 @@ namespace _project.Scripts.Card_Core
             }
             
             isEnabled = true;
-            baseMaterial = GetComponent<Renderer>().material;
 
             if (SceneManager.GetActiveScene().name != "CardGame") Destroy(this);
             if (GetComponent<CardView>() && !cardView) cardView = GetComponent<CardView>();
@@ -169,9 +167,9 @@ namespace _project.Scripts.Card_Core
             if (isMenuSign)
             {
                 var component = GetComponent<Renderer>();
-                if (component != null && baseMaterial != null)
+                if (component != null && _originalMaterial != null)
                 {
-                    component.material = baseMaterial;
+                    component.material = _originalMaterial;
                 }
             }
 
