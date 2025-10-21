@@ -41,6 +41,48 @@ namespace _project.Scripts.Card_Core
         private const int TutorialTurnCount = 5;
         private const int TutorialMoneyGoal = 500;
 
+        /// <summary>
+        /// Gets a value indicating whether the current game state represents an active tutorial step.
+        /// </summary>
+        /// <remarks>
+        /// A tutorial step is active when:
+        /// - The player is on level 0 (the tutorial level)
+        /// - Tutorial sequencing is enabled via CardGameMaster
+        /// - The current tutorial turn is less than the total tutorial turn count
+        ///
+        /// This property is used to determine whether to use tutorial-specific logic for:
+        /// - Drawing action cards (tutorial cards vs. regular deck)
+        /// - Placing plants (tutorial plants vs. random plants)
+        /// - Victory conditions (tutorial bypasses money goals)
+        /// - Round progression logic
+        /// </remarks>
+        /// <value>
+        /// <c>true</c> if currently in an active tutorial step; otherwise, <c>false</c>.
+        /// </value>
+        private bool IsActiveTutorialStep =>
+            level == 0 && CardGameMaster.IsSequencingEnabled && currentTutorialTurn < TutorialTurnCount;
+
+        /// <summary>
+        /// Gets a value indicating whether the tutorial has just been completed.
+        /// </summary>
+        /// <remarks>
+        /// The tutorial is considered just completed when:
+        /// - The player is on level 0 (the tutorial level)
+        /// - Tutorial sequencing is enabled via CardGameMaster
+        /// - The current tutorial turn has reached or exceeded the total tutorial turn count
+        ///
+        /// This property is used to trigger the tutorial-to-normal-game transition, which includes:
+        /// - Displaying the "Tutorial Complete" message
+        /// - Clearing card holders
+        /// - Resetting the money counter
+        /// - Resetting the action deck
+        /// </remarks>
+        /// <value>
+        /// <c>true</c> if the tutorial was just completed; otherwise, <c>false</c>.
+        /// </value>
+        private bool IsTutorialJustCompleted =>
+            level == 0 && CardGameMaster.IsSequencingEnabled && currentTutorialTurn >= TutorialTurnCount;
+
         public TurnController(Func<bool> readyToPlay) => this.readyToPlay = readyToPlay;
 
         private static TurnController Instance { get; set; }
@@ -113,8 +155,7 @@ namespace _project.Scripts.Card_Core
 
             yield return new WaitForSeconds(2f);
 
-            if (level == 0 && CardGameMaster.IsSequencingEnabled && currentTutorialTurn >= TutorialTurnCount &&
-                !tutorialCompleted)
+            if (IsTutorialJustCompleted && !tutorialCompleted)
             {
                 if (debugging)
                     Debug.Log("[TurnController] Tutorial complete! Transitioning to the regular game...");
@@ -131,8 +172,7 @@ namespace _project.Scripts.Card_Core
                 _deckManager.ResetActionDeckAfterTutorial();
             }
             
-            if (level == 0 && CardGameMaster.IsSequencingEnabled &&
-                currentTutorialTurn < TutorialTurnCount)
+            if (IsActiveTutorialStep)
             {
                 if (debugging)
                     Debug.Log(
@@ -152,15 +192,13 @@ namespace _project.Scripts.Card_Core
             {
                 var plantCount = _deckManager.plantLocations.Count(loc =>
                     loc.GetComponentInChildren<PlantController>(true) != null);
-                var isTutorial = level == 0 && CardGameMaster.IsSequencingEnabled &&
-                                 currentTutorialTurn < TutorialTurnCount;
 
                 AnalyticsFunctions.RecordRoundStart(
                     currentRound,
                     plantCount,
                     ScoreManager.GetMoneys(),
                     moneyGoal,
-                    isTutorial
+                    IsActiveTutorialStep
                 );
             }
             catch (Exception ex)
@@ -168,8 +206,7 @@ namespace _project.Scripts.Card_Core
                 Debug.LogWarning($"[Analytics] RecordRoundStart error: {ex.Message}");
             }
 
-            if (level == 0 && CardGameMaster.IsSequencingEnabled &&
-                currentTutorialTurn < TutorialTurnCount)
+            if (IsActiveTutorialStep)
             {
                 if (debugging)
                     Debug.Log(
@@ -324,8 +361,7 @@ namespace _project.Scripts.Card_Core
 
             // During tutorial steps, money goal cannot end the level
             // Money goal can only end level if all plants are also healthy
-            if (!(level == 0 && CardGameMaster.IsSequencingEnabled && currentTutorialTurn < TutorialTurnCount)
-                && ScoreManager.GetMoneys() >= moneyGoal && allPlantsHealthy)
+            if (!IsActiveTutorialStep && ScoreManager.GetMoneys() >= moneyGoal && allPlantsHealthy)
             {
                 if (debugging) Debug.Log("Ending level - money goal reached AND all plants healthy");
                 currentTurn++;
@@ -364,8 +400,7 @@ namespace _project.Scripts.Card_Core
                 Debug.LogWarning($"[Analytics] RecordTurnEnd error: {ex.Message}");
             }
 
-            var isTutorialStep = level == 0 && CardGameMaster.IsSequencingEnabled && currentTutorialTurn < TutorialTurnCount;
-            if (isTutorialStep)
+            if (IsActiveTutorialStep)
             {
                 _deckManager.DrawTutorialActionHand();
             }
@@ -501,6 +536,12 @@ namespace _project.Scripts.Card_Core
             if (_scoreManager) _scoreManager.treatmentCost = 0;
             var scoreDelta = score - scoreBeforeRound;
 
+            // Calculate roundVictory: Player achieves actual victory ONLY when:
+            // 1. Money goal is reached (>= moneyGoal)
+            // 2. Game is NOT in tutorial mode (tutorial doesn't count as victory)
+            // This is distinct from roundWon (positive score delta), which just indicates profitability
+            var roundVictory = !IsActiveTutorialStep && ScoreManager.GetMoneys() >= moneyGoal;
+
             // Count plant health status and record round end analytics
             try
             {
@@ -512,14 +553,18 @@ namespace _project.Scripts.Card_Core
                 var plantsHealthy = plantControllers.Count(p => p.CurrentAfflictions.Count == 0);
                 var plantsDead = _deckManager.plantLocations.Count - plantControllers.Length;
 
+                // Record round end analytics with both performance and success metrics:
+                // - roundWon (scoreDelta > 0): Did player make profit?
+                // - roundVictory: Did player reach the actual win condition?
                 AnalyticsFunctions.RecordRoundEnd(
                     currentRound,
-                    roundTurnCount,  // Use saved value instead of currentTurn (which is now 0)
+                    roundTurnCount,
                     score,
                     scoreDelta,
                     plantsHealthy,
                     plantsDead,
-                    scoreDelta > 0
+                    scoreDelta > 0,  // roundWon: positive score change
+                    roundVictory     // roundVictory: actual goal achievement (non-tutorial)
                 );
             }
             catch (Exception ex)
@@ -528,8 +573,7 @@ namespace _project.Scripts.Card_Core
             }
 
             // If money goal reached at end-of-round, end the level immediately (except during tutorial steps)
-            var isTutorialStep = level == 0 && CardGameMaster.IsSequencingEnabled && currentTutorialTurn < TutorialTurnCount;
-            if (!isTutorialStep && ScoreManager.GetMoneys() >= moneyGoal)
+            if (!IsActiveTutorialStep && ScoreManager.GetMoneys() >= moneyGoal)
             {
                 shopQueued = true;
                 EndLevel();
@@ -554,10 +598,9 @@ namespace _project.Scripts.Card_Core
 
             if (score > 0)
             {
-                if (advanceTutorial && level == 0 && CardGameMaster.IsSequencingEnabled &&
-                    currentTutorialTurn < TutorialTurnCount)
+                if (advanceTutorial && IsActiveTutorialStep)
                     currentTutorialTurn++;
-                
+
                 newRoundReady = true;
                 canClickEnd = true;
             }
