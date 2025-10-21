@@ -73,7 +73,7 @@ namespace _project.Scripts.Card_Core
         ///
         /// This property is used to trigger the tutorial-to-normal-game transition, which includes:
         /// - Displaying the "Tutorial Complete" message
-        /// - Clearing card holders
+        /// - Clearing cardholders
         /// - Resetting the money counter
         /// - Resetting the action deck
         /// </remarks>
@@ -232,7 +232,7 @@ namespace _project.Scripts.Card_Core
                 var sequencer = FindFirstObjectByType<RobotCardGameSequencer>(FindObjectsInactive.Exclude);
                 if (sequencer) yield return StartCoroutine(sequencer.ResumeUIPopInAndWait());
 
-                // Record turn start analytics before drawing action hand
+                // Record turn starts analytics before drawing action hand
                 try
                 {
                     var afflictedCount = _deckManager.plantLocations
@@ -386,7 +386,7 @@ namespace _project.Scripts.Card_Core
             totalTurns++;
             SpreadAfflictions(plantControllers);
 
-            // Record turn end analytics before counters advance
+            // Record turn end analytics before counter-advance
             try
             {
                 AnalyticsFunctions.RecordTurnEnd(
@@ -535,11 +535,6 @@ namespace _project.Scripts.Card_Core
             var score = _scoreManager.CalculateScore();
             if (_scoreManager) _scoreManager.treatmentCost = 0;
             var scoreDelta = score - scoreBeforeRound;
-
-            // Calculate roundVictory: Player achieves actual victory ONLY when:
-            // 1. Money goal is reached (>= moneyGoal)
-            // 2. Game is NOT in tutorial mode (tutorial doesn't count as victory)
-            // This is distinct from roundWon (positive score delta), which just indicates profitability
             var roundVictory = !IsActiveTutorialStep && ScoreManager.GetMoneys() >= moneyGoal;
 
             // Count plant health status and record round end analytics
@@ -552,10 +547,7 @@ namespace _project.Scripts.Card_Core
 
                 var plantsHealthy = plantControllers.Count(p => p.CurrentAfflictions.Count == 0);
                 var plantsDead = _deckManager.plantLocations.Count - plantControllers.Length;
-
-                // Record round end analytics with both performance and success metrics:
-                // - roundWon (scoreDelta > 0): Did player make profit?
-                // - roundVictory: Did player reach the actual win condition?
+                
                 AnalyticsFunctions.RecordRoundEnd(
                     currentRound,
                     roundTurnCount,
@@ -563,8 +555,8 @@ namespace _project.Scripts.Card_Core
                     scoreDelta,
                     plantsHealthy,
                     plantsDead,
-                    scoreDelta > 0,  // roundWon: positive score change
-                    roundVictory     // roundVictory: actual goal achievement (non-tutorial)
+                    scoreDelta > 0,
+                    roundVictory
                 );
             }
             catch (Exception ex)
