@@ -1476,25 +1476,42 @@ namespace _project.Scripts.Card_Core
 
         public void RedrawCards()
         {
-            if (updatingActionDisplay) return;
-
-            if (CardGameMaster.Instance.cardHolders.Any(holder => holder && holder.HoldingCard))
+            var cgm = CardGameMaster.Instance;
+            if (cgm?.turnController == null)
             {
-                Debug.LogError("Cards In CardHolder!");
+                Debug.LogWarning("[DeckManager] Cannot record redraw: CardGameMaster or TurnController not initialized");
                 return;
             }
 
-            var cardsDiscarded = "";
-            var cardsDrawn = "";
+            var currentScore = ScoreManager.GetMoneys();
+            var currentRoundNum = cgm.turnController.currentRound;
+            var currentTurnNum = cgm.turnController.currentTurn;
+
+            if (updatingActionDisplay)
+            {
+                AnalyticsFunctions.RecordRedraw("N/A", "N/A", currentScore, currentRoundNum, currentTurnNum,
+                    false, "Animation in progress");
+                return;
+            }
+
+            if (cgm.cardHolders.Any(holder => holder && holder.HoldingCard))
+            {
+                Debug.LogError("Cards In CardHolder!");
+                AnalyticsFunctions.RecordRedraw("N/A", "N/A", currentScore, currentRoundNum, currentTurnNum,
+                    false, "Cards in holders");
+                return;
+            }
 
             // Create a temporary list to avoid modifying _actionHand while iterating
             var cardsToDiscard = new List<ICard>(_actionHand);
+
+            // Capture discarded card names before clearing
+            var cardsDiscarded = string.Join(",", cardsToDiscard.Select(card => card.Name));
+
             foreach (var card in cardsToDiscard)
             {
-                cardsDiscarded +=  card.Name + ",";
                 DiscardActionCard(card, true);
             }
-            
 
             _actionHand.Clear();
 
@@ -1506,6 +1523,8 @@ namespace _project.Scripts.Card_Core
 
             // Clear all existing visualized cards in the action card parent
             ClearActionCardVisuals();
+
+            var newlyDrawnCards = new List<ICard>();
 
             for (var i = 0; i < cardsDrawnPerTurn; i++)
             {
@@ -1524,17 +1543,19 @@ namespace _project.Scripts.Card_Core
                 var drawnCard = _actionDeck[0];
                 _actionDeck.RemoveAt(0);
                 _actionHand.Add(drawnCard);
-                cardsDrawn += drawnCard.Name + ",";
+                newlyDrawnCards.Add(drawnCard);
             }
+
+            var cardsDrawn = string.Join(",", newlyDrawnCards.Select(card => card.Name));
 
             DisplayActionCardsSequence();
             if (debug) Debug.Log("Action Hand: " + string.Join(", ", _actionHand.ConvertAll(card => card.Name)));
             ScoreManager.SubtractMoneys(redrawCost);
             ScoreManager.UpdateMoneysText();
 
+            // Record successful redraw with actual card data
             AnalyticsFunctions.RecordRedraw(cardsDiscarded, cardsDrawn, ScoreManager.GetMoneys(),
-                CardGameMaster.Instance.turnController.currentRound,
-                CardGameMaster.Instance.turnController.currentTurn);
+                currentRoundNum, currentTurnNum, true, "");
         }
 
         /// <summary>

@@ -18,7 +18,8 @@ namespace _project.Scripts.Analytics
             AnalyticsService.Instance.RecordEvent(ev);
         }
 
-        public static void RecordRedraw(string discarded, string drawn, int score, int round, int turn)
+        public static void RecordRedraw(string discarded, string drawn, int score, int round, int turn,
+            bool success = true, string blockReason = "")
         {
             if (AnalyticsService.Instance == null) return;
 
@@ -28,7 +29,9 @@ namespace _project.Scripts.Analytics
                 CardsDrawn = drawn,
                 CurrentScore = score,
                 CurrentRound = round,
-                CurrentTurn = turn
+                CurrentTurn = turn,
+                Success = success,
+                BlockReason = blockReason
             };
 
             AnalyticsService.Instance.RecordEvent(ev);
