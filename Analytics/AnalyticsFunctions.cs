@@ -31,7 +31,7 @@ namespace _project.Scripts.Analytics
                 CurrentRound = round,
                 CurrentTurn = turn,
                 Success = success,
-                BlockReason = blockReason
+                FailReason = blockReason
             };
 
             AnalyticsService.Instance.RecordEvent(ev);

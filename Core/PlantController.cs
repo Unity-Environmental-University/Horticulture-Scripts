@@ -255,8 +255,9 @@ namespace _project.Scripts.Core
                 if (healthBarHandler) healthBarHandler.SpawnHearts(this);
             }
 
-            Debug.LogWarning(name + " has " + CurrentAfflictions.Count + " afflictions. Current infect level is " +
-                             GetInfectLevel());
+            if (CardGameMaster.Instance.debuggingCardClass)
+                Debug.Log(name + " has " + CurrentAfflictions.Count + " afflictions. Current infect level is " +
+                          GetInfectLevel());
             
             if (debuffSystem && CardGameMaster.Instance)
                 TurnController.QueuePlantEffect(

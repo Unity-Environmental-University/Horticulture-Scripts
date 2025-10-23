@@ -31,8 +31,8 @@ namespace _project.Scripts.Analytics
         public int CurrentScore { set => SetParameter("currentScore", value); }
         public int CurrentRound { set => SetParameter("currentRound", value); }
         public int CurrentTurn { set => SetParameter("currentTurn", value); }
-        public bool Success { set => SetParameter("success", value); }
-        public string BlockReason { set => SetParameter("blockReason", value); }
+        public bool Success { set => SetParameter("redrawSuccess", value); }
+        public string FailReason { set => SetParameter("failReason", value); }
     }
 
     public class RoundStartEvent : Event
