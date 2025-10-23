@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using _project.Scripts.Card_Core;
 using _project.Scripts.Core;
 using _project.Scripts.Stickers;
@@ -110,7 +111,7 @@ namespace _project.Scripts.Classes
     public class FertilizerBasic : ILocationCard
     {
         public string Name => "FertilizerBasic";
-        public string Description => "Does FertilizerBasic Things";
+        public string Description => "Doubles the value of the plant by enriching the soil with nutrients.";
 
         private int _value = -1;
 
@@ -147,6 +148,14 @@ namespace _project.Scripts.Classes
 
         public void ApplyLocationEffect(PlantController plant)
         {
+            if (plant?.PlantCard?.Value == null) return;
+
+            var currentValue = plant.PlantCard.Value.Value;
+            var doubledValue = currentValue * 2;
+            
+            const int maxPlantValue = 999;
+            plant.PlantCard.Value = Mathf.Min(Mathf.Max(0, doubledValue), maxPlantValue);
+            plant.UpdatePriceFlag(plant.PlantCard.Value.Value);
         }
 
         public void RemoveLocationEffect(PlantController plant)
@@ -155,10 +164,21 @@ namespace _project.Scripts.Classes
 
         public void ApplyTurnEffect(PlantController plant)
         {
+            /* DISABLED TURN EFFECT IN FAVOR OF APPLICATION EFFECT
             if (plant?.PlantCard?.Value == null) return;
 
             plant.PlantCard.Value += 1;
             plant.UpdatePriceFlag(plant.PlantCard.Value ?? 0);
+            */
+
+            if (plant?.PlantCard?.Value == null) return;
+
+            foreach (var damage in plant.CurrentAfflictions.Select(affliction => affliction.GetCard()?.Value ?? 0))
+            {
+                plant.PlantCard.Value = Mathf.Max(0, plant.PlantCard.Value.Value + damage + 1);
+            }
+
+            plant.UpdatePriceFlag(plant.PlantCard.Value.Value);
         }
     }
 
