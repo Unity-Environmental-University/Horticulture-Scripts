@@ -146,9 +146,11 @@ namespace _project.Scripts.Classes
         {
             if (plant?.PlantCard?.Value == null) return;
 
+            if (plant.buffFX) plant.buffFX.Play();
+
             var currentValue = plant.PlantCard.Value.Value;
             var doubledValue = currentValue * 2;
-            
+
             const int maxPlantValue = 999;
             plant.PlantCard.Value = Mathf.Min(Mathf.Max(0, doubledValue), maxPlantValue);
             plant.UpdatePriceFlag(plant.PlantCard.Value.Value);
@@ -156,6 +158,7 @@ namespace _project.Scripts.Classes
 
         public void RemoveLocationEffect(PlantController plant)
         {
+            if (plant?.buffFX) plant.buffFX.Stop();
         }
 
         public void ApplyTurnEffect(PlantController plant)
@@ -166,8 +169,9 @@ namespace _project.Scripts.Classes
             plant.PlantCard.Value += 1;
             plant.UpdatePriceFlag(plant.PlantCard.Value ?? 0);
             */
-
+            
             if (plant?.PlantCard?.Value == null) return;
+            if (plant.buffFX.isStopped) plant.buffFX.Play();
 
             foreach (var damage in plant.CurrentAfflictions.Select(affliction => affliction.GetCard()?.Value ?? 0))
                 plant.PlantCard.Value = Mathf.Max(0, plant.PlantCard.Value.Value + damage + 1);

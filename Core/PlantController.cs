@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using _project.Scripts.Card_Core;
@@ -56,6 +57,7 @@ namespace _project.Scripts.Core
         [SerializeField] public List<string> pAfflictions = new();
         [SerializeField] public List<string> uTreatments = new();
         [SerializeField] public ParticleSystem debuffSystem;
+        [SerializeField] public ParticleSystem buffFX;
         [SerializeField] public ParticleSystem deathFX;
         
         [DontSerialize] public PlantCardFunctions plantCardFunctions;
@@ -119,7 +121,7 @@ namespace _project.Scripts.Core
 
         private void Update()
         {
-            if (PlantCard is { Value: <= 0 }) KillPlant();
+            if (PlantCard is { Value: <= 0 }) StartCoroutine(KillPlant());
 
             if (!_needsShaderUpdate) return;
             UpdateShaders();
@@ -406,10 +408,18 @@ namespace _project.Scripts.Core
             return CurrentAfflictions.Any(existing => existing.GetType() == affliction.GetType());
         }
 
-        private void KillPlant()
+        private IEnumerator KillPlant()
         {
+            //TODO Add Play for deathAnimation
+            
+            // Wait for animation to finish
+            //yield return new WaitForSeconds(deathAnimation.main.duration);
+            
             if (CardGameMaster.Instance)
                 StartCoroutine(CardGameMaster.Instance.deckManager.ClearPlant(this));
+            
+            // for now return
+            yield break;
         }
     }
 }
