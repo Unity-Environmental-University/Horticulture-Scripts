@@ -438,7 +438,9 @@ namespace _project.Scripts.Card_Core
                 var controller = plantControllers[i];
 
                 // Skip if no afflictions or 50% chance
-                if (!controller.CurrentAfflictions.Any() || random.NextDouble() >= 0.5) continue;
+                if (!controller.CurrentAfflictions.Any()
+                    || !controller.canSpreadAfflictions
+                    || random.NextDouble() >= 0.5) continue;
 
                 var afflictions = controller.CurrentAfflictions;
                 var count = afflictions.Count;
@@ -468,7 +470,7 @@ namespace _project.Scripts.Card_Core
                     // Eligibility filters
                     targets = targets
                         .Where(t => !t.UsedTreatments.Any(tmt => tmt is PlantAfflictions.Panacea) &&
-                                    !t.HasHadAffliction(affliction))
+                                    !t.HasHadAffliction(affliction) && t.canReceiveAfflictions)
                         .ToList();
 
                     if (targets.Count == 0) continue;
