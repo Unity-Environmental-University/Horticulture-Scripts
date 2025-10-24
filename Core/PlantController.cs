@@ -59,6 +59,8 @@ namespace _project.Scripts.Core
         [SerializeField] public ParticleSystem deathFX;
         
         [DontSerialize] public PlantCardFunctions plantCardFunctions;
+        [DontSerialize] public bool canSpreadAfflictions = true;
+        [DontSerialize] public bool canReceiveAfflictions = true;
 
         [CanBeNull] public GameObject priceFlag;
         [CanBeNull] public TextMeshPro priceFlagText;

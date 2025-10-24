@@ -136,6 +136,8 @@ namespace _project.Scripts.Card_Core
             new Panacea(),
             new FertilizerBasic(),
             new FertilizerBasic(),
+            new IsolateBasic(),
+            new IsolateBasic(),
             
             // cards w/o materials
             new ImidaclopridTreatment(),
