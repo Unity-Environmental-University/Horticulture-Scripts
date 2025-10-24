@@ -396,8 +396,11 @@ namespace _project.Scripts.PlayModeTest
 
                 deckManager.plantLocations = plantLocations;
 
-                // Activate CardGameMaster (ignore expected setup warnings)
+                // Activate CardGameMaster (ignore expected setup warnings).
+                // TurnController.Start kicks off the full turn loop which clears all plants; disable the
+                // component ahead of activation so our manually-seeded plants remain in place.
                 LogAssert.ignoreFailingMessages = true;
+                turnController.enabled = false;
                 cardGameMasterGo.SetActive(true);
                 LogAssert.ignoreFailingMessages = false; // Reset immediately to prevent test pollution
 
