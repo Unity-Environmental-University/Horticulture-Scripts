@@ -112,23 +112,19 @@ namespace _project.Scripts.Classes
     {
         public string Name => "FertilizerBasic";
         public string Description => "Doubles the value of the plant by enriching the soil with nutrients.";
-
         private int _value = -1;
-
         public int? Value
         {
             get => _value;
             set => _value = value ?? 0;
         }
-
         public int EffectDuration => IsPermanent ? 999 : 3;
         public bool IsPermanent => false;
         public GameObject Prefab => CardGameMaster.Instance.locationCardPrefab;
-        public Material Material => Resources.Load<Material>("Materials/Cards/NeemOil");
+        public Material Material => Resources.Load<Material>("Materials/Cards/NeemOil"); //TODO Make new Asset
         public List<ISticker> Stickers { get; } = new();
-
         public LocationEffectType EffectType => null;
-
+        
         public ICard Clone()
         {
             var clone = new FertilizerBasic { Value = Value };
@@ -174,11 +170,60 @@ namespace _project.Scripts.Classes
             if (plant?.PlantCard?.Value == null) return;
 
             foreach (var damage in plant.CurrentAfflictions.Select(affliction => affliction.GetCard()?.Value ?? 0))
-            {
                 plant.PlantCard.Value = Mathf.Max(0, plant.PlantCard.Value.Value + damage + 1);
-            }
 
             plant.UpdatePriceFlag(plant.PlantCard.Value.Value);
+        }
+    }
+    
+    public class IsolateBasic : ILocationCard
+    {
+        public string Name => "IsolateBasic";
+        public string Description => "Isolates Applied Plant. Preventing Spread of Afflictions To and From the Applied Plant";
+        private int _value = -5;
+        public int? Value
+        {
+            get => _value;
+            set => _value = value ?? 0;
+        }
+        public int EffectDuration => IsPermanent ? 999 : 3;
+        public bool IsPermanent => false;
+        public GameObject Prefab => CardGameMaster.Instance.locationCardPrefab;
+        public Material Material => Resources.Load<Material>("Materials/Cards/NeemOil"); //TODO Make new Asset
+        public List<ISticker> Stickers { get; } = new();
+        public LocationEffectType EffectType => null;
+        
+        public ICard Clone()
+        {
+            var clone = new IsolateBasic { Value = Value };
+            foreach (var sticker in Stickers) clone.Stickers.Add(sticker.Clone());
+            return clone;
+        }
+
+        public void Selected()
+        {
+            if (CardGameMaster.Instance.debuggingCardClass) Debug.Log("Selected " + Name);
+        }
+
+        public void ModifyValue(int delta)
+        {
+            _value += delta;
+        }
+
+        public void ApplyLocationEffect(PlantController plant)
+        {
+            plant.canSpreadAfflictions = false;
+            plant.canReceiveAfflictions = false;
+        }
+
+        public void RemoveLocationEffect(PlantController plant)
+        {
+            plant.canSpreadAfflictions = true;
+            plant.canReceiveAfflictions = true;
+        }
+
+        public void ApplyTurnEffect(PlantController plant)
+        {
         }
     }
 
