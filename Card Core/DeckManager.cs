@@ -108,10 +108,13 @@ namespace _project.Scripts.Card_Core
             new MealyBugsCard(),
             new ThripsCard(),
             new MildewCard(),
-            
+
             // cards w/o shaders
             new FungusGnatsCard(),
-            new SpiderMitesCard()
+            new SpiderMitesCard(),
+
+            // non-spreadable condition cards
+            new DehydratedCard()
         };
 
         private static readonly List<ICard> PrototypePlantsDeck = new()
@@ -744,6 +747,7 @@ namespace _project.Scripts.Card_Core
                 "Thrips" => new PlantAfflictions.ThripsAffliction(),
                 "Spider Mites" => new PlantAfflictions.SpiderMitesAffliction(),
                 "Fungus Gnats" => new PlantAfflictions.FungusGnatsAffliction(),
+                "Dehydrated" => new PlantAfflictions.DehydratedAffliction(),
                 _ => null
             };
         }

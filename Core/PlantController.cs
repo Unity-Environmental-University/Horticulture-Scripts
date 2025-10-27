@@ -169,9 +169,9 @@ namespace _project.Scripts.Core
                 if (!renderer1.CompareTag("Plant")) continue;
 
                 var targetShader = GetShader(renderer1);
-
                 _cachedMaterialList.Clear();
                 renderer1.GetMaterials(_cachedMaterialList);
+                if (targetShader == null) continue;
                 foreach (var material in _cachedMaterialList.Where(material => material.shader != targetShader))
                     material.shader = targetShader;
 
@@ -259,15 +259,20 @@ namespace _project.Scripts.Core
                 if (healthBarHandler) healthBarHandler.SpawnHearts(this);
             }
 
-            if (CardGameMaster.Instance.debuggingCardClass)
+            var cardGameMaster = CardGameMaster.Instance;
+            if (cardGameMaster && cardGameMaster.debuggingCardClass)
+            {
                 Debug.Log(name + " has " + CurrentAfflictions.Count + " afflictions. Current infect level is " +
                           GetInfectLevel());
-            
-            if (debuffSystem && CardGameMaster.Instance)
+            }
+
+            if (debuffSystem && cardGameMaster && cardGameMaster.soundSystem)
+            {
                 TurnController.QueuePlantEffect(
                     this,
                     debuffSystem,
-                    CardGameMaster.Instance.soundSystem.GetInsectSound(affliction));
+                    cardGameMaster.soundSystem.GetInsectSound(affliction));
+            }
         }
 
         /// <summary>
@@ -287,7 +292,7 @@ namespace _project.Scripts.Core
             FlagShadersUpdate();
         }
 
-        private void AddInfect(PlantAfflictions.IAffliction affliction, int amount)
+        public void AddInfect(PlantAfflictions.IAffliction affliction, int amount)
         {
             if (PlantCard is not IPlantCard plantCardInterface) return;
             var source = affliction?.Name ?? affliction?.GetType().Name ?? "Unknown";

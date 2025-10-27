@@ -452,6 +452,8 @@ namespace _project.Scripts.Card_Core
                 {
                     var affliction = afflictions[(startIndex + attempt) % count];
 
+                    if (!affliction.IsSpreadable) continue;
+                    
                     // Build a list of targets
                     List<PlantController> targets;
                     if (affliction is PlantAfflictions.ThripsAffliction)

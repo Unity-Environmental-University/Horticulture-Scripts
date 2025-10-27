@@ -589,6 +589,40 @@ namespace _project.Scripts.Classes
         }
     }
 
+    public class DehydratedCard : IAfflictionCard
+    {
+        public PlantAfflictions.IAffliction Affliction => new PlantAfflictions.DehydratedAffliction();
+        public string Name => "Dehydrated";
+        public int? Value => -3;
+        private int _baseInfectLevel = 1;
+        private int _baseEggLevel;
+
+        public int BaseInfectLevel
+        {
+            get => _baseInfectLevel;
+            private set => _baseInfectLevel = Mathf.Max(0, value);
+        }
+
+        public int BaseEggLevel
+        {
+            get => _baseEggLevel;
+            private set => _baseEggLevel = Mathf.Max(0, value);
+        }
+
+        public List<ISticker> Stickers { get; } = new();
+
+        public ICard Clone()
+        {
+            var clone = new DehydratedCard
+            {
+                BaseInfectLevel = BaseInfectLevel,
+                BaseEggLevel = BaseEggLevel
+            };
+            foreach (var sticker in Stickers) clone.Stickers.Add(sticker.Clone());
+            return clone;
+        }
+    }
+
     #endregion
 
     #region Action Cards

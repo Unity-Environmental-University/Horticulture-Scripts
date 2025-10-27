@@ -28,9 +28,9 @@ namespace _project.Scripts.ModLoading
         private readonly string[] _vulnerableToTreatments;
         private bool _hasAdults = true;
         private bool _hasLarvae = true;
-
+        
         public ModAffliction(string name, string description, Color color, string shaderName = null,
-            string[] vulnerableToTreatments = null)
+            string[] vulnerableToTreatments = null, bool isSpreadable = true)
         {
             Name = name ?? "Unknown Affliction";
             Description = description ?? "";
@@ -38,17 +38,19 @@ namespace _project.Scripts.ModLoading
             Shader = !string.IsNullOrEmpty(shaderName) ? Shader.Find(shaderName) : null;
             _vulnerableToTreatments = vulnerableToTreatments?.ToArray() ?? Array.Empty<string>();
             AcceptableTreatments = BuildAcceptableTreatments(_vulnerableToTreatments);
+            IsSpreadable = isSpreadable;
         }
 
         public string Name { get; }
         public string Description { get; }
         public Color Color { get; }
         public Shader Shader { get; }
+        public bool IsSpreadable { get; }
         public List<PlantAfflictions.ITreatment> AcceptableTreatments { get; }
 
         public PlantAfflictions.IAffliction Clone()
         {
-            return new ModAffliction(Name, Description, Color, Shader?.name, _vulnerableToTreatments);
+            return new ModAffliction(Name, Description, Color, Shader?.name, _vulnerableToTreatments, IsSpreadable);
         }
 
         public bool TreatWith(PlantAfflictions.ITreatment treatment, PlantController plant)

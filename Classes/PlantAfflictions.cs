@@ -39,6 +39,7 @@ namespace _project.Scripts.Classes
             public Color Color { get; }
             [CanBeNull] public Shader Shader { get; }
             public List<ITreatment> AcceptableTreatments { get; }
+            public bool IsSpreadable => true;
             public bool TreatWith(ITreatment treatment, PlantController plant);
             public void TickDay(PlantController plant);
 
@@ -234,6 +235,7 @@ namespace _project.Scripts.Classes
             public string Description => "";
             public Color Color => Color.white;
             public Shader Shader => Shader.Find($"Shader Graphs/Mold");
+            public bool IsSpreadable => true;
 
             public List<ITreatment> AcceptableTreatments => Treatments;
 
@@ -283,6 +285,7 @@ namespace _project.Scripts.Classes
             public string Description => "";
             public Color Color => Color.cyan;
             public Shader Shader => Shader.Find($"Shader Graphs/Aphids");
+            public bool IsSpreadable => true;
 
             public List<ITreatment> AcceptableTreatments => Treatments;
 
@@ -329,6 +332,7 @@ namespace _project.Scripts.Classes
             public string Description => "";
             public Color Color => Color.orange;
             public Shader Shader => Shader.Find($"Shader Graphs/SpiderMites");
+            public bool IsSpreadable => true;
 
             public List<ITreatment> AcceptableTreatments => Treatments;
 
@@ -376,6 +380,7 @@ namespace _project.Scripts.Classes
             public string Description => "";
             public Color Color => Color.deepPink;
             public Shader Shader => Shader.Find($"Shader Graphs/FungusGnats");
+            public bool IsSpreadable => true;
 
             public List<ITreatment> AcceptableTreatments => Treatments;
 
@@ -408,6 +413,63 @@ namespace _project.Scripts.Classes
                 plant.UpdatePriceFlag(newVal);
             }
             public ICard GetCard() { return new FungusGnatsCard(); }
+        }
+
+        public class DehydratedAffliction : IAffliction
+        {
+            private static readonly List<ITreatment> Treatments = new()
+            {
+               //TODO - Make Water Card 
+            };
+
+            public string Name => "Dehydrated";
+            public string Description => "Plant lacks water. Does not spread to other plants.";
+            public Color Color => new Color(0.8f, 0.6f, 0.4f);
+            public Shader Shader => null; //TODO - Add Animation state or Shader
+            public bool IsSpreadable => false;
+
+            public List<ITreatment> AcceptableTreatments => Treatments;
+
+            public IAffliction Clone() { return new DehydratedAffliction(); }
+
+            public bool CanBeTreatedBy(ITreatment treatment)
+            {
+                return Treatments.Any(t => t.GetType() == treatment.GetType());
+            }
+
+            public bool TreatWith(ITreatment treatment, PlantController plant)
+            {
+                if (!CanBeTreatedBy(treatment)) return false;
+                if (!TreatmentAttemptSucceeds(this, treatment))
+                {
+                    return false;
+                }
+
+                var infectReduction = treatment.InfectCureValue ?? 0;
+                var eggReduction = treatment.EggCureValue ?? 0;
+                plant.ReduceAfflictionValues(this, infectReduction, eggReduction);
+                return true;
+            }
+
+            public void TickDay(PlantController plant)
+            {
+                if (!plant.PlantCard.Value.HasValue) return;
+                var newVal = Mathf.Max(0, plant.PlantCard.Value.Value - 1);
+                plant.PlantCard.Value = newVal;
+                plant.UpdatePriceFlag(newVal);
+
+                var infectFrom = plant.GetInfectFrom(this);
+                if (infectFrom >= 3)
+                {
+                    plant.PlantCard.Value = 0;
+                    plant.UpdatePriceFlag(0);
+                    return;
+                }
+
+                plant.AddInfect(this, 1);
+            }
+
+            public ICard GetCard() { return new DehydratedCard(); }
         }
 
         #endregion
