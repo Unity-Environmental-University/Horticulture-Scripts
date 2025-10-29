@@ -824,7 +824,40 @@ namespace _project.Scripts.Classes
             return clone;
         }
     }
+    
+    public class HydrationBasic : ICard
+    {
+        [CanBeNull] private string _description;
+        public PlantAfflictions.ITreatment Treatment => new PlantAfflictions.HydrationTreatmentBasic();
+        public string Name => "HydrationBasic";
+        private int _value = -5;
+        public int? Value
+        {
+            get => _value;
+            set => _value = value ?? 0;
+        }
 
+        public List<ISticker> Stickers { get; } = new();
+
+        public string Description
+        {
+            set => _description = value;
+            get => _description ?? Treatment.Description;
+        }
+
+        public GameObject Prefab => CardGameMaster.Instance.actionCardPrefab;
+        public Material Material => Resources.Load<Material>($"Materials/Cards/Hydration");
+
+        public void Selected() { if (CardGameMaster.Instance.debuggingCardClass) Debug.Log("Selected " + Name); }
+        public void ModifyValue(int delta) => _value += delta;
+        public ICard Clone()
+        {
+            var clone = new HydrationBasic { Value = Value };
+            foreach (var sticker in Stickers) clone.Stickers.Add(sticker.Clone());
+            return clone;
+        }
+    }
+    
     public class Panacea : ICard
     {
         [CanBeNull] private string _description;
@@ -857,6 +890,6 @@ namespace _project.Scripts.Classes
             return clone;
         }
     }
-
+    
     #endregion
 }

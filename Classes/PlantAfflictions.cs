@@ -14,7 +14,7 @@ namespace _project.Scripts.Classes
     {
         // Constants for treatment effectiveness
         private const int StandardCureAmount = 1;
-        private const int PanaceaCureAmount = 999;
+        private const int MaxCureAmount = 999;
         private const int DefaultEfficacy = 100;
 
         private static int ResolveTreatmentEfficacy(IAffliction affliction, ITreatment treatment)
@@ -419,7 +419,7 @@ namespace _project.Scripts.Classes
         {
             private static readonly List<ITreatment> Treatments = new()
             {
-               //TODO - Make Water Card 
+               new HydrationTreatmentBasic()
             };
 
             public string Name => "Dehydrated";
@@ -632,14 +632,44 @@ namespace _project.Scripts.Classes
                 set => _eggCureValue = value ?? 0;
             }
         }
+        
+        public class HydrationTreatmentBasic : ITreatment
+        {
+            public string Name => "Hydration";
+            public string Description => "Treats Dehydrated Plants";
+            public int BeeValue => 0;
+            
+            /// <remarks>
+            /// Hydration cures Dehydration bc otherwise the water race would allow the player to over-water
+            /// </remarks>
+            private int _infectCureValue = MaxCureAmount;
+            private int _eggCureValue = StandardCureAmount;
+            private int _efficacy = DefaultEfficacy;
+            public int? Efficacy
+            {
+                get => _efficacy;
+                set => _efficacy = value ?? 0;
+            }
+            public int? InfectCureValue
+            {
+                get => _infectCureValue;
+                set => _infectCureValue = value ?? 0;
+            }
+
+            public int? EggCureValue
+            {
+                get => _eggCureValue;
+                set => _eggCureValue = value ?? 0;
+            }
+        }
 
         public class Panacea : ITreatment
         {
             public string Name => "Panacea";
             public string Description => "Cures All Afflictions";
             public int BeeValue => 0;
-            private int _infectCureValue = PanaceaCureAmount;
-            private int _eggCureValue = PanaceaCureAmount;
+            private int _infectCureValue = MaxCureAmount;
+            private int _eggCureValue = MaxCureAmount;
             private int _efficacy = DefaultEfficacy; //TODO
             public int? Efficacy
             {

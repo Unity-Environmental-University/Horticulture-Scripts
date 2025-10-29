@@ -136,15 +136,15 @@ namespace _project.Scripts.Card_Core
             new SoapyWaterBasic(),
             new SoapyWaterBasic(),
             new Panacea(),
-            new Panacea(),
             new FertilizerBasic(),
             new FertilizerBasic(),
             new IsolateBasic(),
             new IsolateBasic(),
             
-            // cards w/o materials
+            // TODO cards w/o materials
             new ImidaclopridTreatment(),
-            new SpinosadTreatment()
+            new SpinosadTreatment(),
+            new HydrationBasic()
         };
 
         private readonly List<ICard> _tutorialActionDeck = new()
@@ -762,6 +762,7 @@ namespace _project.Scripts.Card_Core
                 "SoapyWater" => new PlantAfflictions.SoapyWaterTreatment(),
                 "Spinosad" => new PlantAfflictions.SpinosadTreatment(),
                 "Imidacloprid" => new PlantAfflictions.ImidaclopridTreatment(),
+                "Hydration" => new PlantAfflictions.HydrationTreatmentBasic(),
                 "Panacea" => new PlantAfflictions.Panacea(),
                 _ => null
             };
