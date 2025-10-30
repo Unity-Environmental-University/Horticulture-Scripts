@@ -43,7 +43,7 @@ namespace _project.Scripts.Card_Core
             else
                 Debug.LogWarning("CardView: No Renderer found on card prefab; skipping material assignment.");
             descriptionText.text = card.Description ?? string.Empty;
-            if (card.Value != null) treatmentCostText.text = "$ " + card.Value;
+            if (card.Value != null) treatmentCostText.text = card.Value.ToString();
             _originalCard = card;
 
             RestoreStickerVisuals();

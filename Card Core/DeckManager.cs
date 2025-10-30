@@ -750,7 +750,7 @@ namespace _project.Scripts.Card_Core
                 "Spider Mites" => new PlantAfflictions.SpiderMitesAffliction(),
                 "Fungus Gnats" => new PlantAfflictions.FungusGnatsAffliction(),
                 "Dehydrated" => new PlantAfflictions.DehydratedAffliction(),
-                "NeedsLight" => new PlantAfflictions.NeedsLightAffliction(),
+                "Needs Light" => new PlantAfflictions.NeedsLightAffliction(),
                 _ => null
             };
         }

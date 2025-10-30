@@ -626,7 +626,7 @@ namespace _project.Scripts.Classes
     public class NeedsLightCard : IAfflictionCard
     {
         public PlantAfflictions.IAffliction Affliction => new PlantAfflictions.NeedsLightAffliction();
-        public string Name => "NeedsLight";
+        public string Name => "Needs Light";
         public int? Value => -3;
         private int _baseInfectLevel = 1;
         private int _baseEggLevel;

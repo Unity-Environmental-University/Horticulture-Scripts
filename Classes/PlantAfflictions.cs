@@ -479,7 +479,7 @@ namespace _project.Scripts.Classes
                new SunlightTreatmentBasic()
             };
 
-            public string Name => "NeedsLight";
+            public string Name => "Needs Light";
             public string Description => "Plant lacks sunlight. Does not spread to other plants.";
             public Color Color => new Color(0.9f, 0.9f, 0.6f);
             public Shader Shader => null; //TODO - Add Animation state or Shader
