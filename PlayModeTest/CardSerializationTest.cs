@@ -39,7 +39,7 @@ namespace _project.Scripts.PlayModeTest
         // All card types
         private static readonly Type[] AllCardTypes = ModifiableValueCards
             .Concat(ReadOnlyValueCards)
-            .Concat(new[] { typeof(FertilizerBasic) })
+            .Concat(new[] { typeof(UreaBasic) })
             .ToArray();
 
         [Test]

@@ -472,6 +472,63 @@ namespace _project.Scripts.Classes
             public ICard GetCard() { return new DehydratedCard(); }
         }
 
+        public class NeedsLightAffliction : IAffliction
+        {
+            private static readonly List<ITreatment> Treatments = new()
+            {
+               new SunlightTreatmentBasic()
+            };
+
+            public string Name => "NeedsLight";
+            public string Description => "Plant lacks sunlight. Does not spread to other plants.";
+            public Color Color => new Color(0.9f, 0.9f, 0.6f);
+            public Shader Shader => null; //TODO - Add Animation state or Shader
+            public bool IsSpreadable => false;
+
+            public List<ITreatment> AcceptableTreatments => Treatments;
+
+            public IAffliction Clone() { return new NeedsLightAffliction(); }
+
+            public bool CanBeTreatedBy(ITreatment treatment)
+            {
+                return Treatments.Any(t => t.GetType() == treatment.GetType());
+            }
+
+            public bool TreatWith(ITreatment treatment, PlantController plant)
+            {
+                if (!CanBeTreatedBy(treatment)) return false;
+                if (!TreatmentAttemptSucceeds(this, treatment))
+                {
+                    return false;
+                }
+
+                var infectReduction = treatment.InfectCureValue ?? 0;
+                var eggReduction = treatment.EggCureValue ?? 0;
+                plant.ReduceAfflictionValues(this, infectReduction, eggReduction);
+                return true;
+            }
+
+            public void TickDay(PlantController plant)
+            {
+                if (!plant.PlantCard.Value.HasValue) return;
+                var newVal = Mathf.Max(0, plant.PlantCard.Value.Value - 1);
+                plant.PlantCard.Value = newVal;
+                plant.UpdatePriceFlag(newVal);
+
+                var infectFrom = plant.GetInfectFrom(this);
+                if (infectFrom >= 3)
+                {
+                    plant.PlantCard.Value = 0;
+                    plant.UpdatePriceFlag(0);
+                    return;
+                }
+
+                plant.AddInfect(this, 1);
+            }
+
+            public ICard GetCard() { return new NeedsLightCard(); }
+        }
+
         #endregion
 
         #region ITreatments
@@ -638,10 +695,37 @@ namespace _project.Scripts.Classes
             public string Name => "Hydration";
             public string Description => "Treats Dehydrated Plants";
             public int BeeValue => 0;
-            
+
             /// <remarks>
             /// Hydration cures Dehydration bc otherwise the water race would allow the player to over-water
             /// </remarks>
+            private int _infectCureValue = MaxCureAmount;
+            private int _eggCureValue = StandardCureAmount;
+            private int _efficacy = DefaultEfficacy;
+            public int? Efficacy
+            {
+                get => _efficacy;
+                set => _efficacy = value ?? 0;
+            }
+            public int? InfectCureValue
+            {
+                get => _infectCureValue;
+                set => _infectCureValue = value ?? 0;
+            }
+
+            public int? EggCureValue
+            {
+                get => _eggCureValue;
+                set => _eggCureValue = value ?? 0;
+            }
+        }
+
+        public class SunlightTreatmentBasic : ITreatment
+        {
+            public string Name => "Sunlight";
+            public string Description => "Treats Plants Needing Light";
+            public int BeeValue => 0;
+
             private int _infectCureValue = MaxCureAmount;
             private int _eggCureValue = StandardCureAmount;
             private int _efficacy = DefaultEfficacy;

@@ -114,7 +114,8 @@ namespace _project.Scripts.Card_Core
             new SpiderMitesCard(),
 
             // non-spreadable condition cards
-            new DehydratedCard()
+            new DehydratedCard(),
+            new NeedsLightCard()
         };
 
         private static readonly List<ICard> PrototypePlantsDeck = new()
@@ -136,15 +137,16 @@ namespace _project.Scripts.Card_Core
             new SoapyWaterBasic(),
             new SoapyWaterBasic(),
             new Panacea(),
-            new FertilizerBasic(),
-            new FertilizerBasic(),
+            new UreaBasic(),
+            new UreaBasic(),
             new IsolateBasic(),
             new IsolateBasic(),
-            
+
             // TODO cards w/o materials
             new ImidaclopridTreatment(),
             new SpinosadTreatment(),
-            new HydrationBasic()
+            new HydrationBasic(),
+            new SunlightBasic()
         };
 
         private readonly List<ICard> _tutorialActionDeck = new()
@@ -748,6 +750,7 @@ namespace _project.Scripts.Card_Core
                 "Spider Mites" => new PlantAfflictions.SpiderMitesAffliction(),
                 "Fungus Gnats" => new PlantAfflictions.FungusGnatsAffliction(),
                 "Dehydrated" => new PlantAfflictions.DehydratedAffliction(),
+                "NeedsLight" => new PlantAfflictions.NeedsLightAffliction(),
                 _ => null
             };
         }
@@ -763,6 +766,7 @@ namespace _project.Scripts.Card_Core
                 "Spinosad" => new PlantAfflictions.SpinosadTreatment(),
                 "Imidacloprid" => new PlantAfflictions.ImidaclopridTreatment(),
                 "Hydration" => new PlantAfflictions.HydrationTreatmentBasic(),
+                "Sunlight" => new PlantAfflictions.SunlightTreatmentBasic(),
                 "Panacea" => new PlantAfflictions.Panacea(),
                 _ => null
             };

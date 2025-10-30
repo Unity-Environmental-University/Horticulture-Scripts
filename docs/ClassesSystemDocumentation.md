@@ -29,7 +29,7 @@ CardClasses
 ├── Plant Cards (ColeusCard, ChrysanthemumCard, PepperCard, CucumberCard)
 ├── Affliction Cards (AphidsCard, MealyBugsCard, ThripsCard, MildewCard, SpiderMitesCard, FungusGnatsCard)
 ├── Treatment Cards (HorticulturalOilBasic, InsecticideBasic, FungicideBasic, SoapyWaterBasic, SpinosadTreatment, ImidaclopridTreatment, Panacea)
-└── Location Cards (FertilizerBasic)
+└── Location Cards (UreaBasic)
 
 PlantAfflictions : MonoBehaviour
 ├── IAffliction (contract) + implementations

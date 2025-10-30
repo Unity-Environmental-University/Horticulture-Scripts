@@ -108,10 +108,10 @@ namespace _project.Scripts.Classes
 
     public abstract class LocationEffectType { }
 
-    public class FertilizerBasic : ILocationCard
+    public class UreaBasic : ILocationCard
     {
-        public string Name => "FertilizerBasic";
-        public string Description => "Doubles the value of the plant by enriching the soil with nutrients.";
+        public string Name => "UreaBasic";
+        public string Description => "Doubles the value of the plant by enriching the soil with nitrogen-rich urea.";
         private int _value = -1;
         public int? Value
         {
@@ -120,14 +120,14 @@ namespace _project.Scripts.Classes
         }
         public int EffectDuration => IsPermanent ? 999 : 3;
         public bool IsPermanent => false;
-        public GameObject Prefab => CardGameMaster.Instance.locationCardPrefab;
-        public Material Material => Resources.Load<Material>("Materials/Cards/NeemOil"); //TODO Make new Asset
+        public GameObject Prefab => CardGameMaster.Instance.actionCardPrefab;
+        public Material Material => Resources.Load<Material>($"Materials/Cards/Urea");
         public List<ISticker> Stickers { get; } = new();
         public LocationEffectType EffectType => null;
-        
+
         public ICard Clone()
         {
-            var clone = new FertilizerBasic { Value = Value };
+            var clone = new UreaBasic { Value = Value };
             foreach (var sticker in Stickers) clone.Stickers.Add(sticker.Clone());
             return clone;
         }
@@ -192,8 +192,8 @@ namespace _project.Scripts.Classes
         }
         public int EffectDuration => IsPermanent ? 999 : 3;
         public bool IsPermanent => false;
-        public GameObject Prefab => CardGameMaster.Instance.locationCardPrefab;
-        public Material Material => Resources.Load<Material>("Materials/Cards/NeemOil"); //TODO Make new Asset
+        public GameObject Prefab => CardGameMaster.Instance.actionCardPrefab;
+        public Material Material => Resources.Load<Material>("Materials/Cards/Isolate");
         public List<ISticker> Stickers { get; } = new();
         public LocationEffectType EffectType => null;
         
@@ -623,6 +623,40 @@ namespace _project.Scripts.Classes
         }
     }
 
+    public class NeedsLightCard : IAfflictionCard
+    {
+        public PlantAfflictions.IAffliction Affliction => new PlantAfflictions.NeedsLightAffliction();
+        public string Name => "NeedsLight";
+        public int? Value => -3;
+        private int _baseInfectLevel = 1;
+        private int _baseEggLevel;
+
+        public int BaseInfectLevel
+        {
+            get => _baseInfectLevel;
+            private set => _baseInfectLevel = Mathf.Max(0, value);
+        }
+
+        public int BaseEggLevel
+        {
+            get => _baseEggLevel;
+            private set => _baseEggLevel = Mathf.Max(0, value);
+        }
+
+        public List<ISticker> Stickers { get; } = new();
+
+        public ICard Clone()
+        {
+            var clone = new NeedsLightCard
+            {
+                BaseInfectLevel = BaseInfectLevel,
+                BaseEggLevel = BaseEggLevel
+            };
+            foreach (var sticker in Stickers) clone.Stickers.Add(sticker.Clone());
+            return clone;
+        }
+    }
+
     #endregion
 
     #region Action Cards
@@ -857,7 +891,40 @@ namespace _project.Scripts.Classes
             return clone;
         }
     }
-    
+
+    public class SunlightBasic : ICard
+    {
+        [CanBeNull] private string _description;
+        public PlantAfflictions.ITreatment Treatment => new PlantAfflictions.SunlightTreatmentBasic();
+        public string Name => "SunlightBasic";
+        private int _value = -5;
+        public int? Value
+        {
+            get => _value;
+            set => _value = value ?? 0;
+        }
+
+        public List<ISticker> Stickers { get; } = new();
+
+        public string Description
+        {
+            set => _description = value;
+            get => _description ?? Treatment.Description;
+        }
+
+        public GameObject Prefab => CardGameMaster.Instance.actionCardPrefab;
+        public Material Material => Resources.Load<Material>($"Materials/Cards/Sunlight");
+
+        public void Selected() { if (CardGameMaster.Instance.debuggingCardClass) Debug.Log("Selected " + Name); }
+        public void ModifyValue(int delta) => _value += delta;
+        public ICard Clone()
+        {
+            var clone = new SunlightBasic { Value = Value };
+            foreach (var sticker in Stickers) clone.Stickers.Add(sticker.Clone());
+            return clone;
+        }
+    }
+
     public class Panacea : ICard
     {
         [CanBeNull] private string _description;
