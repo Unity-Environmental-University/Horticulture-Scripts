@@ -7,6 +7,7 @@ using _project.Scripts.Cinematics;
 using _project.Scripts.Classes;
 using _project.Scripts.Core;
 using _project.Scripts.GameState;
+using _project.Scripts.UI;
 using TMPro;
 using Unity.Serialization;
 using UnityEngine;
@@ -18,6 +19,7 @@ namespace _project.Scripts.Card_Core
     {
         public GameObject lostGameObjects;
         public GameObject winScreen;
+        public Sprite cardDiagram;
         public int turnCount = 4;
         public int level;
         public int moneyGoal;
@@ -159,7 +161,7 @@ namespace _project.Scripts.Card_Core
             {
                 if (debugging)
                     Debug.Log("[TurnController] Tutorial complete! Transitioning to the regular game...");
-                CardGameMaster.Instance.popUpController.ActivatePopUpPanel(null,
+                CardGameMaster.Instance.popUpController.ActivatePopUpPanel(null,false,
                     "Tutorial Complete! Press Continue to proceed to the regular game...");
                 yield return new WaitForSeconds(2f);
                 var cardHolders = CardGameMaster.Instance.cardHolders;
@@ -217,6 +219,8 @@ namespace _project.Scripts.Card_Core
                 {
                     CinematicDirector.PlayScene(CardGameMaster.Instance.cinematicDirector.aphidsTimeline);
                     yield return new WaitUntil(readyToPlay);
+                    CardGameMaster.Instance.popUpController.ActivatePopUpPanel(cardDiagram, true,
+                        "Here's a quick outline of how the cards work!");
                 }
                 // Reveal UI, wait for pop-in to finish, then draw the hand
                 var sequencer = FindFirstObjectByType<RobotCardGameSequencer>(FindObjectsInactive.Exclude);
@@ -694,7 +698,7 @@ namespace _project.Scripts.Card_Core
         {
             winScreen.gameObject.SetActive(true);
             canClickEnd = false;
-            CardGameMaster.Instance.uiInputModule.enabled = true;
+            UIInputManager.RequestEnable("TurnController");
             winScreen.gameObject.GetComponentInChildren<TextMeshProUGUI>().text =
                 "Good job! You beat the first 2 levels in " + currentRound + " rounds and " + totalTurns +
                 " turns. That's [excellent!  / pretty good / average / " +

@@ -1566,7 +1566,7 @@ namespace _project.Scripts.Card_Core
 
             // Record successful redraw with actual card data
             AnalyticsFunctions.RecordRedraw(cardsDiscarded, cardsDrawn, ScoreManager.GetMoneys(),
-                currentRoundNum, currentTurnNum, true, "");
+                currentRoundNum, currentTurnNum);
         }
 
         /// <summary>

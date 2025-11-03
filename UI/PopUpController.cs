@@ -11,39 +11,57 @@ namespace _project.Scripts.UI
     public class PopUpController : MonoBehaviour
     {
         [SerializeField] private GameObject popUpPanel;
-        [SerializeField] private Image displayedImage;
-        [SerializeField] private TextMeshProUGUI popUpText;
         [SerializeField] private Button closeButton;
         
-        public void ActivatePopUpPanel([CanBeNull] Image image, string text)
+        [Header("Image Priority Pop-Up")]
+        [SerializeField] private GameObject imagePri;
+        [SerializeField] private Image imagePriImage;
+        [SerializeField] private TextMeshProUGUI imagePriText;
+        [Header("Text Priority Pop-Up")]
+        [SerializeField] private GameObject textPri;
+        [SerializeField] private Image textPriImage;
+        [SerializeField] private TextMeshProUGUI textPriText;
+        
+        public void ActivatePopUpPanel([CanBeNull] Sprite image, bool imageFocus, string text)
         {
             if (popUpPanel.activeInHierarchy) return;
 
             Time.timeScale = 0;
             Click3D.Click3DGloballyDisabled = true;
             popUpPanel.SetActive(true);
-            ToggleUiInput();
+            imagePri.SetActive(imageFocus);
+            textPri.SetActive(!imageFocus);
+            UIInputManager.RequestEnable("PopUpController");
 
-            if (image != null) displayedImage.sprite = image.sprite;
-            popUpText.text = text;
+            if (imageFocus)
+            {
+                if (imagePriImage) imagePriImage.sprite = image;
+                if (imagePriText) imagePriText.text = text;
+            }
+            else
+            {
+                if (textPriImage) textPriImage.sprite = image;
+                if (textPriText) textPriText.text = text;
+            }
         }
 
         public void ClosePopUpPanel()
         {
             Time.timeScale = 1;
             popUpPanel.SetActive(false);
+            imagePri.SetActive(false);
+            textPri.SetActive(false);
             ClearPanelElements();
-            ToggleUiInput();
+            UIInputManager.RequestDisable("PopUpController");
             Click3D.Click3DGloballyDisabled = false;
         }
 
         private void ClearPanelElements()
         {
-            displayedImage.sprite = null;
-            popUpText.text = null;
+            if (imagePriImage) imagePriImage.sprite = null;
+            if (imagePriText) imagePriText.text = null;
+            if (textPriImage) textPriImage.sprite = null;
+            if (textPriText) textPriText.text = null;
         }
-
-        // ReSharper disable once MemberCanBeMadeStatic.Local
-        private void ToggleUiInput() { CardGameMaster.Instance.uiInputModule.enabled = !CardGameMaster.Instance.uiInputModule.enabled; }
     }
 }

@@ -275,21 +275,48 @@ private IEnumerator CustomRobotSequence()
 
 ### UI Input Management
 
+#### Why UIInputManager?
+
+Prior to UIInputManager, direct manipulation of `uiInputModule.enabled` caused race conditions:
+
+**The Problem:**
+1. Cinematic enables UIInput (OnEnable)
+2. Player skips cinematic → Popup appears
+3. Popup enables UIInput (ownership transfer)
+4. Cinematic OnDisable fires (Unity lifecycle quirk)
+5. **BUG:** UIInput disabled despite popup being active
+
+**The Solution:**
+UIInputManager tracks ownership, ensuring only the current owner can disable UIInput.
+
+**Usage Pattern:**
+
 ```csharp
-// Temporary UI input control
+// Proper UI input control for cinematics
 public class CustomCinematicController : MonoBehaviour
 {
     private void OnEnable()
     {
-        CardGameMaster.Instance.uiInputModule.enabled = false; // Disable during cutscene
+        UIInputManager.RequestEnable("CustomCinematic"); // Take ownership
     }
-    
-    private void OnDisable()  
+
+    private void OnDisable()
     {
-        CardGameMaster.Instance.uiInputModule.enabled = true;  // Re-enable after cutscene
+        UIInputManager.RequestDisable("CustomCinematic"); // Release ownership
     }
 }
 ```
+
+#### Common UI Input Pitfalls
+
+❌ **DON'T:** Directly access `CardGameMaster.Instance.uiInputModule.enabled`
+✅ **DO:** Use `UIInputManager.RequestEnable("YourSystemName")`
+
+❌ **DON'T:** Assume your OnDisable will execute before other systems take ownership
+✅ **DO:** Use ownership-based requests that respect the current owner
+
+❌ **DON'T:** Use generic owner names like "UI" or "Controller"
+✅ **DO:** Use specific, traceable names like "PopUpController" or "CutsceneUI"
 
 ## Dependencies
 

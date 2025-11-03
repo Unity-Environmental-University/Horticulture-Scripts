@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using _project.Scripts.Classes;
+using _project.Scripts.UI;
 using UnityEngine;
 using Random = UnityEngine.Random;
 
@@ -25,14 +26,14 @@ namespace _project.Scripts.Card_Core
             GenerateShopInventory();
             shopPanel.SetActive(true);
             Click3D.Click3DGloballyDisabled = true;
-            CardGameMaster.Instance.uiInputModule.enabled = true;
+            UIInputManager.RequestEnable("ShopManager");
         }
 
         public void CloseShop()
         {
             shopPanel.SetActive(false);
             Click3D.Click3DGloballyDisabled = false;
-            CardGameMaster.Instance.uiInputModule.enabled = false;
+            UIInputManager.RequestDisable("ShopManager");
 
             var tc = CardGameMaster.Instance.turnController;
             if (tc.level == 2)
