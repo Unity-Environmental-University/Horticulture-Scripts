@@ -558,7 +558,7 @@ UIInputManager has comprehensive test coverage in `UIInputManagerTests.cs`:
 
 ## Related Documentation
 
-- [Cinematics System Documentation](./CinematicsSystemDocumentation.md) - UIInput usage in cinematics
+- [Cinematics System Documentation](./cinematics-system-documentation.md) - UIInput usage in cinematics
 - [PopUpController.cs](../UI/PopUpController.cs) - Popup UIInput management
 - [CLAUDE.md](../../../CLAUDE.md) - Project architecture overview
 

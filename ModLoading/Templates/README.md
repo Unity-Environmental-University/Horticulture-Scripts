@@ -53,4 +53,4 @@ After creating your mod files:
 
 ## Advanced Modding
 
-For AssetBundle creation and advanced modding techniques, see the Unity documentation on AssetBundles and the main MOD_GUIDE.md file.
+For AssetBundle creation and advanced modding techniques, see the Unity documentation on AssetBundles and the main mod-guide.md file.

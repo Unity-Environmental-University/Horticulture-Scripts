@@ -1,47 +1,56 @@
-# Unity Horticulture
+# Horticulture Scripts
 
-**Project Description:** A game built with Unity 6 where players learn about and practice Integrated Pest Management.
+> Script-only slice of the Horticulture project — a Unity 6 experience that teaches Integrated Pest Management through hands-on plant care challenges.
 
-**Key Features:**
+## Snapshot
 
-*   Educational game focused on IPM techniques.
-*   Players diagnose plant problems and implement sustainable solutions.
+| Detail | Notes |
+| --- | --- |
+| Unity | 6 (6000.x series) |
+| Platforms | Windows, macOS, Linux, Android, iOS |
+| Repository Scope | Code-only mirror of the gameplay logic; assets and content ship from the main game repo |
+| Status | Active development — expect experimental branches and in-flight systems |
 
-**Technical Details:**
+## Highlights
 
-*   **Unity Version:** 6
-*   **Platform:** Windows, Mac, Linux, Android, & IOS
+- 🌱 Scenario-driven lessons that reinforce sustainable growing practices.
+- 🪲 Dynamic pest identification and treatment workflows built on reusable card systems.
+- 🧠 Modular architecture: MonoBehaviours orchestrate plain-C# subsystems for easier testing and iteration.
 
-**Looking to for the Builds?**
+## Documentation Hub
 
-*   **Windows, Mac, Linux, & Android:** Builds can be found on the [Releases](https://github.com/Unity-Environmental-University/Horticulture-Scripts/releases) tab in GitHub
-*   **IOS:** For now, You can Join the Public IOS [TestFlight](https://testflight.apple.com/join/1f84McMq)
+| System | Reference |
+| --- | --- |
+| Classes | `docs/classes-system-documentation.md` |
+| Cinematics | `docs/cinematics-system-documentation.md` |
+| Audio | `docs/audio-system-documentation.md` |
+| Game State | `docs/game-state-system-documentation.md` |
+| Mod Loading | `docs/mod-loading-system-documentation.md` |
+| Modding Guide | `docs/modding-guide.md` |
 
-**Note:** This is a development project and may contain unfinished features. Additionally, this is a secondary repository and will not always reflect the current status of the project (I.E., Not all pushes will be reflected here)
+> Tip: Docs live alongside the scripts they describe. If you touch a system, audit its entry here before shipping.
 
-## Documentation
+## Build Access
 
-- Classes System: `docs/ClassesSystemDocumentation.md`
-- Cinematics System: `docs/CinematicsSystemDocumentation.md`
-- Audio System: `docs/AudioSystemDocumentation.md`
-- Game State System: `docs/GameStateSystemDocumentation.md`
-- Mod Loading System: `docs/ModLoadingSystemDocumentation.md`
-- Modding Guide: `docs/ModdingGuide.md`
+- Desktop & Android builds land on the [GitHub Releases](https://github.com/Unity-Environmental-University/Horticulture-Scripts/releases) page.
+- iOS players can join the public [TestFlight](https://testflight.apple.com/join/1f84McMq) to preview the latest validated drop.
 
-## Testing
+## Testing Cheat Sheet
 
-- Headless Play Mode (macOS):
-  - `/Applications/Unity/Hub/Editor/<version>/Unity.app/Contents/MacOS/Unity -projectPath <Unity-project> -runTests -testPlatform PlayMode -logFile - -testResults results.xml`
-- Headless Play Mode (Windows):
-  - `"C:\\Program Files\\Unity\\Hub\\Editor\\<version>\\Editor\\Unity.exe" -projectPath <path> -runTests -testPlatform PlayMode -logFile - -testResults results.xml`
-- In-Editor: Window > General > Test Runner (PlayMode). Re-run relevant suites after every change.
+- Headless Play Mode (macOS): `/Applications/Unity/Hub/Editor/<version>/Unity.app/Contents/MacOS/Unity -projectPath <Unity-project> -runTests -testPlatform PlayMode -logFile - -testResults results.xml`
+- Headless Play Mode (Windows): `"C:\\Program Files\\Unity\\Hub\\Editor\\<version>\\Editor\\Unity.exe" -projectPath <path> -runTests -testPlatform PlayMode -logFile - -testResults results.xml`
+- In-Editor: `Window > General > Test Runner` (PlayMode). Re-run focused suites whenever gameplay logic changes.
 
-## Gameplay Behavior
+## Gameplay Radar
 
-- Card Holder Visibility
-  - Placed card holders stay visible if they currently hold a card (including location/persistent cards), even when no plant is present and between rounds.
-  - When a location card expires or a card is removed, holders return to normal visibility: visible if a plant is present, hidden if not.
-  - Relevant code paths:
-    - `Card Core/DeckManager.cs`: `ClearAllPlants`, `ClearPlant` (respect `HoldingCard` when hiding holders)
-    - `Card Core/PlacedCardHolder.cs`: `ClearLocationCardByExpiry`, `ClearHolder`, `GiveBackCard` (normalize visibility by plant presence)
-  - Tests: `PlayModeTest/CardHolderVisibilityTests.cs`
+- **Card Holder Visibility**
+  - Holders remain visible while hosting any card (location or persistent) even off-plant or between rounds.
+  - Once the card expires or returns to the deck, holders revert: visible with a plant, hidden otherwise.
+  - Anchoring code paths: `Card Core/DeckManager.cs` (`ClearAllPlants`, `ClearPlant`) and `Card Core/PlacedCardHolder.cs` (`ClearLocationCardByExpiry`, `ClearHolder`, `GiveBackCard`).
+  - Guardrails: `PlayModeTest/CardHolderVisibilityTests.cs`.
+
+## House Rules
+
+- Treat this repo as the scripting source of truth; Unity assets stay in the primary game workspace.
+- Keep private fields serialized, follow the `_camelCase` convention, and let helper classes shoulder complex logic.
+- Feature work ships with matching Play Mode coverage and doc updates tracked in the table above.
