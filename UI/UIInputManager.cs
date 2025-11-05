@@ -90,7 +90,7 @@ namespace _project.Scripts.UI
         {
             lock (OwnershipLock)
             {
-                if (CardGameMaster.Instance?.uiInputModule == null)
+                if (!CardGameMaster.Instance?.uiInputModule)
                 {
                     Debug.LogWarning(
                         $"[UIInputManager] Cannot disable UIInput - uiInputModule not found. Requested by: {owner}");
@@ -121,7 +121,7 @@ namespace _project.Scripts.UI
         {
             lock (OwnershipLock)
             {
-                if (CardGameMaster.Instance?.uiInputModule == null)
+                if (!CardGameMaster.Instance?.uiInputModule)
                 {
                     Debug.LogWarning("[UIInputManager] Cannot force UIInput state - uiInputModule not found");
                     return;
