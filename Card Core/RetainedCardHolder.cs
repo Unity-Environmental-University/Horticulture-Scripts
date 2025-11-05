@@ -10,6 +10,13 @@ namespace _project.Scripts.Card_Core
         [SerializeField] private GameObject cardPrefab;
         [Header("Card Type Restrictions")]
         [SerializeField] private CardHolderType acceptedCardType = CardHolderType.ActionOnly;
+        [Header("Retained Visuals")]
+        [Tooltip("Scale multiplier applied after resolving the source card scale relative to this holder.")]
+        [SerializeField] private Vector3 retainedCardScaleMultiplier = Vector3.one * 0.8f;
+        [Tooltip("Local-space rotation offset applied after the default lay-flat rotation (-90,0,0).")]
+        [SerializeField] private Vector3 retainedCardRotationOffsetEuler = Vector3.zero;
+        [Tooltip("Local offset applied to the retained clone relative to the holder's origin.")]
+        [SerializeField] private Vector3 retainedCardPositionOffsetLocal = Vector3.zero;
         private DeckManager _deckManager;
         private GameObject cardGoClone;
         private ICard _heldCard;
@@ -118,10 +125,7 @@ namespace _project.Scripts.Card_Core
             
             cgm.playerHandAudioSource.PlayOneShot(cgm.soundSystem.placeCard);
 
-            cardGoClone.transform.SetParent(transform, false);
-            cardGoClone.transform.localPosition = Vector3.zero;
-            cardGoClone.transform.localRotation = Quaternion.Euler(-90f, 0f, 0f);
-            cardGoClone.transform.localScale = Vector3.one * 0.8f;
+            ApplyCloneTransform(cardGoClone.transform, selectedClick3D.transform);
 
             foreach (var r in selectedClick3D.GetComponentsInChildren<Renderer>())
                 r.enabled = false;
@@ -243,10 +247,7 @@ namespace _project.Scripts.Card_Core
                 click3D.RefreshState();
             }
 
-            cardGoClone.transform.SetParent(transform, false);
-            cardGoClone.transform.localPosition = Vector3.zero;
-            cardGoClone.transform.localRotation = Quaternion.Euler(-90f, 0f, 0f);
-            cardGoClone.transform.localScale = Vector3.one * 0.9f;
+            ApplyCloneTransform(cardGoClone.transform, returnedCardGo.transform);
 
             Destroy(returnedCardGo);
         }
@@ -308,9 +309,7 @@ namespace _project.Scripts.Card_Core
             }
             
             // Position and scale the card
-            cardGoClone.transform.localPosition = Vector3.zero;
-            cardGoClone.transform.localRotation = Quaternion.Euler(-90f, 0f, 0f);
-            cardGoClone.transform.localScale = Vector3.one * 0.8f;
+            ApplyCloneTransform(cardGoClone.transform, null);
             
             // Hide the retained slot button
             if (_buttonRenderer)
@@ -327,6 +326,35 @@ namespace _project.Scripts.Card_Core
                 cardGoClone.transform.DOKill();
             }
             transform.DOKill();
+        }
+
+        private void ApplyCloneTransform(Transform cloneTransform, Transform sourceTransform)
+        {
+            if (!cloneTransform) return;
+
+            cloneTransform.SetParent(transform, false);
+            cloneTransform.localPosition = retainedCardPositionOffsetLocal;
+            cloneTransform.localRotation = Quaternion.Euler(-90f, 0f, 0f) *
+                                           Quaternion.Euler(retainedCardRotationOffsetEuler);
+            cloneTransform.localScale = ResolveCloneLocalScale(sourceTransform);
+        }
+
+        private Vector3 ResolveCloneLocalScale(Transform sourceTransform)
+        {
+            if (sourceTransform == null)
+                return Vector3.Scale(Vector3.one, retainedCardScaleMultiplier);
+
+            var parentLossyScale = transform.lossyScale;
+            var sourceLocalScale = sourceTransform.localScale;
+            var sourceLossyScale = sourceTransform.lossyScale;
+
+            var resolved = new Vector3(
+                Mathf.Approximately(parentLossyScale.x, 0f) ? sourceLocalScale.x : sourceLossyScale.x / parentLossyScale.x,
+                Mathf.Approximately(parentLossyScale.y, 0f) ? sourceLocalScale.y : sourceLossyScale.y / parentLossyScale.y,
+                Mathf.Approximately(parentLossyScale.z, 0f) ? sourceLocalScale.z : sourceLossyScale.z / parentLossyScale.z
+            );
+
+            return Vector3.Scale(resolved, retainedCardScaleMultiplier);
         }
     }
 }
