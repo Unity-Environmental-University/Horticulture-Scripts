@@ -51,7 +51,11 @@ namespace _project.Scripts.Core
         [SerializeField] private ParticleSystem buffSystem;
         [SerializeField] private ParticleSystem thripsFX;
         [SerializeField] private ParticleSystem gnatsFX;
-        
+
+        [Header("Animation System")]
+        [Tooltip("Animator for affliction animations. Trigger names follow pattern: {PlantCard.Name.ToLower()}{AnimationTriggerName}\n\nExample: For Chrysanthemum with Droop affliction → 'chrysanthemumDroop' trigger")]
+        [SerializeField] private Animator plantAnimator;
+
         [SerializeField] public List<string> cAfflictions = new();
         [SerializeField] public List<string> cTreatments = new();
         [SerializeField] public List<string> pAfflictions = new();
@@ -116,6 +120,10 @@ namespace _project.Scripts.Core
             // ReSharper disable once ShaderLabShaderReferenceNotResolved
             if (!litShader) litShader = Shader.Find("Shader Graphs/CustomLit");
 
+            // Auto-discover plant animator if not assigned
+            if (!plantAnimator)
+                plantAnimator = GetComponentInChildren<Animator>();
+
             UpdateShaders();
         }
 
@@ -148,7 +156,7 @@ namespace _project.Scripts.Core
         public void UpdatePriceFlag(int newValue)
         {
             if (priceFlagText) priceFlagText.text = "$" + newValue;
-            if (CardGameMaster.Instance != null)
+            if (CardGameMaster.Instance)
                 CardGameMaster.Instance.scoreManager.CalculatePotentialProfit();
         }
 
@@ -171,7 +179,7 @@ namespace _project.Scripts.Core
                 var targetShader = GetShader(renderer1);
                 _cachedMaterialList.Clear();
                 renderer1.GetMaterials(_cachedMaterialList);
-                if (targetShader == null) continue;
+                if (!targetShader) continue;
                 foreach (var material in _cachedMaterialList.Where(material => material.shader != targetShader))
                     material.shader = targetShader;
 
@@ -209,9 +217,9 @@ namespace _project.Scripts.Core
             }
 
             // Note: Infect/egg reduction is now handled by treatments, not by removal
-            
-            
-            if (CardGameMaster.Instance != null)
+
+
+            if (CardGameMaster.Instance)
             {
                 TurnController.QueuePlantEffect(
                     this,
@@ -219,6 +227,17 @@ namespace _project.Scripts.Core
                     sound: CardGameMaster.Instance.soundSystem.plantHeal,
                     delay: 0.3f
                     );
+            }
+
+            // Trigger recovery animation if specified
+            if (plantAnimator && PlantCard != null && !string.IsNullOrEmpty(affliction.RecoveryAnimationTriggerName))
+            {
+                var prefix = PlantCard.Name.ToLower();
+                var triggerName = $"{prefix}{affliction.RecoveryAnimationTriggerName}";
+                if (HasAnimatorParameter(triggerName))
+                {
+                    plantAnimator.SetTrigger(triggerName);
+                }
             }
         }
 
@@ -246,32 +265,52 @@ namespace _project.Scripts.Core
                     break;
             }
 
-            var iCard = affliction.GetCard();
-            var healthBarHandler = GetComponent<PlantHealthBarHandler>();
-
-            if (iCard is IAfflictionCard afflictionInterface)
+            // Only add affliction values if PlantCard is present
+            if (PlantCard != null)
             {
-                AddInfect(affliction, afflictionInterface.BaseInfectLevel);
-                if (afflictionInterface.BaseEggLevel > 0)
-                    AddEggs(affliction, afflictionInterface.BaseEggLevel);
+                var iCard = affliction.GetCard();
+                var healthBarHandler = GetComponent<PlantHealthBarHandler>();
 
-                // Update health bar UI after both infect and eggs are added
-                if (healthBarHandler) healthBarHandler.SpawnHearts(this);
+                if (iCard is IAfflictionCard afflictionInterface)
+                {
+                    AddInfect(affliction, afflictionInterface.BaseInfectLevel);
+                    if (afflictionInterface.BaseEggLevel > 0)
+                        AddEggs(affliction, afflictionInterface.BaseEggLevel);
+
+                    // Update health bar UI after both infect and eggs are added
+                    if (healthBarHandler) healthBarHandler.SpawnHearts(this);
+                }
+
+                var cardGameMaster = CardGameMaster.Instance;
+                if (cardGameMaster && cardGameMaster.debuggingCardClass)
+                {
+                    Debug.Log(name + " has " + CurrentAfflictions.Count + " afflictions. Current infect level is " +
+                              GetInfectLevel());
+                }
+            }
+            else
+            {
+                Debug.LogWarning($"PlantController.AddAffliction: PlantCard is null on '{gameObject.name}'. " +
+                                "Cannot add affliction values. Affliction visual effects will still apply.", this);
             }
 
-            var cardGameMaster = CardGameMaster.Instance;
-            if (cardGameMaster && cardGameMaster.debuggingCardClass)
-            {
-                Debug.Log(name + " has " + CurrentAfflictions.Count + " afflictions. Current infect level is " +
-                          GetInfectLevel());
-            }
-
-            if (debuffSystem && cardGameMaster && cardGameMaster.soundSystem)
+            if (debuffSystem && CardGameMaster.Instance && CardGameMaster.Instance.soundSystem)
             {
                 TurnController.QueuePlantEffect(
                     this,
                     debuffSystem,
-                    cardGameMaster.soundSystem.GetInsectSound(affliction));
+                    CardGameMaster.Instance.soundSystem.GetInsectSound(affliction));
+            }
+
+            // Trigger affliction animation if specified
+            if (plantAnimator && PlantCard != null && !string.IsNullOrEmpty(affliction.AnimationTriggerName))
+            {
+                var prefix = PlantCard.Name.ToLower();
+                var triggerName = $"{prefix}{affliction.AnimationTriggerName}";
+                if (HasAnimatorParameter(triggerName))
+                {
+                    plantAnimator.SetTrigger(triggerName);
+                }
             }
         }
 
@@ -411,6 +450,18 @@ namespace _project.Scripts.Core
         public bool HasAffliction(PlantAfflictions.IAffliction affliction)
         {
             return CurrentAfflictions.Any(existing => existing.GetType() == affliction.GetType());
+        }
+
+        /// <summary>
+        /// Checks if the plant's animator has a specific trigger parameter.
+        /// Prevents errors when animation clips haven't been added yet.
+        /// </summary>
+        /// <param name="paramName">The trigger parameter name to check</param>
+        /// <returns>True if the parameter exists, false otherwise</returns>
+        private bool HasAnimatorParameter(string paramName)
+        {
+            return plantAnimator && plantAnimator.parameters.Any(param =>
+                param.name == paramName && param.type == AnimatorControllerParameterType.Trigger);
         }
 
         private IEnumerator KillPlant()

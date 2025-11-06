@@ -40,6 +40,21 @@ namespace _project.Scripts.Classes
             [CanBeNull] public Shader Shader { get; }
             public List<ITreatment> AcceptableTreatments { get; }
             public bool IsSpreadable => true;
+
+            /// <summary>
+            /// Optional animation trigger name for when affliction is applied.
+            /// Returns null by default (no animation). Plant-specific prefix will be added automatically.
+            /// </summary>
+            /// <example>"Droop" becomes "mumsDroop", "coleusDroop", etc.</example>
+            [CanBeNull] public string AnimationTriggerName => null;
+
+            /// <summary>
+            /// Optional animation trigger name for when affliction is removed.
+            /// Returns null by default (no animation). Plant-specific prefix will be added automatically.
+            /// </summary>
+            /// <example>"Recover" becomes "mumsRecover", "coleusRecover", etc.</example>
+            [CanBeNull] public string RecoveryAnimationTriggerName => null;
+
             public bool TreatWith(ITreatment treatment, PlantController plant);
             public void TickDay(PlantController plant);
 
@@ -425,8 +440,10 @@ namespace _project.Scripts.Classes
             public string Name => "Dehydrated";
             public string Description => "Plant lacks water. Does not spread to other plants.";
             public Color Color => new Color(0.8f, 0.6f, 0.4f);
-            public Shader Shader => null; //TODO - Add Animation state or Shader
+            public Shader Shader => null;
             public bool IsSpreadable => false;
+            public string AnimationTriggerName => "Droop";
+            public string RecoveryAnimationTriggerName => "Recover";
 
             public List<ITreatment> AcceptableTreatments => Treatments;
 
@@ -482,8 +499,10 @@ namespace _project.Scripts.Classes
             public string Name => "Needs Light";
             public string Description => "Plant lacks sunlight. Does not spread to other plants.";
             public Color Color => new Color(0.9f, 0.9f, 0.6f);
-            public Shader Shader => null; //TODO - Add Animation state or Shader
+            public Shader Shader => null;
             public bool IsSpreadable => false;
+            public string AnimationTriggerName => "Wilt";
+            public string RecoveryAnimationTriggerName => "Recover";
 
             public List<ITreatment> AcceptableTreatments => Treatments;
 
@@ -697,7 +716,7 @@ namespace _project.Scripts.Classes
             public int BeeValue => 0;
 
             /// <remarks>
-            /// Hydration cures Dehydration bc otherwise the water race would allow the player to over-water
+            /// Hydration cures Dehydration because otherwise the water race would allow the player to over-water
             /// </remarks>
             private int _infectCureValue = MaxCureAmount;
             private int _eggCureValue = StandardCureAmount;
