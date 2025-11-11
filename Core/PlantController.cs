@@ -307,10 +307,35 @@ namespace _project.Scripts.Core
             {
                 var prefix = PlantCard.Name.ToLower();
                 var triggerName = $"{prefix}{affliction.AnimationTriggerName}";
+
                 if (HasAnimatorParameter(triggerName))
                 {
                     plantAnimator.SetTrigger(triggerName);
+
+                    var cgm = CardGameMaster.Instance;
+                    if (cgm && cgm.debuggingCardClass)
+                    {
+                        Debug.Log($"[PlantController] Triggered animation '{triggerName}' for {affliction.Name} on {name}", this);
+                    }
                 }
+                else
+                {
+                    var cgm = CardGameMaster.Instance;
+                    if (cgm && cgm.debuggingCardClass)
+                    {
+                        Debug.LogWarning($"[PlantController] Animator parameter '{triggerName}' not found in animator controller on {name}", this);
+                    }
+                }
+            }
+            else if (!string.IsNullOrEmpty(affliction.AnimationTriggerName))
+            {
+                var cgm = CardGameMaster.Instance;
+                if (!cgm || !cgm.debuggingCardClass) return;
+                // Only log if animation was specified but prerequisites missing
+                if (!plantAnimator)
+                    Debug.LogWarning($"[PlantController] Animator component missing for '{affliction.Name}' animation on {name}", this);
+                else if (PlantCard == null)
+                    Debug.LogWarning($"[PlantController] PlantCard reference missing for animation trigger on {name}", this);
             }
         }
 
