@@ -69,6 +69,7 @@ namespace _project.Scripts.Card_Core
 
         public void CardClicked(Click3D clickedCard)
         {
+            if (CardGameMaster.Instance?.isInspecting == true) return;
             var dm = _deckManager ?? CardGameMaster.Instance?.deckManager;
             var drag = dm != null ? dm.SelectedSticker : null;
             if (dm != null && drag != null)

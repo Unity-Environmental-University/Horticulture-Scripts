@@ -58,6 +58,16 @@ namespace _project.Scripts.Core
             CardGameMaster.Instance.isInspecting = true;
             CardGameMaster.Instance.inspectedObj = this;
             CardGameMaster.Instance.turnController.canClickEnd = false;
+            
+            var deckManager = CardGameMaster.Instance.deckManager;
+            if (deckManager?.selectedACardClick3D != null)
+            {
+                var selectedClick = deckManager.selectedACardClick3D;
+                selectedClick.selected = false;
+                StartCoroutine(selectedClick.AnimateCardBack());
+                deckManager.ClearSelectedCard();
+            }
+
             CardGameMaster.Instance.inspectingInfoPanels.SetActive(true);
             
             _originalPosition = _inspectableObject.transform.position;

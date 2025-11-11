@@ -78,6 +78,7 @@ namespace _project.Scripts.Card_Core
         public void HoldSelectedCard()
         {
             var cgm = CardGameMaster.Instance;
+            if (cgm.isInspecting) return;
             var selectedCard = _deckManager.selectedACard;
             var selectedClick3D = _deckManager.selectedACardClick3D;
 
@@ -149,6 +150,7 @@ namespace _project.Scripts.Card_Core
         private void SelectHeldCard()
         {
             if (isCardLocked) return;
+            if (CardGameMaster.Instance?.isInspecting == true) return;
             var click3D = cardGoClone.GetComponent<Click3D>();
             if (click3D == null) return;
 
