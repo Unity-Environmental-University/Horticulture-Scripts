@@ -501,7 +501,7 @@ namespace _project.Scripts.Classes
             public Color Color => new Color(0.9f, 0.9f, 0.6f);
             public Shader Shader => null;
             public bool IsSpreadable => false;
-            public string AnimationTriggerName => "Wilt";
+            public string AnimationTriggerName => "Droop";
             public string RecoveryAnimationTriggerName => "Recover";
 
             public List<ITreatment> AcceptableTreatments => Treatments;
