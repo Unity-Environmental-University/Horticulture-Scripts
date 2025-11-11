@@ -1,10 +1,12 @@
 using System.Collections.Generic;
 using System.Linq;
 using _project.Scripts.Card_Core;
+using _project.Scripts.Cinematics;
 using _project.Scripts.Data;
 using _project.Scripts.UI;
 using Unity.VisualScripting;
 using UnityEngine;
+using UnityEngine.Playables;
 using UnityEngine.Rendering;
 using UnityEngine.Rendering.Universal;
 
@@ -42,7 +44,8 @@ namespace _project.Scripts.Core
 
         public void ToggleInspect()
         {
-            if (CardGameMaster.Instance.deckManager.updatingActionDisplay) return;
+            if (CardGameMaster.Instance.deckManager.updatingActionDisplay ||
+                CinematicDirector.Director.state == PlayState.Playing) return;
             if (!CardGameMaster.Instance.isInspecting)
                 EnterInspectMode();
             else
