@@ -23,6 +23,8 @@ namespace _project.Scripts.GameState
         public int currentTutorialTurn;
         public int totalTurns;
         public int currentRound;
+        public int currentRoundInLevel;
+        public int gameMode; // 0=Tutorial, 1=Campaign, 2=Endless
         public bool canClickEnd;
         public bool newRoundReady;
         public bool shopQueued;

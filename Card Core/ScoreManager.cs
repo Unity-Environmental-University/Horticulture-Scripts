@@ -38,8 +38,24 @@ namespace _project.Scripts.Card_Core
         public static void UpdateMoneysText(int modifier = 0)
         {
             if (CardGameMaster.Instance.moneysText)
-                CardGameMaster.Instance.moneysText!.text = "Moneys: " + "$" + (Moneys + modifier) 
-                                                          + "/" + CardGameMaster.Instance.turnController.moneyGoal;
+            {
+                var turnController = CardGameMaster.Instance.turnController;
+                var displayMoney = Moneys + modifier;
+
+                // Display different format based on game mode
+                if (turnController.currentGameMode == GameMode.Campaign)
+                {
+                    CardGameMaster.Instance.moneysText!.text =
+                        $"Money: ${displayMoney} Rent Due: ${turnController.moneyGoal}";
+                }
+                else
+                {
+                    // Tutorial or Endless mode - original format
+                    CardGameMaster.Instance.moneysText!.text =
+                        "Moneys: " + "$" + displayMoney + "/" + turnController.moneyGoal;
+                }
+            }
+
             if (CardGameMaster.Instance.shopMoneyText)
                 CardGameMaster.Instance.shopMoneyText!.text = "Moneys: " + "$" + (Moneys + modifier);
         }

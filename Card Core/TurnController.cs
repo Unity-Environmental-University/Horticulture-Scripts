@@ -15,6 +15,13 @@ using Random = System.Random;
 
 namespace _project.Scripts.Card_Core
 {
+    public enum GameMode
+    {
+        Tutorial,
+        Campaign,
+        Endless
+    }
+
     public class TurnController : MonoBehaviour
     {
         public GameObject lostGameObjects;
@@ -23,10 +30,12 @@ namespace _project.Scripts.Card_Core
         public int turnCount = 4;
         public int level;
         public int moneyGoal;
+        public GameMode currentGameMode = GameMode.Campaign;
         public int currentTurn;
         public int currentTutorialTurn;
         public int totalTurns;
         public int currentRound;
+        public int currentRoundInLevel;
         public bool canClickEnd;
         public bool newRoundReady;
         public bool debugging;
@@ -42,6 +51,7 @@ namespace _project.Scripts.Card_Core
 
         private const int TutorialTurnCount = 5;
         private const int TutorialMoneyGoal = 500;
+        private const int RoundsPerLevel = 5;
 
         /// <summary>
         /// Gets a value indicating whether the current game state represents an active tutorial step.
@@ -126,6 +136,12 @@ namespace _project.Scripts.Card_Core
 
         private void Start()
         {
+            // Set game mode based on level and tutorial state
+            if (level == 0 && CardGameMaster.IsSequencingEnabled)
+                currentGameMode = GameMode.Tutorial;
+            else
+                currentGameMode = GameMode.Campaign; // Explicitly set Campaign for non-tutorial games
+
             UpdateMoneyGoal();
             _scoreManager.ResetMoneys();
             if (readyToPlay != null)
@@ -136,9 +152,9 @@ namespace _project.Scripts.Card_Core
         {
             moneyGoal = level switch
             {
-                0 => 50,
-                1 => 100,
-                _ => moneyGoal
+                0 => 50,        // Tutorial
+                1 or 2 => 100,  // Levels 1-2
+                _ => 100 + ((level - 2) * 50)  // Levels 3+: $150, $200, $250, etc.
             };
         }
 
@@ -171,6 +187,8 @@ namespace _project.Scripts.Card_Core
                 _scoreManager.ResetMoneys();
                 currentRound = 1;
                 tutorialCompleted = true;
+                // Transition to Campaign mode after tutorial
+                currentGameMode = GameMode.Campaign;
                 _deckManager.ResetActionDeckAfterTutorial();
             }
             
@@ -266,11 +284,29 @@ namespace _project.Scripts.Card_Core
 
         private void Update()
         {
+            // Debug toggle for game mode (F9 to cycle)
+            if (Input.GetKeyDown(KeyCode.F9) && !IsActiveTutorialStep)
+            {
+                currentGameMode = currentGameMode switch
+                {
+                    GameMode.Campaign => GameMode.Endless,
+                    GameMode.Endless => GameMode.Campaign,
+                    _ => GameMode.Campaign
+                };
+                Debug.Log($"[DEBUG] Switched to {currentGameMode} mode");
+            }
+
             if (CardGameMaster.Instance.turnText)
                 // No hard turn cap; show current turn only
                 CardGameMaster.Instance.turnText!.text = "Turn: " + currentTurn;
             if (CardGameMaster.Instance.roundText)
-                CardGameMaster.Instance.roundText!.text = "Round: " + currentRound;
+            {
+                // Show progress within level for Campaign mode
+                if (currentGameMode == GameMode.Campaign && !IsActiveTutorialStep)
+                    CardGameMaster.Instance.roundText!.text = $"Round: {currentRoundInLevel}/{RoundsPerLevel}";
+                else
+                    CardGameMaster.Instance.roundText!.text = "Round: " + currentRound;
+            }
             if (CardGameMaster.Instance.levelText)
                 CardGameMaster.Instance.levelText!.text = "Level: " + (level + 1);
         }
@@ -365,7 +401,9 @@ namespace _project.Scripts.Card_Core
 
             // During tutorial steps, money goal cannot end the level
             // Money goal can only end level if all plants are also healthy
-            if (!IsActiveTutorialStep && ScoreManager.GetMoneys() >= moneyGoal && allPlantsHealthy)
+            // In Campaign mode, level only ends at end of 5 rounds (not mid-round)
+            if (!IsActiveTutorialStep && currentGameMode != GameMode.Campaign &&
+                ScoreManager.GetMoneys() >= moneyGoal && allPlantsHealthy)
             {
                 if (debugging) Debug.Log("Ending level - money goal reached AND all plants healthy");
                 currentTurn++;
@@ -498,6 +536,44 @@ namespace _project.Scripts.Card_Core
         private static IEnumerator PauseRoutine(float delay = 1f) { yield return new WaitForSeconds(delay); }
 
         /// <summary>
+        /// Prepares the game for the next round by clearing plants, applying queued treatments,
+        /// and checking if the game should continue or end.
+        /// </summary>
+        /// <param name="score">The player's current score after round calculations</param>
+        /// <param name="advanceTutorial">Whether to advance tutorial turn counter</param>
+        private void PrepareNextRound(int score, bool advanceTutorial = false)
+        {
+            _deckManager.ClearAllPlants();
+
+            if (debugging) Debug.Log("Score: " + score);
+
+            var pControllers = _deckManager.plantLocations
+                .SelectMany(location => location.GetComponentsInChildren<PlantController>(false))
+                .ToArray();
+
+            if (debugging) Debug.Log($"Found {pControllers.Length} PlantControllers in PlantLocation.");
+
+            foreach (var controller in pControllers)
+            {
+                controller.plantCardFunctions.ApplyQueuedTreatments();
+                controller.FlagShadersUpdate();
+            }
+
+            if (score > 0)
+            {
+                if (advanceTutorial && IsActiveTutorialStep)
+                    currentTutorialTurn++;
+
+                newRoundReady = true;
+                canClickEnd = true;
+            }
+            else
+            {
+                GameLost();
+            }
+        }
+
+        /// <summary>
         ///     Ends the current round, updates the game state, and prepares for the next round.
         /// </summary>
         /// <remarks>
@@ -572,41 +648,53 @@ namespace _project.Scripts.Card_Core
                 Debug.LogWarning($"[Analytics] RecordRoundEnd error: {ex.Message}");
             }
 
-            // If money goal reached at end-of-round, end the level immediately (except during tutorial steps)
-            if (!IsActiveTutorialStep && ScoreManager.GetMoneys() >= moneyGoal)
+            // Handle different game modes
+            if (currentGameMode == GameMode.Campaign && !IsActiveTutorialStep)
             {
-                shopQueued = true;
-                EndLevel();
-                yield break;
-            }
+                // Campaign mode: 5-round system with rent payment
+                currentRoundInLevel++;
 
-            _deckManager.ClearAllPlants();
+                if (debugging) Debug.Log($"Campaign: Round {currentRoundInLevel}/{RoundsPerLevel} completed");
 
-            if (debugging) Debug.Log("Score: " + score);
+                if (currentRoundInLevel >= RoundsPerLevel)
+                {
+                    // Rent check after 5 rounds
+                    var currentMoney = ScoreManager.GetMoneys();
+                    if (currentMoney >= moneyGoal)
+                    {
+                        // Success: pay rent and advance to next level
+                        if (debugging)
+                            Debug.Log($"Rent paid: ${moneyGoal}. Remaining money: ${currentMoney - moneyGoal}");
+                        currentRoundInLevel = 0; // Reset BEFORE EndLevel to prevent race condition
+                        ScoreManager.SubtractMoneys(moneyGoal);
+                        shopQueued = true;
+                        EndLevel();
+                    }
+                    else
+                    {
+                        // Failure: cannot afford rent
+                        if (debugging) Debug.Log($"Cannot afford rent. Money: ${currentMoney}, Rent: ${moneyGoal}");
+                        GameLost();
+                    }
 
-            var pControllers = _deckManager.plantLocations
-                .SelectMany(location => location.GetComponentsInChildren<PlantController>(false))
-                .ToArray();
-
-            if (debugging) Debug.Log($"Found {pControllers.Length} PlantControllers in PlantLocation.");
-
-            foreach (var controller in pControllers)
-            {
-                controller.plantCardFunctions.ApplyQueuedTreatments();
-                controller.FlagShadersUpdate();
-            }
-
-            if (score > 0)
-            {
-                if (advanceTutorial && IsActiveTutorialStep)
-                    currentTutorialTurn++;
-
-                newRoundReady = true;
-                canClickEnd = true;
+                    yield break;
+                }
+                
+                // Continue to next round in Campaign mode
+                PrepareNextRound(score);
             }
             else
             {
-                GameLost();
+                // Tutorial or Endless mode: Original logic
+                // If money goal reached at end-of-round, end the level immediately (except during tutorial steps)
+                if (!IsActiveTutorialStep && ScoreManager.GetMoneys() >= moneyGoal)
+                {
+                    shopQueued = true;
+                    EndLevel();
+                    yield break;
+                }
+
+                PrepareNextRound(score, advanceTutorial);
             }
         }
 
@@ -716,7 +804,15 @@ namespace _project.Scripts.Card_Core
             // Reset tutorial progress when restarting the game
             currentTutorialTurn = 0;
             currentRound = 0;
+            currentRoundInLevel = 0; // Reset Campaign mode round counter
             tutorialCompleted = false;
+
+            // Reset to appropriate game mode
+            if (level == 0 && CardGameMaster.IsSequencingEnabled)
+                currentGameMode = GameMode.Tutorial;
+            else
+                currentGameMode = GameMode.Campaign;
+
             var holders = CardGameMaster.Instance.cardHolders;
             if (holders != null)
                 foreach (var holder in holders.Where(holder => holder))

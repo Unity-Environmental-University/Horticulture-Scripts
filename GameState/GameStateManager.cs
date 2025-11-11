@@ -30,6 +30,8 @@ namespace _project.Scripts.GameState
                 currentTutorialTurn = tc.currentTutorialTurn,
                 totalTurns = tc.totalTurns,
                 currentRound = tc.currentRound,
+                currentRoundInLevel = tc.currentRoundInLevel,
+                gameMode = (int)tc.currentGameMode,
                 canClickEnd = tc.canClickEnd,
                 newRoundReady = tc.newRoundReady,
                 shopQueued = tc.shopQueued,
@@ -58,18 +60,14 @@ namespace _project.Scripts.GameState
             // Retained Card
             var retained = Object.FindFirstObjectByType<RetainedCardHolder>();
             if (retained && retained.HeldCard != null)
-            {
                 data.retainedCard = new RetainedCardData
                 {
                     card = SerializeCard(retained.HeldCard),
                     hasPaidForCard = retained.hasPaidForCard,
                     isCardLocked = retained.isCardLocked
                 };
-            }
             else
-            {
                 data.retainedCard = null; // No retained card to save
-            }
 
             // Save to PlayerPrefs
             var json = JsonUtility.ToJson(data);
@@ -86,21 +84,21 @@ namespace _project.Scripts.GameState
             }
 
             var json = PlayerPrefs.GetString("GameState");
-            
+
             // Validate JSON input before deserialization
             if (string.IsNullOrEmpty(json))
             {
                 Debug.LogError("Invalid game state data: empty or null JSON");
                 return;
             }
-            
+
             // Additional security: limit JSON size to prevent DoS attacks
             if (json.Length > 1024 * 1024) // 1MB limit
             {
                 Debug.LogError("Game state data too large, possible security issue");
                 return;
             }
-            
+
             GameStateData data;
             try
             {
@@ -123,16 +121,16 @@ namespace _project.Scripts.GameState
                 Debug.LogError("CardGameMaster instance not found during load");
                 return;
             }
-            
+
             var tc = CardGameMaster.Instance.turnController;
             var dm = CardGameMaster.Instance.deckManager;
-            
+
             if (tc == null)
             {
                 Debug.LogError("TurnController not found during load");
                 return;
             }
-            
+
             if (dm == null)
             {
                 Debug.LogError("DeckManager not found during load");
@@ -149,6 +147,21 @@ namespace _project.Scripts.GameState
                 tc.currentTutorialTurn = data.turnData.currentTutorialTurn;
                 tc.totalTurns = data.turnData.totalTurns;
                 tc.currentRound = data.turnData.currentRound;
+
+                // Validate round counter to prevent corrupted save data
+                tc.currentRoundInLevel = Mathf.Clamp(data.turnData.currentRoundInLevel, 0, 5);
+
+                // Validate game mode enum
+                if (Enum.IsDefined(typeof(GameMode), data.turnData.gameMode))
+                {
+                    tc.currentGameMode = (GameMode)data.turnData.gameMode;
+                }
+                else
+                {
+                    Debug.LogWarning($"Invalid game mode {data.turnData.gameMode}, defaulting to Campaign");
+                    tc.currentGameMode = GameMode.Campaign;
+                }
+
                 tc.canClickEnd = data.turnData.canClickEnd;
                 tc.newRoundReady = data.turnData.newRoundReady;
                 tc.shopQueued = data.turnData.shopQueued;
@@ -161,13 +174,9 @@ namespace _project.Scripts.GameState
 
             // Restore Score with validation
             if (data.scoreData != null)
-            {
                 ScoreManager.SetScore(data.scoreData.money);
-            }
             else
-            {
                 Debug.LogWarning("Score data is null, skipping score restoration");
-            }
 
             // Restore Decks with validation
             if (data.deckData != null)
@@ -200,7 +209,7 @@ namespace _project.Scripts.GameState
                 retained.HeldCard = restoredCard;
                 retained.hasPaidForCard = data.retainedCard.hasPaidForCard;
                 retained.isCardLocked = data.retainedCard.isCardLocked;
-                    
+
                 // Create the visual representation of the retained card
                 retained.RestoreCardVisual();
             }
@@ -216,14 +225,11 @@ namespace _project.Scripts.GameState
             yield return CardGameMaster.Instance.deckManager.RestorePlantsSequentially(plantData);
             tc.ClearEffectQueue();
             SuppressQueuedEffects = false;
-            
+
             // Update plant shaders after restoration to show current afflictions/treatments visually
             var plantControllers = Object.FindObjectsByType<PlantController>(FindObjectsSortMode.None);
-            foreach (var plantController in plantControllers)
-            {
-                plantController.FlagShadersUpdate();
-            }
-            
+            foreach (var plantController in plantControllers) plantController.FlagShadersUpdate();
+
             // Wait one frame to ensure shader updates are processed
             yield return null;
         }
