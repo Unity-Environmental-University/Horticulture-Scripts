@@ -124,6 +124,7 @@ namespace _project.Scripts.Card_Core
         private void OnPlacedCardClicked()
         {
             if (placedCard is ILocationCard) return;
+            if (CardGameMaster.Instance?.isInspecting == true) return;
             if (Time.time - _lastClickTime < 0.1f) return;
             _lastClickTime = Time.time;
             if (Time.frameCount == _lastPlacementFrame) return;
