@@ -34,9 +34,9 @@ namespace _project.Scripts.Card_Core
             }
             else if (isRedrawButton)
             {
-                _buttonText.text = _turnController.newRoundReady ? "" : "Redraw -$" + _deckManager.redrawCost;
+                _buttonText.text = _turnController.newRoundReady ? "" : "Redraw -$" + _deckManager.RedrawCost;
 
-                var canAffordRedraw = _deckManager.redrawCost <= ScoreManager.GetMoneys();
+                var canAffordRedraw = _deckManager.RedrawCost <= ScoreManager.GetMoneys();
                 var shouldEnable = canAffordRedraw
                                    && !_turnController.newRoundReady
                                    && _turnController.canClickEnd

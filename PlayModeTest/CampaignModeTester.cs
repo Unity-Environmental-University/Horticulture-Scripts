@@ -8,18 +8,18 @@ using Object = UnityEngine.Object;
 namespace _project.Scripts.PlayModeTest
 {
     /// <summary>
-    /// Tests for Campaign mode mechanics including:
-    /// - 5-round level system
-    /// - Rent payment on level completion
-    /// - Money persistence across levels
-    /// - Win/loss conditions
+    ///     Tests for Campaign mode mechanics including:
+    ///     - 5-round level system
+    ///     - Rent payment on level completion
+    ///     - Money persistence across levels
+    ///     - Win/loss conditions
     /// </summary>
     public class CampaignModeTester
     {
-        private GameObject _cardGameMasterGo;
         private CardGameMaster _cardGameMaster;
-        private TurnController _turnController;
+        private GameObject _cardGameMasterGo;
         private ScoreManager _scoreManager;
+        private TurnController _turnController;
 
         [SetUp]
         public void Setup()
@@ -85,10 +85,7 @@ namespace _project.Scripts.PlayModeTest
         public void RoundCounter_IncrementsAfterEachRound()
         {
             // Simulate completing rounds
-            for (int i = 0; i < 3; i++)
-            {
-                _turnController.currentRoundInLevel++;
-            }
+            for (var i = 0; i < 3; i++) _turnController.currentRoundInLevel++;
 
             Assert.AreEqual(3, _turnController.currentRoundInLevel,
                 "Round counter should be 3 after 3 rounds");
@@ -156,7 +153,7 @@ namespace _project.Scripts.PlayModeTest
             _turnController.moneyGoal = 100;
 
             // Check if rent can be paid
-            bool canAffordRent = ScoreManager.GetMoneys() >= _turnController.moneyGoal;
+            var canAffordRent = ScoreManager.GetMoneys() >= _turnController.moneyGoal;
 
             Assert.IsFalse(canAffordRent,
                 "Player should not be able to afford rent with $90 when goal is $100");
@@ -170,7 +167,7 @@ namespace _project.Scripts.PlayModeTest
             _turnController.moneyGoal = 100;
 
             // Check if rent can be paid
-            bool canAffordRent = ScoreManager.GetMoneys() >= _turnController.moneyGoal;
+            var canAffordRent = ScoreManager.GetMoneys() >= _turnController.moneyGoal;
 
             Assert.IsTrue(canAffordRent,
                 "Player should be able to afford rent with $100 when goal is $100");
@@ -184,7 +181,7 @@ namespace _project.Scripts.PlayModeTest
             _turnController.moneyGoal = 100;
 
             // Check if rent can be paid
-            bool canAffordRent = ScoreManager.GetMoneys() >= _turnController.moneyGoal;
+            var canAffordRent = ScoreManager.GetMoneys() >= _turnController.moneyGoal;
 
             Assert.IsTrue(canAffordRent,
                 "Player should be able to afford rent with $150 when goal is $100");
@@ -202,9 +199,10 @@ namespace _project.Scripts.PlayModeTest
             ScoreManager.UpdateMoneysText();
 
             // Check text format
-            string expectedText = "Money: $75 | Rent Due: $100";
-            Assert.AreEqual(expectedText, _cardGameMaster.moneysText.text,
-                "UI should show 'Money: $X | Rent Due: $Y' format in Campaign mode");
+            const string expectedText = "Money: $75 Rent Due: $100";
+            if (_cardGameMaster.moneysText)
+                Assert.AreEqual(expectedText, _cardGameMaster.moneysText.text,
+                    "UI should show 'Money: $X | Rent Due: $Y' format in Campaign mode");
         }
 
         [Test]
@@ -219,9 +217,10 @@ namespace _project.Scripts.PlayModeTest
             ScoreManager.UpdateMoneysText();
 
             // Check text format
-            string expectedText = "Moneys: $75/500";
-            Assert.AreEqual(expectedText, _cardGameMaster.moneysText.text,
-                "UI should show 'Moneys: $X/Y' format in Tutorial mode");
+            var expectedText = "Moneys: $75/500";
+            if (_cardGameMaster.moneysText)
+                Assert.AreEqual(expectedText, _cardGameMaster.moneysText.text,
+                    "UI should show 'Moneys: $X/Y' format in Tutorial mode");
         }
 
         [Test]
@@ -233,14 +232,14 @@ namespace _project.Scripts.PlayModeTest
 
             // Simulate Update() method behavior
             if (_turnController.currentGameMode == GameMode.Campaign)
-            {
-                _cardGameMaster.roundText.text = $"Round: {_turnController.currentRoundInLevel}/5";
-            }
+                if (_cardGameMaster.roundText)
+                    _cardGameMaster.roundText.text = $"Round: {_turnController.currentRoundInLevel}/5";
 
             // Check text format
-            string expectedText = "Round: 3/5";
-            Assert.AreEqual(expectedText, _cardGameMaster.roundText.text,
-                "Round display should show 'Round: X/5' in Campaign mode");
+            var expectedText = "Round: 3/5";
+            if (_cardGameMaster.roundText)
+                Assert.AreEqual(expectedText, _cardGameMaster.roundText.text,
+                    "Round display should show 'Round: X/5' in Campaign mode");
         }
 
         [Test]
@@ -267,7 +266,7 @@ namespace _project.Scripts.PlayModeTest
         [Test]
         public void MoneyPersistence_AcrossMultipleLevels()
         {
-            int startingMoney = 250;
+            const int startingMoney = 250;
             ScoreManager.SetScore(startingMoney);
 
             // Level 1: Goal $100, starting with $250

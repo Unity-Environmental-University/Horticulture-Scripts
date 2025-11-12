@@ -123,7 +123,7 @@ namespace _project.Scripts.Card_Core
         /// </summary>
         private void OnPlacedCardClicked()
         {
-            if (placedCard is ILocationCard) return;
+            if (placedCard is null or ILocationCard) return;
             if (CardGameMaster.Instance?.isInspecting == true) return;
             if (Time.time - _lastClickTime < 0.1f) return;
             _lastClickTime = Time.time;
@@ -148,6 +148,8 @@ namespace _project.Scripts.Card_Core
         private void PickUpPlacedCard()
         {
             if (!HoldingCard) return;
+            // Safety check: prevent picking up expired/null cards or Location Cards
+            if (placedCard is null or ILocationCard) return;
 
             Cgm.playerHandAudioSource.PlayOneShot(Cgm.soundSystem.unplaceCard);
 
@@ -189,6 +191,8 @@ namespace _project.Scripts.Card_Core
         private void SwapWithSelectedCard()
         {
             if (!HoldingCard || _deckManager.selectedACard == null) return;
+            // Safety check: prevent swapping with expired/null cards
+            if (placedCard == null) return;
 
             if (!CanAcceptCard(_deckManager.selectedACard))
             {
@@ -296,7 +300,15 @@ namespace _project.Scripts.Card_Core
         public void ClearLocationCardByExpiry()
         {
             if (placedCard is not ILocationCard) return;
-            if (placedCardClick3D) Destroy(placedCardClick3D.gameObject);
+
+            if (placedCardClick3D)
+            {
+                placedCardClick3D.enabled = false;
+                placedCardClick3D.isEnabled = false;
+                placedCardClick3D.onClick3D?.RemoveAllListeners();
+                Destroy(placedCardClick3D.gameObject);
+            }
+
             placedCardView = null;
             placedCardClick3D = null;
             placedCard = null;
@@ -311,6 +323,9 @@ namespace _project.Scripts.Card_Core
 
         public void TakeSelectedCard()
         {
+            // Prevent interaction when holding a Location Card (same check as OnPlacedCardClicked)
+            if (HoldingCard && placedCard is ILocationCard) return;
+
             if (HoldingCard) GiveBackCard();
 
             if (_deckManager.selectedACardClick3D is null || _deckManager.selectedACard is null) return;

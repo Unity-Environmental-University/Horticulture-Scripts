@@ -233,8 +233,29 @@ namespace _project.Scripts.Card_Core
         public GameObject pepperPrefab;
         public float cardSpacing = 1f;
         public int cardsDrawnPerTurn = 4;
-        public int redrawCost = 3;
+        private int _redrawCount;
+        public int RedrawCost => GetFibonacci(4 + _redrawCount);
         public bool debug = true;
+
+        public void ResetRedrawCount()
+        {
+            _redrawCount = 0;
+        }
+
+        private static int GetFibonacci(int n)
+        {
+            if (n <= 1) return n;
+            var a = 0;
+            var b = 1;
+            for (var i = 2; i <= n; i++)
+            {
+                var temp = a;
+                a = b;
+                b = temp + b;
+            }
+
+            return b;
+        }
 
         #endregion
 
@@ -1561,7 +1582,11 @@ namespace _project.Scripts.Card_Core
 
             DisplayActionCardsSequence();
             if (debug) Debug.Log("Action Hand: " + string.Join(", ", _actionHand.ConvertAll(card => card.Name)));
-            ScoreManager.SubtractMoneys(redrawCost);
+
+            var cost = RedrawCost;
+            _redrawCount++;
+
+            ScoreManager.SubtractMoneys(cost);
             ScoreManager.UpdateMoneysText();
 
             // Record successful redraw with actual card data

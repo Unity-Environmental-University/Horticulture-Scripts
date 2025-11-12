@@ -1,3 +1,4 @@
+using System.Reflection;
 using _project.Scripts.Classes;
 using _project.Scripts.Core;
 using NUnit.Framework;
@@ -6,8 +7,9 @@ using UnityEngine;
 namespace _project.Scripts.PlayModeTest
 {
     /// <summary>
-    /// Tests for plant affliction animation hook system.
-    /// Verifies that animation triggers are properly configured and PlantCard.Name-based animation prefixes work correctly.
+    ///     Tests for plant affliction animation hook system.
+    ///     Verifies that animation triggers are properly configured and PlantCard.Name-based animation prefixes work
+    ///     correctly.
     /// </summary>
     public class AnimationHookTests
     {
@@ -31,8 +33,8 @@ namespace _project.Scripts.PlayModeTest
             var affliction = new PlantAfflictions.NeedsLightAffliction();
 
             // Assert
-            Assert.AreEqual("Wilt", affliction.AnimationTriggerName,
-                "NeedsLightAffliction should have 'Wilt' animation trigger");
+            Assert.AreEqual("Droop", affliction.AnimationTriggerName,
+                "NeedsLightAffliction should have 'Droop' animation trigger");
             Assert.AreEqual("Recover", affliction.RecoveryAnimationTriggerName,
                 "NeedsLightAffliction should have 'Recover' recovery animation trigger");
         }
@@ -79,7 +81,8 @@ namespace _project.Scripts.PlayModeTest
             var cucumberPrefix = cucumberCard.Name.ToLower();
 
             // Assert
-            Assert.AreEqual("chrysanthemum", chrysanthemumPrefix, "Chrysanthemum card should produce 'chrysanthemum' prefix");
+            Assert.AreEqual("chrysanthemum", chrysanthemumPrefix,
+                "Chrysanthemum card should produce 'chrysanthemum' prefix");
             Assert.AreEqual("coleus", coleusPrefix, "Coleus card should produce 'coleus' prefix");
             Assert.AreEqual("pepper", pepperPrefix, "Pepper card should produce 'pepper' prefix");
             Assert.AreEqual("cucumber", cucumberPrefix, "Cucumber card should produce 'cucumber' prefix");
@@ -94,7 +97,7 @@ namespace _project.Scripts.PlayModeTest
 
             // Act
             var hasParameter = (bool)plantController.GetType()
-                .GetMethod("HasAnimatorParameter", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)
+                .GetMethod("HasAnimatorParameter", BindingFlags.NonPublic | BindingFlags.Instance)!
                 .Invoke(plantController, new object[] { "chrysanthemumDroop" });
 
             // Assert
@@ -166,13 +169,11 @@ namespace _project.Scripts.PlayModeTest
 
             // Act & Assert - All should have the properties (even if they return null)
             foreach (var affliction in afflictions)
-            {
                 Assert.DoesNotThrow(() =>
-                {
-                    var trigger = affliction.AnimationTriggerName;
-                    var recovery = affliction.RecoveryAnimationTriggerName;
-                }, $"{affliction.Name} should have animation trigger properties accessible");
-            }
+                    {
+                        var trigger = affliction.AnimationTriggerName;
+                        var recovery = affliction.RecoveryAnimationTriggerName;
+                    }, $"{affliction.Name} should have animation trigger properties accessible");
         }
     }
 }
