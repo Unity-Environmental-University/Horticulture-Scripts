@@ -519,7 +519,16 @@ public class SaveLoadIntegrationTests
 - [ ] Invalid placements show appropriate feedback
 - [ ] Cards can be picked up from placed locations
 - [ ] Card swapping works correctly
-- [ ] Redraw functionality works and costs money appropriately
+
+**Redraw Functionality:**
+- [ ] Redraw works at start of turn (before placing cards)
+- [ ] Redraw blocked after placing cards in current turn
+- [ ] Redraw allowed when cards on table are from previous turns
+- [ ] Redraw blocked during card animations
+- [ ] Card swapping preserves original placement turn
+- [ ] Error messages correctly identify block reason
+- [ ] Redraw cost follows Fibonacci sequence (3, 5, 8, 13...)
+- [ ] Analytics correctly track blocked vs. successful redraws
 
 **Plant Management**:
 - [ ] Plants appear correctly when placed

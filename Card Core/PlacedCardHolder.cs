@@ -6,6 +6,7 @@ using _project.Scripts.Core;
 using _project.Scripts.Handlers;
 using UnityEngine;
 using UnityEngine.InputSystem;
+using UnityEngine.Serialization;
 
 namespace _project.Scripts.Card_Core
 {
@@ -42,6 +43,15 @@ namespace _project.Scripts.Card_Core
         private ScoreManager _scoreManager;
         public ICard placedCard;
         public bool HoldingCard => placedCardClick3D;
+
+        /// <summary>
+        /// The turn number when the current card was placed. -1 if no card is held.
+        /// Used to determine if redraw should be blocked (can't redraw if cards placed this turn).
+        /// NOTE: Not currently persisted in save/load system - will reset to -1 on game load.
+        /// </summary>
+        [FormerlySerializedAs("_placementTurn")] [SerializeField, Tooltip("The turn number when the current card was placed. -1 if no card is held.")]
+        private int placementTurn = -1;
+        public int PlacementTurn { get => placementTurn; private set => placementTurn = value; }
 
         private static CardGameMaster Cgm => CardGameMaster.Instance;
 
@@ -188,6 +198,11 @@ namespace _project.Scripts.Card_Core
             _scoreManager.CalculateTreatmentCost();
         }
 
+        /// <summary>
+        /// Swaps the currently held card with the selected card from the hand.
+        /// NOTE: PlacementTurn is intentionally NOT updated during swaps, preserving the original
+        /// placement turn to prevent redraw exploits via card swapping.
+        /// </summary>
         private void SwapWithSelectedCard()
         {
             if (!HoldingCard || _deckManager.selectedACard == null) return;
@@ -289,6 +304,7 @@ namespace _project.Scripts.Card_Core
             placedCard = null;
             placedCardClick3D = null;
             placedCardView = null;
+            PlacementTurn = -1;
 
             // Normalize visibility based on plant presence when no card is held
             var plant = ResolvePlantForDisplay();
@@ -312,6 +328,7 @@ namespace _project.Scripts.Card_Core
             placedCardView = null;
             placedCardClick3D = null;
             placedCard = null;
+            PlacementTurn = -1;
 
             // When a location card expires, return the holder to its normal visibility:
             // show if a plant is present; hide if not.
@@ -392,6 +409,18 @@ namespace _project.Scripts.Card_Core
 
             _lastPlacementFrame = Time.frameCount;
             _lastPlacementTime = Time.time;
+
+            // Track which turn the card was placed
+            var cgm = CardGameMaster.Instance;
+            if (cgm?.turnController != null)
+            {
+                PlacementTurn = cgm.turnController.currentTurn;
+            }
+            else
+            {
+                Debug.LogWarning("[PlacedCardHolder] Cannot track placement turn: CardGameMaster or TurnController not initialized", this);
+                PlacementTurn = -1;
+            }
 
             if (placedCardView != null) placedCardView.enabled = false;
 
@@ -539,6 +568,7 @@ namespace _project.Scripts.Card_Core
             placedCardView = null;
             placedCardClick3D = null;
             placedCard = null;
+            PlacementTurn = -1;
 
             var playerAudio = CardGameMaster.Instance.playerHandAudioSource;
             playerAudio.PlayOneShot(CardGameMaster.Instance.soundSystem.unplaceCard);

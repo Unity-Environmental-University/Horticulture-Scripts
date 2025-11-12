@@ -1526,11 +1526,14 @@ namespace _project.Scripts.Card_Core
                 return;
             }
 
-            if (cgm.cardHolders.Any(holder => holder && holder.HoldingCard))
+            // Only block redraw if cards were placed THIS turn
+            // NOTE: This check occurs BEFORE TurnController.EndTurn() increments currentTurn,
+            // ensuring cards placed in the current turn block redraw until turn ends.
+            if (cgm.cardHolders.Any(holder => holder && holder.HoldingCard && holder.PlacementTurn == currentTurnNum))
             {
-                Debug.LogError("Cards In CardHolder!");
+                Debug.LogError("Cards placed this turn are in CardHolder! Cannot redraw.");
                 AnalyticsFunctions.RecordRedraw("N/A", "N/A", currentScore, currentRoundNum, currentTurnNum,
-                    false, "Cards in holders");
+                    false, "Cards placed this turn");
                 return;
             }
 

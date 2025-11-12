@@ -305,6 +305,30 @@ Before treating a plant, consider:
 - **Redraw Strategy**: Consider redrawing poor hands (costs $3)
 - **Card Retention**: Keep one useful card between rounds
 
+#### Redraw Restrictions
+
+The redraw mechanic has specific timing restrictions to prevent exploitation:
+
+**When You CAN Redraw:**
+- At the start of any turn (before placing cards)
+- After ending your turn (cards from previous turns remain on the table)
+- When you have cards from earlier turns on plants but haven't placed anything this turn
+
+**When You CANNOT Redraw:**
+- After placing cards during the current turn
+- While card animations are in progress
+- If any cards were placed this turn (even if picked up again)
+
+**Strategic Implications:**
+- Plan your card placements carefully—once you place a card this turn, you lose redraw access
+- Swapping cards preserves the original placement turn (you can't exploit swaps to enable redraw)
+- Cards from previous turns don't block redraw, allowing you to build on existing strategies
+
+**Example Scenarios:**
+- ✅ Turn 1: Place 2 cards → End Turn → Turn 2: Redraw available (cards are from Turn 1)
+- ❌ Turn 2: Place 1 card → Try to redraw (BLOCKED - card placed this turn)
+- ✅ Turn 2: Start turn → Redraw immediately (no cards placed yet this turn)
+
 ### Advanced Techniques
 
 #### Affliction Spread Prediction

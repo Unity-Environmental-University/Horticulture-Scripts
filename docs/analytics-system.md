@@ -150,7 +150,7 @@ Fired when a player attempts to redraw their hand (both successful and blocked a
 
 **Block Reasons:**
 - `"Animation in progress"`: Card display animation is still running
-- `"Cards in holders"`: Player has cards placed on plants
+- `"Cards placed this turn"`: Player has cards that were placed during the current turn (prevents mid-turn redraws)
 
 **Usage Examples:**
 
@@ -177,7 +177,7 @@ AnalyticsFunctions.RecordRedraw(
     blockReason: "Animation in progress"
 );
 
-// Blocked attempt - cards in holders
+// Blocked attempt - cards placed this turn
 AnalyticsFunctions.RecordRedraw(
     discarded: "N/A",
     drawn: "N/A",
@@ -185,7 +185,7 @@ AnalyticsFunctions.RecordRedraw(
     round: 2,
     turn: 4,
     success: false,
-    blockReason: "Cards in holders"
+    blockReason: "Cards placed this turn"
 );
 ```
 
@@ -194,7 +194,7 @@ AnalyticsFunctions.RecordRedraw(
 **UI/UX Improvements:**
 - Filter `success=false` events to identify user frustration points
 - Track `blockReason="Animation in progress"` frequency to optimize animation timing
-- Analyze correlation between `blockReason="Cards in holders"` and tutorial completion
+- Analyze correlation between `blockReason="Cards placed this turn"` and tutorial completion
 
 **Player Behavior:**
 - Redraw frequency by round/turn indicates strategic complexity
