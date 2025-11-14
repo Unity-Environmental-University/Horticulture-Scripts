@@ -68,6 +68,7 @@ namespace _project.Scripts.Core
         [DontSerialize] public bool canSpreadAfflictions = true;
         [DontSerialize] public bool canReceiveAfflictions = true;
 
+        private bool _isDying;
         [CanBeNull] public GameObject priceFlag;
         [CanBeNull] public TextMeshPro priceFlagText;
         [CanBeNull] public AudioSource audioSource;
@@ -129,7 +130,27 @@ namespace _project.Scripts.Core
 
         private void Update()
         {
-            if (PlantCard is { Value: <= 0 }) StartCoroutine(KillPlant());
+            if (!_isDying && PlantCard is { Value: <= 0 })
+            {
+                _isDying = true;
+
+                // Immediately disable cardholders to prevent placement during death sequence
+                // Note: Card cleanup is handled by DeckManager.ClearPlant() after death animation
+                var location = transform.parent;
+                if (location)
+                {
+                    var cardHolders = location.GetComponentsInChildren<PlacedCardHolder>();
+                    foreach (var holder in cardHolders)
+                    {
+                        if (!holder) continue;
+
+                        // Disable the cardholder immediately to prevent new card placements
+                        holder.ToggleCardHolder(false);
+                    }
+                }
+
+                StartCoroutine(KillPlant());
+            }
 
             if (!_needsShaderUpdate) return;
             UpdateShaders();
@@ -230,15 +251,11 @@ namespace _project.Scripts.Core
             }
 
             // Trigger recovery animation if specified
-            if (plantAnimator && PlantCard != null && !string.IsNullOrEmpty(affliction.RecoveryAnimationTriggerName))
-            {
-                var prefix = PlantCard.Name.ToLower();
-                var triggerName = $"{prefix}{affliction.RecoveryAnimationTriggerName}";
-                if (HasAnimatorParameter(triggerName))
-                {
-                    plantAnimator.SetTrigger(triggerName);
-                }
-            }
+            if (!plantAnimator || PlantCard == null ||
+                string.IsNullOrEmpty(affliction.RecoveryAnimationTriggerName)) return;
+            var prefix = PlantCard.Name.ToLower();
+            var triggerName = $"{prefix}{affliction.RecoveryAnimationTriggerName}";
+            if (HasAnimatorParameter(triggerName)) plantAnimator.SetTrigger(triggerName);
         }
 
         /// <summary>
@@ -489,18 +506,67 @@ namespace _project.Scripts.Core
                 param.name == paramName && param.type == AnimatorControllerParameterType.Trigger);
         }
 
-        private IEnumerator KillPlant()
+        /// <summary>
+        ///     Gets the length of an animation clip by trigger name.
+        ///     Attempts to find the animation clip in the animator controller and returns its duration.
+        /// </summary>
+        /// <param name="triggerName">The trigger name to search for</param>
+        /// <returns>Animation clip length in seconds, or 2.0f as fallback if not found</returns>
+        private float GetAnimationClipLength(string triggerName)
         {
-            //TODO Add Play for deathAnimation
-            
-            // Wait for animation to finish
-            //yield return new WaitForSeconds(deathAnimation.main.duration);
-            
-            if (CardGameMaster.Instance)
-                StartCoroutine(CardGameMaster.Instance.deckManager.ClearPlant(this));
-            
-            // for now return
-            yield break;
+            if (!plantAnimator || !plantAnimator.runtimeAnimatorController)
+                return 2.0f;
+
+            var clips = plantAnimator.runtimeAnimatorController.animationClips;
+            var matchingClip = clips.FirstOrDefault(clip =>
+                clip.name.Equals(triggerName, StringComparison.OrdinalIgnoreCase));
+
+            return matchingClip ? matchingClip.length : 2.0f;
+        }
+
+        /// <summary>
+        ///     Handles plant death by triggering death animation, playing death sound, and clearing the plant.
+        ///     Follows the same pattern as affliction animations with [plant name]Death trigger.
+        /// </summary>
+        public IEnumerator KillPlant(bool requestDeckCleanup = true)
+        {
+            if (plantAnimator && PlantCard != null)
+            {
+                var prefix = PlantCard.Name.ToLower();
+                var triggerName = $"{prefix}Death";
+
+                if (HasAnimatorParameter(triggerName))
+                {
+                    plantAnimator.SetTrigger(triggerName);
+
+                    var cgm = CardGameMaster.Instance;
+                    if (cgm && cgm.debuggingCardClass)
+                        Debug.Log($"[PlantController] Triggered death animation '{triggerName}' on {name}", this);
+
+                    // Play death sound
+                    if (cgm && cgm.soundSystem)
+                    {
+                        var deathSound = cgm.soundSystem.plantDeath;
+                        if (deathSound && audioSource)
+                            audioSource.PlayOneShot(deathSound);
+                    }
+
+                    var animationDuration = GetAnimationClipLength(triggerName);
+                    yield return new WaitForSeconds(animationDuration);
+                }
+                else if (CardGameMaster.Instance && CardGameMaster.Instance.debuggingCardClass)
+                {
+                    Debug.LogWarning($"[PlantController] Death animation trigger '{triggerName}' not found on {name}",
+                        this);
+                }
+            }
+
+            if (!requestDeckCleanup) yield break;
+
+            var cardGameMaster = CardGameMaster.Instance;
+            if (cardGameMaster && cardGameMaster.deckManager)
+                cardGameMaster.deckManager.StartCoroutine(
+                    cardGameMaster.deckManager.ClearPlant(this, true));
         }
     }
 }

@@ -192,7 +192,7 @@ private void GenerateShopInventory()
 |--------|------------|---------|-------------|
 | `PlacePlants()` | None | `IEnumerator` | Coroutine to place plants on board |
 | `ClearAllPlants()` | None | `void` | Removes all plants from board |
-| `ClearPlant(PlantController)` | `plant`: Plant to remove | `IEnumerator` | Removes specific plant with effects |
+| `ClearPlant(PlantController, bool skipDeathSequence = false)` | `plant`: Plant to remove<br>`skipDeathSequence`: true to skip calling `KillPlant` (when already running) | `IEnumerator` | Removes specific plant with optional death animation |
 
 #### Affliction Management Methods
 
@@ -324,6 +324,22 @@ Players can retain one card between rounds using the `RetainedCardHolder` system
 
 #### Sticker System
 Stickers can be applied to cards to modify their properties (costs, effects).
+
+#### Plant Death and Card Placement
+
+When a plant's value drops to 0 or below:
+- **Immediate Response**: Cardholders are disabled immediately in `PlantController.Update()` to prevent new card placements
+- **Treatment Card Cleanup**: Treatment cards already placed on the plant are destroyed (not returned to deck) when `DeckManager.ClearPlant()` is called after the death animation
+- **Location Card Persistence**: Location cards (ILocationCard) remain visible after plant death as they're tied to the location, not the plant
+- **Validation**: `PlacedCardHolder.TakeSelectedCard()` validates plant health before accepting cards
+- **Death Sequence**: Plant death triggers animation, cardholder disable, and treatment card cleanup in that order
+
+**Design Rationale**: Treatment cards placed on dying plants represent wasted resources. This mechanic teaches players to:
+- Monitor plant health proactively
+- Avoid investing in plants beyond recovery
+- Understand the economic cost of late interventions
+
+Location cards persist because they affect the growing location itself, independent of which plant occupies it.
 
 ## Usage Examples
 

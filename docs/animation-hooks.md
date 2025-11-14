@@ -1,6 +1,6 @@
 # Plant Affliction Animation Hooks
 
-**Last Updated:** 2025-11-06
+**Last Updated:** 2025-11-14
 **Unity Version:** 6000.1.11f1+
 **Introduced:** v1.0 (Animation Hook System)
 
@@ -140,12 +140,26 @@ These are the trigger names for built-in plant types:
 | FungusGnats     | `null`              | `null`                       |
 | MealyBugs       | `null`              | `null`                       |
 
+### Death Animation Names
+
+Death animations use a similar pattern to affliction animations:
+
+| Event Type | Trigger Pattern | Example |
+|------------|----------------|---------|
+| Plant Death | `{plantName}Death` | `chrysanthemumDeath` |
+
+Death animations are triggered when plant value reaches 0 or below.
+
 ### Example Trigger Names
 
 - `chrysanthemumDroop` - Chrysanthemum drooping from dehydration
 - `coleusWilt` - Coleus wilting from light deficiency
 - `pepperRecover` - Pepper recovering from any affliction
 - `cucumberRecover` - Cucumber returning to healthy state
+- `chrysanthemumDeath` - Chrysanthemum death animation
+- `coleusDeath` - Coleus death animation
+- `pepperDeath` - Pepper death animation
+- `cucumberDeath` - Cucumber death animation
 
 ## Creating Custom Affliction Animations
 
@@ -209,6 +223,17 @@ Animations triggered by `RemoveAffliction()`:
 - Transition back to healthy/idle state
 - Return plant to normal appearance
 
+### On Plant Death (KillPlant)
+
+Death animations triggered by `KillPlant()`:
+- Play **once** when plant value reaches 0 or below
+- Wait for animation to complete before clearing plant
+- Play death sound effect alongside animation
+- Uses `GetAnimationClipLength()` to determine animation duration
+- Falls back to 2.0 seconds if animation clip not found
+- Gracefully handles missing animator or animation clips
+- Protected by `_isDying` flag to prevent multiple death sequences
+
 ### Integration with Existing Systems
 
 Animation hooks work alongside:
@@ -235,6 +260,9 @@ Unit tests are located in `PlayModeTest/AnimationHookTests.cs`:
 - `PlantController_HasAnimatorParameter_*` - Parameter checking logic
 - `PlantController_AddAffliction_*` - Graceful handling tests
 - `AllAfflictionTypes_HaveAnimationTriggerProperties` - Interface compliance
+- `DeathAnimation_TriggerNames_FollowNamingConvention` - Death animation naming validation
+- `PlantController_GetAnimationClipLength_*` - Animation duration detection tests
+- `PlantController_KillPlant_*` - Death animation graceful handling tests
 
 **Note**: Tests that validated `GetPlantTypeName()` have been removed as the system now uses serialized fields instead of enum mapping.
 
@@ -246,8 +274,7 @@ Potential improvements to the system:
 2. **Looping Animations**: Continuous affliction animations (e.g., constant shaking)
 3. **Blend Trees**: Smooth transitions between severity levels
 4. **Animation Events**: Callbacks for sound effects or particle spawning mid-animation
-5. **Death Animations**: Integrate with `KillPlant()` TODO at PlantController.cs:418
-6. **Stacking Animations**: Multiple afflictions triggering layered animations
+5. **Stacking Animations**: Multiple afflictions triggering layered animations
 
 ## Troubleshooting
 

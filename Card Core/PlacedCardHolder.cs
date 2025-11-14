@@ -338,6 +338,15 @@ namespace _project.Scripts.Card_Core
             RefreshEfficacyDisplay();
         }
 
+        /// <summary>
+        /// Places the currently selected card from DeckManager onto this holder.
+        /// Validates that the associated plant exists and has positive value before placement.
+        /// </summary>
+        /// <remarks>
+        /// This method prevents placing cards on dead or dying plants (Value &lt;= 0).
+        /// Cards placed on plants that subsequently die are destroyed, not returned to the deck,
+        /// so this validation prevents wasted resources.
+        /// </remarks>
         public void TakeSelectedCard()
         {
             // Prevent interaction when holding a Location Card (same check as OnPlacedCardClicked)
@@ -346,6 +355,20 @@ namespace _project.Scripts.Card_Core
             if (HoldingCard) GiveBackCard();
 
             if (_deckManager.selectedACardClick3D is null || _deckManager.selectedACard is null) return;
+
+            // Prevent placing cards on dead or dying plants
+            var plant = ResolvePlantForDisplay();
+            if (plant == null)
+            {
+                Debug.LogWarning($"[PlacedCardHolder] Cannot place card: No plant found for holder '{name}'", this);
+                return;
+            }
+
+            if (plant.PlantCard == null || plant.PlantCard.Value <= 0)
+            {
+                Debug.Log($"[PlacedCardHolder] Cannot place card '{_deckManager.selectedACard.Name}' on dead/dying plant '{plant.name}' (Value: {plant.PlantCard?.Value ?? 0})", this);
+                return;
+            }
 
             if (!CanAcceptCard(_deckManager.selectedACard))
             {

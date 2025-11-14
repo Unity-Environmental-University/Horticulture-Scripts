@@ -580,12 +580,33 @@ namespace _project.Scripts.Card_Core
             if (debug) Debug.Log("All plants cleared");
         }
 
-        public IEnumerator ClearPlant(PlantController plant)
+        /// <summary>
+        /// Removes a plant from the board and cleans up associated cards and UI elements.
+        /// </summary>
+        /// <param name="plant">The PlantController to remove from the game board.</param>
+        /// <param name="skipDeathSequence">If true, skips the death animation and immediately destroys the plant.
+        /// Use this when the death animation is already running or when immediate cleanup is needed (e.g., tests).</param>
+        /// <returns>Coroutine that completes when plant cleanup is finished.</returns>
+        /// <remarks>
+        /// <para>Cleanup process:</para>
+        /// <list type="number">
+        /// <item>Plays death animation (unless skipDeathSequence=true)</item>
+        /// <item>Destroys plant GameObject</item>
+        /// <item>Clears treatment cards from PlacedCardHolders (cards are DESTROYED, not recycled to deck)</item>
+        /// <item>Preserves location cards (ILocationCard) - they remain visible as they're tied to location, not plant</item>
+        /// <item>Disables cardholders without location cards</item>
+        /// <item>Notifies SpotDataHolder of plant removal</item>
+        /// </list>
+        /// <para>Design Note: Treatment cards on dying plants are destroyed as a penalty for poor plant management,
+        /// teaching players the importance of early intervention. Location cards persist because they affect
+        /// the growing location itself, independent of which plant occupies it.</para>
+        /// </remarks>
+        public IEnumerator ClearPlant(PlantController plant, bool skipDeathSequence = false)
         {
             if (!plant) yield break;
 
-            plant.deathFX.Play();
-            yield return new WaitForSeconds(plant.deathFX.main.duration + 0.5f);
+            if (!skipDeathSequence)
+                yield return plant.KillPlant(false);
             
             var location = plantLocations.FirstOrDefault(slot =>
                 slot.GetComponentsInChildren<PlantController>(true).Contains(plant));
@@ -606,7 +627,21 @@ namespace _project.Scripts.Card_Core
             foreach (var holder in cardHolders)
             {
                 if (!holder) continue;
-                if (holder.HoldingCard) continue; // Keep visible if a persistent card is present
+
+                // Location cards persist after plant death (tied to location, not plant)
+                if (holder.HoldingCard && holder.placedCard is ILocationCard)
+                {
+                    // Keep location card and holder visible
+                    continue;
+                }
+
+                // Clear treatment cards - they're destroyed when plant dies (not returned to deck)
+                if (holder.HoldingCard)
+                {
+                    holder.ClearHolder();
+                }
+
+                // Hide the card holder (already disabled by PlantController on death detection)
                 holder.ToggleCardHolder(false);
             }
         }

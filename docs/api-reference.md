@@ -335,7 +335,7 @@ public void RedrawCards()
 // Plant Operations
 public IEnumerator PlacePlants()
 public void ClearAllPlants()
-public IEnumerator ClearPlant(PlantController plant)
+public IEnumerator ClearPlant(PlantController plant, bool skipDeathSequence = false)
 
 // Affliction Management
 public void DrawAfflictions()

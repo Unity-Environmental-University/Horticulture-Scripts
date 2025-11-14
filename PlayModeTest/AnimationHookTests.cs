@@ -175,5 +175,110 @@ namespace _project.Scripts.PlayModeTest
                         var recovery = affliction.RecoveryAnimationTriggerName;
                     }, $"{affliction.Name} should have animation trigger properties accessible");
         }
+
+        [Test]
+        public void DeathAnimation_TriggerNames_FollowNamingConvention()
+        {
+            // Arrange
+            var chrysanthemumCard = new ChrysanthemumCard();
+            var coleusCard = new ColeusCard();
+            var pepperCard = new PepperCard();
+            var cucumberCard = new CucumberCard();
+
+            // Act
+            var chrysanthemumTrigger = $"{chrysanthemumCard.Name.ToLower()}Death";
+            var coleusTrigger = $"{coleusCard.Name.ToLower()}Death";
+            var pepperTrigger = $"{pepperCard.Name.ToLower()}Death";
+            var cucumberTrigger = $"{cucumberCard.Name.ToLower()}Death";
+
+            // Assert
+            Assert.AreEqual("chrysanthemumDeath", chrysanthemumTrigger,
+                "Chrysanthemum death trigger should follow naming convention");
+            Assert.AreEqual("coleusDeath", coleusTrigger,
+                "Coleus death trigger should follow naming convention");
+            Assert.AreEqual("pepperDeath", pepperTrigger,
+                "Pepper death trigger should follow naming convention");
+            Assert.AreEqual("cucumberDeath", cucumberTrigger,
+                "Cucumber death trigger should follow naming convention");
+        }
+
+        [Test]
+        public void PlantController_GetAnimationClipLength_ReturnsFallbackWhenNoAnimator()
+        {
+            // Arrange
+            var gameObject = new GameObject("TestPlant");
+            var plantController = gameObject.AddComponent<PlantController>();
+
+            // Act
+            var clipLength = (float)plantController.GetType()
+                .GetMethod("GetAnimationClipLength", BindingFlags.NonPublic | BindingFlags.Instance)!
+                .Invoke(plantController, new object[] { "chrysanthemumDeath" });
+
+            // Assert
+            Assert.AreEqual(2.0f, clipLength,
+                "Should return fallback duration of 2.0f when no animator is present");
+
+            Object.DestroyImmediate(gameObject);
+        }
+
+        [Test]
+        public void PlantController_GetAnimationClipLength_ReturnsFallbackWhenNoRuntimeController()
+        {
+            // Arrange
+            var gameObject = new GameObject("TestPlant");
+            var plantController = gameObject.AddComponent<PlantController>();
+            gameObject.AddComponent<Animator>(); // Animator without runtime controller
+
+            // Act
+            var clipLength = (float)plantController.GetType()
+                .GetMethod("GetAnimationClipLength", BindingFlags.NonPublic | BindingFlags.Instance)!
+                .Invoke(plantController, new object[] { "chrysanthemumDeath" });
+
+            // Assert
+            Assert.AreEqual(2.0f, clipLength,
+                "Should return fallback duration of 2.0f when no runtime controller is present");
+
+            Object.DestroyImmediate(gameObject);
+        }
+
+        [Test]
+        public void PlantController_KillPlant_DoesNotThrowWhenNoAnimator()
+        {
+            // Arrange
+            var gameObject = new GameObject("TestPlant");
+            var plantController = gameObject.AddComponent<PlantController>();
+            plantController.PlantCard = new ChrysanthemumCard { Value = 0 };
+
+            // Act & Assert - Should not throw even without animator
+            Assert.DoesNotThrow(() =>
+                {
+                    var coroutine = plantController.KillPlant();
+                    // Start the coroutine to test it doesn't throw
+                    coroutine.MoveNext();
+                },
+                "KillPlant should handle missing animator gracefully");
+
+            Object.DestroyImmediate(gameObject);
+        }
+
+        [Test]
+        public void PlantController_KillPlant_DoesNotThrowWhenNoPlantCard()
+        {
+            // Arrange
+            var gameObject = new GameObject("TestPlant");
+            var plantController = gameObject.AddComponent<PlantController>();
+            gameObject.AddComponent<Animator>();
+
+            // Act & Assert - Should not throw even without PlantCard
+            Assert.DoesNotThrow(() =>
+                {
+                    var coroutine = plantController.KillPlant();
+                    // Start the coroutine to test it doesn't throw
+                    coroutine.MoveNext();
+                },
+                "KillPlant should handle missing PlantCard gracefully");
+
+            Object.DestroyImmediate(gameObject);
+        }
     }
 }
