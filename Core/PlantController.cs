@@ -509,19 +509,46 @@ namespace _project.Scripts.Core
         /// <summary>
         ///     Gets the length of an animation clip by trigger name.
         ///     Attempts to find the animation clip in the animator controller and returns its duration.
+        ///     Searches for clips that match the trigger name (case-insensitive) or contain it.
         /// </summary>
         /// <param name="triggerName">The trigger name to search for</param>
         /// <returns>Animation clip length in seconds, or 2.0f as fallback if not found</returns>
         private float GetAnimationClipLength(string triggerName)
         {
             if (!plantAnimator || !plantAnimator.runtimeAnimatorController)
+            {
+                var cgm = CardGameMaster.Instance;
+                if (cgm && cgm.debuggingCardClass)
+                    Debug.LogWarning($"[PlantController] No animator or controller found for animation '{triggerName}' on {name}. Using 2.0s fallback.", this);
                 return 2.0f;
+            }
 
             var clips = plantAnimator.runtimeAnimatorController.animationClips;
+
+            // First, try exact match (case-insensitive)
             var matchingClip = clips.FirstOrDefault(clip =>
                 clip.name.Equals(triggerName, StringComparison.OrdinalIgnoreCase));
 
-            return matchingClip ? matchingClip.length : 2.0f;
+            // If no exact match, try to find clip that contains the trigger name
+            if (!matchingClip)
+            {
+                matchingClip = clips.FirstOrDefault(clip =>
+                    clip.name.IndexOf(triggerName, StringComparison.OrdinalIgnoreCase) >= 0);
+            }
+
+            if (matchingClip)
+            {
+                var cgm = CardGameMaster.Instance;
+                if (cgm && cgm.debuggingCardClass)
+                    Debug.Log($"[PlantController] Found animation clip '{matchingClip.name}' for trigger '{triggerName}' with duration {matchingClip.length:F2}s on {name}", this);
+                return matchingClip.length;
+            }
+
+            var cgmFallback = CardGameMaster.Instance;
+            if (cgmFallback && cgmFallback.debuggingCardClass)
+                Debug.LogWarning($"[PlantController] No animation clip found for trigger '{triggerName}' on {name}. Using 2.0s fallback. Available clips: {string.Join(", ", clips.Select(c => c.name))}", this);
+
+            return 2.0f;
         }
 
         /// <summary>
@@ -548,7 +575,13 @@ namespace _project.Scripts.Core
                     {
                         var deathSound = cgm.soundSystem.plantDeath;
                         if (deathSound && audioSource)
+                        {
+                            // Reset audio properties to ensure consistent volume (matches TurnController.PlayQueuedPlantEffects behavior)
+                            audioSource.pitch = 1f;
+                            audioSource.volume = 1f;
+                            audioSource.spatialBlend = 0f;
                             audioSource.PlayOneShot(deathSound);
+                        }
                     }
 
                     var animationDuration = GetAnimationClipLength(triggerName);
