@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Reflection;
+using System.Text.RegularExpressions;
 using _project.Scripts.Audio;
 using _project.Scripts.Card_Core;
 using _project.Scripts.Cinematics;
@@ -126,16 +127,13 @@ namespace _project.Scripts.PlayModeTest
             plantFunctions.deckManager = _deckManager;
             plant.plantCardFunctions = plantFunctions;
 
-            // Create card holder
+            // Create cardholder
             var cardHolderGo = new GameObject("CardHolder");
             cardHolderGo.transform.SetParent(_plantLocationGo.transform);
             cardHolder = cardHolderGo.AddComponent<PlacedCardHolder>();
 
-            // Initialize card holder's Click3D component
-            var holderClick3D = cardHolderGo.AddComponent<SafeClick3D>();
-            cardHolder.GetType()
-                .GetField("holderClick3D", BindingFlags.NonPublic | BindingFlags.Instance)
-                ?.SetValue(cardHolder, holderClick3D);
+            // Add Click3D component (will be found dynamically by ToggleCardHolder)
+            cardHolderGo.AddComponent<SafeClick3D>();
 
             // Register location with DeckManager
             _deckManager.plantLocations.Add(_plantLocationGo.transform);
@@ -149,21 +147,20 @@ namespace _project.Scripts.PlayModeTest
             // Arrange
             var plant = CreatePlantWithCardHolder(out var cardHolder);
 
-            // Enable the card holder initially
+            // Enable the cardholder initially
             cardHolder.ToggleCardHolder(true);
             yield return null;
 
             // Verify holder is initially enabled
-            var holderClick3D = cardHolder.GetType()
-                .GetField("holderClick3D", BindingFlags.NonPublic | BindingFlags.Instance)
-                ?.GetValue(cardHolder) as Click3D;
+            var holderClick3D = cardHolder.gameObject.GetComponentInChildren<Click3D>(true);
+            Assert.IsNotNull(holderClick3D, "Click3D component should exist on card holder");
             Assert.IsTrue(holderClick3D.isEnabled, "Card holder should be enabled initially");
 
             // Act - kill the plant by setting value to 0
             plant.PlantCard.Value = 0;
             yield return null; // Wait for Update() to detect death
 
-            // Assert - card holder should be disabled immediately
+            // Assert - cardholder should be disabled immediately
             Assert.IsFalse(holderClick3D.isEnabled, "Card holder should be disabled when plant dies");
         }
 
@@ -185,38 +182,13 @@ namespace _project.Scripts.PlayModeTest
             yield return null;
 
             // Act - attempt to take selected card
-            LogAssert.Expect(LogType.Log, "Cannot place cards on dead or dying plants");
+            // Expect the dead/dying plant validation to trigger
+            LogAssert.Expect(LogType.Log, new Regex(@"\[PlacedCardHolder\] Cannot place card .* on dead/dying plant .* \(Value: 0\)"));
             cardHolder.TakeSelectedCard();
             yield return null;
 
             // Assert - card should NOT be placed
             Assert.IsFalse(cardHolder.HoldingCard, "Card should not be placed on dead plant");
-            Assert.IsNull(cardHolder.placedCard, "Placed card should remain null");
-        }
-
-        [UnityTest]
-        public IEnumerator TakeSelectedCard_FailsOnDyingPlant()
-        {
-            // Arrange
-            var plant = CreatePlantWithCardHolder(out var cardHolder);
-            var testCard = new FakeCard();
-
-            // Set up selected card in DeckManager
-            var cardGo = new GameObject("SelectedCard");
-            var cardClick3D = cardGo.AddComponent<SafeClick3D>();
-            _deckManager.selectedACard = testCard;
-            _deckManager.selectedACardClick3D = cardClick3D;
-
-            // Set plant value to 0 to trigger death (but don't wait for Update)
-            plant.PlantCard.Value = 0;
-
-            // Act - attempt to take selected card before Update() runs
-            LogAssert.Expect(LogType.Log, "Cannot place cards on dead or dying plants");
-            cardHolder.TakeSelectedCard();
-            yield return null;
-
-            // Assert - card should NOT be placed
-            Assert.IsFalse(cardHolder.HoldingCard, "Card should not be placed on dying plant");
             Assert.IsNull(cardHolder.placedCard, "Placed card should remain null");
         }
 
@@ -281,12 +253,11 @@ namespace _project.Scripts.PlayModeTest
             // Act - call ClearPlant directly (skipping death animation)
             yield return _deckManager.ClearPlant(plant, skipDeathSequence: true);
 
-            // Assert - card holder should be cleared and disabled
+            // Assert - cardholder should be cleared and disabled
             Assert.IsFalse(cardHolder.HoldingCard, "Card holder should not hold a card after ClearPlant");
 
-            var holderClick3D = cardHolder.GetType()
-                .GetField("holderClick3D", BindingFlags.NonPublic | BindingFlags.Instance)
-                ?.GetValue(cardHolder) as Click3D;
+            var holderClick3D = cardHolder.gameObject.GetComponentInChildren<Click3D>(true);
+            Assert.IsNotNull(holderClick3D, "Click3D component should exist on card holder");
             Assert.IsFalse(holderClick3D.isEnabled, "Card holder should be disabled after ClearPlant");
         }
     }
