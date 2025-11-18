@@ -641,7 +641,7 @@ namespace _project.Scripts.Card_Core
                     holder.ClearHolder();
                 }
 
-                // Hide the card holder (already disabled by PlantController on death detection)
+                // Hide the cardholder (already disabled by PlantController on death detection)
                 holder.ToggleCardHolder(false);
             }
         }

@@ -146,8 +146,8 @@ namespace _project.Scripts.Classes
         public void ApplyLocationEffect(PlantController plant)
         {
             if (plant?.PlantCard?.Value == null) return;
-            if (plant != _lastEffectedPlant!) _lastEffectedPlant = plant;
-
+            _lastEffectedPlant = plant;
+            
             if (plant.buffFX) plant.buffFX.Play();
 
             var currentValue = plant.PlantCard.Value.Value;
