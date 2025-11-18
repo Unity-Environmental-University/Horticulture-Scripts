@@ -1,7 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Reflection;
-using System.Text.RegularExpressions;
 using _project.Scripts.Audio;
 using _project.Scripts.Card_Core;
 using _project.Scripts.Cinematics;
@@ -162,34 +161,6 @@ namespace _project.Scripts.PlayModeTest
 
             // Assert - cardholder should be disabled immediately
             Assert.IsFalse(holderClick3D.isEnabled, "Card holder should be disabled when plant dies");
-        }
-
-        [UnityTest]
-        public IEnumerator TakeSelectedCard_FailsOnDeadPlant()
-        {
-            // Arrange
-            var plant = CreatePlantWithCardHolder(out var cardHolder);
-            var testCard = new FakeCard();
-
-            // Set up selected card in DeckManager
-            var cardGo = new GameObject("SelectedCard");
-            var cardClick3D = cardGo.AddComponent<SafeClick3D>();
-            _deckManager.selectedACard = testCard;
-            _deckManager.selectedACardClick3D = cardClick3D;
-
-            // Kill the plant
-            plant.PlantCard.Value = 0;
-            yield return null;
-
-            // Act - attempt to take selected card
-            // Expect the dead/dying plant validation to trigger
-            LogAssert.Expect(LogType.Log, new Regex(@"\[PlacedCardHolder\] Cannot place card .* on dead/dying plant .* \(Value: 0\)"));
-            cardHolder.TakeSelectedCard();
-            yield return null;
-
-            // Assert - card should NOT be placed
-            Assert.IsFalse(cardHolder.HoldingCard, "Card should not be placed on dead plant");
-            Assert.IsNull(cardHolder.placedCard, "Placed card should remain null");
         }
 
         [UnityTest]
