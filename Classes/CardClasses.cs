@@ -124,6 +124,7 @@ namespace _project.Scripts.Classes
         public Material Material => Resources.Load<Material>($"Materials/Cards/Urea");
         public List<ISticker> Stickers { get; } = new();
         public LocationEffectType EffectType => null;
+        private PlantController _lastEffectedPlant;
 
         public ICard Clone()
         {
@@ -145,6 +146,7 @@ namespace _project.Scripts.Classes
         public void ApplyLocationEffect(PlantController plant)
         {
             if (plant?.PlantCard?.Value == null) return;
+            if (plant != _lastEffectedPlant!) _lastEffectedPlant = plant;
 
             if (plant.buffFX) plant.buffFX.Play();
 
@@ -163,14 +165,8 @@ namespace _project.Scripts.Classes
 
         public void ApplyTurnEffect(PlantController plant)
         {
-            /* DISABLED TURN EFFECT IN FAVOR OF APPLICATION EFFECT
             if (plant?.PlantCard?.Value == null) return;
-
-            plant.PlantCard.Value += 1;
-            plant.UpdatePriceFlag(plant.PlantCard.Value ?? 0);
-            */
-            
-            if (plant?.PlantCard?.Value == null) return;
+            if (plant != _lastEffectedPlant) ApplyLocationEffect(plant);
             if (plant.buffFX.isStopped) plant.buffFX.Play();
 
             foreach (var damage in plant.CurrentAfflictions.Select(affliction => affliction.GetCard()?.Value ?? 0))
