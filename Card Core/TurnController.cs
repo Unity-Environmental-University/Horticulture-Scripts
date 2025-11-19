@@ -284,18 +284,6 @@ namespace _project.Scripts.Card_Core
 
         private void Update()
         {
-            // Debug toggle for game mode (F9 to cycle)
-            if (Input.GetKeyDown(KeyCode.F9) && !IsActiveTutorialStep)
-            {
-                currentGameMode = currentGameMode switch
-                {
-                    GameMode.Campaign => GameMode.Endless,
-                    GameMode.Endless => GameMode.Campaign,
-                    _ => GameMode.Campaign
-                };
-                Debug.Log($"[DEBUG] Switched to {currentGameMode} mode");
-            }
-
             if (CardGameMaster.Instance.turnText)
                 // No hard turn cap; show current turn only
                 CardGameMaster.Instance.turnText!.text = "Turn: " + currentTurn;
@@ -807,6 +795,7 @@ namespace _project.Scripts.Card_Core
             currentRound = 0;
             currentRoundInLevel = 0; // Reset Campaign mode round counter
             tutorialCompleted = false;
+            _deckManager.ResetRedrawCount();
 
             // Reset to appropriate game mode
             if (level == 0 && CardGameMaster.IsSequencingEnabled)
