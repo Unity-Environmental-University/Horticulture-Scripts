@@ -60,10 +60,22 @@ public interface ICard
 Extends ICard for plant-specific functionality.
 
 ```csharp
+public enum PlantCardCategory
+{
+    Fruiting,
+    Decorative,
+    Other
+}
+```
+
+`PlantCardCategory` allows systems to branch based on whether a plant is produced for harvest (Fruiting), aesthetic spreads (Decorative), or other future categories.
+
+```csharp
 public interface IPlantCard : ICard
 {
     InfectLevel Infect { get; }
     int EggLevel { get; set; }
+    PlantCardCategory Category { get; }
 }
 ```
 
@@ -71,6 +83,7 @@ public interface IPlantCard : ICard
 
 - **Infect** - Infection tracking system for all affliction sources
 - **EggLevel** - Total egg count across all afflictions
+- **Category** - Tile classification (Fruiting, Decorative, etc.) so rules can branch by plant type
 
 ### IAfflictionCard Interface
 

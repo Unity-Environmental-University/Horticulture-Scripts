@@ -46,7 +46,7 @@ PlantEffectClasses
 
 ### ICard and Card Types (CardClasses.cs)
 - ICard: Base contract with `Name`, optional `Description`, nullable `Value`, optional `Affliction`/`Treatment`, `Prefab`, `Material`, `List<ISticker> Stickers`; `Clone()`, `Selected()`, `ApplySticker()`, `ModifyValue(int)`.
-- IPlantCard: Extends ICard for plant-specific cards with `InfectLevel` and `EggLevel` properties.
+- IPlantCard: Extends ICard for plant-specific cards with `InfectLevel`, `EggLevel`, and a `PlantCardCategory` so cards can report if they are Fruiting, Decorative, or another class.
 - IAfflictionCard: Extends ICard for affliction cards with `BaseInfectLevel` and `BaseEggLevel` properties.
 - ILocationCard: Extends ICard for location effects with `EffectDuration`, `IsPermanent`, `EffectType`, and location effect methods.
 - CardHand: Manages `Deck` and `PrototypeDeck`; `DrawCards(int)`, `DeckRandomDraw()` duplicates each prototype 1–4x.
