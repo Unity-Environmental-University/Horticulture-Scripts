@@ -691,6 +691,7 @@ namespace _project.Scripts.Card_Core
             level++;
             UpdateMoneyGoal();
             _deckManager.ResetRedrawCount();
+            DeckManager.GeneratePlantPrices();
             if (!shopQueued) return;
             CardGameMaster.Instance.shopManager.OpenShop();
             shopQueued = false;

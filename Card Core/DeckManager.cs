@@ -132,21 +132,21 @@ namespace _project.Scripts.Card_Core
             new HorticulturalOilBasic(),
             new FungicideBasic(),
             new FungicideBasic(),
-            new InsecticideBasic(),
-            new InsecticideBasic(),
             new SoapyWaterBasic(),
-            new SoapyWaterBasic(),
-            new Panacea(),
+            new SoapyWaterBasic(), 
             new UreaBasic(),
             new UreaBasic(),
             new IsolateBasic(),
             new IsolateBasic(),
-
-            // TODO cards w/o materials
             new ImidaclopridTreatment(),
             new SpinosadTreatment(),
             new HydrationBasic(),
-            new SunlightBasic()
+            new SunlightBasic(),
+
+            // TODO cards w/o new materials
+            new InsecticideBasic(),
+            new InsecticideBasic(),
+            new Panacea(),
         };
 
         private readonly List<ICard> _tutorialActionDeck = new()
@@ -177,6 +177,10 @@ namespace _project.Scripts.Card_Core
         private readonly List<ISticker> _playerStickers = new();
         private static readonly List<ICard> PlantDeck = new();
         private static readonly List<ICard> AfflictionsDeck = new();
+
+        // Price boost tracking for current level
+        private static PlantCardCategory? _boostedCategory;
+        private static int _priceBoostAmount;
 
         #endregion
 
@@ -481,6 +485,7 @@ namespace _project.Scripts.Card_Core
 
             ClearAllPlants();
             _plantHand.DeckRandomDraw();
+            ApplyStoredPriceBoost();
             ShuffleDeck(_plantHand.Deck);
             _plantHand.Clear();
 
@@ -662,6 +667,34 @@ namespace _project.Scripts.Card_Core
                 PepperCard => pepperPrefab,
                 _ => null
             };
+        }
+
+        public static void GeneratePlantPrices()
+        {
+            // Pick random category and boost amount for this level
+            _boostedCategory = (PlantCardCategory)Random.Range(0, 1);
+            _priceBoostAmount = Random.Range(2, 5);
+
+            Debug.Log($"Price boost of +${_priceBoostAmount} will be applied to category: {_boostedCategory} for this level");
+        }
+
+        private void ApplyStoredPriceBoost()
+        {
+            if (!_boostedCategory.HasValue) return;
+
+            foreach (var card in PlantDeck)
+            {
+                if (card is not IPlantCard plantCard) continue;
+                if (plantCard.Category != _boostedCategory.Value) continue;
+                if (card.Value.HasValue)
+                {
+                    card.Value = card.Value.Value + _priceBoostAmount;
+                }
+            }
+
+            if (!debug) return;
+            var boostedCount = PlantDeck.Count(c => c is IPlantCard pc && pc.Category == _boostedCategory.Value);
+            Debug.Log($"Applied +${_priceBoostAmount} boost to {boostedCount} {_boostedCategory} cards in deck");
         }
 
         #endregion
