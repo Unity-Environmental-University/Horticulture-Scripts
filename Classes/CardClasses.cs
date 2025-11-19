@@ -37,10 +37,18 @@ namespace _project.Scripts.Classes
         void ModifyValue(int delta) { }
     }
 
+    public enum PlantCardCategory
+    {
+        Fruiting,
+        Decorative,
+        Other
+    }
+
     public interface IPlantCard : ICard
     {
         InfectLevel Infect { get; }
         int EggLevel { get; set; }
+        PlantCardCategory Category { get; }
     }
 
     public interface IAfflictionCard : ICard
@@ -249,6 +257,7 @@ namespace _project.Scripts.Classes
             get => _value;
             set => _value = value ?? 0;
         }
+        public PlantCardCategory Category => PlantCardCategory.Decorative;
         public GameObject Prefab => CardGameMaster.Instance.actionCardPrefab;
 
         public List<ISticker> Stickers { get; } = new();
@@ -287,6 +296,8 @@ namespace _project.Scripts.Classes
             set => _value = value ?? 0;
         }
 
+        public PlantCardCategory Category => PlantCardCategory.Decorative;
+
         public GameObject Prefab => CardGameMaster.Instance.actionCardPrefab;
         public List<ISticker> Stickers { get; } = new();
 
@@ -323,6 +334,8 @@ namespace _project.Scripts.Classes
             get => _value;
             set => _value = value ?? 0;
         }
+        public PlantCardCategory Category => PlantCardCategory.Fruiting;
+
         public GameObject Prefab => CardGameMaster.Instance.actionCardPrefab;
         public List<ISticker> Stickers { get; } = new();
 
@@ -359,6 +372,8 @@ namespace _project.Scripts.Classes
             get => _value;
             set => _value = value ?? 0;
         }
+        public PlantCardCategory Category => PlantCardCategory.Fruiting;
+
         public GameObject Prefab => CardGameMaster.Instance.actionCardPrefab;
         public List<ISticker> Stickers { get; } = new();
 

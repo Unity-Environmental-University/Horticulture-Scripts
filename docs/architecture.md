@@ -226,12 +226,22 @@ public interface ICard
     ICard Clone();
 }
 
+public enum PlantCardCategory
+{
+    Fruiting,
+    Decorative,
+    Other
+}
+
 public interface IPlantCard : ICard
 {
     InfectLevel Infect { get; }
     int EggLevel { get; set; }
+    PlantCardCategory Category { get; }
 }
 ```
+
+Plant cards now expose `PlantCardCategory` so consumers can distinguish Fruiting versus Decorative cards (and add new categories later).
 
 ### Plant Management System
 
