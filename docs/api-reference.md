@@ -356,6 +356,33 @@ public void ApplyAfflictionDeck()
 
 // Deck Operations
 public void ShuffleDeck(List<ICard> deck)
+
+// Price Boost System
+public static void GeneratePlantPrices()
+```
+
+#### Price Boost System
+
+Manages dynamic plant pricing for increased replayability and strategic variety.
+
+```csharp
+public static void GeneratePlantPrices()
+```
+
+Generates a random plant price boost for the current level. Call this once per level before placing plants.
+
+**Behavior**:
+- Randomly selects Fruiting or Decorative category (50% chance each)
+- Randomly selects boost amount between $2-$4
+- Stores selection for automatic application during plant placement
+
+**Example**:
+```csharp
+// At level start in TurnController
+DeckManager.GeneratePlantPrices();
+
+// Later, when plants are placed
+StartCoroutine(deckManager.PlacePlants()); // Boost applied automatically via PrepareNextRound
 ```
 
 ### TurnController Class

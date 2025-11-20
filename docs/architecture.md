@@ -243,6 +243,48 @@ public interface IPlantCard : ICard
 
 Plant cards now expose `PlantCardCategory` so consumers can distinguish Fruiting versus Decorative cards (and add new categories later).
 
+### Game Economy System
+
+**Price Boost Mechanism**:
+The game implements a dynamic pricing system to add variety and strategic depth to each level. At the start of each level, the system randomly selects:
+- One plant category (Fruiting or Decorative)
+- A base boost amount (+$2 to +$4)
+- Applies a difficulty multiplier based on current level
+
+This boost is applied to all plant cards of the selected category when they are placed on the board during that level.
+
+**Difficulty Scaling**:
+To keep the game challenging but playable as rent increases, the price boost scales with level difficulty:
+
+**Formula**: `modifier = 1 + (level - 1) / 2`
+
+| Level | Rent | Modifier | Boost Range | Example Boosted Value* |
+|-------|------|----------|-------------|------------------------|
+| 1     | $100 | 1x       | $2-4        | $6-12                  |
+| 2     | $100 | 1x       | $2-4        | $6-12                  |
+| 3     | $150 | 2x       | $4-8        | $8-16                  |
+| 5     | $250 | 3x       | $6-12       | $10-20                 |
+| 10    | $500 | 5x       | $10-20      | $14-28                 |
+| 20    | $1000| 10x      | $20-40      | $24-48                 |
+
+*Boosted plant value = base value ($4-8) + scaled boost
+
+This scaling keeps pace with rent increases (+$50/level starting at level 3), maintaining game balance across difficulty levels.
+
+**Implementation**:
+- `DeckManager.CalculatePriceBoostModifier()`: Calculates difficulty multiplier based on level
+- `DeckManager.GeneratePlantPrices()`: Called at level start to select category and scaled amount
+- Static fields `_boostedCategory` and `_priceBoostAmount` store the selection
+- `DeckManager.ApplyStoredPriceBoost()`: Called automatically during plant placement via `PrepareNextRound()`
+- Price boosts persist for the entire level but reset between levels (cards regenerated from prototypes)
+
+**Design Rationale**:
+- Encourages players to adapt strategy based on which plants have higher value
+- Adds replayability through randomized economic conditions
+- Rewards players who diversify their plant portfolio
+- Teaches market dynamics and opportunity cost
+- Scales difficulty to prevent economic impossibility at high levels
+
 ### Plant Management System
 
 **Primary Components**:
