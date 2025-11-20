@@ -669,13 +669,68 @@ namespace _project.Scripts.Card_Core
             };
         }
 
-        public static void GeneratePlantPrices()
+        /// <summary>
+        /// Calculates the price boost multiplier based on difficulty level.
+        /// Scales with rent increases to keep the game challenging but playable.
+        /// </summary>
+        /// <param name="level">Current difficulty level (defaults to reading from TurnController)</param>
+        /// <returns>Multiplier for price boost (1x at early levels, scaling up with difficulty)</returns>
+        /// <remarks>
+        /// Formula: 1 + (level - 1) / 2, capped at 20x for extreme levels
+        /// - Level 1-2: 1x multiplier
+        /// - Level 3-4: 2x multiplier
+        /// - Level 5-6: 3x multiplier
+        /// - Level 10: 5x multiplier
+        /// - Level 39+: 20x multiplier (capped)
+        /// This scaling keeps pace with rent increases (+$50/level starting at level 3).
+        /// </remarks>
+        private static int CalculatePriceBoostModifier(int? level = null)
         {
-            // Pick random category and boost amount for this level
-            _boostedCategory = (PlantCardCategory)Random.Range(0, 1);
-            _priceBoostAmount = Random.Range(2, 5);
+            int currentLevel;
+            if (level.HasValue)
+            {
+                currentLevel = level.Value;
+            }
+            else if (CardGameMaster.Instance?.turnController)
+            {
+                currentLevel = CardGameMaster.Instance.turnController.level;
+            }
+            else
+            {
+                Debug.LogWarning("[DeckManager] CardGameMaster not initialized, using level 1 modifier");
+                return 1;
+            }
 
-            Debug.Log($"Price boost of +${_priceBoostAmount} will be applied to category: {_boostedCategory} for this level");
+            var modifier = 1 + (currentLevel - 1) / 2;
+
+            // Cap at 20x to prevent extreme scaling at very high levels
+            return Mathf.Min(modifier, 20);
+        }
+
+        /// <summary>
+        /// Generates a random plant price boost for the current level.
+        /// Randomly selects one plant category (Fruiting or Decorative) and a boost amount (2-4),
+        /// scaled by the current difficulty level, which will be applied to all matching plants
+        /// when PrepareNextRound is called.
+        /// </summary>
+        /// <param name="level">Optional level override for testing (defaults to reading from TurnController)</param>
+        /// <remarks>
+        /// This method should be called once per level during level progression.
+        /// The selected category and boost amount are stored statically and applied
+        /// automatically by PrepareNextRound via ApplyStoredPriceBoost.
+        /// Base boost range (2-5) is multiplied by difficulty modifier for higher levels.
+        /// </remarks>
+        public static void GeneratePlantPrices(int? level = null)
+        {
+            var modifier = CalculatePriceBoostModifier(level);
+            _boostedCategory = (PlantCardCategory)Random.Range(0, 2);
+            _priceBoostAmount = Random.Range(2, 5) * modifier;
+
+            var currentLevel = level ?? CardGameMaster.Instance?.turnController?.level ?? 1;
+            if (CardGameMaster.Instance?.debuggingCardClass == true)
+                Debug.Log($"Level {currentLevel}: " +
+                          $"Price boost of +${_priceBoostAmount} (modifier: {modifier}x) " +
+                          $"will be applied to category: {_boostedCategory}");
         }
 
         private void ApplyStoredPriceBoost()
