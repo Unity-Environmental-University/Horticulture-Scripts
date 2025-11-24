@@ -113,24 +113,23 @@ namespace _project.Scripts.Card_Core
 
             // Validate and refresh plant reference before applying effects
             RefreshAssociatedPlant();
+
+            var hasPlant = _associatedPlant != null && _associatedPlant.PlantCard != null;
             
-            if (_associatedPlant == null || _associatedPlant.PlantCard == null)
+            if (hasPlant)
             {
-                if (!cLocationCard.IsPermanent) _remainingDuration--;
-                return;
-            }
-            
-            try
-            {
-                cLocationCard.ApplyTurnEffect(_associatedPlant);
-            }
-            catch (Exception e)
-            {
-                Debug.LogError($"Error applying location effect {cLocationCard.Name}: {e.Message}");
-                // Deactivate on error to prevent repeated failures
-                _effectActive = false;
-                cLocationCard = null;
-                return;
+                try
+                {
+                    cLocationCard.ApplyTurnEffect(_associatedPlant);
+                }
+                catch (Exception e)
+                {
+                    Debug.LogError($"Error applying location effect {cLocationCard.Name}: {e.Message}");
+                    // Deactivate on error to prevent repeated failures
+                    _effectActive = false;
+                    cLocationCard = null;
+                    return;
+                }
             }
             
             if (cLocationCard.IsPermanent) return;

@@ -2,7 +2,7 @@
 *.meta
 *.meta.*
 
-# Ignore Git Setup Files
+# Ignore Project Scripts
 Git-Setup.bat
 Git-Setup.sh
 
@@ -15,3 +15,6 @@ Data/CardGameEditorTweaks.cs
 # Un-Needed Files
 Scripts.asmdef
 /package.json
+
+# IDE Files
+.vscode
