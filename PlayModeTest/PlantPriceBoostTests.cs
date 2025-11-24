@@ -7,6 +7,8 @@ using NUnit.Framework;
 using UnityEngine;
 using UnityEngine.TestTools;
 
+// ReSharper disable PossibleInvalidOperationException
+
 namespace _project.Scripts.PlayModeTest
 {
     /// <summary>
@@ -206,7 +208,7 @@ namespace _project.Scripts.PlayModeTest
         [Test]
         public void GeneratePlantPrices_SelectsValidCategory()
         {
-            // Test multiple times to ensure randomness stays within valid range
+            // Test multiple times to ensure randomness stays within a valid range
             for (var i = 0; i < 25; i++)
             {
                 DeckManager.GeneratePlantPrices();
@@ -318,7 +320,7 @@ namespace _project.Scripts.PlayModeTest
             SetBoostedCategory(null);
             SetPriceBoostAmount(5);
 
-            // Add cards to deck
+            // Add cards to the deck
             var pepperCard = new PepperCard();
             var coleusCard = new ColeusCard();
             var initialPepperValue = pepperCard.Value;
@@ -412,7 +414,7 @@ namespace _project.Scripts.PlayModeTest
             SetBoostedCategory(PlantCardCategory.Fruiting);
             SetPriceBoostAmount(3);
 
-            // Create a test card with null value
+            // Create a test card with a null value
             var testCard = new TestPlantCardWithNullValue();
             Assert.IsNull(testCard.Value, "Test card should have null value");
 
