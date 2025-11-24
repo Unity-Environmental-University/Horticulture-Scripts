@@ -21,7 +21,7 @@ namespace _project.Scripts.Card_Core
 
         public void RefreshAssociatedPlant()
         {
-            // Only refresh if cache is dirty or plant reference is invalid
+            // Only refresh if the cache is dirty or the plant reference is invalid
             if (!_plantCacheDirty && _associatedPlant && _associatedPlant.PlantCard != null)
                 return;
 
@@ -59,7 +59,7 @@ namespace _project.Scripts.Card_Core
                     return;
                 }
 
-                // Clear previous effect before applying new one
+                // Clear previous effect before applying the new one
                 if (cLocationCard != null && _effectActive)
                 {
                     TryRemoveLocationEffect(cLocationCard);
@@ -217,7 +217,7 @@ namespace _project.Scripts.Card_Core
             if (locationCard == null) return;
 
             RefreshAssociatedPlant();
-            if (_associatedPlant == null) return;
+            if (!_associatedPlant) return;
 
             try
             {
