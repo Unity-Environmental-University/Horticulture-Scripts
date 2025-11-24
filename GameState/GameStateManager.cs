@@ -240,6 +240,7 @@ namespace _project.Scripts.GameState
             {
                 cardTypeName = card.GetType().Name,
                 value = card.Value,
+                baseValue = card is IPlantCard plantCard ? plantCard.BaseValue : null,
                 stickers = card.Stickers?.Select(SerializeSticker).ToList() ?? new List<StickerData>()
             };
         }
@@ -294,6 +295,10 @@ namespace _project.Scripts.GameState
                     throw new Exception($"Could not create card instance for type: {typeName}");
                 if (data.value.HasValue)
                     clone.Value = data.value.Value;
+
+                // Restore BaseValue for plant cards
+                if (clone is IPlantCard plantCard && data.baseValue.HasValue)
+                    plantCard.BaseValue = data.baseValue.Value;
 
                 // Restore stickers
                 if (data.stickers == null) return clone;

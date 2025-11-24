@@ -419,7 +419,7 @@ namespace _project.Scripts.PlayModeTest
             var plantDeck = GetPlantDeck();
             plantDeck.Add(testCard);
 
-            // Apply boost should not throw exception
+            // Apply boost should not throw an exception
             Assert.DoesNotThrow(CallApplyStoredPriceBoost, "Should handle null Value gracefully");
 
             // Verify card still has null value (no boost applied)
@@ -436,6 +436,7 @@ namespace _project.Scripts.PlayModeTest
             public int? Value { get; set; }
             public PlantCardCategory Category => PlantCardCategory.Fruiting;
 
+            public int BaseValue { get; set; }
             public InfectLevel Infect { get; } = new();
 
             public int EggLevel

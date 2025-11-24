@@ -46,6 +46,20 @@ namespace _project.Scripts.Classes
 
     public interface IPlantCard : ICard
     {
+        /// <summary>
+        /// The base value used for diminishing returns calculations by location cards.
+        /// Automatically set when the first location card effect is applied.
+        /// </summary>
+        /// <remarks>
+        /// <para>This property supports location cards like UreaBasic that provide cumulative
+        /// diminishing returns. The BaseValue is typically set to the plant's value at the time
+        /// of first application and remains constant for subsequent boost calculations.</para>
+        /// <para><b>Important:</b> This should only be modified by ILocationCard implementations.
+        /// Direct modification by game code will break diminishing returns calculations and
+        /// cause incorrect pricing.</para>
+        /// <para>This value persists across save/load operations via GameStateManager.</para>
+        /// </remarks>
+        int BaseValue { get; set; }
         InfectLevel Infect { get; }
         int EggLevel { get; set; }
         PlantCardCategory Category { get; }
@@ -116,6 +130,16 @@ namespace _project.Scripts.Classes
 
     public abstract class LocationEffectType { }
 
+    /// <summary>
+    /// Location card that enriches soil with nitrogen-rich urea, providing cumulative
+    /// diminishing returns price boosts to plants.
+    /// </summary>
+    /// <remarks>
+    /// <para>The first application doubles the plant's value. Subsequent applications
+    /// add progressively smaller boosts (50%, 33%, 25%, etc. of the original value).</para>
+    /// <para>This implements a diminishing returns model to balance gameplay and prevent
+    /// exponential value growth from repeated applications.</para>
+    /// </remarks>
     public class UreaBasic : ILocationCard
     {
         public string Name => "UreaBasic";
@@ -151,18 +175,57 @@ namespace _project.Scripts.Classes
             _value += delta;
         }
 
+        /// <summary>
+        /// Applies a cumulative diminishing returns price boost to the specified plant.
+        /// </summary>
+        /// <param name="plant">The plant to apply the Urea effect to. No effect if null or has no PlantCard.</param>
+        /// <remarks>
+        /// <para><b>First Application:</b> Doubles the plant's current value and stores it as BaseValue.</para>
+        /// <para><b>Subsequent Applications:</b> Adds a diminishing boost calculated as
+        /// <c>BaseValue × (1 / (applicationsCount + 1))</c>, rounded to the nearest integer.</para>
+        /// <para><b>Value Cap:</b> Final value is capped at <c>BaseValue²</c> to prevent unbounded growth.</para>
+        /// <para>Application count is tracked in <c>plant.uLocationCards</c> and persists across save/load.</para>
+        /// </remarks>
+        /// <example>
+        /// For a plant with initial value 10:
+        /// <code>
+        /// urea.ApplyLocationEffect(plant);  // 10 → 20 (BaseValue = 10, 100% boost)
+        /// urea.ApplyLocationEffect(plant);  // 20 → 25 (adds 5, 50% of BaseValue)
+        /// urea.ApplyLocationEffect(plant);  // 25 → 28 (adds 3, 33% of BaseValue)
+        /// urea.ApplyLocationEffect(plant);  // 28 → 30 (adds 2, 25% of BaseValue)
+        /// </code>
+        /// </example>
         public void ApplyLocationEffect(PlantController plant)
         {
             if (plant?.PlantCard?.Value == null) return;
+            if (plant.PlantCard is not IPlantCard plantCard) return;
+
             _lastEffectedPlant = plant;
-            
             if (plant.buffFX) plant.buffFX.Play();
 
             var currentValue = plant.PlantCard.Value.Value;
-            var doubledValue = currentValue * 2;
+            var timesUsed = plant.uLocationCards.Count(lCard => lCard == Name);
 
-            const int maxPlantValue = 999;
-            plant.PlantCard.Value = Mathf.Min(Mathf.Max(0, doubledValue), maxPlantValue);
+            int newValue;
+            if (timesUsed == 0)
+            {
+                // First use: establish BaseValue and double current value
+                plantCard.BaseValue = currentValue;
+                newValue = currentValue * 2;
+            }
+            else
+            {
+                // Subsequent uses: add diminishing boost (1/(n+1) of BaseValue)
+                var multiplier = 1.0f / (timesUsed + 1);
+                var boost = Mathf.RoundToInt(plantCard.BaseValue * multiplier);
+                newValue = currentValue + boost;
+            }
+
+            plant.uLocationCards.Add(Name);
+
+            // Cap at BaseValue squared to prevent unbounded growth
+            var maxPlantValue = plantCard.BaseValue * plantCard.BaseValue;
+            plant.PlantCard.Value = Mathf.Min(newValue, maxPlantValue);
             plant.UpdatePriceFlag(plant.PlantCard.Value.Value);
         }
 
@@ -183,24 +246,29 @@ namespace _project.Scripts.Classes
             plant.UpdatePriceFlag(plant.PlantCard.Value.Value);
         }
     }
-    
+
     public class IsolateBasic : ILocationCard
     {
         public string Name => "IsolateBasic";
-        public string Description => "Isolates Applied Plant. Preventing Spread of Afflictions To and From the Applied Plant";
+
+        public string Description =>
+            "Isolates Applied Plant. Preventing Spread of Afflictions To and From the Applied Plant";
+
         private int _value = -5;
+
         public int? Value
         {
             get => _value;
             set => _value = value ?? 0;
         }
+
         public int EffectDuration => IsPermanent ? 999 : 3;
         public bool IsPermanent => false;
         public GameObject Prefab => CardGameMaster.Instance.actionCardPrefab;
         public Material Material => Resources.Load<Material>("Materials/Cards/Isolate");
         public List<ISticker> Stickers { get; } = new();
         public LocationEffectType EffectType => null;
-        
+
         public ICard Clone()
         {
             var clone = new IsolateBasic { Value = Value };
@@ -241,9 +309,11 @@ namespace _project.Scripts.Classes
 
     public class ColeusCard : IPlantCard
     {
+        private const int InitialValue = 5;
         public PlantType Type => PlantType.Coleus;
         public string Name => "Coleus";
-        private int _value = 5;
+        private int _value = InitialValue;
+        public int BaseValue { get; set; } = InitialValue;
         public InfectLevel Infect { get; } = new();
 
         public int EggLevel
@@ -264,7 +334,7 @@ namespace _project.Scripts.Classes
 
         public ICard Clone()
         {
-            var clone = new ColeusCard { EggLevel = EggLevel, Value = Value };
+            var clone = new ColeusCard { EggLevel = EggLevel, Value = Value, BaseValue = BaseValue };
             foreach (var kv in Infect.All)
             {
                 clone.Infect.SetInfect(kv.Key, kv.Value.infect);
@@ -278,9 +348,11 @@ namespace _project.Scripts.Classes
 
     public class ChrysanthemumCard : IPlantCard
     {
+        private const int InitialValue = 8;
         public PlantType Type => PlantType.Chrysanthemum;
         public string Name => "Chrysanthemum";
-        private int _value = 8;
+        private int _value = InitialValue;
+        public int BaseValue { get; set; } = InitialValue;
 
         public InfectLevel Infect { get; } = new();
 
@@ -303,7 +375,7 @@ namespace _project.Scripts.Classes
 
         public ICard Clone()
         {
-            var clone = new ChrysanthemumCard { EggLevel = EggLevel, Value = Value };
+            var clone = new ChrysanthemumCard { EggLevel = EggLevel, Value = Value, BaseValue = BaseValue };
             foreach (var kv in Infect.All)
             {
                 clone.Infect.SetInfect(kv.Key, kv.Value.infect);
@@ -317,9 +389,11 @@ namespace _project.Scripts.Classes
 
     public class PepperCard : IPlantCard
     {
+        private const int InitialValue = 4;
         public PlantType Type => PlantType.Pepper;
         public string Name => "Pepper";
-        private int _value = 4;
+        private int _value = InitialValue;
+        public int BaseValue { get; set; } = InitialValue;
 
         public InfectLevel Infect { get; } = new();
 
@@ -341,7 +415,7 @@ namespace _project.Scripts.Classes
 
         public ICard Clone()
         {
-            var clone = new PepperCard { EggLevel = EggLevel, Value = Value };
+            var clone = new PepperCard { EggLevel = EggLevel, Value = Value, BaseValue = BaseValue };
             foreach (var kv in Infect.All)
             {
                 clone.Infect.SetInfect(kv.Key, kv.Value.infect);
@@ -355,9 +429,11 @@ namespace _project.Scripts.Classes
 
     public class CucumberCard : IPlantCard
     {
+        private const int InitialValue = 3;
         public PlantType Type => PlantType.Cucumber;
         public string Name => "Cucumber";
-        private int _value = 3;
+        private int _value = InitialValue;
+        public int BaseValue { get; set; } = InitialValue;
 
         public InfectLevel Infect { get; } = new();
 
@@ -373,13 +449,12 @@ namespace _project.Scripts.Classes
             set => _value = value ?? 0;
         }
         public PlantCardCategory Category => PlantCardCategory.Fruiting;
-
         public GameObject Prefab => CardGameMaster.Instance.actionCardPrefab;
         public List<ISticker> Stickers { get; } = new();
 
         public ICard Clone()
         {
-            var clone = new CucumberCard { EggLevel = EggLevel, Value = Value };
+            var clone = new CucumberCard { EggLevel = EggLevel, Value = Value, BaseValue = BaseValue };
             foreach (var kv in Infect.All)
             {
                 clone.Infect.SetInfect(kv.Key, kv.Value.infect);
@@ -869,7 +944,7 @@ namespace _project.Scripts.Classes
             return clone;
         }
     }
-    
+
     public class HydrationBasic : ICard
     {
         [CanBeNull] private string _description;
@@ -968,6 +1043,6 @@ namespace _project.Scripts.Classes
             return clone;
         }
     }
-    
+
     #endregion
 }

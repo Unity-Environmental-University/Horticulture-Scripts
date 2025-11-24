@@ -74,6 +74,7 @@ namespace _project.Scripts.GameState
         public string cardTypeName;
         public List<StickerData> stickers;
         public int? value;
+        public int? baseValue;
     }
 
     [Serializable]
