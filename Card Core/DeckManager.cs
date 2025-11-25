@@ -633,17 +633,16 @@ namespace _project.Scripts.Card_Core
             {
                 if (!holder) continue;
 
-                // Location cards persist after plant death (tied to location, not plant)
-                if (holder.HoldingCard && holder.placedCard is ILocationCard)
+                switch (holder.HoldingCard)
                 {
-                    // Keep location card and holder visible
-                    continue;
-                }
-
-                // Clear treatment cards - they're destroyed when plant dies (not returned to deck)
-                if (holder.HoldingCard)
-                {
-                    holder.ClearHolder();
+                    // Location cards persist after plant death (tied to location, not plant)
+                    case true when holder.placedCard is ILocationCard:
+                        // Keep the location card and holder visible
+                        continue;
+                    // Clear treatment cards - they're destroyed when the plant dies (not returned to deck)
+                    case true:
+                        holder.ClearHolder();
+                        break;
                 }
 
                 // Hide the cardholder (already disabled by PlantController on death detection)
@@ -718,7 +717,7 @@ namespace _project.Scripts.Card_Core
         /// This method should be called once per level during level progression.
         /// The selected category and boost amount are stored statically and applied
         /// automatically by PrepareNextRound via ApplyStoredPriceBoost.
-        /// Base boost range (2-5) is multiplied by difficulty modifier for higher levels.
+        /// Difficulty modifier multiplies base boost range (2-5) for higher levels.
         /// </remarks>
         public static void GeneratePlantPrices(int? level = null)
         {
@@ -962,7 +961,7 @@ namespace _project.Scripts.Card_Core
         #region Afflictions Management
 
         /// Draws a random number of affliction cards from the affliction deck, with the number
-        /// of cards to be drawn determined using a weighted random value based on the current plant hand size.
+        /// of cards to be drawn determined to use a weighted random value based on the current plant hand size.
         /// The method first shuffles the affliction deck, clears any existing cards in the affliction hand,
         /// and then draws a specified number of cards while updating the affliction hand.
         /// Log information about the drawn cards if debugging is enabled
@@ -1149,7 +1148,7 @@ namespace _project.Scripts.Card_Core
             // Hybrid approach: scaling up to 6 cards, overlap for 7+
             if (totalCards <= maxScalingCards)
             {
-                // Use a scaling approach for smaller hands (up to 6 cards)
+                // Use a scaling approach for the smaller hands (up to 6 cards)
                 if (totalCards <= cardsDrawnPerTurn) return (effectiveSpacing, cardScale, false);
                 // Reduce spacing dynamically based on card count
                 var overflowFactor = (float)cardsDrawnPerTurn / totalCards;
@@ -1651,7 +1650,7 @@ namespace _project.Scripts.Card_Core
 
             // Only block redraw if cards were placed THIS turn
             // NOTE: This check occurs BEFORE TurnController.EndTurn() increments currentTurn,
-            // ensuring cards placed in the current turn block redraw until turn ends.
+            // ensuring cards placed in the current turn block redraw until the turn ends.
             if (cgm.cardHolders.Any(holder => holder && holder.HoldingCard && holder.PlacementTurn == currentTurnNum))
             {
                 Debug.LogError("Cards placed this turn are in CardHolder! Cannot redraw.");
