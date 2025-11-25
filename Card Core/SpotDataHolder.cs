@@ -14,6 +14,7 @@ namespace _project.Scripts.Card_Core
         private PlantController _associatedPlant;
         private ILocationCard cLocationCard;
         private bool _effectActive;
+        private bool _pendingExpiry;
         private bool _plantCacheDirty = true;
         private int _remainingDuration;
         
@@ -76,6 +77,7 @@ namespace _project.Scripts.Card_Core
                 // Activate the effect - it will apply on next ProcessTurn()
                 _remainingDuration = locationCard.EffectDuration;
                 _effectActive = true;
+                _pendingExpiry = false;
             }
             catch (Exception e)
             {
@@ -96,6 +98,7 @@ namespace _project.Scripts.Card_Core
 
                 _effectActive = false;
                 cLocationCard = null;
+                _pendingExpiry = false;
             }
             catch (Exception e)
             {
@@ -137,7 +140,23 @@ namespace _project.Scripts.Card_Core
             _remainingDuration--;
             if (_remainingDuration > 0) return;
 
+            _pendingExpiry = true;
+        }
+
+        public void FinalizeLocationCardTurn()
+        {
+            if (!_pendingExpiry)
+                return;
+
             var expired = cLocationCard;
+            _pendingExpiry = false;
+
+            if (expired == null)
+            {
+                _effectActive = false;
+                return;
+            }
+
             _effectActive = false;
             cLocationCard = null;
 

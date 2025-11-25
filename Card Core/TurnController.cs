@@ -341,6 +341,8 @@ namespace _project.Scripts.Card_Core
                 .SelectMany(location => location.GetComponentsInChildren<PlantController>(false))
                 .ToArray();
 
+            var spotDataHolders = FindObjectsByType<SpotDataHolder>(FindObjectsSortMode.None);
+
             var cardHolders = CardGameMaster.Instance?.cardHolders;
             if (cardHolders != null)
             {
@@ -358,7 +360,6 @@ namespace _project.Scripts.Card_Core
                 StartCoroutine(PauseRoutine());
 
                 // Process location card effects for each spot
-                var spotDataHolders = FindObjectsByType<SpotDataHolder>(FindObjectsSortMode.None);
                 foreach (var spotDataHolder in spotDataHolders)
                 {
                     spotDataHolder.ProcessTurn();
@@ -389,7 +390,7 @@ namespace _project.Scripts.Card_Core
 
             // During tutorial steps, money goal cannot end the level
             // Money goal can only end level if all plants are also healthy
-            // In Campaign mode, level only ends at end of 5 rounds (not mid-round)
+            // In Campaign mode, level only ends at the end of 5 rounds (not mid-round)
             if (!IsActiveTutorialStep && currentGameMode != GameMode.Campaign &&
                 ScoreManager.GetMoneys() >= moneyGoal && allPlantsHealthy)
             {
@@ -397,6 +398,7 @@ namespace _project.Scripts.Card_Core
                 currentTurn++;
                 totalTurns++;
                 shopQueued = true; // We'll need to maybe find a use for this
+                FinalizeLocationCards();
                 EndLevel();
                 return;
             }
@@ -405,6 +407,7 @@ namespace _project.Scripts.Card_Core
             if (allPlantsHealthy)
             {
                 if (debugging) Debug.Log("Ending round early - all plants are dead or healthy after processing");
+                FinalizeLocationCards();
                 StartCoroutine(EndRound(advanceTutorial: true));
                 return;
             }
@@ -415,6 +418,7 @@ namespace _project.Scripts.Card_Core
             currentTurn++;
             totalTurns++;
             SpreadAfflictions(plantControllers);
+            FinalizeLocationCards();
 
             // Record turn end analytics before counter-advance
             try
@@ -442,6 +446,12 @@ namespace _project.Scripts.Card_Core
             canClickEnd = true;
 
             _scoreManager.CalculateTreatmentCost();
+            return;
+
+            void FinalizeLocationCards()
+            {
+                foreach (var spotDataHolder in spotDataHolders) spotDataHolder?.FinalizeLocationCardTurn();
+            }
         }
 
         /// <summary>
@@ -528,7 +538,7 @@ namespace _project.Scripts.Card_Core
         /// and checking if the game should continue or end.
         /// </summary>
         /// <param name="score">The player's current score after round calculations</param>
-        /// <param name="advanceTutorial">Whether to advance tutorial turn counter</param>
+        /// <param name="advanceTutorial">Whether to advance the tutorial turn counter</param>
         private void PrepareNextRound(int score, bool advanceTutorial = false)
         {
             _deckManager.ClearAllPlants();
@@ -650,7 +660,7 @@ namespace _project.Scripts.Card_Core
                     var currentMoney = ScoreManager.GetMoneys();
                     if (currentMoney >= moneyGoal)
                     {
-                        // Success: pay rent and advance to next level
+                        // Success: pay rent and advance to the next level
                         if (debugging)
                             Debug.Log($"Rent paid: ${moneyGoal}. Remaining money: ${currentMoney - moneyGoal}");
                         currentRoundInLevel = 0; // Reset BEFORE EndLevel to prevent race condition
@@ -668,7 +678,7 @@ namespace _project.Scripts.Card_Core
                     yield break;
                 }
                 
-                // Continue to next round in Campaign mode
+                // Continue to the next round in Campaign mode
                 PrepareNextRound(score);
             }
             else
@@ -817,7 +827,7 @@ namespace _project.Scripts.Card_Core
         private void GameLost() { lostGameObjects.SetActive(true); }
 
         /// <summary>
-        /// Cleanup coroutines and queues on component destruction to prevent memory leaks
+        /// Clean up coroutines and queues on component destruction to prevent memory leaks
         /// This may not be necessary, except if the player returns to the menu.
         /// </summary>
         private void OnDestroy()

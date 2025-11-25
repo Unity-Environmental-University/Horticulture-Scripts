@@ -140,6 +140,7 @@ namespace _project.Scripts.PlayModeTest
             for (var turn = 0; turn < isolation.EffectDuration; turn++)
             {
                 spot.ProcessTurn();
+                spot.FinalizeLocationCardTurn();
                 yield return null;
             }
 
@@ -267,6 +268,7 @@ namespace _project.Scripts.PlayModeTest
             for (var turn = 0; turn < isolation.EffectDuration; turn++)
             {
                 middleSpot.ProcessTurn();
+                middleSpot.FinalizeLocationCardTurn();
                 yield return null;
             }
 

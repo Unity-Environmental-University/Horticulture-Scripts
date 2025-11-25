@@ -62,7 +62,11 @@ namespace _project.Scripts.PlayModeTest
             _cardHolder.placedCard = locationCard;
 
             // Process turns equal to duration
-            for (var i = 0; i < locationCard.EffectDuration; i++) _spotDataHolder.ProcessTurn();
+            for (var i = 0; i < locationCard.EffectDuration; i++)
+            {
+                _spotDataHolder.ProcessTurn();
+                _spotDataHolder.FinalizeLocationCardTurn();
+            }
 
             // Assert - Should still be there (duration is 3, so after 3 turns it should be 0 and expire? Or expire on next?)
             // Logic says: _remainingDuration--; if (_remainingDuration > 0) return;
