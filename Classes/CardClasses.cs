@@ -53,7 +53,7 @@ namespace _project.Scripts.Classes
         /// <remarks>
         /// <para>This property supports location cards like UreaBasic that provide cumulative
         /// diminishing returns. The BaseValue is typically set to the plant's value at the time
-        /// of first application and remains constant for subsequent boost calculations.</para>
+        /// of the first application and remains constant for subsequent boost calculations.</para>
         /// <para><b>Important:</b> This should only be modified by ILocationCard implementations.
         /// Direct modification by game code will break diminishing returns calculations and
         /// cause incorrect pricing.</para>
@@ -209,7 +209,7 @@ namespace _project.Scripts.Classes
             int newValue;
             if (timesUsed == 0)
             {
-                // First use: establish BaseValue and double current value
+                // First use: establish BaseValue and double the current value
                 plantCard.BaseValue = currentValue;
                 newValue = currentValue * 2;
             }
