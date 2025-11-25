@@ -54,6 +54,14 @@ namespace _project.Scripts.GameState
     }
 
     [Serializable]
+    public class InfectDataEntry
+    {
+        public string source;
+        public int infect;
+        public int eggs;
+    }
+
+    [Serializable]
     public class PlantData
     {
         public CardData plantCard;
@@ -66,6 +74,11 @@ namespace _project.Scripts.GameState
         public List<string> usedTreatments;
 
         public float moldIntensity;
+
+        public List<string> uLocationCards;
+        public List<InfectDataEntry> infectData;
+        public bool canSpreadAfflictions;
+        public bool canReceiveAfflictions;
     }
 
     [Serializable]

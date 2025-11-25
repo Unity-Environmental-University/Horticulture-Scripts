@@ -234,7 +234,7 @@ namespace _project.Scripts.GameState
             yield return null;
         }
 
-        private static CardData SerializeCard(ICard card)
+        public static CardData SerializeCard(ICard card)
         {
             return new CardData
             {
@@ -271,11 +271,35 @@ namespace _project.Scripts.GameState
                     priorAfflictions = plant.pAfflictions,
                     usedTreatments = plant.uTreatments,
                     currentTreatments = plant.cTreatments,
-                    moldIntensity = plant.moldIntensity
+                    moldIntensity = plant.moldIntensity,
+                    uLocationCards = plant.uLocationCards?.ToList() ?? new List<string>(),
+                    infectData = SerializeInfectLevel(plant.PlantCard as IPlantCard),
+                    canSpreadAfflictions = plant.canSpreadAfflictions,
+                    canReceiveAfflictions = plant.canReceiveAfflictions
                 });
             }
 
             return list;
+        }
+
+        /// <summary>
+        ///     Serializes the InfectLevel dictionary to a list format compatible with Unity's JsonUtility.
+        ///     Only includes non-zero entries to optimize save file size.
+        /// </summary>
+        internal static List<InfectDataEntry> SerializeInfectLevel(IPlantCard plantCard)
+        {
+            if (plantCard?.Infect == null)
+                return new List<InfectDataEntry>();
+
+            var allInfections = plantCard.Infect.All;
+            if (allInfections != null)
+                return (from kvp in allInfections
+                        where kvp.Value.infect > 0 || kvp.Value.eggs > 0
+                        select new InfectDataEntry
+                            { source = kvp.Key, infect = kvp.Value.infect, eggs = kvp.Value.eggs })
+                    .ToList();
+            Debug.LogWarning("InfectLevel.All returned null, skipping infection serialization");
+            return new List<InfectDataEntry>();
         }
 
         /// <summary>

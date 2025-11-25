@@ -616,6 +616,14 @@ namespace _project.Scripts.Card_Core
             var location = plantLocations.FirstOrDefault(slot =>
                 slot.GetComponentsInChildren<PlantController>(true).Contains(plant));
 
+            var master = CardGameMaster.Instance;
+            if (master?.isInspecting == true && master.inspectedObj)
+            {
+                var inspectComponent = plant.GetComponentInChildren<InspectFromClick>(true);
+                if (inspectComponent && master.inspectedObj == inspectComponent)
+                    inspectComponent.ToggleInspect();
+            }
+
             Destroy(plant.gameObject);
 
             if (!location) yield break;
@@ -874,6 +882,46 @@ namespace _project.Scripts.Card_Core
                     foreach (var tr in pd.currentTreatments)
                         plant.CurrentTreatments.Add(GetTreatmentFromString(tr));
                 plant.SetMoldIntensity(pd.moldIntensity);
+
+                // Restore location card tracking
+                if (pd.uLocationCards != null)
+                {
+                    plant.uLocationCards.Clear();
+                    plant.uLocationCards.AddRange(pd.uLocationCards);
+                }
+
+                // Restore infection/egg levels (convert list back to dictionary)
+                if (pd.infectData != null && plant.PlantCard is IPlantCard plantCardInterface)
+                {
+                    foreach (var entry in pd.infectData)
+                    {
+                        if (entry == null || string.IsNullOrEmpty(entry.source))
+                        {
+                            Debug.LogWarning("Skipping invalid InfectDataEntry during restoration");
+                            continue;
+                        }
+
+                        if (entry.infect > 0)
+                            plantCardInterface.Infect.SetInfect(entry.source, entry.infect);
+                        if (entry.eggs > 0)
+                            plantCardInterface.Infect.SetEggs(entry.source, entry.eggs);
+                    }
+                }
+
+                // Restore isolation flags (backwards compatibility: detect old save format)
+                var isOldSaveFormat = pd.uLocationCards == null;
+                if (isOldSaveFormat)
+                {
+                    // Old save: default to allowing spread/receive
+                    plant.canSpreadAfflictions = true;
+                    plant.canReceiveAfflictions = true;
+                }
+                else
+                {
+                    // New save: use saved values
+                    plant.canSpreadAfflictions = pd.canSpreadAfflictions;
+                    plant.canReceiveAfflictions = pd.canReceiveAfflictions;
+                }
 
                 yield return new WaitForSeconds(delay);
             }
