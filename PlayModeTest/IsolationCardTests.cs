@@ -243,6 +243,79 @@ namespace _project.Scripts.PlayModeTest
         }
 
         /// <summary>
+        ///     Tests that an isolated plant remains protected during the spread phase of its final turn,
+        ///     even after ProcessTurn() has marked it for expiry.
+        ///     This verifies the two-phase commit behavior prevents vulnerability during expiry.
+        /// </summary>
+        [UnityTest]
+        public IEnumerator IsolationCard_ProtectsDuringFinalTurn_BeforeFinalization()
+        {
+            // Setup TurnController environment
+            var (turnController, plants, roots) = SetupTurnControllerWithPlants(3);
+            yield return null;
+
+            // Give first plant an affliction (source)
+            plants[0].AddAffliction(new PlantAfflictions.ThripsAffliction());
+
+            // Apply IsolateBasic to middle plant (potential target)
+            var middleSpot = plants[1].GetComponentInParent<SpotDataHolder>();
+            var isolation = new IsolateBasic();
+            middleSpot.OnLocationCardPlaced(isolation);
+            yield return null;
+
+            // Verify isolation is applied
+            Assert.IsFalse(plants[1].canReceiveAfflictions,
+                "Middle plant should have receiving disabled after IsolateBasic placement");
+
+            // Process turns up to EffectDuration - 1 (one turn before expiry)
+            for (var turn = 0; turn < isolation.EffectDuration - 1; turn++)
+            {
+                middleSpot.ProcessTurn();
+                middleSpot.FinalizeLocationCardTurn();
+                yield return null;
+            }
+
+            // Verify isolation is still active
+            Assert.IsFalse(plants[1].canReceiveAfflictions,
+                "Middle plant should still be protected before final turn");
+
+            // NOW: Simulate the FINAL turn's critical sequence
+            // Step 1: ProcessTurn() marks for expiry but keeps effect active
+            middleSpot.ProcessTurn();
+            yield return null;
+
+            // Verify protection is STILL active (this is the critical assertion)
+            Assert.IsFalse(plants[1].canReceiveAfflictions,
+                "After ProcessTurn() on final turn, plant should STILL be protected during spread phase");
+
+            // Step 2: Spread phase happens (before finalization)
+            var spreadMethod = GetSpreadAfflictionsMethod();
+            for (var i = 0; i < SpreadAttemptsStandard; i++)
+            {
+                spreadMethod.Invoke(turnController, new object[] { plants });
+                yield return null;
+            }
+
+            // Assert: Isolated middle plant should NOT have received affliction during spread
+            Assert.AreEqual(0, plants[1].CurrentAfflictions.Count,
+                "Isolated plant should remain protected during spread phase of final turn " +
+                $"(after ProcessTurn, before FinalizeLocationCardTurn). Attempted {SpreadAttemptsStandard} spreads.");
+
+            // Step 3: FinalizeLocationCardTurn() removes the effect
+            middleSpot.FinalizeLocationCardTurn();
+            yield return null;
+
+            // Verify protection is NOW disabled
+            Assert.IsTrue(plants[1].canReceiveAfflictions,
+                "After FinalizeLocationCardTurn(), plant should no longer be protected");
+            Assert.IsTrue(plants[1].canSpreadAfflictions,
+                "After FinalizeLocationCardTurn(), plant should be able to spread again");
+
+            // Cleanup
+            yield return CleanupTestEnvironment(roots);
+        }
+
+        /// <summary>
         ///     Tests that spreading resumes after IsolateBasic expires.
         /// </summary>
         [UnityTest]
