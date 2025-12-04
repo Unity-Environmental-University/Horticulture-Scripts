@@ -20,29 +20,6 @@ namespace _project.Scripts.PlayModeTest
         private DeckManager _deckManager;
         private Transform _location;
 
-        // Safe subclass of Click3D that disables Start logic.
-        private class SafeClick3D : Click3D
-        {
-            // ReSharper disable once Unity.RedundantEventFunction
-            private void Start() { /* No-op to prevent self-destruction check from running */ }
-        }
-
-        private class FakeLocationCard : ILocationCard
-        {
-            public string Name => "Fake Location";
-            public string Description => "Test location";
-            public int? Value => 1;
-            public Material Material => null;
-            public List<ISticker> Stickers { get; } = new();
-            public bool IsPermanent => false;
-            public int EffectDuration => 1;
-            public LocationEffectType EffectType => null;
-            public ICard Clone() => this; // Not used in tests
-            public void ApplyLocationEffect(PlantController plant) { }
-            public void RemoveLocationEffect(PlantController plant) { }
-            public void ApplyTurnEffect(PlantController plant) { }
-        }
-
         [UnitySetUp]
         public IEnumerator Setup()
         {
@@ -164,7 +141,8 @@ namespace _project.Scripts.PlayModeTest
             var buttonRenderer = holder.transform.Find("Button").GetComponent<MeshRenderer>();
             var buttonClick = holder.transform.Find("Button").GetComponent<Click3D>();
             Assert.IsNotNull(buttonRenderer, "Button MeshRenderer missing");
-            Assert.IsFalse(buttonRenderer.enabled, "Holder should hide when location card expires and no plant is present");
+            Assert.IsFalse(buttonRenderer.enabled,
+                "Holder should hide when location card expires and no plant is present");
             Assert.IsNotNull(buttonClick, "Button Click3D missing");
             Assert.IsFalse(buttonClick.isEnabled, "Holder Click3D should be disabled when hidden");
         }
@@ -188,9 +166,50 @@ namespace _project.Scripts.PlayModeTest
             var buttonRenderer = holder.transform.Find("Button").GetComponent<MeshRenderer>();
             var buttonClick = holder.transform.Find("Button").GetComponent<Click3D>();
             Assert.IsNotNull(buttonRenderer, "Button MeshRenderer missing");
-            Assert.IsTrue(buttonRenderer.enabled, "Holder should show when location card expires but a plant is present");
+            Assert.IsTrue(buttonRenderer.enabled,
+                "Holder should show when location card expires but a plant is present");
             Assert.IsNotNull(buttonClick, "Button Click3D missing");
             Assert.IsTrue(buttonClick.isEnabled, "Holder Click3D should be enabled when shown");
+        }
+
+        // Safe subclass of Click3D that disables Start logic.
+        private class SafeClick3D : Click3D
+        {
+            // ReSharper disable once Unity.RedundantEventFunction
+            private void Start()
+            {
+                /* No-op to prevent self-destruction check from running */
+            }
+        }
+
+        private class FakeLocationCard : ILocationCard
+        {
+            public int? Value => 1;
+            public string Name => "Fake Location";
+            public string Description => "Test location";
+            public Material Material => null;
+            public List<ISticker> Stickers { get; } = new();
+            public bool IsPermanent => false;
+            public int EffectDuration => 1;
+            public LocationEffectType EffectType => null;
+
+            public ICard Clone()
+            {
+                return this;
+                // Not used in tests
+            }
+
+            public void ApplyLocationEffect(PlantController plant)
+            {
+            }
+
+            public void RemoveLocationEffect(PlantController plant)
+            {
+            }
+
+            public void ApplyTurnEffect(PlantController plant)
+            {
+            }
         }
     }
 }

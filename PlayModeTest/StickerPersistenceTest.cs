@@ -22,9 +22,11 @@ namespace _project.Scripts.PlayModeTest
 
             // Assert
             Assert.AreEqual(1, originalCard.Stickers.Count, "Original card should have 1 sticker");
-            Assert.AreEqual("TestSticker", originalCard.Stickers.First().Name, "Original card should have the test sticker");
+            Assert.AreEqual("TestSticker", originalCard.Stickers.First().Name,
+                "Original card should have the test sticker");
             Assert.AreEqual(1, clonedCard.Stickers.Count, "Cloned card should preserve stickers");
-            Assert.AreEqual("TestSticker", clonedCard.Stickers.First().Name, "Cloned card should have the same sticker name");
+            Assert.AreEqual("TestSticker", clonedCard.Stickers.First().Name,
+                "Cloned card should have the same sticker name");
             Assert.AreEqual(1, originalCard.Stickers.Count, "Original card should still have 1 sticker");
         }
 
@@ -43,7 +45,8 @@ namespace _project.Scripts.PlayModeTest
             // Assert
             Assert.AreEqual(1, originalCard.Stickers.Count, "Original card should have 1 sticker");
             Assert.AreEqual(1, clonedCard.Stickers.Count, "Cloned affliction card should preserve stickers");
-            Assert.AreEqual("TestAfflictionSticker", clonedCard.Stickers.First().Name, "Cloned card should have the same sticker name");
+            Assert.AreEqual("TestAfflictionSticker", clonedCard.Stickers.First().Name,
+                "Cloned card should have the same sticker name");
         }
 
         [Test]
@@ -61,7 +64,8 @@ namespace _project.Scripts.PlayModeTest
             // Assert
             Assert.AreEqual(1, originalCard.Stickers.Count, "Original plant card should have 1 sticker");
             Assert.AreEqual(1, clonedCard.Stickers.Count, "Cloned plant card should preserve stickers");
-            Assert.AreEqual("TestPlantSticker", clonedCard.Stickers.First().Name, "Cloned card should have the same sticker name");
+            Assert.AreEqual("TestPlantSticker", clonedCard.Stickers.First().Name,
+                "Cloned card should have the same sticker name");
         }
     }
 }

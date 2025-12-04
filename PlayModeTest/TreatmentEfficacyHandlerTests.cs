@@ -13,53 +13,6 @@ namespace _project.Scripts.PlayModeTest
 {
     public class TreatmentEfficacyHandlerTests
     {
-        private class TestAffliction : PlantAfflictions.IAffliction
-        {
-            private readonly bool _canTreat;
-            private readonly string _name;
-
-            public TestAffliction(string name, bool canTreat)
-            {
-                _name = name;
-                _canTreat = canTreat;
-            }
-
-            public string Name => _name;
-            public string Description => string.Empty;
-            public Color Color => Color.white;
-            public Shader Shader => null;
-            public List<PlantAfflictions.ITreatment> AcceptableTreatments { get; } = new();
-
-            public bool CanBeTreatedBy(PlantAfflictions.ITreatment treatment)
-            {
-                return _canTreat;
-            }
-
-            public bool TreatWith(PlantAfflictions.ITreatment treatment, PlantController plant) { return _canTreat; }
-
-            public void TickDay(PlantController plant) { }
-
-            public PlantAfflictions.IAffliction Clone()
-            {
-                return new TestAffliction(_name, _canTreat);
-            }
-        }
-
-        private class TestTreatment : PlantAfflictions.ITreatment
-        {
-            public TestTreatment(string name, int? efficacy)
-            {
-                Name = name;
-                Efficacy = efficacy;
-            }
-
-            public string Name { get; }
-            public string Description => string.Empty;
-            public int? InfectCureValue { get; set; }
-            public int? EggCureValue { get; set; }
-            public int? Efficacy { get; set; }
-        }
-
         [Test]
         public void GetRelationalEfficacy_ReturnsTreatmentEfficacyForNewCombination()
         {
@@ -205,6 +158,58 @@ namespace _project.Scripts.PlayModeTest
 
             Assert.Fail("Failed to find a deterministic seed for the requested predicate.");
             return -1;
+        }
+
+        private class TestAffliction : PlantAfflictions.IAffliction
+        {
+            private readonly bool _canTreat;
+
+            public TestAffliction(string name, bool canTreat)
+            {
+                Name = name;
+                _canTreat = canTreat;
+            }
+
+            public string Name { get; }
+
+            public string Description => string.Empty;
+            public Color Color => Color.white;
+            public Shader Shader => null;
+            public List<PlantAfflictions.ITreatment> AcceptableTreatments { get; } = new();
+
+            public bool CanBeTreatedBy(PlantAfflictions.ITreatment treatment)
+            {
+                return _canTreat;
+            }
+
+            public bool TreatWith(PlantAfflictions.ITreatment treatment, PlantController plant)
+            {
+                return _canTreat;
+            }
+
+            public void TickDay(PlantController plant)
+            {
+            }
+
+            public PlantAfflictions.IAffliction Clone()
+            {
+                return new TestAffliction(Name, _canTreat);
+            }
+        }
+
+        private class TestTreatment : PlantAfflictions.ITreatment
+        {
+            public TestTreatment(string name, int? efficacy)
+            {
+                Name = name;
+                Efficacy = efficacy;
+            }
+
+            public string Name { get; }
+            public string Description => string.Empty;
+            public int? InfectCureValue { get; set; }
+            public int? EggCureValue { get; set; }
+            public int? Efficacy { get; set; }
         }
     }
 }

@@ -17,32 +17,14 @@ namespace _project.Scripts.PlayModeTest
 {
     public class PlantDeathCardPlacementTests
     {
+        private GameObject _actionParentGo;
         private GameObject _cardGameMasterGo;
-        private GameObject _plantLocationGo;
         private DeckManager _deckManager;
+        private GameObject _lostObjectsGo;
+        private GameObject _plantLocationGo;
         private ScoreManager _scoreManager;
         private TurnController _turnController;
-        private GameObject _lostObjectsGo;
         private GameObject _winScreenGo;
-        private GameObject _actionParentGo;
-
-        // Fake card for testing
-        private class FakeCard : ICard
-        {
-            public string Name => "Test Card";
-            public PlantAfflictions.ITreatment Treatment => null;
-            public string Description => "Test card for death placement tests";
-            public int? Value => 1;
-            public Material Material => null;
-            public List<ISticker> Stickers { get; } = new List<ISticker>();
-            public ICard Clone() => new FakeCard();
-        }
-
-        // Safe Click3D subclass that disables Start logic
-        private class SafeClick3D : Click3D
-        {
-            private void Start() { /* No-op to prevent self-destruction check */ }
-        }
 
         [UnitySetUp]
         public IEnumerator Setup()
@@ -190,7 +172,7 @@ namespace _project.Scripts.PlayModeTest
             Assert.IsTrue(cardHolder.HoldingCard, "Card should be placed initially");
 
             // Act - call ClearPlant directly (this is what happens after death animation)
-            yield return _deckManager.ClearPlant(plant, skipDeathSequence: true);
+            yield return _deckManager.ClearPlant(plant, true);
 
             // Assert - card should be cleared by DeckManager.ClearPlant()
             Assert.IsFalse(cardHolder.HoldingCard, "Card should be cleared when DeckManager.ClearPlant() is called");
@@ -222,7 +204,7 @@ namespace _project.Scripts.PlayModeTest
             yield return null;
 
             // Act - call ClearPlant directly (skipping death animation)
-            yield return _deckManager.ClearPlant(plant, skipDeathSequence: true);
+            yield return _deckManager.ClearPlant(plant, true);
 
             // Assert - cardholder should be cleared and disabled
             Assert.IsFalse(cardHolder.HoldingCard, "Card holder should not hold a card after ClearPlant");
@@ -230,6 +212,31 @@ namespace _project.Scripts.PlayModeTest
             var holderClick3D = cardHolder.gameObject.GetComponentInChildren<Click3D>(true);
             Assert.IsNotNull(holderClick3D, "Click3D component should exist on card holder");
             Assert.IsFalse(holderClick3D.isEnabled, "Card holder should be disabled after ClearPlant");
+        }
+
+        // Fake card for testing
+        private class FakeCard : ICard
+        {
+            public int? Value => 1;
+            public string Name => "Test Card";
+            public PlantAfflictions.ITreatment Treatment => null;
+            public string Description => "Test card for death placement tests";
+            public Material Material => null;
+            public List<ISticker> Stickers { get; } = new();
+
+            public ICard Clone()
+            {
+                return new FakeCard();
+            }
+        }
+
+        // Safe Click3D subclass that disables Start logic
+        private class SafeClick3D : Click3D
+        {
+            private void Start()
+            {
+                /* No-op to prevent self-destruction check */
+            }
         }
     }
 }

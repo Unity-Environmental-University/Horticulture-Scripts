@@ -15,12 +15,13 @@ namespace _project.Scripts.PlayModeTest
         // Discover all treatment cards dynamically so tests auto‑update when new treatments are added.
         private static readonly Type[] ModifiableValueCards =
             new[] { typeof(ColeusCard), typeof(ChrysanthemumCard), typeof(PepperCard), typeof(CucumberCard) }
-            .Concat(DiscoverTreatmentCardTypes())
-            .Distinct()
-            .ToArray();
-        
+                .Concat(DiscoverTreatmentCardTypes())
+                .Distinct()
+                .ToArray();
+
         // Cards with read-only values (fixed values)
-        private static readonly Type[] ReadOnlyValueCards = {
+        private static readonly Type[] ReadOnlyValueCards =
+        {
             typeof(AphidsCard),
             typeof(MealyBugsCard),
             typeof(ThripsCard),
@@ -28,14 +29,15 @@ namespace _project.Scripts.PlayModeTest
             typeof(SpiderMitesCard),
             typeof(FungusGnatsCard)
         };
-        
+
         // Cards with sticker support (NOTE: Currently NO cards have proper sticker backing fields)
         // All current cards have "Stickers => new()" which creates a new list each time
         // This means stickers are not actually persisted across calls
-        private static readonly Type[] StickerCompatibleCards = {
+        private static readonly Type[] StickerCompatibleCards =
+        {
             // Empty array because current card implementations don't support sticker persistence
         };
-        
+
         // All card types
         private static readonly Type[] AllCardTypes = ModifiableValueCards
             .Concat(ReadOnlyValueCards)
@@ -46,10 +48,7 @@ namespace _project.Scripts.PlayModeTest
         public void TestAllCardTypesSerialization()
         {
             // Test basic serialization for all cards
-            foreach (var cardType in AllCardTypes)
-            {
-                TestCardSerialization(cardType);
-            }
+            foreach (var cardType in AllCardTypes) TestCardSerialization(cardType);
         }
 
         [Test]
@@ -63,7 +62,7 @@ namespace _project.Scripts.PlayModeTest
                               "This is a design limitation that needs to be addressed.");
                 return;
             }
-            
+
             // Only test sticker-compatible cards (currently none)
             foreach (var cardType in StickerCompatibleCards)
             {
@@ -71,7 +70,7 @@ namespace _project.Scripts.PlayModeTest
                 TestCardSerializationWithMultipleStickers(cardType);
             }
         }
-        
+
         [Test]
         public void TestStickerImplementationLimitation()
         {
@@ -79,13 +78,13 @@ namespace _project.Scripts.PlayModeTest
             // ColeusCard has proper backing field, but some other cards use { get; } = new()
             ICard testCard = new ColeusCard();
             var initialStickerCount = testCard.Stickers.Count;
-            
+
             var sticker = ScriptableObject.CreateInstance<ValueReducerSticker>();
             testCard.ApplySticker(sticker);
-            
+
             var afterApplyStickerCount = testCard.Stickers.Count;
             var secondCheckCount = testCard.Stickers.Count;
-            
+
             // ColeusCard has proper sticker support with backing field
             Assert.AreEqual(0, initialStickerCount, "Initial sticker count should be 0");
             Assert.AreEqual(1, afterApplyStickerCount, "ColeusCard properly supports stickers with backing field");
@@ -99,21 +98,15 @@ namespace _project.Scripts.PlayModeTest
             foreach (var cardType in ModifiableValueCards)
             {
                 var card = TryCreateCard(cardType);
-                if (card?.Value != null)
-                {
-                    TestCardValuePreservation(card);
-                }
+                if (card?.Value != null) TestCardValuePreservation(card);
             }
         }
-        
+
         [Test]
         public void TestReadOnlyCardsSerialization()
         {
             // Test that read-only cards can at least be created and have their basic properties preserved
-            foreach (var cardType in ReadOnlyValueCards)
-            {
-                TestReadOnlyCardSerialization(cardType);
-            }
+            foreach (var cardType in ReadOnlyValueCards) TestReadOnlyCardSerialization(cardType);
         }
 
         private static void TestCardSerialization(Type cardType)
@@ -138,23 +131,24 @@ namespace _project.Scripts.PlayModeTest
             Assert.IsNotNull(deserializedCard, $"Failed to deserialize card of type {cardType.Name}");
 
             // Verify basic properties
-            Assert.AreEqual(originalCard.Name, deserializedCard.Name, 
+            Assert.AreEqual(originalCard.Name, deserializedCard.Name,
                 $"Name mismatch for {cardType.Name}");
-            Assert.AreEqual(originalCard.Value, deserializedCard.Value, 
+            Assert.AreEqual(originalCard.Value, deserializedCard.Value,
                 $"Value mismatch for {cardType.Name}");
         }
-        
+
         private static void TestReadOnlyCardBasicSerialization(Type cardType, CardData cardData)
         {
             // For read-only cards, just verify CardData structure is correct
             Assert.AreEqual(cardType.Name, cardData.cardTypeName, $"Card type name mismatch for {cardType.Name}");
-            
+
             // Create a fresh instance to verify basic properties are preserved in CardData
             var freshCard = TryCreateCard(cardType);
             Assert.IsNotNull(freshCard, $"Failed to create fresh instance of read-only card {cardType.Name}");
-            Assert.AreEqual(freshCard.Value, cardData.value, $"CardData value doesn't match card value for {cardType.Name}");
+            Assert.AreEqual(freshCard.Value, cardData.value,
+                $"CardData value doesn't match card value for {cardType.Name}");
         }
-        
+
         private static void TestReadOnlyCardSerialization(Type cardType)
         {
             // Create a card of the specified type
@@ -165,7 +159,7 @@ namespace _project.Scripts.PlayModeTest
             var cardData = ConvertCardToCardData(originalCard);
             Assert.IsNotNull(cardData, $"Failed to convert read-only {cardType.Name} to CardData");
             Assert.AreEqual(cardType.Name, cardData.cardTypeName, $"Card type name mismatch for {cardType.Name}");
-            
+
             // For read-only cards, we expect they can be created fresh even if full deserialization fails
             var freshCard = TryCreateCard(cardType);
             Assert.IsNotNull(freshCard, $"Failed to create fresh instance of read-only card {cardType.Name}");
@@ -185,12 +179,12 @@ namespace _project.Scripts.PlayModeTest
 
             var cardData = ConvertCardToCardData(originalCard);
             Assert.IsNotNull(cardData, $"Failed to convert {cardType.Name} with sticker to CardData");
-            Assert.AreEqual(1, cardData.stickers.Count, 
+            Assert.AreEqual(1, cardData.stickers.Count,
                 $"Sticker not preserved for {cardType.Name}");
 
             var deserializedCard = DeserializeCardData(cardData);
             Assert.IsNotNull(deserializedCard, $"Failed to deserialize card of type {cardType.Name} with sticker");
-            Assert.AreEqual(1, deserializedCard.Stickers.Count, 
+            Assert.AreEqual(1, deserializedCard.Stickers.Count,
                 $"Sticker count mismatch for {cardType.Name}");
         }
 
@@ -207,12 +201,13 @@ namespace _project.Scripts.PlayModeTest
 
             var cardData = ConvertCardToCardData(originalCard);
             Assert.IsNotNull(cardData, $"Failed to convert {cardType.Name} with multiple stickers to CardData");
-            Assert.AreEqual(2, cardData.stickers.Count, 
+            Assert.AreEqual(2, cardData.stickers.Count,
                 $"Multiple stickers not preserved for {cardType.Name}");
 
             var deserializedCard = DeserializeCardData(cardData);
-            Assert.IsNotNull(deserializedCard, $"Failed to deserialize card of type {cardType.Name} with multiple stickers");
-            Assert.AreEqual(2, deserializedCard.Stickers.Count, 
+            Assert.IsNotNull(deserializedCard,
+                $"Failed to deserialize card of type {cardType.Name} with multiple stickers");
+            Assert.AreEqual(2, deserializedCard.Stickers.Count,
                 $"Multiple sticker count mismatch for {cardType.Name}");
         }
 
@@ -227,7 +222,7 @@ namespace _project.Scripts.PlayModeTest
             var deserializedCard = DeserializeCardData(cardData);
             Assert.IsNotNull(deserializedCard, $"Failed to deserialize {card.GetType().Name} with modified value");
 
-            Assert.AreEqual(card.Value, deserializedCard.Value, 
+            Assert.AreEqual(card.Value, deserializedCard.Value,
                 $"Value modification not preserved for {card.GetType().Name}");
         }
 
@@ -237,8 +232,14 @@ namespace _project.Scripts.PlayModeTest
             var types = AppDomain.CurrentDomain.GetAssemblies()
                 .SelectMany(a =>
                 {
-                    try { return a.GetTypes(); }
-                    catch { return Array.Empty<Type>(); }
+                    try
+                    {
+                        return a.GetTypes();
+                    }
+                    catch
+                    {
+                        return Array.Empty<Type>();
+                    }
                 })
                 .Where(t => typeof(ICard).IsAssignableFrom(t)
                             && t.IsClass
@@ -249,19 +250,14 @@ namespace _project.Scripts.PlayModeTest
             var treatmentCardTypes = new List<Type>();
 
             foreach (var t in types)
-            {
                 try
                 {
-                    if (Activator.CreateInstance(t) is ICard { Treatment: not null })
-                    {
-                        treatmentCardTypes.Add(t);
-                    }
+                    if (Activator.CreateInstance(t) is ICard { Treatment: not null }) treatmentCardTypes.Add(t);
                 }
                 catch
                 {
                     // Ignore types that fail to instantiate in test environment
                 }
-            }
 
             return treatmentCardTypes.ToArray();
         }

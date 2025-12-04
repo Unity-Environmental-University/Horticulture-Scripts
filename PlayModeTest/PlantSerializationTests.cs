@@ -218,7 +218,6 @@ namespace _project.Scripts.PlayModeTest
 
             // Restore infection
             if (data1.infectData != null && plant2.PlantCard is IPlantCard plantCardInterface)
-            {
                 foreach (var entry in data1.infectData)
                 {
                     if (entry.infect > 0)
@@ -226,7 +225,6 @@ namespace _project.Scripts.PlayModeTest
                     if (entry.eggs > 0)
                         plantCardInterface.Infect.SetEggs(entry.source, entry.eggs);
                 }
-            }
 
             // Restore isolation flags
             var legacySave = data1.uLocationCards == null;

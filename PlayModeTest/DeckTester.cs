@@ -17,33 +17,13 @@ namespace _project.Scripts.PlayModeTest
     {
         private GameObject _actionParentGo;
         private GameObject _cardGameMasterGo;
-
-        private DeckManager deckManager;
+        private GameObject _lostObjectsGo;
         private ScoreManager _scoreManager;
         private TurnController _turnController;
-        private GameObject fakePrefab;
-        private GameObject _lostObjectsGo;
         private GameObject _winScreenGo;
-        
-        // Fake implementation of ICard for testing.
-        private class FakeCard : ICard
-        {
-            public FakeCard(string name)
-            {
-                Name = name;
-            }
 
-            public string Name { get; }
-            public GameObject Prefab => CardGameMaster.Instance?.actionCardPrefab;
-            public List<ISticker> Stickers { get; } = new();
-
-            public ICard Clone()
-            {
-                return new FakeCard(Name);
-            }
-        }
-
-        private class CardViewFake : MonoBehaviour { }
+        private DeckManager deckManager;
+        private GameObject fakePrefab;
 
         [SetUp]
         public void Setup()
@@ -112,12 +92,9 @@ namespace _project.Scripts.PlayModeTest
                 typeof(DeckManager).GetField("_actionDeck", BindingFlags.NonPublic | BindingFlags.Instance);
             var actionDeck = actionDeckField.GetValue(deckManager) as List<ICard>;
             actionDeck.Clear();
-            
+
             const int numOfFakeCards = 5;
-            for (var i = 0; i < numOfFakeCards; i++)
-            {
-                actionDeck.Add(new FakeCard("Fake " + i));
-            }
+            for (var i = 0; i < numOfFakeCards; i++) actionDeck.Add(new FakeCard("Fake " + i));
 
             // Ensure _actionHand and _actionDiscardPile are empty.
             var actionHandField =
@@ -141,6 +118,28 @@ namespace _project.Scripts.PlayModeTest
         }
 
         #endregion
+
+        // Fake implementation of ICard for testing.
+        private class FakeCard : ICard
+        {
+            public FakeCard(string name)
+            {
+                Name = name;
+            }
+
+            public string Name { get; }
+            public GameObject Prefab => CardGameMaster.Instance?.actionCardPrefab;
+            public List<ISticker> Stickers { get; } = new();
+
+            public ICard Clone()
+            {
+                return new FakeCard(Name);
+            }
+        }
+
+        private class CardViewFake : MonoBehaviour
+        {
+        }
 
         #region Edge Case Tests
 
