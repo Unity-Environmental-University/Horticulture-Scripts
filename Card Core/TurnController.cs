@@ -534,10 +534,11 @@ namespace _project.Scripts.Card_Core
         private static IEnumerator PauseRoutine(float delay = 1f) { yield return new WaitForSeconds(delay); }
 
         /// <summary>
-        /// Prepares the game for the next round by clearing plants, applying queued treatments,
-        /// and checking if the game should continue or end.
+        /// Prepares the game for the next round by clearing plants and applying queued treatments.
+        /// This method does NOT check for loss conditions based on money - those checks happen
+        /// at the appropriate time in EndRound (rent check for Campaign mode at lines 671-676).
         /// </summary>
-        /// <param name="score">The player's current score after round calculations</param>
+        /// <param name="score">The player's current score after round calculations (for logging only)</param>
         /// <param name="advanceTutorial">Whether to advance the tutorial turn counter</param>
         private void PrepareNextRound(int score, bool advanceTutorial = false)
         {
@@ -557,18 +558,13 @@ namespace _project.Scripts.Card_Core
                 controller.FlagShadersUpdate();
             }
 
-            if (score > 0)
-            {
-                if (advanceTutorial && IsActiveTutorialStep)
-                    currentTutorialTurn++;
+            // Advance tutorial if requested and we're in an active tutorial step
+            if (advanceTutorial && IsActiveTutorialStep)
+                currentTutorialTurn++;
 
-                newRoundReady = true;
-                canClickEnd = true;
-            }
-            else
-            {
-                GameLost();
-            }
+            // Always prepare for the next round - loss conditions are checked elsewhere
+            newRoundReady = true;
+            canClickEnd = true;
         }
 
         /// <summary>
