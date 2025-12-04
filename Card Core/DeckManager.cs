@@ -890,7 +890,7 @@ namespace _project.Scripts.Card_Core
                     plant.uLocationCards.AddRange(pd.uLocationCards);
                 }
 
-                // Restore infection/egg levels (convert list back to dictionary)
+                // Restore infection/egg levels (convert the list back to dictionary)
                 if (pd.infectData != null && plant.PlantCard is IPlantCard plantCardInterface)
                 {
                     foreach (var entry in pd.infectData)
@@ -908,7 +908,7 @@ namespace _project.Scripts.Card_Core
                     }
                 }
 
-                // Restore isolation flags (backwards compatibility: detect old save format)
+                // Restore isolation flags (backwards compatibility: detect the old save format)
                 var isOldSaveFormat = pd.uLocationCards == null;
                 if (isOldSaveFormat)
                 {
