@@ -360,6 +360,11 @@ namespace _project.Scripts.Classes
             
             public bool TreatWith(ITreatment treatment, PlantController plant)
             {
+                // Process negative effect - Not Systematized, as this is currently the only case
+                if (treatment.GetType() == typeof(ImidaclopridTreatment))
+                {
+                    plant.AddInfect(this,1);
+                }
                 if (!CanBeTreatedBy(treatment)) return false;
                 if (!TreatmentAttemptSucceeds(this, treatment))
                 {
