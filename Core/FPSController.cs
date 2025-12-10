@@ -43,6 +43,7 @@ namespace _project.Scripts.Core
         private bool _isGrounded;
         private InputAction _jumpAction;
         private InputAction _lookAction;
+        private InputAction _moveAction;
         private InputAction _noteAction;
         private InputAction _progressTimeAction;
         private InputAction _sprintAction;
@@ -75,22 +76,20 @@ namespace _project.Scripts.Core
                 Debug.LogError("Notebook GameObject not assigned!");
             }
 
-            // Initialize input actions with null checks
-            try
-            {
-                _lookAction = InputSystem.actions.FindAction("Look");
-                _escapeAction = InputSystem.actions.FindAction("Escape");
-                _sprintAction = InputSystem.actions.FindAction("Sprint");
-                _crouchAction = InputSystem.actions.FindAction("Crouch");
-                _jumpAction = InputSystem.actions.FindAction("Jump");
-                _noteAction = InputSystem.actions.FindAction("Note");
-                _galleryAction = InputSystem.actions.FindAction("Gallery");
-                _progressTimeAction = InputSystem.actions.FindAction("ProgressTime");
-            }
-            catch (Exception e)
-            {
-                Debug.LogError($"Error initializing input actions: {e.Message}");
-            }
+            // Initialize input actions
+            _lookAction = InputSystem.actions.FindAction("Look");
+            _moveAction = InputSystem.actions.FindAction("Move");
+            _escapeAction = InputSystem.actions.FindAction("Escape");
+            _sprintAction = InputSystem.actions.FindAction("Sprint");
+            _crouchAction = InputSystem.actions.FindAction("Crouch");
+            _jumpAction = InputSystem.actions.FindAction("Jump");
+            _noteAction = InputSystem.actions.FindAction("Note");
+            _galleryAction = InputSystem.actions.FindAction("Gallery");
+            _progressTimeAction = InputSystem.actions.FindAction("ProgressTime");
+
+            // Validate critical actions
+            if (_moveAction == null || _lookAction == null)
+                Debug.LogWarning("Critical input actions (Move/Look) not found. Check Input Actions asset.");
         }
 
         private void Update()
@@ -115,6 +114,7 @@ namespace _project.Scripts.Core
         {
             // Clean up input action references to prevent memory leaks
             _lookAction = null;
+            _moveAction = null;
             _escapeAction = null;
             _sprintAction = null;
             _crouchAction = null;
@@ -238,17 +238,18 @@ namespace _project.Scripts.Core
 
         private void ApplyMoveDirection()
         {
-            // Calculate movement direction
-            var moveX = Input.GetAxis("Horizontal");
-            var moveZ = Input.GetAxis("Vertical");
-            var move = transform.right * moveX + transform.forward * moveZ;
+            if (_moveAction == null) return;
+
+            // Calculate movement direction using new Input System
+            var moveInput = _moveAction.ReadValue<Vector2>();
+            var move = transform.right * moveInput.x + transform.forward * moveInput.y;
 
             if (move.magnitude > 1)
                 move.Normalize();
 
             if (_isClimbing)
             {
-                var verticalInput = Input.GetAxis("Vertical");
+                var verticalInput = moveInput.y;
                 if (verticalInput == 0) return;
                 _controller.Move(transform.up * (verticalInput * _climbSpeed * Time.deltaTime));
                 _velocity.y = 0;
@@ -261,7 +262,7 @@ namespace _project.Scripts.Core
 
         private void HandleNoteBook()
         {
-            if (!_noteAction.WasReleasedThisFrame()) return;
+            if (_noteAction == null || !_noteAction.WasReleasedThisFrame()) return;
             switch (noteBook.activeSelf)
             {
                 case true:
@@ -290,15 +291,20 @@ namespace _project.Scripts.Core
 
         private void HandleJump()
         {
-            if (_jumpAction.IsPressed() && _isGrounded && !_isCrouching)
-                _velocity.y = Mathf.Sqrt(jumpHeight * -2f * _gravity);
-            if (_jumpAction.IsPressed() && _isClimbing) _isClimbing = false;
+            if (_jumpAction != null)
+            {
+                if (_jumpAction.IsPressed() && _isGrounded && !_isCrouching)
+                    _velocity.y = Mathf.Sqrt(jumpHeight * -2f * _gravity);
+                if (_jumpAction.IsPressed() && _isClimbing) _isClimbing = false;
+            }
             _velocity.y += _gravity * Time.deltaTime;
             _controller.Move(_velocity * Time.deltaTime);
         }
 
         private void HandleCrouch()
         {
+            if (_crouchAction == null) return;
+
             if (_crouchAction.IsPressed())
             {
                 _isCrouching = true;
@@ -315,6 +321,8 @@ namespace _project.Scripts.Core
 
         private void HandleSprint()
         {
+            if (_sprintAction == null) return;
+
             if (!_isCrouching && _isGrounded && _sprintAction.IsPressed())
                 speed = BaseSpeed * sprintMultiplier;
             else if (_sprintAction.WasReleasedThisFrame())
@@ -323,7 +331,7 @@ namespace _project.Scripts.Core
 
         private void HandleGamePause()
         {
-            if (_escapeAction.WasReleasedThisFrame())
+            if (_escapeAction != null && _escapeAction.WasReleasedThisFrame())
                 menuManager.PauseGame();
         }
     }

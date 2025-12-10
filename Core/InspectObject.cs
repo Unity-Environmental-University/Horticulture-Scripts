@@ -34,6 +34,7 @@ namespace _project.Scripts.Core
         public float inspectDistanceDefault = 2f; // Sets the Default distance
         public float rotateSpeed = 2.0f; // Speed of the object rotation
         public float highlightIntensity = 1; // Intensity of Highlight
+        public float scrollSensitivity = 0.1f; // Sensitivity for scroll wheel zoom
         public bool debugging;
 
         private readonly Dictionary<Renderer, Color> _originalColors = new();
@@ -42,8 +43,10 @@ namespace _project.Scripts.Core
     
         private InputAction _leftClickAction;
         private InputAction _leftJoyStickAction;
+        private InputAction _lookAction;
         private InputAction _rightClickAction;
         private InputAction _rightJoyStickAction;
+        private InputAction _scrollAction;
         private InputAction _inspectAction;
         private DepthOfField _depthOfField;
         private GameObject _inspectableObject; // The object to inspect
@@ -69,13 +72,15 @@ namespace _project.Scripts.Core
             _rightClickAction = InputSystem.actions.FindAction("RightClick");
             _leftJoyStickAction = InputSystem.actions.FindAction("LeftJoyStick");
             _rightJoyStickAction = InputSystem.actions.FindAction("RightJoyStick");
+            _lookAction = InputSystem.actions.FindAction("Look");
+            _scrollAction = InputSystem.actions.FindAction("ScrollWheel");
 
             LoadInspectImages();
         }
 
         private void Update()
         {
-            if (_inspectAction.WasReleasedThisFrame())
+            if (_inspectAction != null && _inspectAction.WasReleasedThisFrame())
             {
                 // Check if the player pressed the "I" key
                 if (_inspecting)
@@ -154,45 +159,40 @@ namespace _project.Scripts.Core
         private void HandleMouseInput()
         {
             if (!_inspectableObject) return;
-            //if the player holds the left mouse button and moves the mouse, rotate the object
-            if (_leftClickAction.IsInProgress())
-            {
-                // Get the mouse movement
-                var mouseX = Input.GetAxis("Mouse X");
-                var mouseY = Input.GetAxis("Mouse Y");
 
+            // Get mouse delta from new Input System
+            var mouseDelta = _lookAction?.ReadValue<Vector2>() ?? Vector2.zero;
+
+            //if the player holds the left mouse button and moves the mouse, rotate the object
+            if (_leftClickAction != null && _leftClickAction.IsInProgress())
+            {
                 // Rotate the object
-                _inspectableObject.transform.Rotate(Vector3.up, -mouseX * rotateSpeed, Space.World);
+                _inspectableObject.transform.Rotate(Vector3.up, -mouseDelta.x * rotateSpeed, Space.World);
                 _inspectableObject.transform.Rotate(
                     Vector3.right,
-                    mouseY * rotateSpeed,
+                    mouseDelta.y * rotateSpeed,
                     Space.World
                 );
             }
 
             // if the Player is holding the right mouse button, move along x/y-axis
-            if (_rightClickAction.IsInProgress())
+            if (_rightClickAction != null && _rightClickAction.IsInProgress())
             {
-                var mouseX = Input.GetAxis("Mouse X");
-                var mouseY = Input.GetAxis("Mouse Y");
-
                 // Calculate movement in screen space and translate it to world space
-                var moveX = playerCamera.transform.right * (mouseX * Time.unscaledDeltaTime);
-                var moveY = playerCamera.transform.up * (mouseY * Time.unscaledDeltaTime);
+                var moveX = playerCamera.transform.right * (mouseDelta.x * Time.unscaledDeltaTime);
+                var moveY = playerCamera.transform.up * (mouseDelta.y * Time.unscaledDeltaTime);
 
                 // Move the object without changing its distance to the camera
                 _inspectableObject.transform.position += moveX + moveY;
             }
 
-
             //if the player scrolls the mouse wheel, move the object closer or further away
-            if (Input.GetAxis("Mouse ScrollWheel") == 0) return;
-            // Get the mouse scroll-wheel movement
-            var scrollWheel = Input.GetAxis("Mouse ScrollWheel");
+            var scrollValue = _scrollAction?.ReadValue<Vector2>() ?? Vector2.zero;
+            if (scrollValue.y == 0) return;
 
-            // Move the object closer or further away
+            // Move the object closer or further away (scroll Y is the wheel direction)
             _inspectableObject.transform.position +=
-                playerCamera.transform.forward * scrollWheel;
+                playerCamera.transform.forward * (scrollValue.y * scrollSensitivity);
         }
 
         private void HandleJoystickInput()
@@ -200,31 +200,27 @@ namespace _project.Scripts.Core
             if (!_inspectableObject) return;
 
             // If the player moves the left joystick, rotate the object
-            if (_leftJoyStickAction.IsInProgress())
+            if (_leftJoyStickAction != null && _leftJoyStickAction.IsInProgress())
             {
                 // Get joystick axis values
-                // ReSharper disable twice Unity.PerformanceCriticalCodeInvocation
-                var joyX = _leftJoyStickAction.ReadValue<Vector2>().x;
-                var joyY = _leftJoyStickAction.ReadValue<Vector2>().y;
+                var joyInput = _leftJoyStickAction.ReadValue<Vector2>();
 
                 // Rotate the object similar to mouse movement
-                _inspectableObject.transform.Rotate(Vector3.up, -joyX * rotateSpeed, Space.World);
-                _inspectableObject.transform.Rotate(Vector3.right, joyY * rotateSpeed, Space.World);
+                _inspectableObject.transform.Rotate(Vector3.up, -joyInput.x * rotateSpeed, Space.World);
+                _inspectableObject.transform.Rotate(Vector3.right, joyInput.y * rotateSpeed, Space.World);
             }
 
             // If a player moves the right joystick, move along x/y-axis
-            if (!_rightJoyStickAction.IsInProgress()) return;
-            {
-                var joyX = _rightJoyStickAction.ReadValue<Vector2>().x;
-                var joyY = _rightJoyStickAction.ReadValue<Vector2>().y;
+            if (_rightJoyStickAction == null || !_rightJoyStickAction.IsInProgress()) return;
 
-                // Calculate movement in world space and translate the object
-                var moveX = playerCamera.transform.right * (joyX * Time.unscaledDeltaTime);
-                var moveY = playerCamera.transform.up * (joyY * Time.unscaledDeltaTime);
+            var rightJoyInput = _rightJoyStickAction.ReadValue<Vector2>();
 
-                // Move the object without changing its distance to the camera
-                _inspectableObject.transform.position += moveX + moveY;
-            }
+            // Calculate movement in world space and translate the object
+            var moveX = playerCamera.transform.right * (rightJoyInput.x * Time.unscaledDeltaTime);
+            var moveY = playerCamera.transform.up * (rightJoyInput.y * Time.unscaledDeltaTime);
+
+            // Move the object without changing its distance to the camera
+            _inspectableObject.transform.position += moveX + moveY;
         }
 
         //checks to see if the player is looking at the object on the raycast layer
@@ -427,6 +423,18 @@ namespace _project.Scripts.Core
 
             // Recursively restore the color of all child objects
             foreach (Transform child in obj.transform) RestoreOriginalColors(child.gameObject);
+        }
+
+        private void OnDestroy()
+        {
+            // Clean up input action references
+            _inspectAction = null;
+            _leftClickAction = null;
+            _rightClickAction = null;
+            _leftJoyStickAction = null;
+            _rightJoyStickAction = null;
+            _lookAction = null;
+            _scrollAction = null;
         }
     }
 }
