@@ -21,7 +21,6 @@
               "title": "self-replicating-card-feature"
             }
           }
-        ]
       }
     ],
     "direction": "vertical"
@@ -183,9 +182,7 @@
       "bases:Create new base": false
     }
   },
-  "active": "0b8d37250e3fc91a",
   "lastOpenFiles": [
-    "user-guide.md",
     "README.md",
     "README-WIKI.md",
     "ARCHITECTURE.md",
