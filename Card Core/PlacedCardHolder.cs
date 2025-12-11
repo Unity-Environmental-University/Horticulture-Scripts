@@ -1,11 +1,13 @@
 ﻿using System;
 using System.Collections;
+using System.Collections.Generic;
 using System.Reflection;
 using _project.Scripts.Classes;
 using _project.Scripts.Core;
 using _project.Scripts.Handlers;
 using UnityEngine;
 using UnityEngine.InputSystem;
+using UnityEngine.Rendering;
 using UnityEngine.Serialization;
 
 namespace _project.Scripts.Card_Core
@@ -19,6 +21,15 @@ namespace _project.Scripts.Card_Core
 
     public class PlacedCardHolder : MonoBehaviour
     {
+        private static readonly int BaseColor = Shader.PropertyToID("_BaseColor");
+        private static readonly int Color1 = Shader.PropertyToID("_Color");
+        private static readonly int Surface = Shader.PropertyToID("_Surface");
+        private static readonly int Blend = Shader.PropertyToID("_Blend");
+        private static readonly int AlphaClip = Shader.PropertyToID("_AlphaClip");
+        private static readonly int ZWrite = Shader.PropertyToID("_ZWrite");
+        private static readonly int SrcBlend = Shader.PropertyToID("_SrcBlend");
+        private static readonly int DstBlend = Shader.PropertyToID("_DstBlend");
+
         [Header("Card Type Restrictions")]
         [SerializeField] private CardHolderType acceptedCardType = CardHolderType.Any;
         
@@ -37,6 +48,17 @@ namespace _project.Scripts.Card_Core
         [Header("Hover Behavior")]
         [Tooltip("Disable hover pop animation for cloned cards placed in this holder.")]
         [SerializeField] private bool disableHoverOnPlacedCard = true;
+        
+        [Header("Hover Preview")]
+        [Tooltip("When a compatible card is selected, hovering this holder shows a ghost preview.")]
+        [SerializeField] private bool enableHoverPreview = true;
+
+        [SerializeField, Range(0f, 1f)] private float previewAlpha = 0.35f;
+        
+        private Click3D _holderClick3D;
+        private GameObject _previewCardClone;
+        private bool _isHovered;
+        private List<Material> _previewMaterials;
 
         private int _lastPlacementFrame = -1;
         private float _lastPlacementTime = -1f;
@@ -47,7 +69,7 @@ namespace _project.Scripts.Card_Core
         /// <summary>
         /// The turn number when the current card was placed. -1 if no card is held.
         /// Used to determine if redraw should be blocked (can't redraw if cards placed this turn).
-        /// NOTE: Not currently persisted in save/load system - will reset to -1 on game load.
+        /// NOTE: Not currently persisted in save/load system - will reset to -1 on a game load.
         /// </summary>
         [FormerlySerializedAs("_placementTurn")] [SerializeField, Tooltip("The turn number when the current card was placed. -1 if no card is held.")]
         private int placementTurn = -1;
@@ -57,10 +79,227 @@ namespace _project.Scripts.Card_Core
 
         private void Start()
         {
+            if (CardGameMaster.Instance == null)
+            {
+                Debug.LogError("[PlacedCardHolder] CardGameMaster.Instance is null in Start. " +
+                              "Ensure CardGameMaster exists in scene and initializes first.", this);
+                return;
+            }
+
             _deckManager = CardGameMaster.Instance.deckManager;
             _scoreManager = CardGameMaster.Instance.scoreManager;
+
+            if (_deckManager == null)
+            {
+                Debug.LogError("[PlacedCardHolder] DeckManager is null after CardGameMaster initialization.", this);
+            }
+
             if (spotDataHolder)
                 spotDataHolder.RegisterCardHolder(this);
+
+            SubscribeHoverPreview();
+        }
+
+        private void SubscribeHoverPreview()
+        {
+            if (!enableHoverPreview || _deckManager == null) return;
+
+            _deckManager.SelectedCardChanged += OnSelectedCardChanged;
+            _holderClick3D = ResolveHolderClick3D();
+            if (!_holderClick3D) return;
+            _holderClick3D.HoverEntered += OnHolderHoverEnter;
+            _holderClick3D.HoverExited += OnHolderHoverExit;
+        }
+
+        private Click3D ResolveHolderClick3D()
+        {
+            var click3Ds = GetComponentsInChildren<Click3D>(true);
+            foreach (var candidate in click3Ds)
+            {
+                if (candidate == null) continue;
+                if (candidate.handItem || candidate.isSticker) continue;
+                if (candidate.GetComponent<CardView>() != null) continue;
+                return candidate;
+            }
+
+            if (click3Ds.Length > 0)
+            {
+                Debug.LogWarning($"[PlacedCardHolder] No valid holder Click3D found for '{name}'. " +
+                                "Hover preview may not work correctly.", this);
+            }
+
+            return null;
+        }
+
+        private void OnHolderHoverEnter(Click3D click3D)
+        {
+            _isHovered = true;
+            UpdatePreview();
+        }
+
+        private void OnHolderHoverExit(Click3D click3D)
+        {
+            _isHovered = false;
+            ClearPreview();
+        }
+
+        private void OnSelectedCardChanged(ICard card)
+        {
+            if (!_isHovered)
+            {
+                ClearPreview();
+                return;
+            }
+
+            UpdatePreview();
+        }
+
+        private void UpdatePreview()
+        {
+            ClearPreview();
+
+            if (!_deckManager) return;
+
+            var selectedCardClick3D = _deckManager.selectedACardClick3D;
+            var selectedCard = _deckManager.selectedACard;
+
+            if (!selectedCardClick3D || selectedCard == null) return;
+            if (HoldingCard) return;
+
+            var plant = ResolvePlantForDisplay();
+            if (!plant || plant.PlantCard == null || plant.PlantCard.Value <= 0) return;
+
+            if (!CanAcceptCard(selectedCard)) return;
+
+            var sourceLocalScale = selectedCardClick3D.transform.localScale;
+            var sourceLossyScale = selectedCardClick3D.transform.lossyScale;
+            var parentLossyScale = transform.lossyScale;
+            var resolvedLocalScale = new Vector3(
+                !Mathf.Approximately(parentLossyScale.x, 0f)
+                    ? sourceLossyScale.x / parentLossyScale.x
+                    : sourceLocalScale.x,
+                !Mathf.Approximately(parentLossyScale.y, 0f)
+                    ? sourceLossyScale.y / parentLossyScale.y
+                    : sourceLocalScale.y,
+                !Mathf.Approximately(parentLossyScale.z, 0f)
+                    ? sourceLossyScale.z / parentLossyScale.z
+                    : sourceLocalScale.z
+            );
+
+            var resolvedLocalRotation =
+                Quaternion.Euler(-90f, 0f, 0f) * Quaternion.Euler(placedCardRotationOffsetEuler);
+
+            var cardClone = Instantiate(selectedCardClick3D.gameObject, transform);
+
+            var cardViewClone = cardClone.GetComponent<CardView>();
+            if (cardViewClone)
+                cardViewClone.Setup(selectedCard);
+
+            cardClone.transform.SetParent(transform, false);
+            cardClone.transform.localPosition = placedCardPositionOffsetLocal;
+            cardClone.transform.localRotation = resolvedLocalRotation;
+            cardClone.transform.localScale = Vector3.Scale(resolvedLocalScale, placedCardScaleMultiplier);
+
+            DisablePreviewInteraction(cardClone);
+            ApplyPreviewVisuals(cardClone);
+
+            _previewCardClone = cardClone;
+        }
+
+        private static void DisablePreviewInteraction(GameObject previewClone)
+        {
+            var click3D = previewClone.GetComponent<Click3D>();
+            if (click3D)
+            {
+                click3D.isEnabled = false;
+                click3D.enabled = false;
+                click3D.onClick3D?.RemoveAllListeners();
+            }
+
+            var colliders = previewClone.GetComponentsInChildren<Collider>(true);
+            foreach (var collider in colliders)
+                collider.enabled = false;
+        }
+
+        private void ApplyPreviewVisuals(GameObject previewClone)
+        {
+            _previewMaterials = new List<Material>();
+            var renderers = previewClone.GetComponentsInChildren<Renderer>(true);
+            foreach (var r in renderers)
+            {
+                if (!r) continue;
+                r.shadowCastingMode = ShadowCastingMode.Off;
+                r.receiveShadows = false;
+
+                var material = r.material;
+                if (!material) continue;
+                _previewMaterials.Add(material);
+                MakeMaterialTransparent(material, previewAlpha);
+            }
+        }
+
+        private static void MakeMaterialTransparent(Material material, float alpha)
+        {
+            if (material.HasProperty(BaseColor))
+            {
+                var baseColor = material.GetColor(BaseColor);
+                baseColor.a = alpha;
+                material.SetColor(BaseColor, baseColor);
+            }
+
+            if (material.HasProperty(Color1))
+            {
+                var color = material.GetColor(Color1);
+                color.a = alpha;
+                material.SetColor(Color1, color);
+            }
+
+            if (material.HasProperty(Surface))
+            {
+                material.SetFloat(Surface, 1f);
+                material.EnableKeyword("_SURFACE_TYPE_TRANSPARENT");
+                material.DisableKeyword("_SURFACE_TYPE_OPAQUE");
+            }
+
+            if (material.HasProperty(Blend))
+                material.SetFloat(Blend, 0f);
+
+            if (material.HasProperty(AlphaClip))
+                material.SetFloat(AlphaClip, 0f);
+
+            if (material.HasProperty(ZWrite))
+                material.SetFloat(ZWrite, 0f);
+
+            if (material.HasProperty(SrcBlend))
+                material.SetInt(SrcBlend, (int)BlendMode.SrcAlpha);
+
+            if (material.HasProperty(DstBlend))
+                material.SetInt(DstBlend, (int)BlendMode.OneMinusSrcAlpha);
+
+            material.SetOverrideTag("RenderType", "Transparent");
+            material.DisableKeyword("_ALPHATEST_ON");
+            material.EnableKeyword("_ALPHABLEND_ON");
+            material.DisableKeyword("_ALPHAPREMULTIPLY_ON");
+            material.DisableKeyword("_ALPHAMODULATE_ON");
+            material.renderQueue = (int)RenderQueue.Transparent;
+        }
+
+        private void ClearPreview()
+        {
+            if (_previewCardClone == null) return;
+
+            Destroy(_previewCardClone);
+            _previewCardClone = null;
+
+            if (_previewMaterials != null)
+            {
+                foreach (var mat in _previewMaterials)
+                {
+                    if (mat) Destroy(mat);
+                }
+                _previewMaterials.Clear();
+                _previewMaterials = null;
+            }
         }
 
         private EfficacyDisplayHandler GetEfficacyDisplay()
@@ -349,6 +588,8 @@ namespace _project.Scripts.Card_Core
         /// </remarks>
         public void TakeSelectedCard()
         {
+            ClearPreview();
+
             // Prevent interaction when holding a Location Card (same check as OnPlacedCardClicked)
             if (HoldingCard && placedCard is ILocationCard) return;
 
@@ -698,6 +939,17 @@ namespace _project.Scripts.Card_Core
 
         private void OnDestroy()
         {
+            ClearPreview();
+
+            if (_deckManager != null)
+                _deckManager.SelectedCardChanged -= OnSelectedCardChanged;
+
+            if (_holderClick3D != null)
+            {
+                _holderClick3D.HoverEntered -= OnHolderHoverEnter;
+                _holderClick3D.HoverExited -= OnHolderHoverExit;
+            }
+
             if (spotDataHolder)
                 spotDataHolder.UnregisterCardHolder(this);
         }

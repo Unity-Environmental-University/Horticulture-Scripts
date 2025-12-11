@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using _project.Scripts.Core;
 using DG.Tweening;
@@ -17,6 +18,20 @@ namespace _project.Scripts.Card_Core
 
         private static readonly int Color1 = Shader.PropertyToID("_Color");
         [SerializeField] public UnityEvent onClick3D;
+
+        /// <summary>
+        /// Event fired when the mouse cursor enters this Click3D object.
+        /// Subscribers receive a reference to this Click3D component.
+        /// Only fires when the component is enabled and Click3DGloballyDisabled is false.
+        /// </summary>
+        public event Action<Click3D> HoverEntered;
+
+        /// <summary>
+        /// Event fired when the mouse cursor exits this Click3D object.
+        /// Subscribers receive a reference to this Click3D component.
+        /// Only fires when the component is enabled and Click3DGloballyDisabled is false.
+        /// </summary>
+        public event Action<Click3D> HoverExited;
 
         [Tooltip("If True: Hovering over a card will pop it up a bit. If False: item will highlight on hover")]
         public bool handItem;
@@ -124,6 +139,7 @@ namespace _project.Scripts.Card_Core
         private void OnMouseEnter()
         {
             if (!isEnabled || Click3DGloballyDisabled) return;
+            HoverEntered?.Invoke(this);
             
             if (isMenuSign)
             {
@@ -159,6 +175,7 @@ namespace _project.Scripts.Card_Core
         private void OnMouseExit()
         {
             if (!isEnabled || Click3DGloballyDisabled) return;
+            HoverExited?.Invoke(this);
 
             var plant = GetComponentInParent<PlantController>();
             if (plant) plant.FlagShadersUpdate();

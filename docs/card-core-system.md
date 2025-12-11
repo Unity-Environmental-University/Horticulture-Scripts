@@ -27,9 +27,9 @@ CardGameMaster (Singleton)
 ├── ShopManager (Card Purchasing)
 └── Supporting Components
     ├── CardView (Visual Representation)
-    ├── PlacedCardHolder (Card Placement)
+    ├── PlacedCardHolder (Card Placement & Hover Preview)
     ├── RetainedCardHolder (Card Retention)
-    └── Click3D (3D Interaction)
+    └── Click3D (3D Interaction & Hover Events)
 ```
 
 ### Key Design Patterns
@@ -142,6 +142,86 @@ public void OpenShop()
 public void CloseShop()
 private void GenerateShopInventory()
 ```
+
+### Click3D
+
+Handles 3D object interaction, hover effects, and provides event hooks for hover state changes.
+
+**Location**: `Assets/_project/Scripts/Card Core/Click3D.cs`
+
+**Responsibilities**:
+- Mouse/touch input detection on 3D objects
+- Hover animations (pop-up for cards, scale for stickers, color change for others)
+- Click event dispatching via UnityEvent
+- Hover state event notifications (new feature)
+
+**Key Events**:
+```csharp
+public event Action<Click3D> HoverEntered;  // Fires when mouse enters
+public event Action<Click3D> HoverExited;   // Fires when mouse exits
+public UnityEvent onClick3D;                 // Fires on click
+```
+
+**Configuration**:
+- `handItem`: Cards in hand pop up on hover
+- `isSticker`: Stickers scale up on hover
+- `animTime`: Animation duration (default: 0.2s)
+- `scaleUp`: Scale multiplier for cards (default: 1.05)
+- `popHeight`: Height offset for card pop (default: 0.2)
+
+**Usage Notes**:
+- Hover events only fire when `isEnabled = true` and `Click3DGloballyDisabled = false`
+- Events pass reference to the Click3D component for context
+- Other components can subscribe to hover events for custom behaviors (e.g., hover preview system)
+
+**Platform Limitations**:
+- Hover events require mouse input and will **not** fire on touch-only devices (mobile, tablets)
+- Touch platforms only support click detection through `onClick3D`, not hover state changes
+- The hover preview system is therefore unavailable on touch platforms
+- Consider alternative UI patterns for touch platforms (e.g., tap-to-preview, long-press, or always-visible placement guides)
+
+### PlacedCardHolder
+
+Manages card placement locations on plants, including card acceptance logic and hover preview functionality.
+
+**Location**: `Assets/_project/Scripts/Card Core/PlacedCardHolder.cs`
+
+**Responsibilities**:
+- Card placement and retrieval
+- Card type filtering (Any, ActionOnly, LocationOnly)
+- Hover preview display for selected cards (new feature)
+- Treatment efficacy display integration
+- Plant death handling
+
+**Key Properties**:
+```csharp
+public bool HoldingCard { get; }        // Whether holder has a card
+public ICard placedCard;                 // Current placed card
+public int PlacementTurn { get; }       // Turn when card was placed
+```
+
+**Hover Preview System** (New):
+- **enableHoverPreview**: Toggle ghost preview on/off (default: true)
+- **previewAlpha**: Transparency of preview (default: 0.35, range 0-1)
+- Automatically shows preview when:
+  - Holder is empty
+  - Player has a card selected
+  - Card is compatible with holder type
+  - Plant is alive
+- Preview uses URP-compatible transparency rendering
+- Preview is non-interactive (no colliders or Click3D)
+
+**Key Methods**:
+```csharp
+public void TakeSelectedCard()           // Places selected card
+public void OnPlacedCardClicked()        // Picks up placed card
+public bool CanAcceptCard(ICard card)    // Validates card compatibility
+```
+
+**Integration**:
+- Subscribes to `DeckManager.SelectedCardChanged` for preview updates
+- Subscribes to holder's `Click3D.HoverEntered/Exited` for hover detection
+- Properly cleans up event subscriptions in OnDestroy
 
 ## API Reference
 
@@ -325,6 +405,36 @@ Players can retain one card between rounds using the `RetainedCardHolder` system
 #### Sticker System
 Stickers can be applied to cards to modify their properties (costs, effects).
 
+#### Hover Preview System
+
+When a player selects a card, hovering over empty card holders displays a ghost preview of the card in its placed position.
+
+**Preview Behavior**:
+- **Visual Feedback**: Semi-transparent clone of the selected card appears at the holder location
+- **Smart Filtering**: Preview only shows if the card is compatible with the holder type (ActionOnly, LocationOnly, Any)
+- **Plant Health Check**: Preview only appears if the associated plant is alive
+- **Non-Interactive**: Preview cannot be clicked or interacted with
+- **Real-time Updates**: Preview updates automatically when selecting different cards
+
+**Configuration** (per PlacedCardHolder):
+- `enableHoverPreview`: Toggle feature on/off (default: enabled)
+- `previewAlpha`: Control transparency (default: 0.35, fully configurable 0-1)
+
+**Technical Implementation**:
+- Uses URP-compatible transparency rendering
+- Disables shadows and colliders on preview
+- Properly cleans up when hover ends or card selection changes
+- Event-driven: responds to `DeckManager.SelectedCardChanged` and Click3D hover events
+
+**Player Benefits**:
+- Visual confirmation of card placement before committing
+- Better understanding of which slots accept which cards
+- Improved decision-making for card placement strategy
+
+**Platform Note**:
+- This feature requires mouse input and is **not available on touch-only devices** (mobile, tablets)
+- Touch users will not see hover previews and must rely on visual cues from card holders and placement validation
+
 #### Plant Death and Card Placement
 
 When a plant's value drops to 0 or below:
@@ -412,9 +522,51 @@ public void ApplyTreatmentWithEffects(PlantController plant, ParticleSystem heal
 {
     // Apply the treatment logic
     plant.RemoveAffliction(someAffliction);
-    
+
     // Queue visual/audio feedback
     TurnController.QueuePlantEffect(plant, healEffect, healSound, 0.5f);
+}
+```
+
+### Subscribing to Click3D Hover Events
+
+```csharp
+// Subscribe to hover events on a card holder or card
+public class CustomHoverHandler : MonoBehaviour
+{
+    private Click3D _click3D;
+
+    private void Start()
+    {
+        _click3D = GetComponent<Click3D>();
+        if (_click3D != null)
+        {
+            _click3D.HoverEntered += OnHoverEnter;
+            _click3D.HoverExited += OnHoverExit;
+        }
+    }
+
+    private void OnHoverEnter(Click3D click3D)
+    {
+        Debug.Log($"Mouse entered: {click3D.gameObject.name}");
+        // Custom hover logic here (e.g., show tooltip, play sound, update UI)
+    }
+
+    private void OnHoverExit(Click3D click3D)
+    {
+        Debug.Log($"Mouse exited: {click3D.gameObject.name}");
+        // Custom hover exit logic here
+    }
+
+    private void OnDestroy()
+    {
+        // Always clean up event subscriptions
+        if (_click3D != null)
+        {
+            _click3D.HoverEntered -= OnHoverEnter;
+            _click3D.HoverExited -= OnHoverExit;
+        }
+    }
 }
 ```
 
