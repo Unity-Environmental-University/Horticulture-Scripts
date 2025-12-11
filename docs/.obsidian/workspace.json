@@ -1,0 +1,230 @@
+{
+  "main": {
+    "id": "3d024ecace4a6ed9",
+    "type": "split",
+    "children": [
+      {
+        "id": "5c691708589d0d14",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "0b8d37250e3fc91a",
+            "type": "leaf",
+            "state": {
+              "type": "markdown",
+              "state": {
+                "file": "self-replicating-card-feature.md",
+                "mode": "source",
+                "source": false
+              },
+              "icon": "lucide-file",
+              "title": "self-replicating-card-feature"
+            }
+          },
+          {
+            "id": "734f91417a58996f",
+            "type": "leaf",
+            "state": {
+              "type": "markdown",
+              "state": {
+                "file": "user-guide.md",
+                "mode": "source",
+                "source": false
+              },
+              "icon": "lucide-file",
+              "title": "user-guide"
+            }
+          }
+        ],
+        "currentTab": 1
+      }
+    ],
+    "direction": "vertical"
+  },
+  "left": {
+    "id": "9b63d22165c1c1aa",
+    "type": "split",
+    "children": [
+      {
+        "id": "8b1e62cd05c86020",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "6b1163e8cca775db",
+            "type": "leaf",
+            "state": {
+              "type": "file-explorer",
+              "state": {
+                "sortOrder": "alphabetical",
+                "autoReveal": false
+              },
+              "icon": "lucide-folder-closed",
+              "title": "Files"
+            }
+          },
+          {
+            "id": "745f033230284698",
+            "type": "leaf",
+            "state": {
+              "type": "search",
+              "state": {
+                "query": "",
+                "matchingCase": false,
+                "explainSearch": false,
+                "collapseAll": false,
+                "extraContext": false,
+                "sortOrder": "alphabetical"
+              },
+              "icon": "lucide-search",
+              "title": "Search"
+            }
+          },
+          {
+            "id": "e020277713c535d2",
+            "type": "leaf",
+            "state": {
+              "type": "bookmarks",
+              "state": {},
+              "icon": "lucide-bookmark",
+              "title": "Bookmarks"
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "horizontal",
+    "width": 286.5
+  },
+  "right": {
+    "id": "8f8b35a4e0530f4f",
+    "type": "split",
+    "children": [
+      {
+        "id": "ed735923bc192fa9",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "b587911d32cb5e9e",
+            "type": "leaf",
+            "state": {
+              "type": "backlink",
+              "state": {
+                "file": "Welcome.md",
+                "collapseAll": false,
+                "extraContext": false,
+                "sortOrder": "alphabetical",
+                "showSearch": false,
+                "searchQuery": "",
+                "backlinkCollapsed": false,
+                "unlinkedCollapsed": true
+              },
+              "icon": "links-coming-in",
+              "title": "Backlinks for Welcome"
+            }
+          },
+          {
+            "id": "7536474cfacb849c",
+            "type": "leaf",
+            "state": {
+              "type": "outgoing-link",
+              "state": {
+                "file": "Welcome.md",
+                "linksCollapsed": false,
+                "unlinkedCollapsed": true
+              },
+              "icon": "links-going-out",
+              "title": "Outgoing links from Welcome"
+            }
+          },
+          {
+            "id": "a5d32c9750dca5a6",
+            "type": "leaf",
+            "state": {
+              "type": "tag",
+              "state": {
+                "sortOrder": "frequency",
+                "useHierarchy": true,
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-tags",
+              "title": "Tags"
+            }
+          },
+          {
+            "id": "25e4cd0327aa1ba4",
+            "type": "leaf",
+            "state": {
+              "type": "all-properties",
+              "state": {
+                "sortOrder": "frequency",
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-archive",
+              "title": "All properties"
+            }
+          },
+          {
+            "id": "d127a65f97baab2f",
+            "type": "leaf",
+            "state": {
+              "type": "outline",
+              "state": {
+                "file": "Welcome.md",
+                "followCursor": false,
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-list",
+              "title": "Outline of Welcome"
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "horizontal",
+    "width": 300,
+    "collapsed": true
+  },
+  "left-ribbon": {
+    "hiddenItems": {
+      "switcher:Open quick switcher": false,
+      "graph:Open graph view": false,
+      "canvas:Create new canvas": false,
+      "daily-notes:Open today's daily note": false,
+      "templates:Insert template": false,
+      "command-palette:Open command palette": false,
+      "bases:Create new base": false
+    }
+  },
+  "active": "734f91417a58996f",
+  "lastOpenFiles": [
+    "README.md",
+    "README-WIKI.md",
+    "ARCHITECTURE.md",
+    "cinematics-system-documentation.md",
+    "Home.md",
+    "plant-location-card-slots-technical-design.md",
+    "Quick-Reference.md",
+    "user-guide.md",
+    "i-location-card-system.md",
+    "Documentation-Templates.md",
+    "self-replicating-card-feature.md",
+    "analytics-system.md",
+    "Architecture-Hub.md",
+    "classes-system-documentation.md",
+    "Navigation-Index.md",
+    "System-Integration.md",
+    "Code-Standards.md",
+    "testing-guide.md",
+    "developer-onboarding.md",
+    "card-core-system.md",
+    "mod-guide.md",
+    "Core-Systems.md",
+    "Common-Workflows.md",
+    "animation-hooks.md",
+    "api-reference.md",
+    "Troubleshooting.md"
+  ]
+}
