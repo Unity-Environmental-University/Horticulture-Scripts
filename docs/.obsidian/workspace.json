@@ -185,6 +185,7 @@
   },
   "active": "0b8d37250e3fc91a",
   "lastOpenFiles": [
+    "hover-system-enhancements.md.meta",
     "hover-system-enhancements.md",
     "Navigation-Index.md.meta",
     "Troubleshooting.md.meta",
@@ -219,7 +220,6 @@
     "mod-guide.md",
     "Core-Systems.md",
     "Common-Workflows.md",
-    "animation-hooks.md",
-    "api-reference.md"
+    "animation-hooks.md"
   ]
 }
