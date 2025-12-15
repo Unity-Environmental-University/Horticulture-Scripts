@@ -771,6 +771,34 @@ namespace _project.Scripts.Classes
             }
         }
 
+        public class LadyBugs : ITreatment
+        {
+            public string Name => "LadyBugs";
+            public string Description => "Lady Bugs affect all plants and are a beneficial insect";
+            public int BeeValue => 5;
+
+            private int _efficacy = DefaultEfficacy;
+            public int? Efficacy
+            {
+                get => _efficacy;
+                set => _efficacy = value ?? 0;
+            }
+
+            private int _infectCureValue = MaxCureAmount;
+            public int? InfectCureValue
+            {
+                get => _infectCureValue;
+                set => _infectCureValue = value ?? 0;
+            }
+
+            private int _eggCureValue = MaxCureAmount;
+            public int? EggCureValue
+            {
+                get => _eggCureValue;
+                set => _eggCureValue = value ?? 0;
+            }
+        }
+
         public class Panacea : ITreatment
         {
             public string Name => "Panacea";

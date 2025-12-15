@@ -526,11 +526,11 @@ namespace _project.Scripts.Core
 
             var clips = plantAnimator.runtimeAnimatorController.animationClips;
 
-            // First, try exact match (case-insensitive)
+            // First, try an exact match (case-insensitive)
             var matchingClip = clips.FirstOrDefault(clip =>
                 clip.name.Equals(triggerName, StringComparison.OrdinalIgnoreCase));
 
-            // If no exact match, try to find clip that contains the trigger name
+            // If no exact match, try to find a clip that contains the trigger name
             if (!matchingClip)
             {
                 matchingClip = clips.FirstOrDefault(clip =>

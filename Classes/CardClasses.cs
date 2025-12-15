@@ -71,6 +71,13 @@ namespace _project.Scripts.Classes
         int BaseEggLevel { get; }
     }
 
+    public interface IFieldSpell : ICard
+    {
+        bool AffectsAllPlants { get; set; }
+        bool ShowsGhosts { get; set; }
+        bool TillDeath { get; set; }
+    }
+
 
     #region Decks
 
@@ -1039,6 +1046,42 @@ namespace _project.Scripts.Classes
         public ICard Clone()
         {
             var clone = new Panacea { Value = Value };
+            foreach (var sticker in Stickers) clone.Stickers.Add(sticker.Clone());
+            return clone;
+        }
+    }
+
+    #endregion
+
+    #region FieldSpells
+
+    public class LadyBugs : IFieldSpell
+    {
+        [CanBeNull] public string Description => "Lady Bugs be lady bugs bro...";
+        public PlantAfflictions.ITreatment Treatment => new PlantAfflictions.LadyBugs();
+        
+        public bool AffectsAllPlants { get; set; } = true;
+        public bool ShowsGhosts { get; set; } = true;
+        public bool TillDeath { get; set; } = true;
+        
+        public string Name => "Lady Bugs";
+        
+        private int _value = -15;
+        public int? Value
+        {
+            get => _value;
+            set => _value = value ?? 0;
+        }
+
+        public List<ISticker> Stickers { get; } = new();
+        public GameObject Prefab => CardGameMaster.Instance.actionCardPrefab;
+        public Material Material => Resources.Load<Material>($"Materials/Cards/LadyBugs");
+
+        public void Selected() { if (CardGameMaster.Instance.debuggingCardClass) Debug.Log("Selected " + Name); }
+        public void ModifyValue(int delta) => _value += delta;
+        public ICard Clone()
+        {
+            var clone = new LadyBugs { Value = Value };
             foreach (var sticker in Stickers) clone.Stickers.Add(sticker.Clone());
             return clone;
         }

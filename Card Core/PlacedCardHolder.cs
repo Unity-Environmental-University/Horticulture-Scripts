@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using System.Reflection;
 using _project.Scripts.Classes;
 using _project.Scripts.Core;
@@ -286,20 +287,15 @@ namespace _project.Scripts.Card_Core
 
         private void ClearPreview()
         {
-            if (_previewCardClone == null) return;
+            if (!_previewCardClone) return;
 
             Destroy(_previewCardClone);
             _previewCardClone = null;
 
-            if (_previewMaterials != null)
-            {
-                foreach (var mat in _previewMaterials)
-                {
-                    if (mat) Destroy(mat);
-                }
-                _previewMaterials.Clear();
-                _previewMaterials = null;
-            }
+            if (_previewMaterials == null) return;
+            foreach (var mat in _previewMaterials.Where(mat => mat)) Destroy(mat);
+            _previewMaterials.Clear();
+            _previewMaterials = null;
         }
 
         private EfficacyDisplayHandler GetEfficacyDisplay()
