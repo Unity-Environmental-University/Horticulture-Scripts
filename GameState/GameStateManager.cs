@@ -260,7 +260,7 @@ namespace _project.Scripts.GameState
             var list = new List<PlantData>();
             for (var i = 0; i < dm.plantLocations.Count; i++)
             {
-                var plant = dm.plantLocations[i].GetComponentInChildren<PlantController>();
+                var plant = dm.plantLocations[i].Transform.GetComponentInChildren<PlantController>();
                 if (!plant) continue;
 
                 list.Add(new PlantData

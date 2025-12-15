@@ -66,7 +66,7 @@ namespace _project.Scripts.PlayModeTest
 
             // Add DeckManager (required by ScoreManager)
             var deckManager = rootGo.AddComponent<DeckManager>();
-            deckManager.plantLocations = new List<Transform>(); // Empty list
+            deckManager.plantLocations = new List<PlantHolder>(); // Empty list
 
             // Add ScoreManager (required by SpreadAfflictions)
             var scoreManager = rootGo.AddComponent<ScoreManager>();

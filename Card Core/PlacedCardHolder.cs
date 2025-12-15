@@ -615,6 +615,19 @@ namespace _project.Scripts.Card_Core
 
             var selectedCard = _deckManager.selectedACardClick3D;
 
+            if (selectedCard is IFieldSpell)
+            {
+                // TODO: Implement field spell logic - can now iterate card holders via plantHolder.CardHolders
+                foreach (var plantHolder in _deckManager.plantLocations)
+                {
+                    if (!plantHolder) continue;
+                    foreach (var holder in plantHolder.CardHolders)
+                    {
+                        // Field spell effect placeholder
+                    }
+                }
+            }
+
             // Properly disable the original card's Click3D component to prevent duplicate clicks
             var sourceLocalScale = selectedCard.transform.localScale;
             var sourceLossyScale = selectedCard.transform.lossyScale;

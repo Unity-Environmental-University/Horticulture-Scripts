@@ -197,7 +197,7 @@ namespace _project.Scripts.Card_Core
         private readonly List<ICard> _actionHand = new();
         private bool _usingTutorialActionDeck;
 
-        public List<Transform> plantLocations;
+        public List<PlantHolder> plantLocations;
         public Transform actionCardParent;
         public Transform stickerPackParent;
 
@@ -267,6 +267,7 @@ namespace _project.Scripts.Card_Core
 
         private void Start()
         {
+            InitializePlantHolders();
             InitializeActionDeck();
             InitializeStickerDeck();
             _plantHand.DeckRandomDraw();
@@ -274,6 +275,16 @@ namespace _project.Scripts.Card_Core
             if (debug) Debug.Log("Initial Deck Order: " + string.Join(", ", PlantDeck.ConvertAll(card => card.Name)));
             if (debug)
                 Debug.Log("Initial Deck Order: " + string.Join(", ", AfflictionsDeck.ConvertAll(card => card.Name)));
+        }
+
+        /// <summary>
+        /// Initializes each PlantHolder by discovering its child PlacedCardHolder components.
+        /// </summary>
+        private void InitializePlantHolders()
+        {
+            if (plantLocations == null) return;
+            foreach (var holder in plantLocations)
+                holder?.InitializeCardHolders();
         }
 
         /// Initializes the action deck by populating it with clones of prototype action cards.
@@ -498,6 +509,9 @@ namespace _project.Scripts.Card_Core
 
         private IEnumerator PlacePlantsSequentially(float delay = 0.3f)
         {
+            if (plantLocations == null)
+                yield break;
+
             //delay = CardGameMaster.Instance.soundSystem.plantSpawn.length;
             for (var i = 0; i < _plantHand.Count && i < plantLocations.Count; i++)
             {
@@ -505,14 +519,18 @@ namespace _project.Scripts.Card_Core
                 if (!prefab) continue;
 
                 var plantLocation = plantLocations[i];
+                if (!plantLocation) continue;
+
+                var plantLocationTransform = plantLocation.Transform;
+                if (!plantLocationTransform) continue;
 
                 // Play the sound before placing
                 var clip = CardGameMaster.Instance.soundSystem.plantSpawn;
-                if (clip) AudioSource.PlayClipAtPoint(clip, plantLocation.position);
+                if (clip) AudioSource.PlayClipAtPoint(clip, plantLocation.Position);
 
                 // Instantiate and assign
-                var plant = Instantiate(prefab, plantLocation.position, plantLocation.rotation);
-                plant.transform.SetParent(plantLocation);
+                var plant = Instantiate(prefab, plantLocation.Position, plantLocation.Rotation);
+                plant.transform.SetParent(plantLocationTransform);
 
                 var plantController = plant.GetComponent<PlantController>();
                 plantController.PlantCard = _plantHand[i];
@@ -521,7 +539,7 @@ namespace _project.Scripts.Card_Core
                     plantController.priceFlagText!.text = "$" + plantController.PlantCard.Value;
 
                 // Notify SpotDataHolder that a plant was added
-                var spotDataHolder = plantLocation.GetComponentInChildren<SpotDataHolder>();
+                var spotDataHolder = plantLocationTransform.GetComponentInChildren<SpotDataHolder>();
                 if (spotDataHolder)
                 {
                     spotDataHolder.InvalidatePlantCache();
@@ -540,11 +558,19 @@ namespace _project.Scripts.Card_Core
         {
             yield return null;
 
+            if (plantLocations == null)
+                yield break;
+
             foreach (var location in plantLocations)
             {
-                var plantController = location.GetComponentInChildren<PlantController>(true);
-                var cardHolders = location.GetComponentsInChildren<PlacedCardHolder>(true);
-                
+                if (!location) continue;
+
+                var plantTransform = location.Transform;
+                if (!plantTransform) continue;
+
+                var plantController = plantTransform.GetComponentInChildren<PlantController>(true);
+                var cardHolders = plantTransform.GetComponentsInChildren<PlacedCardHolder>(true);
+
                 foreach (var cardHolder in cardHolders)
                     if (cardHolder && !cardHolder.HoldingCard)
                         cardHolder.ToggleCardHolder(plantController != null);
@@ -557,27 +583,53 @@ namespace _project.Scripts.Card_Core
         /// random draw on the plant deck. Outputs debug messages if enabled.
         public void ClearAllPlants()
         {
-            foreach (var child in plantLocations
-                         .Select(slot => slot.GetComponentsInChildren<PlantController>(true))
-                         .SelectMany(children => children)) Destroy(child.gameObject);
+            if (plantLocations == null) return;
+
+            foreach (var slot in plantLocations)
+            {
+                if (!slot) continue;
+
+                var slotTransform = slot.Transform;
+                if (!slotTransform) continue;
+
+                var plants = slotTransform.GetComponentsInChildren<PlantController>(true);
+                foreach (var plant in plants)
+                {
+                    if (!plant) continue;
+                    Destroy(plant.gameObject);
+                }
+            }
 
             // Notify SpotDataHolders that plants were removed
-            foreach (var spotDataHolder in plantLocations
-                         .Select(location => location.GetComponentInChildren<SpotDataHolder>())
-                         .Where(holder => holder))
+            foreach (var location in plantLocations)
             {
+                if (!location) continue;
+
+                var locationTransform = location.Transform;
+                if (!locationTransform) continue;
+
+                var spotDataHolder = locationTransform.GetComponentInChildren<SpotDataHolder>();
+                if (!spotDataHolder) continue;
+
                 spotDataHolder.InvalidatePlantCache();
                 spotDataHolder.RefreshAssociatedPlant();
             }
 
             // Hide cardholders only if they are NOT currently holding a card
-            foreach (var holder in plantLocations
-                         .Select(location => location.GetComponentsInChildren<PlacedCardHolder>(true))
-                         .SelectMany(cardHolders => cardHolders))
+            foreach (var location in plantLocations)
             {
-                if (!holder) continue;
-                if (holder.HoldingCard) continue; // Keep visible if a persistent card is present
-                holder.ToggleCardHolder(false);
+                if (!location) continue;
+
+                var locationTransform = location.Transform;
+                if (!locationTransform) continue;
+
+                var holders = locationTransform.GetComponentsInChildren<PlacedCardHolder>(true);
+                foreach (var holder in holders)
+                {
+                    if (!holder) continue;
+                    if (holder.HoldingCard) continue; // Keep visible if a persistent card is present
+                    holder.ToggleCardHolder(false);
+                }
             }
 
             _plantHand.DeckRandomDraw();
@@ -612,9 +664,24 @@ namespace _project.Scripts.Card_Core
 
             if (!skipDeathSequence)
                 yield return plant.KillPlant(false);
-            
-            var location = plantLocations.FirstOrDefault(slot =>
-                slot.GetComponentsInChildren<PlantController>(true).Contains(plant));
+
+            PlantHolder location = null;
+            if (plantLocations != null)
+            {
+                foreach (var slot in plantLocations)
+                {
+                    if (!slot) continue;
+
+                    var slotTransform = slot.Transform;
+                    if (!slotTransform) continue;
+
+                    if (slotTransform.GetComponentsInChildren<PlantController>(true).Contains(plant))
+                    {
+                        location = slot;
+                        break;
+                    }
+                }
+            }
 
             var master = CardGameMaster.Instance;
             if (master?.isInspecting == true && master.inspectedObj)
@@ -628,15 +695,18 @@ namespace _project.Scripts.Card_Core
 
             if (!location) yield break;
 
+            var locationTransform = location.Transform;
+            if (!locationTransform) yield break;
+
             // Notify SpotDataHolder that the plant was removed
-            var spotDataHolder = location.GetComponentInChildren<SpotDataHolder>();
-            if (spotDataHolder != null)
+            var spotDataHolder = locationTransform.GetComponentInChildren<SpotDataHolder>();
+            if (spotDataHolder)
             {
                 spotDataHolder.InvalidatePlantCache();
                 spotDataHolder.RefreshAssociatedPlant();
             }
 
-            var cardHolders = location.GetComponentsInChildren<PlacedCardHolder>(true);
+            var cardHolders = locationTransform.GetComponentsInChildren<PlacedCardHolder>(true);
             foreach (var holder in cardHolders)
             {
                 if (!holder) continue;
@@ -851,10 +921,10 @@ namespace _project.Scripts.Card_Core
                 var location = plantLocations[pd.locationIndex];
                 // Play spawn sound
                 var clip = CardGameMaster.Instance.soundSystem.plantSpawn;
-                if (clip) AudioSource.PlayClipAtPoint(clip, location.position);
+                if (clip) AudioSource.PlayClipAtPoint(clip, location.Position);
 
                 // Instantiate and set parent
-                var plantObj = Instantiate(prefab, location.position, location.rotation);
+                var plantObj = Instantiate(prefab, location.Position, location.Rotation);
                 plantObj.transform.SetParent(location);
 
                 // Restore plant controller state
@@ -1053,7 +1123,7 @@ namespace _project.Scripts.Card_Core
             }
 
             var availablePlants = validLocations
-                .Select(location => location.GetComponentInChildren<PlantController>(true))
+                .Select(location => location.Transform.GetComponentInChildren<PlantController>(true))
                 .Where(controller => controller)
                 .ToList();
 

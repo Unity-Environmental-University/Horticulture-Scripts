@@ -93,7 +93,7 @@ namespace _project.Scripts.PlayModeTest
             _turnController.lostGameObjects = _lostObjectsGo;
             _turnController.winScreen = _winScreenGo;
 
-            _deckManager.plantLocations = new List<Transform>();
+            _deckManager.plantLocations = new List<PlantHolder>();
             _actionParentGo = new GameObject("ActionCardParent");
             _deckManager.actionCardParent = _actionParentGo.transform;
 

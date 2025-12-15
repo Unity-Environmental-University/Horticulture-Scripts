@@ -418,7 +418,7 @@ namespace _project.Scripts.PlayModeTest
                 roots.Add(winScreenGo);
 
                 // Setup DeckManager
-                var plantLocations = new List<Transform>();
+                var plantLocations = new List<PlantHolder>();
                 var actionParentGo = new GameObject("ActionCardParent");
                 deckManager.actionCardParent = actionParentGo.transform;
                 roots.Add(actionParentGo);
@@ -466,7 +466,7 @@ namespace _project.Scripts.PlayModeTest
                     plant.plantCardFunctions = plantFunctions;
 
                     plants[i] = plant;
-                    plantLocations.Add(spotRoot.transform);
+                    plantLocations.Add(new PlantHolder(spotRoot.transform));
                 }
 
                 deckManager.plantLocations = plantLocations;

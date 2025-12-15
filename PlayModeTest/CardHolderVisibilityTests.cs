@@ -34,7 +34,7 @@ namespace _project.Scripts.PlayModeTest
             _cgmGo.AddComponent<CardGameMaster>();
 
             _location = new GameObject("Location").transform;
-            _deckManager.plantLocations = new List<Transform> { _location };
+            _deckManager.plantLocations = new List<PlantHolder> { new PlantHolder(_location) };
 
             yield return null;
         }

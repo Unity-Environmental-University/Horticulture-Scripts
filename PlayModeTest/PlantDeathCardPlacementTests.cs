@@ -49,7 +49,7 @@ namespace _project.Scripts.PlayModeTest
             _turnController.lostGameObjects = _lostObjectsGo;
             _turnController.winScreen = _winScreenGo;
 
-            _deckManager.plantLocations = new List<Transform>();
+            _deckManager.plantLocations = new List<PlantHolder>();
             _actionParentGo = new GameObject("ActionCardParent");
             _deckManager.actionCardParent = _actionParentGo.transform;
 
@@ -117,7 +117,7 @@ namespace _project.Scripts.PlayModeTest
             cardHolderGo.AddComponent<SafeClick3D>();
 
             // Register location with DeckManager
-            _deckManager.plantLocations.Add(_plantLocationGo.transform);
+            _deckManager.plantLocations.Add(new PlantHolder(_plantLocationGo.transform));
 
             return plant;
         }

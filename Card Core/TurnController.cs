@@ -208,10 +208,10 @@ namespace _project.Scripts.Card_Core
             }
 
             // Record round start analytics (after plants are placed for accurate count)
-            try
-            {
-                var plantCount = _deckManager.plantLocations.Count(loc =>
-                    loc.GetComponentInChildren<PlantController>(true) != null);
+	            try
+	            {
+	                var plantCount = _deckManager.plantLocations?.Count(loc =>
+	                    loc && loc.Transform.GetComponentInChildren<PlantController>(true) != null) ?? 0;
 
                 AnalyticsFunctions.RecordRoundStart(
                     currentRound,
@@ -255,11 +255,12 @@ namespace _project.Scripts.Card_Core
                 if (sequencer) yield return StartCoroutine(sequencer.ResumeUIPopInAndWait());
 
                 // Record turn starts analytics before drawing action hand
-                try
-                {
-                    var afflictedCount = _deckManager.plantLocations
-                        .Select(loc => loc.GetComponentInChildren<PlantController>(true))
-                        .Count(p => p != null && p.CurrentAfflictions.Count > 0);
+	                try
+	                {
+	                    var afflictedCount = _deckManager.plantLocations?
+	                        .Where(loc => loc)
+	                        .Select(loc => loc.Transform.GetComponentInChildren<PlantController>(true))
+	                        .Count(p => p != null && p.CurrentAfflictions.Count > 0) ?? 0;
 
                     AnalyticsFunctions.RecordTurnStart(
                         currentRound,
@@ -336,10 +337,11 @@ namespace _project.Scripts.Card_Core
                 return;
             }
 
-            // Snapshot plant controllers for this turn's processing
-            var plantControllers = _deckManager.plantLocations
-                .SelectMany(location => location.GetComponentsInChildren<PlantController>(false))
-                .ToArray();
+	            // Snapshot plant controllers for this turn's processing
+	            var plantControllers = _deckManager.plantLocations?
+	                .Where(location => location)
+	                .SelectMany(location => location.Transform.GetComponentsInChildren<PlantController>(false))
+	                .ToArray() ?? Array.Empty<PlantController>();
 
             var spotDataHolders = FindObjectsByType<SpotDataHolder>(FindObjectsSortMode.None);
 
@@ -546,9 +548,10 @@ namespace _project.Scripts.Card_Core
 
             if (debugging) Debug.Log("Score: " + score);
 
-            var pControllers = _deckManager.plantLocations
-                .SelectMany(location => location.GetComponentsInChildren<PlantController>(false))
-                .ToArray();
+	            var pControllers = _deckManager.plantLocations
+	                ?.Where(location => location)
+	                .SelectMany(location => location.Transform.GetComponentsInChildren<PlantController>(false))
+	                .ToArray() ?? Array.Empty<PlantController>();
 
             if (debugging) Debug.Log($"Found {pControllers.Length} PlantControllers in PlantLocation.");
 
@@ -616,17 +619,21 @@ namespace _project.Scripts.Card_Core
             var roundVictory = !IsActiveTutorialStep && ScoreManager.GetMoneys() >= moneyGoal;
 
             // Count plant health status and record round end analytics
-            try
-            {
-                var plantControllers = _deckManager.plantLocations
-                    .Select(loc => loc.GetComponentInChildren<PlantController>(true))
-                    .Where(p => p != null)
-                    .ToArray();
+	            try
+	            {
+	                var validLocations = _deckManager.plantLocations?
+	                    .Where(loc => loc)
+	                    .ToArray() ?? Array.Empty<PlantHolder>();
 
-                var plantsHealthy = plantControllers.Count(p => p.CurrentAfflictions.Count == 0);
-                var plantsDead = _deckManager.plantLocations.Count - plantControllers.Length;
-                
-                AnalyticsFunctions.RecordRoundEnd(
+	                var plantControllers = validLocations
+	                    .Select(loc => loc.Transform.GetComponentInChildren<PlantController>(true))
+	                    .Where(p => p != null)
+	                    .ToArray();
+
+	                var plantsHealthy = plantControllers.Count(p => p.CurrentAfflictions.Count == 0);
+	                var plantsDead = validLocations.Length - plantControllers.Length;
+	                
+	                AnalyticsFunctions.RecordRoundEnd(
                     currentRound,
                     roundTurnCount,
                     score,
