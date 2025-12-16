@@ -186,7 +186,19 @@ namespace _project.Scripts.Card_Core
 
         #region Class Variables
 
-        [DontSerialize] public bool updatingActionDisplay;
+        [DontSerialize] private bool _updatingActionDisplay;
+
+        public bool UpdatingActionDisplay
+        {
+            get => _updatingActionDisplay;
+            private set
+            {
+                if (_updatingActionDisplay != value && debug)
+                    Debug.Log(
+                        $"[DeckManager] updatingActionDisplay: {_updatingActionDisplay} -> {value}\n{Environment.StackTrace}");
+                _updatingActionDisplay = value;
+            }
+        }
 
         // DOTween sequence management for memory leak prevention
         private Sequence _currentHandSequence;
@@ -267,6 +279,9 @@ namespace _project.Scripts.Card_Core
 
         private void Start()
         {
+            // Defensive reset: ensure the animation flag starts clean
+            UpdatingActionDisplay = false;
+
             InitializePlantHolders();
             InitializeActionDeck();
             InitializeStickerDeck();
@@ -695,7 +710,7 @@ namespace _project.Scripts.Card_Core
 
             if (!location) yield break;
 
-            var locationTransform = location.Transform;
+            var locationTransform = location!.Transform;
             if (!locationTransform) yield break;
 
             // Notify SpotDataHolder that the plant was removed
@@ -1065,13 +1080,21 @@ namespace _project.Scripts.Card_Core
 
         public void DrawTutorialActionHand()
         {
-            if (updatingActionDisplay) return;
+            if (debug) Debug.Log($"[DeckManager] DrawTutorialActionHand called. updatingActionDisplay={UpdatingActionDisplay}");
 
+            if (UpdatingActionDisplay)
+            {
+                if (debug) Debug.LogWarning("[DeckManager] Cannot draw tutorial hand - updatingActionDisplay is true!");
+                return;
+            }
+
+            if (debug) Debug.Log("[DeckManager] Ensuring tutorial action deck...");
             EnsureTutorialActionDeck();
+            if (debug) Debug.Log("[DeckManager] Calling DrawActionHand...");
             DrawActionHand();
 
             if (debug)
-                Debug.Log($"Tutorial Action Hand: {string.Join(", ", _actionHand.ConvertAll(card => card.Name))}");
+                Debug.Log($"[DeckManager] Tutorial Action Hand: {string.Join(", ", _actionHand.ConvertAll(card => card.Name))}");
         }
 
         #endregion
@@ -1321,7 +1344,7 @@ namespace _project.Scripts.Card_Core
         /// </remarks>
         public void DrawActionHand()
         {
-            if (updatingActionDisplay) return;
+            if (UpdatingActionDisplay) return;
 
             // Discard current hand cards to discard pile
             var cardsToDiscard = new List<ICard>(_actionHand);
@@ -1467,7 +1490,7 @@ namespace _project.Scripts.Card_Core
             }
             
             // Prevent concurrent animation state issues
-            if (updatingActionDisplay)
+            if (UpdatingActionDisplay)
             {
                 Debug.LogWarning("Animation already in progress, queuing card addition after completion");
                 // For now, add the card immediately but skip animation to prevent race conditions
@@ -1517,7 +1540,7 @@ namespace _project.Scripts.Card_Core
             // Kill any existing hand animation sequence to prevent memory leaks
             SafeKillSequence(ref _currentHandSequence);
 
-            updatingActionDisplay = true;
+            UpdatingActionDisplay = true;
 
             try
             {
@@ -1525,7 +1548,7 @@ namespace _project.Scripts.Card_Core
                 var childCount = actionCardParent.childCount;
                 if (childCount == 0)
                 {
-                    updatingActionDisplay = false;
+                    UpdatingActionDisplay = false;
                     _currentHandSequence = null;
                     return;
                 }
@@ -1603,7 +1626,7 @@ namespace _project.Scripts.Card_Core
                     finally
                     {
                         // Always reset state, even if there was an error
-                        updatingActionDisplay = false;
+                        UpdatingActionDisplay = false;
                         _currentHandSequence = null;
                     }
                 });
@@ -1615,7 +1638,7 @@ namespace _project.Scripts.Card_Core
             {
                 Debug.LogError($"Error creating hand reflow animation: {ex.Message}");
                 SafeKillSequence(ref _currentHandSequence);
-                updatingActionDisplay = false;
+                UpdatingActionDisplay = false;
             }
         }
 
@@ -1654,7 +1677,7 @@ namespace _project.Scripts.Card_Core
             // Kill any existing display animation sequence to prevent memory leaks
             SafeKillSequence(ref _currentDisplaySequence);
 
-            updatingActionDisplay = true;
+            UpdatingActionDisplay = true;
 
             try
             {
@@ -1732,7 +1755,7 @@ namespace _project.Scripts.Card_Core
                 // Set completion callback
                 _currentDisplaySequence.OnComplete(() =>
                 {
-                    updatingActionDisplay = false;
+                    UpdatingActionDisplay = false;
                     _currentDisplaySequence = null;
                 });
 
@@ -1742,7 +1765,7 @@ namespace _project.Scripts.Card_Core
             {
                 Debug.LogError($"Error creating display card sequence: {ex.Message}");
                 SafeKillSequence(ref _currentDisplaySequence);
-                updatingActionDisplay = false;
+                UpdatingActionDisplay = false;
             }
         }
 
@@ -1759,7 +1782,7 @@ namespace _project.Scripts.Card_Core
             var currentRoundNum = cgm.turnController.currentRound;
             var currentTurnNum = cgm.turnController.currentTurn;
 
-            if (updatingActionDisplay)
+            if (UpdatingActionDisplay)
             {
                 AnalyticsFunctions.RecordRedraw("N/A", "N/A", currentScore, currentRoundNum, currentTurnNum,
                     false, "Animation in progress");
@@ -1852,7 +1875,7 @@ namespace _project.Scripts.Card_Core
         /// </summary>
         public void RefreshActionHandDisplay()
         {
-            if (updatingActionDisplay) return;
+            if (UpdatingActionDisplay) return;
             ClearActionCardVisuals();
             DisplayActionCardsSequence();
         }

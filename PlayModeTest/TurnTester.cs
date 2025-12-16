@@ -439,7 +439,7 @@ namespace _project.Scripts.PlayModeTest
             // Initialize the tutorial action deck state up front
             _deckManager.DrawTutorialActionHand();
             yield return null;
-            yield return new WaitWhile(() => _deckManager.updatingActionDisplay);
+            yield return new WaitWhile(() => _deckManager.UpdatingActionDisplay);
 
             var initialAll = new List<ICard>();
             initialAll.AddRange(_deckManager.GetActionDeck());

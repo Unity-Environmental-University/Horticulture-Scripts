@@ -65,15 +65,35 @@ namespace _project.Scripts.Cinematics
         /// </summary>
         public IEnumerator ResumeUIPopInAndWait()
         {
+            Debug.Log("[RobotCardGameSequencer] ResumeUIPopInAndWait called.");
             ResumeUIPopIn();
-            if (!uiAnimator) yield break;
+
+            if (!uiAnimator)
+            {
+                Debug.LogWarning("[RobotCardGameSequencer] No uiAnimator found, skipping UI animation.");
+                yield break;
+            }
+
+            Debug.Log($"[RobotCardGameSequencer] UI animator found. isPlaying={uiAnimator.isPlaying}");
 
             // Ensure a frame passes so Animation starts playing after speed change
             yield return null;
 
+            Debug.Log($"[RobotCardGameSequencer] After frame wait. isPlaying={uiAnimator.isPlaying}");
+
             // Wait until the animator finishes the current clip
+            var frameCount = 0;
             while (uiAnimator.isPlaying)
+            {
+                frameCount++;
+                if (frameCount % 60 == 0) // Log every 60 frames (roughly every second at 60 FPS)
+                {
+                    Debug.Log($"[RobotCardGameSequencer] Still waiting for UI animation... (frame {frameCount})");
+                }
                 yield return null;
+            }
+
+            Debug.Log($"[RobotCardGameSequencer] UI animation complete after {frameCount} frames.");
         }
     }
 }

@@ -235,15 +235,41 @@ namespace _project.Scripts.Card_Core
                 TryPlayQueuedEffects();
                 if (currentTutorialTurn == 0)
                 {
+                    if (debugging) Debug.Log("[TurnController] Playing aphids cutscene...");
                     CinematicDirector.PlayScene(CardGameMaster.Instance.cinematicDirector.aphidsTimeline);
+                    if (debugging) Debug.Log("[TurnController] Waiting for cutscene to complete...");
                     yield return new WaitUntil(readyToPlay);
+                    if (debugging) Debug.Log("[TurnController] Cutscene complete. Showing card diagram popup...");
                     CardGameMaster.Instance.popUpController.ActivatePopUpPanel(cardDiagram, true,
                         "Here's a quick outline of how the cards work!");
+                    if (debugging) Debug.Log("[TurnController] Popup shown.");
                 }
                 // Reveal UI, wait for pop-in to finish, then draw the hand
+                if (debugging) Debug.Log("[TurnController] Looking for RobotCardGameSequencer...");
                 var sequencer = FindFirstObjectByType<RobotCardGameSequencer>(FindObjectsInactive.Exclude);
-                if (sequencer) yield return StartCoroutine(sequencer.ResumeUIPopInAndWait());
+                if (sequencer)
+                {
+                    if (debugging) Debug.Log("[TurnController] Sequencer found. Waiting for UI pop-in...");
+                    yield return StartCoroutine(sequencer.ResumeUIPopInAndWait());
+                    if (debugging) Debug.Log("[TurnController] UI pop-in complete.");
+                }
+                else
+                {
+                    if (debugging) Debug.Log("[TurnController] No sequencer found, proceeding without UI animation.");
+                }
+
+                if (debugging) Debug.Log($"[TurnController] Drawing tutorial action hand. updatingActionDisplay={_deckManager.UpdatingActionDisplay}");
+
+                // Wait for any in-progress animations to complete before drawing
+                if (_deckManager.UpdatingActionDisplay)
+                {
+                    if (debugging) Debug.Log("[TurnController] Waiting for in-progress animation to complete...");
+                    yield return new WaitUntil(() => !_deckManager.UpdatingActionDisplay);
+                    if (debugging) Debug.Log("[TurnController] Animation complete, proceeding with draw.");
+                }
+
                 _deckManager.DrawTutorialActionHand();
+                if (debugging) Debug.Log("[TurnController] Tutorial action hand drawn successfully.");
             }
             else
             {
@@ -273,6 +299,14 @@ namespace _project.Scripts.Card_Core
                 catch (Exception ex)
                 {
                     Debug.LogWarning($"[Analytics] RecordTurnStart error: {ex.Message}");
+                }
+
+                // Wait for any in-progress animations to complete before drawing
+                if (_deckManager.UpdatingActionDisplay)
+                {
+                    if (debugging) Debug.Log("[TurnController] Waiting for in-progress animation to complete...");
+                    yield return new WaitUntil(() => !_deckManager.UpdatingActionDisplay);
+                    if (debugging) Debug.Log("[TurnController] Animation complete, proceeding with draw.");
                 }
 
                 _deckManager.DrawActionHand();
@@ -325,7 +359,7 @@ namespace _project.Scripts.Card_Core
         /// </exception>
         public void EndTurn()
         {
-            if (_deckManager.updatingActionDisplay || !canClickEnd) return;
+            if (_deckManager.UpdatingActionDisplay || !canClickEnd) return;
             // Debounce apply button immediately to prevent double-trigger within a single input frame
             canClickEnd = false;
 
