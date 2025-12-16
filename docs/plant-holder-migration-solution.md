@@ -26,6 +26,11 @@ When `DeckManager.plantLocations` was changed from `List<Transform>` to `List<Pl
 
 This combines immediate auto-fixing with a one-time migration tool for robustness.
 
+## Implemented Fix
+
+- `Assets/_project/Scripts/Editor/PlantHolderMigrationTool.cs` migrates legacy YAML where `plantLocations` is still a `List<Transform>` (entries like `- {fileID: ...}`) into the `PlantHolder` shape (`- plantLocation: {fileID: ...}` plus an empty `placedCardHolders` list).
+- Run it in Unity via: `Tools > Migration > Migrate DeckManager Plant Locations (Transform -> PlantHolder)`
+
 #### Phase 1: OnValidate Auto-Migration (IMMEDIATE FIX)
 Add backward-compatible field and auto-migration logic to DeckManager that runs in Editor.
 

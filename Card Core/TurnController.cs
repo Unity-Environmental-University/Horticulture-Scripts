@@ -260,12 +260,28 @@ namespace _project.Scripts.Card_Core
 
                 if (debugging) Debug.Log($"[TurnController] Drawing tutorial action hand. updatingActionDisplay={_deckManager.UpdatingActionDisplay}");
 
-                // Wait for any in-progress animations to complete before drawing
+                // Wait for any in-progress animations to complete before drawing (with timeout protection)
                 if (_deckManager.UpdatingActionDisplay)
                 {
                     if (debugging) Debug.Log("[TurnController] Waiting for in-progress animation to complete...");
-                    yield return new WaitUntil(() => !_deckManager.UpdatingActionDisplay);
-                    if (debugging) Debug.Log("[TurnController] Animation complete, proceeding with draw.");
+
+                    const float timeout = 5f;
+                    var elapsed = 0f;
+                    while (_deckManager.UpdatingActionDisplay && elapsed < timeout)
+                    {
+                        yield return null;
+                        elapsed += Time.deltaTime;
+                    }
+
+                    if (_deckManager.UpdatingActionDisplay)
+                    {
+                        Debug.LogError("[TurnController] Animation timeout! Force-clearing updatingActionDisplay flag.");
+                        _deckManager.ForceResetAnimationFlag();
+                    }
+                    else if (debugging)
+                    {
+                        Debug.Log("[TurnController] Animation complete, proceeding with draw.");
+                    }
                 }
 
                 _deckManager.DrawTutorialActionHand();

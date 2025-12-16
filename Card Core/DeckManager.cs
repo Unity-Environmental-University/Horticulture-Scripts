@@ -193,9 +193,18 @@ namespace _project.Scripts.Card_Core
             get => _updatingActionDisplay;
             private set
             {
+                #if UNITY_EDITOR || DEVELOPMENT_BUILD
                 if (_updatingActionDisplay != value && debug)
-                    Debug.Log(
-                        $"[DeckManager] updatingActionDisplay: {_updatingActionDisplay} -> {value}\n{Environment.StackTrace}");
+                {
+                    Debug.Log($"[DeckManager] updatingActionDisplay: {_updatingActionDisplay} -> {value}");
+
+                    // Only log stack trace for suspicious transitions (setting true when already true)
+                    if (value && _updatingActionDisplay)
+                    {
+                        Debug.LogWarning($"[DeckManager] Suspicious flag transition!\n{Environment.StackTrace}");
+                    }
+                }
+                #endif
                 _updatingActionDisplay = value;
             }
         }
@@ -282,6 +291,8 @@ namespace _project.Scripts.Card_Core
             // Defensive reset: ensure the animation flag starts clean
             UpdatingActionDisplay = false;
 
+            WarnIfPlantLocationsLikelyMissing();
+
             InitializePlantHolders();
             InitializeActionDeck();
             InitializeStickerDeck();
@@ -300,6 +311,18 @@ namespace _project.Scripts.Card_Core
             if (plantLocations == null) return;
             foreach (var holder in plantLocations)
                 holder?.InitializeCardHolders();
+        }
+
+        private void WarnIfPlantLocationsLikelyMissing()
+        {
+            if (plantLocations != null && plantLocations.Count > 0) return;
+
+            // Avoid noisy logs in tests/minimal setups where no board exists yet.
+            if (FindObjectsOfType<SpotDataHolder>(true).Length == 0) return;
+
+            Debug.LogError(
+                "[DeckManager] plantLocations is empty. If you upgraded from a version where this was a List<Transform>, " +
+                "run Tools > Migration > Migrate DeckManager Plant Locations (Transform -> PlantHolder) to update scenes/prefabs.");
         }
 
         /// Initializes the action deck by populating it with clones of prototype action cards.
@@ -1542,6 +1565,9 @@ namespace _project.Scripts.Card_Core
 
             UpdatingActionDisplay = true;
 
+            // Start watchdog coroutine to detect and fix animation timeout
+            StartCoroutine(AnimationTimeoutWatchdog(duration + 2f));
+
             try
             {
                 // Capture current children as the visuals we will reflow
@@ -1678,6 +1704,10 @@ namespace _project.Scripts.Card_Core
             SafeKillSequence(ref _currentDisplaySequence);
 
             UpdatingActionDisplay = true;
+
+            // Start watchdog coroutine to detect and fix animation timeout
+            // Maximum expected duration is ~2 seconds for typical hands, so 5 second timeout is safe
+            StartCoroutine(AnimationTimeoutWatchdog(5f));
 
             try
             {
@@ -1883,6 +1913,47 @@ namespace _project.Scripts.Card_Core
         #endregion
 
         #region DOTween Sequence Management
+
+        /// <summary>
+        /// Force-resets the animation flag and kills all running sequences.
+        /// Called by TurnController when animation timeout is detected.
+        /// </summary>
+        public void ForceResetAnimationFlag()
+        {
+            Debug.LogWarning("[DeckManager] ForceResetAnimationFlag called - clearing stuck animation state.");
+
+            // Kill all running sequences
+            SafeKillSequence(ref _currentHandSequence);
+            SafeKillSequence(ref _currentDisplaySequence);
+
+            // Force-clear the animation flag
+            _updatingActionDisplay = false; // Bypass property setter to avoid logging
+
+            // Re-enable all Click3D components that may have been disabled
+            if (actionCardParent)
+            {
+                foreach (Transform child in actionCardParent)
+                {
+                    var click3D = child.GetComponent<Click3D>();
+                    if (click3D) click3D.enabled = true;
+                }
+            }
+        }
+
+        /// <summary>
+        /// Coroutine watchdog that monitors for animation timeout and force-clears the flag if needed.
+        /// Prevents permanent deadlocks if DOTween OnComplete callbacks fail to fire.
+        /// </summary>
+        private IEnumerator AnimationTimeoutWatchdog(float maxDuration)
+        {
+            yield return new WaitForSeconds(maxDuration);
+
+            if (UpdatingActionDisplay)
+            {
+                Debug.LogError("[DeckManager] Animation watchdog timeout detected! Force-clearing flag.");
+                ForceResetAnimationFlag();
+            }
+        }
 
         /// <summary>
         /// Safely kills a DOTween sequence with proper error handling and memory cleanup.
