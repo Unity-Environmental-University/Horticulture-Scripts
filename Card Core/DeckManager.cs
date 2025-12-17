@@ -218,7 +218,7 @@ namespace _project.Scripts.Card_Core
         private readonly List<ICard> _actionHand = new();
         private bool _usingTutorialActionDeck;
 
-        public List<PlantHolder> plantLocations;
+        public List<PlantHolder> plantLocations = new();
         public Transform actionCardParent;
         public Transform stickerPackParent;
 
@@ -315,10 +315,11 @@ namespace _project.Scripts.Card_Core
 
         private void WarnIfPlantLocationsLikelyMissing()
         {
-            if (plantLocations != null && plantLocations.Count > 0) return;
+            if (plantLocations is { Count: > 0 }) return;
 
             // Avoid noisy logs in tests/minimal setups where no board exists yet.
-            if (FindObjectsOfType<SpotDataHolder>(true).Length == 0) return;
+            if (FindObjectsByType<SpotDataHolder>(FindObjectsInactive.Include, FindObjectsSortMode.None).Length ==
+                0) return;
 
             Debug.LogError(
                 "[DeckManager] plantLocations is empty. If you upgraded from a version where this was a List<Transform>, " +
@@ -1565,7 +1566,7 @@ namespace _project.Scripts.Card_Core
 
             UpdatingActionDisplay = true;
 
-            // Start watchdog coroutine to detect and fix animation timeout
+            // Start a watchdog coroutine to detect and fix animation timeout
             StartCoroutine(AnimationTimeoutWatchdog(duration + 2f));
 
             try
@@ -1705,8 +1706,8 @@ namespace _project.Scripts.Card_Core
 
             UpdatingActionDisplay = true;
 
-            // Start watchdog coroutine to detect and fix animation timeout
-            // Maximum expected duration is ~2 seconds for typical hands, so 5 second timeout is safe
+            // Start a watchdog coroutine to detect and fix animation timeout
+            // Maximum expected duration is ~2 seconds for typical hands, so a 5-second timeout should be safe
             StartCoroutine(AnimationTimeoutWatchdog(5f));
 
             try

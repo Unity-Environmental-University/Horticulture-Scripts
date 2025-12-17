@@ -13,12 +13,12 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "self-replicating-card-feature.md",
+                "file": "Documentation-Templates.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "self-replicating-card-feature"
+              "title": "Documentation-Templates"
             }
           }
         ]
@@ -185,8 +185,16 @@
   },
   "active": "0b8d37250e3fc91a",
   "lastOpenFiles": [
-    "README-WIKI.md",
+    "animation-timeout-system.md.meta",
+    "animation-timeout-system.md",
+    "plant-holder-system.md.meta",
+    "plant-holder-system.md",
+    "Code-Standards.md",
+    "cinematics-system-documentation.md",
+    "api-reference.md",
+    "analytics-system.md",
     "self-replicating-card-feature.md",
+    "README-WIKI.md",
     "hover-system-enhancements.md.meta",
     "hover-system-enhancements.md",
     "Navigation-Index.md.meta",
@@ -197,28 +205,21 @@
     "Code-Standards.md.meta",
     "Core-Systems.md.meta",
     "self-replicating-card-feature.md.meta",
-    "Documentation-Templates.md.meta",
     "user-guide.md",
     "README.md",
     "ARCHITECTURE.md",
-    "cinematics-system-documentation.md",
     "Home.md",
     "plant-location-card-slots-technical-design.md",
     "Quick-Reference.md",
     "i-location-card-system.md",
     "Documentation-Templates.md",
-    "analytics-system.md",
     "Architecture-Hub.md",
     "classes-system-documentation.md",
     "Navigation-Index.md",
     "System-Integration.md",
-    "Code-Standards.md",
     "testing-guide.md",
     "developer-onboarding.md",
     "card-core-system.md",
-    "mod-guide.md",
-    "Core-Systems.md",
-    "Common-Workflows.md",
-    "animation-hooks.md"
+    "mod-guide.md"
   ]
 }

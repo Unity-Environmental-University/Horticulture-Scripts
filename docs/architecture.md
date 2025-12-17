@@ -56,6 +56,7 @@ Horticulture follows a **layered architecture** with **component-based design**,
 3. **High Cohesion**: Related functionality is grouped together
 4. **Extensibility**: New cards, treatments, and features can be added easily
 5. **Testability**: Business logic is separated from Unity dependencies where possible
+6. **Resilience**: Watchdog systems prevent permanent failure states
 
 ## Design Patterns
 
@@ -69,7 +70,7 @@ Horticulture follows a **layered architecture** with **component-based design**,
 public class CardGameMaster : MonoBehaviour
 {
     public static CardGameMaster Instance { get; private set; }
-    
+
     private void Awake()
     {
         if (Instance == null)
@@ -109,7 +110,7 @@ public class PlantController : MonoBehaviour
     // Health and affliction management
 }
 
-public class PlantCardFunctions : MonoBehaviour  
+public class PlantCardFunctions : MonoBehaviour
 {
     // Card-specific functionality
 }
@@ -199,6 +200,102 @@ public static class CardFactory
 - Easy to modify creation logic
 - Supports serialization/deserialization
 
+### Watchdog Pattern
+
+**Usage**: Animation timeout detection and recovery
+- DOTween sequence monitoring in `DeckManager`
+- UI deadlock prevention
+- Automatic recovery from stuck states
+
+```csharp
+// Start watchdog when animation begins
+UpdatingActionDisplay = true;
+StartCoroutine(AnimationTimeoutWatchdog(5f));
+
+// Watchdog monitors for timeout
+private IEnumerator AnimationTimeoutWatchdog(float maxDuration)
+{
+    yield return new WaitForSeconds(maxDuration);
+    if (UpdatingActionDisplay)
+    {
+        Debug.LogError("Animation timeout detected!");
+        ForceResetAnimationFlag();
+    }
+}
+
+// Force recovery when timeout detected
+public void ForceResetAnimationFlag()
+{
+    SafeKillSequence(ref _currentHandSequence);
+    UpdatingActionDisplay = false;
+    // Re-enable disabled components
+}
+```
+
+**Benefits**:
+- Prevents permanent UI deadlocks
+- Automatic recovery from animation failures
+- Improved user experience and robustness
+- Diagnostic logging for debugging
+
+**Use Cases**:
+- DOTween animation sequences
+- Async operations with timeouts
+- Long-running coroutines
+- UI state management
+
+**See Also**: [animation-timeout-system.md](animation-timeout-system.md) for detailed implementation
+
+### Wrapper Pattern
+
+**Usage**: PlantHolder wraps Transform with caching and convenience API
+- Component caching for performance
+- Semantic clarity (plant location vs generic Transform)
+- Backward compatibility via implicit operators
+
+```csharp
+[Serializable]
+public class PlantHolder
+{
+    [SerializeField] private Transform plantLocation;
+    [SerializeField] private List<PlacedCardHolder> placedCardHolders;
+
+    public Transform Transform => plantLocation;
+    public Vector3 Position => plantLocation.position;
+    public IReadOnlyList<PlacedCardHolder> CardHolders => placedCardHolders;
+
+    public void InitializeCardHolders()
+    {
+        placedCardHolders = plantLocation.GetComponentsInChildren<PlacedCardHolder>().ToList();
+    }
+
+    // Implicit conversion for backward compatibility
+    public static implicit operator Transform(PlantHolder holder) => holder?.plantLocation;
+    public static implicit operator bool(PlantHolder holder) => holder?.plantLocation;
+}
+```
+
+**Benefits**:
+- Performance: Pre-caches child components (eliminates O(n) GetComponentsInChildren calls)
+- Semantic clarity: Explicit "plant location" type vs generic Transform
+- Backward compatibility: Implicit operators minimize refactoring
+- Extensibility: Centralized location for plant location logic
+
+**Usage Pattern**:
+```csharp
+// DeckManager maintains list of PlantHolders
+public List<PlantHolder> plantLocations;
+
+// Access cached components without GetComponent call
+foreach (var holder in plantLocations)
+{
+    var cardHolders = holder.CardHolders; // O(1) cached access
+    var position = holder.Position;       // Convenient property
+}
+```
+
+**See Also**: [plant-holder-system.md](plant-holder-system.md) for detailed documentation
+
 ## System Components
 
 ### Card Game System
@@ -209,6 +306,7 @@ public static class CardFactory
 - `TurnController`: Game flow and progression
 - `ScoreManager`: Economy and scoring
 - `ShopManager`: Card acquisition
+- `PlantHolder`: Plant location wrapper with component caching
 
 **Responsibilities**:
 - Turn-based game flow management
@@ -216,6 +314,7 @@ public static class CardFactory
 - Plant placement and removal
 - Economic calculations and scoring
 - Treatment application coordination
+- Animation sequence management with timeout protection
 
 **Key Interfaces**:
 ```csharp
@@ -291,12 +390,14 @@ This scaling keeps pace with rent increases (+$50/level starting at level 3), ma
 - `PlantController`: Individual plant behavior
 - `PlantManager`: Collection management
 - `PlantHealthBarHandler`: Visual health representation
+- `PlantHolder`: Location wrapper with cached card holders
 
 **Responsibilities**:
 - Plant health and state tracking
 - Affliction and treatment application
 - Visual effect coordination
 - Death/removal processing
+- Component caching for performance
 
 **Data Structures**:
 ```csharp
@@ -306,6 +407,15 @@ public class InfectLevel
     public int InfectTotal => _sources.Values.Sum(v => v.infect);
     public int EggTotal => _sources.Values.Sum(v => v.eggs);
 }
+```
+
+**PlantHolder Caching**:
+```csharp
+// Before: Multiple GetComponentsInChildren calls
+var cardHolders = plantLocation.GetComponentsInChildren<PlacedCardHolder>();
+
+// After: O(1) cached access
+var cardHolders = plantHolder.CardHolders;
 ```
 
 ### Game State System
@@ -338,6 +448,7 @@ public class InfectLevel
 - Visual feedback and animations
 - Menu navigation
 - Game state visualization
+- Animation timeout protection
 
 ### Audio System
 
@@ -349,6 +460,27 @@ public class InfectLevel
 - Sound effect playback
 - Audio source management
 - Context-sensitive audio selection
+
+### Animation Management System
+
+**Primary Components**:
+- DOTween sequence management in `DeckManager`
+- Animation timeout watchdog coroutines
+- Force-reset recovery mechanisms
+
+**Responsibilities**:
+- Card hand animation sequences
+- Animation state tracking
+- Timeout detection and recovery
+- Memory leak prevention
+
+**Key Features**:
+- Watchdog pattern prevents permanent UI deadlocks
+- Automatic recovery from failed animations
+- Diagnostic logging for debugging
+- Component re-enablement after recovery
+
+**See**: [animation-timeout-system.md](animation-timeout-system.md) for implementation details
 
 ## Data Flow
 
@@ -397,7 +529,7 @@ graph TD
     C --> D[Serialize Plants]
     D --> E[Serialize Progress]
     E --> F[Write to File]
-    
+
     G[Load Game] --> H[Read File]
     H --> I[Deserialize Data]
     I --> J[Recreate Cards]
@@ -506,7 +638,7 @@ public class ScoreManager : MonoBehaviour
     {
         TurnController.OnTurnEnd += CalculateScore;
     }
-    
+
     private void OnDisable()
     {
         TurnController.OnTurnEnd -= CalculateScore;
@@ -524,9 +656,14 @@ public class ScoreManager : MonoBehaviour
 - UI element reuse for dynamic content
 
 **Garbage Collection Minimization**:
-- Cached references to frequently accessed components
+- Cached references to frequently accessed components (PlantHolder.CardHolders)
 - Struct usage for small data types where appropriate
 - String concatenation optimization
+
+**Animation Sequence Cleanup**:
+- DOTween sequences properly killed to prevent memory leaks
+- References nulled after cleanup via SafeKillSequence()
+- Watchdog coroutines clean up on timeout
 
 ### Processing Optimization
 
@@ -539,6 +676,11 @@ public class ScoreManager : MonoBehaviour
 - Shader updates only when plant state changes
 - Score calculations only when needed
 - Visual effects only created when triggered
+
+**Component Caching**:
+- PlantHolder pre-caches PlacedCardHolder components
+- Eliminates repeated GetComponentsInChildren calls
+- O(1) access to cached components vs O(n) hierarchy traversal
 
 ### Asset Management
 
@@ -646,10 +788,11 @@ Add materials and prefabs for visual representation
 
 ### Current State (Version 1.0)
 
-- Monolithic card game system with tight coupling
+- Component-based card game system
 - File-based save system
 - Single-scene architecture
-- Component-based entity system
+- Watchdog-protected animations
+- PlantHolder wrapper pattern for performance
 
 ### Planned Improvements (Version 2.0)
 
@@ -690,7 +833,8 @@ Key architectural strengths:
 - **Modularity**: Systems can be developed and tested independently
 - **Extensibility**: New content can be added without major refactoring
 - **Maintainability**: Clear interfaces and documentation support long-term development
-- **Performance**: Optimizations focus on the most impactful areas
+- **Performance**: Optimizations focus on the most impactful areas (component caching, animation management)
+- **Resilience**: Watchdog systems prevent permanent failure states
 
 Areas for future improvement:
 - **Testing**: Increase unit test coverage of business logic
@@ -699,3 +843,10 @@ Areas for future improvement:
 - **Modularity**: Consider plugin architecture for user-generated content
 
 This architecture provides a solid foundation for the current educational game while supporting future enhancements and platform expansion.
+
+## Related Documentation
+
+- [plant-holder-system.md](plant-holder-system.md) - PlantHolder wrapper pattern details
+- [animation-timeout-system.md](animation-timeout-system.md) - Watchdog pattern implementation
+- [card-core-system.md](card-core-system.md) - Card Core system architecture
+- [plant-holder-migration-solution.md](plant-holder-migration-solution.md) - Migration guide for PlantHolder
