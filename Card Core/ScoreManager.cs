@@ -142,11 +142,24 @@ namespace _project.Scripts.Card_Core
 
         private static List<PlantController> GetPlatsControllers()
         {
-            var plants = CardGameMaster.Instance.deckManager.plantLocations
-                .Select(location => location.GetComponentInChildren<PlantController>(false))
-                .Where(controller => controller)
-                .ToList();
-            
+            var gameMaster = CardGameMaster.Instance;
+            if (!gameMaster || !gameMaster.deckManager || gameMaster.deckManager.plantLocations == null)
+                return new List<PlantController>();
+
+            var plants = new List<PlantController>(gameMaster.deckManager.plantLocations.Count);
+
+            foreach (var location in gameMaster.deckManager.plantLocations)
+            {
+                if (!location) continue;
+
+                var plantTransform = location.Transform;
+                if (!plantTransform) continue;
+
+                var controller = plantTransform.GetComponentInChildren<PlantController>(false);
+                if (controller)
+                    plants.Add(controller);
+            }
+
             return plants;
         }
     }

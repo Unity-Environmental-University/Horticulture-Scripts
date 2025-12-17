@@ -48,7 +48,7 @@ namespace _project.Scripts.PlayModeTest
             _turnController.lostGameObjects = _lostGameObjects;
 
             // Initialize deck manager with empty plant locations
-            _deckManager.plantLocations = new List<Transform>();
+            _deckManager.plantLocations = new List<PlantHolder>();
 
             // Create action card parent (required by DeckManager)
             var actionParentGo = new GameObject("ActionCardParent");

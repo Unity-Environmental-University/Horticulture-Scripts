@@ -257,10 +257,16 @@ namespace _project.Scripts.GameState
 
         private static List<PlantData> SerializePlants(DeckManager dm)
         {
+            if (!dm || dm.plantLocations == null || dm.plantLocations.Count == 0)
+                return new List<PlantData>();
+
             var list = new List<PlantData>();
             for (var i = 0; i < dm.plantLocations.Count; i++)
             {
-                var plant = dm.plantLocations[i].GetComponentInChildren<PlantController>();
+                var holder = dm.plantLocations[i];
+                if (holder == null || !holder.Transform) continue;
+
+                var plant = holder.Transform.GetComponentInChildren<PlantController>();
                 if (!plant) continue;
 
                 list.Add(new PlantData

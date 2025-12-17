@@ -44,7 +44,7 @@ namespace _project.Scripts.Core
 
         public void ToggleInspect()
         {
-            if (CardGameMaster.Instance.deckManager.updatingActionDisplay ||
+            if (CardGameMaster.Instance.deckManager.UpdatingActionDisplay ||
                 CinematicDirector.Director.state == PlayState.Playing) return;
             if (!CardGameMaster.Instance.isInspecting)
                 EnterInspectMode();

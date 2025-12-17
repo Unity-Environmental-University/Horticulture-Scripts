@@ -208,10 +208,10 @@ namespace _project.Scripts.Card_Core
             }
 
             // Record round start analytics (after plants are placed for accurate count)
-            try
-            {
-                var plantCount = _deckManager.plantLocations.Count(loc =>
-                    loc.GetComponentInChildren<PlantController>(true) != null);
+	            try
+	            {
+	                var plantCount = _deckManager.plantLocations?.Count(loc =>
+	                    loc && loc.Transform.GetComponentInChildren<PlantController>(true) != null) ?? 0;
 
                 AnalyticsFunctions.RecordRoundStart(
                     currentRound,
@@ -235,15 +235,57 @@ namespace _project.Scripts.Card_Core
                 TryPlayQueuedEffects();
                 if (currentTutorialTurn == 0)
                 {
+                    if (debugging) Debug.Log("[TurnController] Playing aphids cutscene...");
                     CinematicDirector.PlayScene(CardGameMaster.Instance.cinematicDirector.aphidsTimeline);
+                    if (debugging) Debug.Log("[TurnController] Waiting for cutscene to complete...");
                     yield return new WaitUntil(readyToPlay);
+                    if (debugging) Debug.Log("[TurnController] Cutscene complete. Showing card diagram popup...");
                     CardGameMaster.Instance.popUpController.ActivatePopUpPanel(cardDiagram, true,
                         "Here's a quick outline of how the cards work!");
+                    if (debugging) Debug.Log("[TurnController] Popup shown.");
                 }
                 // Reveal UI, wait for pop-in to finish, then draw the hand
+                if (debugging) Debug.Log("[TurnController] Looking for RobotCardGameSequencer...");
                 var sequencer = FindFirstObjectByType<RobotCardGameSequencer>(FindObjectsInactive.Exclude);
-                if (sequencer) yield return StartCoroutine(sequencer.ResumeUIPopInAndWait());
+                if (sequencer)
+                {
+                    if (debugging) Debug.Log("[TurnController] Sequencer found. Waiting for UI pop-in...");
+                    yield return StartCoroutine(sequencer.ResumeUIPopInAndWait());
+                    if (debugging) Debug.Log("[TurnController] UI pop-in complete.");
+                }
+                else
+                {
+                    if (debugging) Debug.Log("[TurnController] No sequencer found, proceeding without UI animation.");
+                }
+
+                if (debugging) Debug.Log($"[TurnController] Drawing tutorial action hand. updatingActionDisplay={_deckManager.UpdatingActionDisplay}");
+
+                // Wait for any in-progress animations to complete before drawing (with timeout protection)
+                if (_deckManager.UpdatingActionDisplay)
+                {
+                    if (debugging) Debug.Log("[TurnController] Waiting for in-progress animation to complete...");
+
+                    const float timeout = 5f;
+                    var elapsed = 0f;
+                    while (_deckManager.UpdatingActionDisplay && elapsed < timeout)
+                    {
+                        yield return null;
+                        elapsed += Time.deltaTime;
+                    }
+
+                    if (_deckManager.UpdatingActionDisplay)
+                    {
+                        Debug.LogError("[TurnController] Animation timeout! Force-clearing updatingActionDisplay flag.");
+                        _deckManager.ForceResetAnimationFlag();
+                    }
+                    else if (debugging)
+                    {
+                        Debug.Log("[TurnController] Animation complete, proceeding with draw.");
+                    }
+                }
+
                 _deckManager.DrawTutorialActionHand();
+                if (debugging) Debug.Log("[TurnController] Tutorial action hand drawn successfully.");
             }
             else
             {
@@ -255,11 +297,12 @@ namespace _project.Scripts.Card_Core
                 if (sequencer) yield return StartCoroutine(sequencer.ResumeUIPopInAndWait());
 
                 // Record turn starts analytics before drawing action hand
-                try
-                {
-                    var afflictedCount = _deckManager.plantLocations
-                        .Select(loc => loc.GetComponentInChildren<PlantController>(true))
-                        .Count(p => p != null && p.CurrentAfflictions.Count > 0);
+	                try
+	                {
+	                    var afflictedCount = _deckManager.plantLocations?
+	                        .Where(loc => loc)
+	                        .Select(loc => loc.Transform.GetComponentInChildren<PlantController>(true))
+	                        .Count(p => p != null && p.CurrentAfflictions.Count > 0) ?? 0;
 
                     AnalyticsFunctions.RecordTurnStart(
                         currentRound,
@@ -272,6 +315,14 @@ namespace _project.Scripts.Card_Core
                 catch (Exception ex)
                 {
                     Debug.LogWarning($"[Analytics] RecordTurnStart error: {ex.Message}");
+                }
+
+                // Wait for any in-progress animations to complete before drawing
+                if (_deckManager.UpdatingActionDisplay)
+                {
+                    if (debugging) Debug.Log("[TurnController] Waiting for in-progress animation to complete...");
+                    yield return new WaitUntil(() => !_deckManager.UpdatingActionDisplay);
+                    if (debugging) Debug.Log("[TurnController] Animation complete, proceeding with draw.");
                 }
 
                 _deckManager.DrawActionHand();
@@ -324,7 +375,7 @@ namespace _project.Scripts.Card_Core
         /// </exception>
         public void EndTurn()
         {
-            if (_deckManager.updatingActionDisplay || !canClickEnd) return;
+            if (_deckManager.UpdatingActionDisplay || !canClickEnd) return;
             // Debounce apply button immediately to prevent double-trigger within a single input frame
             canClickEnd = false;
 
@@ -336,10 +387,11 @@ namespace _project.Scripts.Card_Core
                 return;
             }
 
-            // Snapshot plant controllers for this turn's processing
-            var plantControllers = _deckManager.plantLocations
-                .SelectMany(location => location.GetComponentsInChildren<PlantController>(false))
-                .ToArray();
+	            // Snapshot plant controllers for this turn's processing
+	            var plantControllers = _deckManager.plantLocations?
+	                .Where(location => location)
+	                .SelectMany(location => location.Transform.GetComponentsInChildren<PlantController>(false))
+	                .ToArray() ?? Array.Empty<PlantController>();
 
             var spotDataHolders = FindObjectsByType<SpotDataHolder>(FindObjectsSortMode.None);
 
@@ -546,9 +598,10 @@ namespace _project.Scripts.Card_Core
 
             if (debugging) Debug.Log("Score: " + score);
 
-            var pControllers = _deckManager.plantLocations
-                .SelectMany(location => location.GetComponentsInChildren<PlantController>(false))
-                .ToArray();
+	            var pControllers = _deckManager.plantLocations
+	                ?.Where(location => location)
+	                .SelectMany(location => location.Transform.GetComponentsInChildren<PlantController>(false))
+	                .ToArray() ?? Array.Empty<PlantController>();
 
             if (debugging) Debug.Log($"Found {pControllers.Length} PlantControllers in PlantLocation.");
 
@@ -616,17 +669,21 @@ namespace _project.Scripts.Card_Core
             var roundVictory = !IsActiveTutorialStep && ScoreManager.GetMoneys() >= moneyGoal;
 
             // Count plant health status and record round end analytics
-            try
-            {
-                var plantControllers = _deckManager.plantLocations
-                    .Select(loc => loc.GetComponentInChildren<PlantController>(true))
-                    .Where(p => p != null)
-                    .ToArray();
+	            try
+	            {
+	                var validLocations = _deckManager.plantLocations?
+	                    .Where(loc => loc)
+	                    .ToArray() ?? Array.Empty<PlantHolder>();
 
-                var plantsHealthy = plantControllers.Count(p => p.CurrentAfflictions.Count == 0);
-                var plantsDead = _deckManager.plantLocations.Count - plantControllers.Length;
-                
-                AnalyticsFunctions.RecordRoundEnd(
+	                var plantControllers = validLocations
+	                    .Select(loc => loc.Transform.GetComponentInChildren<PlantController>(true))
+	                    .Where(p => p != null)
+	                    .ToArray();
+
+	                var plantsHealthy = plantControllers.Count(p => p.CurrentAfflictions.Count == 0);
+	                var plantsDead = validLocations.Length - plantControllers.Length;
+	                
+	                AnalyticsFunctions.RecordRoundEnd(
                     currentRound,
                     roundTurnCount,
                     score,

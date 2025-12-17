@@ -40,7 +40,7 @@ namespace _project.Scripts.Card_Core
                 var shouldEnable = canAffordRedraw
                                    && !_turnController.newRoundReady
                                    && _turnController.canClickEnd
-                                   && !_deckManager.updatingActionDisplay;
+                                   && !_deckManager.UpdatingActionDisplay;
 
                 _click3D.isEnabled = shouldEnable;
                 if (!shouldEnable) _click3D.mouseOver = false;
@@ -54,7 +54,7 @@ namespace _project.Scripts.Card_Core
                 return;
             }
 
-            var shouldDisableApply = !_turnController.canClickEnd || _deckManager.updatingActionDisplay;
+            var shouldDisableApply = !_turnController.canClickEnd || _deckManager.UpdatingActionDisplay;
             var wasEnabled = _click3D.isEnabled;
             var nowEnabled = !shouldDisableApply;
 

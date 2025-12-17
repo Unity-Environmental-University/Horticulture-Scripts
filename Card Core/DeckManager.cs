@@ -186,7 +186,28 @@ namespace _project.Scripts.Card_Core
 
         #region Class Variables
 
-        [DontSerialize] public bool updatingActionDisplay;
+        [DontSerialize] private bool _updatingActionDisplay;
+
+        public bool UpdatingActionDisplay
+        {
+            get => _updatingActionDisplay;
+            private set
+            {
+                #if UNITY_EDITOR || DEVELOPMENT_BUILD
+                if (_updatingActionDisplay != value && debug)
+                {
+                    Debug.Log($"[DeckManager] updatingActionDisplay: {_updatingActionDisplay} -> {value}");
+
+                    // Only log stack trace for suspicious transitions (setting true when already true)
+                    if (value && _updatingActionDisplay)
+                    {
+                        Debug.LogWarning($"[DeckManager] Suspicious flag transition!\n{Environment.StackTrace}");
+                    }
+                }
+                #endif
+                _updatingActionDisplay = value;
+            }
+        }
 
         // DOTween sequence management for memory leak prevention
         private Sequence _currentHandSequence;
@@ -197,7 +218,7 @@ namespace _project.Scripts.Card_Core
         private readonly List<ICard> _actionHand = new();
         private bool _usingTutorialActionDeck;
 
-        public List<Transform> plantLocations;
+        public List<PlantHolder> plantLocations = new();
         public Transform actionCardParent;
         public Transform stickerPackParent;
 
@@ -267,6 +288,12 @@ namespace _project.Scripts.Card_Core
 
         private void Start()
         {
+            // Defensive reset: ensure the animation flag starts clean
+            UpdatingActionDisplay = false;
+
+            WarnIfPlantLocationsLikelyMissing();
+
+            InitializePlantHolders();
             InitializeActionDeck();
             InitializeStickerDeck();
             _plantHand.DeckRandomDraw();
@@ -274,6 +301,29 @@ namespace _project.Scripts.Card_Core
             if (debug) Debug.Log("Initial Deck Order: " + string.Join(", ", PlantDeck.ConvertAll(card => card.Name)));
             if (debug)
                 Debug.Log("Initial Deck Order: " + string.Join(", ", AfflictionsDeck.ConvertAll(card => card.Name)));
+        }
+
+        /// <summary>
+        /// Initializes each PlantHolder by discovering its child PlacedCardHolder components.
+        /// </summary>
+        private void InitializePlantHolders()
+        {
+            if (plantLocations == null) return;
+            foreach (var holder in plantLocations)
+                holder?.InitializeCardHolders();
+        }
+
+        private void WarnIfPlantLocationsLikelyMissing()
+        {
+            if (plantLocations is { Count: > 0 }) return;
+
+            // Avoid noisy logs in tests/minimal setups where no board exists yet.
+            if (FindObjectsByType<SpotDataHolder>(FindObjectsInactive.Include, FindObjectsSortMode.None).Length ==
+                0) return;
+
+            Debug.LogError(
+                "[DeckManager] plantLocations is empty. If you upgraded from a version where this was a List<Transform>, " +
+                "run Tools > Migration > Migrate DeckManager Plant Locations (Transform -> PlantHolder) to update scenes/prefabs.");
         }
 
         /// Initializes the action deck by populating it with clones of prototype action cards.
@@ -498,6 +548,9 @@ namespace _project.Scripts.Card_Core
 
         private IEnumerator PlacePlantsSequentially(float delay = 0.3f)
         {
+            if (plantLocations == null)
+                yield break;
+
             //delay = CardGameMaster.Instance.soundSystem.plantSpawn.length;
             for (var i = 0; i < _plantHand.Count && i < plantLocations.Count; i++)
             {
@@ -505,14 +558,18 @@ namespace _project.Scripts.Card_Core
                 if (!prefab) continue;
 
                 var plantLocation = plantLocations[i];
+                if (!plantLocation) continue;
+
+                var plantLocationTransform = plantLocation.Transform;
+                if (!plantLocationTransform) continue;
 
                 // Play the sound before placing
                 var clip = CardGameMaster.Instance.soundSystem.plantSpawn;
-                if (clip) AudioSource.PlayClipAtPoint(clip, plantLocation.position);
+                if (clip) AudioSource.PlayClipAtPoint(clip, plantLocation.Position);
 
                 // Instantiate and assign
-                var plant = Instantiate(prefab, plantLocation.position, plantLocation.rotation);
-                plant.transform.SetParent(plantLocation);
+                var plant = Instantiate(prefab, plantLocation.Position, plantLocation.Rotation);
+                plant.transform.SetParent(plantLocationTransform);
 
                 var plantController = plant.GetComponent<PlantController>();
                 plantController.PlantCard = _plantHand[i];
@@ -521,7 +578,7 @@ namespace _project.Scripts.Card_Core
                     plantController.priceFlagText!.text = "$" + plantController.PlantCard.Value;
 
                 // Notify SpotDataHolder that a plant was added
-                var spotDataHolder = plantLocation.GetComponentInChildren<SpotDataHolder>();
+                var spotDataHolder = plantLocationTransform.GetComponentInChildren<SpotDataHolder>();
                 if (spotDataHolder)
                 {
                     spotDataHolder.InvalidatePlantCache();
@@ -540,11 +597,19 @@ namespace _project.Scripts.Card_Core
         {
             yield return null;
 
+            if (plantLocations == null)
+                yield break;
+
             foreach (var location in plantLocations)
             {
-                var plantController = location.GetComponentInChildren<PlantController>(true);
-                var cardHolders = location.GetComponentsInChildren<PlacedCardHolder>(true);
-                
+                if (!location) continue;
+
+                var plantTransform = location.Transform;
+                if (!plantTransform) continue;
+
+                var plantController = plantTransform.GetComponentInChildren<PlantController>(true);
+                var cardHolders = plantTransform.GetComponentsInChildren<PlacedCardHolder>(true);
+
                 foreach (var cardHolder in cardHolders)
                     if (cardHolder && !cardHolder.HoldingCard)
                         cardHolder.ToggleCardHolder(plantController != null);
@@ -557,27 +622,53 @@ namespace _project.Scripts.Card_Core
         /// random draw on the plant deck. Outputs debug messages if enabled.
         public void ClearAllPlants()
         {
-            foreach (var child in plantLocations
-                         .Select(slot => slot.GetComponentsInChildren<PlantController>(true))
-                         .SelectMany(children => children)) Destroy(child.gameObject);
+            if (plantLocations == null) return;
+
+            foreach (var slot in plantLocations)
+            {
+                if (!slot) continue;
+
+                var slotTransform = slot.Transform;
+                if (!slotTransform) continue;
+
+                var plants = slotTransform.GetComponentsInChildren<PlantController>(true);
+                foreach (var plant in plants)
+                {
+                    if (!plant) continue;
+                    Destroy(plant.gameObject);
+                }
+            }
 
             // Notify SpotDataHolders that plants were removed
-            foreach (var spotDataHolder in plantLocations
-                         .Select(location => location.GetComponentInChildren<SpotDataHolder>())
-                         .Where(holder => holder))
+            foreach (var location in plantLocations)
             {
+                if (!location) continue;
+
+                var locationTransform = location.Transform;
+                if (!locationTransform) continue;
+
+                var spotDataHolder = locationTransform.GetComponentInChildren<SpotDataHolder>();
+                if (!spotDataHolder) continue;
+
                 spotDataHolder.InvalidatePlantCache();
                 spotDataHolder.RefreshAssociatedPlant();
             }
 
             // Hide cardholders only if they are NOT currently holding a card
-            foreach (var holder in plantLocations
-                         .Select(location => location.GetComponentsInChildren<PlacedCardHolder>(true))
-                         .SelectMany(cardHolders => cardHolders))
+            foreach (var location in plantLocations)
             {
-                if (!holder) continue;
-                if (holder.HoldingCard) continue; // Keep visible if a persistent card is present
-                holder.ToggleCardHolder(false);
+                if (!location) continue;
+
+                var locationTransform = location.Transform;
+                if (!locationTransform) continue;
+
+                var holders = locationTransform.GetComponentsInChildren<PlacedCardHolder>(true);
+                foreach (var holder in holders)
+                {
+                    if (!holder) continue;
+                    if (holder.HoldingCard) continue; // Keep visible if a persistent card is present
+                    holder.ToggleCardHolder(false);
+                }
             }
 
             _plantHand.DeckRandomDraw();
@@ -612,9 +703,24 @@ namespace _project.Scripts.Card_Core
 
             if (!skipDeathSequence)
                 yield return plant.KillPlant(false);
-            
-            var location = plantLocations.FirstOrDefault(slot =>
-                slot.GetComponentsInChildren<PlantController>(true).Contains(plant));
+
+            PlantHolder location = null;
+            if (plantLocations != null)
+            {
+                foreach (var slot in plantLocations)
+                {
+                    if (!slot) continue;
+
+                    var slotTransform = slot.Transform;
+                    if (!slotTransform) continue;
+
+                    if (slotTransform.GetComponentsInChildren<PlantController>(true).Contains(plant))
+                    {
+                        location = slot;
+                        break;
+                    }
+                }
+            }
 
             var master = CardGameMaster.Instance;
             if (master?.isInspecting == true && master.inspectedObj)
@@ -628,15 +734,18 @@ namespace _project.Scripts.Card_Core
 
             if (!location) yield break;
 
+            var locationTransform = location!.Transform;
+            if (!locationTransform) yield break;
+
             // Notify SpotDataHolder that the plant was removed
-            var spotDataHolder = location.GetComponentInChildren<SpotDataHolder>();
-            if (spotDataHolder != null)
+            var spotDataHolder = locationTransform.GetComponentInChildren<SpotDataHolder>();
+            if (spotDataHolder)
             {
                 spotDataHolder.InvalidatePlantCache();
                 spotDataHolder.RefreshAssociatedPlant();
             }
 
-            var cardHolders = location.GetComponentsInChildren<PlacedCardHolder>(true);
+            var cardHolders = locationTransform.GetComponentsInChildren<PlacedCardHolder>(true);
             foreach (var holder in cardHolders)
             {
                 if (!holder) continue;
@@ -851,10 +960,10 @@ namespace _project.Scripts.Card_Core
                 var location = plantLocations[pd.locationIndex];
                 // Play spawn sound
                 var clip = CardGameMaster.Instance.soundSystem.plantSpawn;
-                if (clip) AudioSource.PlayClipAtPoint(clip, location.position);
+                if (clip) AudioSource.PlayClipAtPoint(clip, location.Position);
 
                 // Instantiate and set parent
-                var plantObj = Instantiate(prefab, location.position, location.rotation);
+                var plantObj = Instantiate(prefab, location.Position, location.Rotation);
                 plantObj.transform.SetParent(location);
 
                 // Restore plant controller state
@@ -995,13 +1104,21 @@ namespace _project.Scripts.Card_Core
 
         public void DrawTutorialActionHand()
         {
-            if (updatingActionDisplay) return;
+            if (debug) Debug.Log($"[DeckManager] DrawTutorialActionHand called. updatingActionDisplay={UpdatingActionDisplay}");
 
+            if (UpdatingActionDisplay)
+            {
+                if (debug) Debug.LogWarning("[DeckManager] Cannot draw tutorial hand - updatingActionDisplay is true!");
+                return;
+            }
+
+            if (debug) Debug.Log("[DeckManager] Ensuring tutorial action deck...");
             EnsureTutorialActionDeck();
+            if (debug) Debug.Log("[DeckManager] Calling DrawActionHand...");
             DrawActionHand();
 
             if (debug)
-                Debug.Log($"Tutorial Action Hand: {string.Join(", ", _actionHand.ConvertAll(card => card.Name))}");
+                Debug.Log($"[DeckManager] Tutorial Action Hand: {string.Join(", ", _actionHand.ConvertAll(card => card.Name))}");
         }
 
         #endregion
@@ -1053,7 +1170,7 @@ namespace _project.Scripts.Card_Core
             }
 
             var availablePlants = validLocations
-                .Select(location => location.GetComponentInChildren<PlantController>(true))
+                .Select(location => location.Transform.GetComponentInChildren<PlantController>(true))
                 .Where(controller => controller)
                 .ToList();
 
@@ -1251,7 +1368,7 @@ namespace _project.Scripts.Card_Core
         /// </remarks>
         public void DrawActionHand()
         {
-            if (updatingActionDisplay) return;
+            if (UpdatingActionDisplay) return;
 
             // Discard current hand cards to discard pile
             var cardsToDiscard = new List<ICard>(_actionHand);
@@ -1397,7 +1514,7 @@ namespace _project.Scripts.Card_Core
             }
             
             // Prevent concurrent animation state issues
-            if (updatingActionDisplay)
+            if (UpdatingActionDisplay)
             {
                 Debug.LogWarning("Animation already in progress, queuing card addition after completion");
                 // For now, add the card immediately but skip animation to prevent race conditions
@@ -1447,7 +1564,10 @@ namespace _project.Scripts.Card_Core
             // Kill any existing hand animation sequence to prevent memory leaks
             SafeKillSequence(ref _currentHandSequence);
 
-            updatingActionDisplay = true;
+            UpdatingActionDisplay = true;
+
+            // Start a watchdog coroutine to detect and fix animation timeout
+            StartCoroutine(AnimationTimeoutWatchdog(duration + 2f));
 
             try
             {
@@ -1455,7 +1575,7 @@ namespace _project.Scripts.Card_Core
                 var childCount = actionCardParent.childCount;
                 if (childCount == 0)
                 {
-                    updatingActionDisplay = false;
+                    UpdatingActionDisplay = false;
                     _currentHandSequence = null;
                     return;
                 }
@@ -1533,7 +1653,7 @@ namespace _project.Scripts.Card_Core
                     finally
                     {
                         // Always reset state, even if there was an error
-                        updatingActionDisplay = false;
+                        UpdatingActionDisplay = false;
                         _currentHandSequence = null;
                     }
                 });
@@ -1545,7 +1665,7 @@ namespace _project.Scripts.Card_Core
             {
                 Debug.LogError($"Error creating hand reflow animation: {ex.Message}");
                 SafeKillSequence(ref _currentHandSequence);
-                updatingActionDisplay = false;
+                UpdatingActionDisplay = false;
             }
         }
 
@@ -1584,7 +1704,11 @@ namespace _project.Scripts.Card_Core
             // Kill any existing display animation sequence to prevent memory leaks
             SafeKillSequence(ref _currentDisplaySequence);
 
-            updatingActionDisplay = true;
+            UpdatingActionDisplay = true;
+
+            // Start a watchdog coroutine to detect and fix animation timeout
+            // Maximum expected duration is ~2 seconds for typical hands, so a 5-second timeout should be safe
+            StartCoroutine(AnimationTimeoutWatchdog(5f));
 
             try
             {
@@ -1662,7 +1786,7 @@ namespace _project.Scripts.Card_Core
                 // Set completion callback
                 _currentDisplaySequence.OnComplete(() =>
                 {
-                    updatingActionDisplay = false;
+                    UpdatingActionDisplay = false;
                     _currentDisplaySequence = null;
                 });
 
@@ -1672,7 +1796,7 @@ namespace _project.Scripts.Card_Core
             {
                 Debug.LogError($"Error creating display card sequence: {ex.Message}");
                 SafeKillSequence(ref _currentDisplaySequence);
-                updatingActionDisplay = false;
+                UpdatingActionDisplay = false;
             }
         }
 
@@ -1689,7 +1813,7 @@ namespace _project.Scripts.Card_Core
             var currentRoundNum = cgm.turnController.currentRound;
             var currentTurnNum = cgm.turnController.currentTurn;
 
-            if (updatingActionDisplay)
+            if (UpdatingActionDisplay)
             {
                 AnalyticsFunctions.RecordRedraw("N/A", "N/A", currentScore, currentRoundNum, currentTurnNum,
                     false, "Animation in progress");
@@ -1782,7 +1906,7 @@ namespace _project.Scripts.Card_Core
         /// </summary>
         public void RefreshActionHandDisplay()
         {
-            if (updatingActionDisplay) return;
+            if (UpdatingActionDisplay) return;
             ClearActionCardVisuals();
             DisplayActionCardsSequence();
         }
@@ -1790,6 +1914,47 @@ namespace _project.Scripts.Card_Core
         #endregion
 
         #region DOTween Sequence Management
+
+        /// <summary>
+        /// Force-resets the animation flag and kills all running sequences.
+        /// Called by TurnController when animation timeout is detected.
+        /// </summary>
+        public void ForceResetAnimationFlag()
+        {
+            Debug.LogWarning("[DeckManager] ForceResetAnimationFlag called - clearing stuck animation state.");
+
+            // Kill all running sequences
+            SafeKillSequence(ref _currentHandSequence);
+            SafeKillSequence(ref _currentDisplaySequence);
+
+            // Force-clear the animation flag
+            _updatingActionDisplay = false; // Bypass property setter to avoid logging
+
+            // Re-enable all Click3D components that may have been disabled
+            if (actionCardParent)
+            {
+                foreach (Transform child in actionCardParent)
+                {
+                    var click3D = child.GetComponent<Click3D>();
+                    if (click3D) click3D.enabled = true;
+                }
+            }
+        }
+
+        /// <summary>
+        /// Coroutine watchdog that monitors for animation timeout and force-clears the flag if needed.
+        /// Prevents permanent deadlocks if DOTween OnComplete callbacks fail to fire.
+        /// </summary>
+        private IEnumerator AnimationTimeoutWatchdog(float maxDuration)
+        {
+            yield return new WaitForSeconds(maxDuration);
+
+            if (UpdatingActionDisplay)
+            {
+                Debug.LogError("[DeckManager] Animation watchdog timeout detected! Force-clearing flag.");
+                ForceResetAnimationFlag();
+            }
+        }
 
         /// <summary>
         /// Safely kills a DOTween sequence with proper error handling and memory cleanup.
