@@ -37,6 +37,7 @@
 - [[cinematics-system-documentation|Cinematics System]]
 - [[animation-hooks|Animation Hooks]]
 - [[self-replicating-card-feature|Self-Replicating Card Feature]]
+- [[field-spell-system|Field Spell System]]
 
 ### Development Guides
 - [[Common-Workflows|Common Workflows]]
@@ -75,6 +76,9 @@
 
 ### D
 - [[developer-onboarding|Developer Onboarding]]
+
+### F
+- [[field-spell-system|Field Spell System]]
 
 ### G
 - [[game-state-system-documentation|Game State System]]

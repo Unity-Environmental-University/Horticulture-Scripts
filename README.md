@@ -24,6 +24,7 @@
 | Classes | `docs/classes-system-documentation.md` |
 | Cinematics | `docs/cinematics-system-documentation.md` |
 | Audio | `docs/audio-system-documentation.md` |
+| Field Spell | `docs/field-spell-system.md` |
 | Game State | `docs/game-state-system-documentation.md` |
 | Mod Loading | `docs/mod-loading-system-documentation.md` |
 | Modding Guide | `docs/modding-guide.md` |

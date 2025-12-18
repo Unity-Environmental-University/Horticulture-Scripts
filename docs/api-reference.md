@@ -472,8 +472,10 @@ public bool click3DGloballyDisabled;
 public UnityEvent OnClick;
 public UnityEvent OnClickDown;
 public UnityEvent OnClickUp;
-public UnityEvent OnHoverEnter;
-public UnityEvent OnHoverExit;
+
+// Hover events (C# events, not UnityEvents)
+public event Action<Click3D> HoverEntered;
+public event Action<Click3D> HoverExited;
 ```
 
 ### PlacedCardHolder Class
