@@ -1718,70 +1718,65 @@ namespace _project.Scripts.Card_Core
                 // Calculate optimal layout for hand size
                 var (effectiveSpacing, cardScale, useOverlapLayout) = CalculateHandLayout(totalCards);
 
-            // Create a DOTween sequence for staggered card appearances
-            _currentDisplaySequence = DOTween.Sequence();
-            // Scale delay so total fan-in animation stays quick even for large hands
-            var cardDelay = Mathf.Min(0.1f, totalCards > 0 ? 0.6f / totalCards : 0.1f);
+                // Pause immediately to prevent autoplay race condition - OnComplete must be attached before Play()
+                _currentDisplaySequence = DOTween.Sequence().Pause();
+                // Scale delay so total fan-in animation stays quick even for large hands
+                var cardDelay = Mathf.Min(0.1f, totalCards > 0 ? 0.6f / totalCards : 0.1f);
 
-            for (var i = 0; i < totalCards; i++)
-            {
-                var card = cardsToDisplay[i];
-                var cardIndex = i; // Capture for closure
-                
-                _currentDisplaySequence.AppendCallback(() =>
+                for (var i = 0; i < totalCards; i++)
                 {
-                    try
+                    var card = cardsToDisplay[i];
+                    var cardIndex = i; // Capture for closure
+
+                    _currentDisplaySequence.AppendCallback(() =>
                     {
-                        var cardObj = Instantiate(card.Prefab, actionCardParent);
-                        var cardView = cardObj.GetComponent<CardView>();
-                        if (cardView)
-                            cardView.Setup(card);
-                        else
-                            Debug.LogWarning("Action Card Prefab is missing a Card View...");
-
-                        var (targetPos, targetRot) = 
-                            CalculateCardTransform(cardIndex, totalCards, effectiveSpacing, useOverlapLayout);
-
-                        // Start from zero scales and animate in
-                        cardObj.transform.localPosition = targetPos;
-                        cardObj.transform.localRotation = targetRot;
-                        cardObj.transform.localScale = Vector3.zero;
-
-                        // Temporarily disable Click3D to prevent conflicts during scale animation
-                        var click3D = cardObj.GetComponent<Click3D>();
-                        if (click3D)
+                        try
                         {
-                            click3D.enabled = false;
+                            var cardObj = Instantiate(card.Prefab, actionCardParent);
+                            var cardView = cardObj.GetComponent<CardView>();
+                            if (cardView)
+                                cardView.Setup(card);
+                            else
+                                Debug.LogWarning("Action Card Prefab is missing a Card View...");
+
+                            var (targetPos, targetRot) =
+                                CalculateCardTransform(cardIndex, totalCards, effectiveSpacing, useOverlapLayout);
+
+                            // Start from zero scales and animate in
+                            cardObj.transform.localPosition = targetPos;
+                            cardObj.transform.localRotation = targetRot;
+                            cardObj.transform.localScale = Vector3.zero;
+
+                            // Temporarily disable Click3D to prevent conflicts during scale animation
+                            var click3D = cardObj.GetComponent<Click3D>();
+                            if (click3D) click3D.enabled = false;
+
+                            // Animate the card scaling up with a bounce effect
+                            cardObj.transform
+                                .DOScale(cardScale, 0.3f)
+                                .SetLink(cardObj, LinkBehaviour.KillOnDisable)
+                                .SetEase(Ease.OutBack)
+                                .OnComplete(() =>
+                                {
+                                    // Re-enable Click3D and set the proper original transform after animation completes
+                                    if (!click3D) return;
+                                    UpdateClick3DFields(click3D, cardScale, targetPos);
+                                    click3D.enabled = true;
+                                });
+
+                            var playerAudio = CardGameMaster.Instance.playerHandAudioSource;
+                            var sfx = CardGameMaster.Instance.soundSystem?.drawCard;
+                            if (playerAudio && sfx) playerAudio.PlayOneShot(sfx);
                         }
+                        catch (Exception ex)
+                        {
+                            Debug.LogError($"Error creating card in display sequence: {ex.Message}");
+                        }
+                    });
 
-                        // Animate the card scaling up with a bounce effect
-                        cardObj.transform
-                            .DOScale(cardScale, 0.3f)
-                            .SetLink(cardObj, LinkBehaviour.KillOnDisable)
-                            .SetEase(Ease.OutBack)
-                            .OnComplete(() =>
-                            {
-                                // Re-enable Click3D and set the proper original transform after animation completes
-                                if (!click3D) return;
-                                UpdateClick3DFields(click3D, cardScale, targetPos);
-                                click3D.enabled = true;
-                            });
-
-                        var playerAudio = CardGameMaster.Instance.playerHandAudioSource;
-                        var sfx = CardGameMaster.Instance.soundSystem?.drawCard;
-                        if (playerAudio && sfx) playerAudio.PlayOneShot(sfx);
-                    }
-                    catch (Exception ex)
-                    {
-                        Debug.LogError($"Error creating card in display sequence: {ex.Message}");
-                    }
-                });
-                
-                if (i < totalCards - 1) // Don't add delay after the last card
-                {
-                    _currentDisplaySequence.AppendInterval(cardDelay);
+                    if (i < totalCards - 1) // Don't add delay after the last card
+                        _currentDisplaySequence.AppendInterval(cardDelay);
                 }
-            }
 
                 // Set completion callback
                 _currentDisplaySequence.OnComplete(() =>
@@ -1931,13 +1926,11 @@ namespace _project.Scripts.Card_Core
             _updatingActionDisplay = false; // Bypass property setter to avoid logging
 
             // Re-enable all Click3D components that may have been disabled
-            if (actionCardParent)
+            if (!actionCardParent) return;
+            foreach (Transform child in actionCardParent)
             {
-                foreach (Transform child in actionCardParent)
-                {
-                    var click3D = child.GetComponent<Click3D>();
-                    if (click3D) click3D.enabled = true;
-                }
+                var click3D = child.GetComponent<Click3D>();
+                if (click3D) click3D.enabled = true;
             }
         }
 
@@ -1949,11 +1942,9 @@ namespace _project.Scripts.Card_Core
         {
             yield return new WaitForSeconds(maxDuration);
 
-            if (UpdatingActionDisplay)
-            {
-                Debug.LogError("[DeckManager] Animation watchdog timeout detected! Force-clearing flag.");
-                ForceResetAnimationFlag();
-            }
+            if (!UpdatingActionDisplay) yield break;
+            Debug.LogError("[DeckManager] Animation watchdog timeout detected! Force-clearing flag.");
+            ForceResetAnimationFlag();
         }
 
         /// <summary>
