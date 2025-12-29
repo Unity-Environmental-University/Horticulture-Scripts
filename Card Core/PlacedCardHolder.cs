@@ -615,7 +615,7 @@ namespace _project.Scripts.Card_Core
 
             var selectedCard = _deckManager.selectedACardClick3D;
 
-            if (selectedCard is IFieldSpell)
+            if (_deckManager.selectedACard is IFieldSpell)
             {
                 // TODO: Implement field spell logic - can now iterate card holders via plantHolder.CardHolders
                 foreach (var plantHolder in _deckManager.plantLocations)
