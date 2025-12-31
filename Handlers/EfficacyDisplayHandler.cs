@@ -55,12 +55,17 @@ namespace _project.Scripts.Handlers
 
             foreach (var affliction in afflictions)
             {
-                if (affliction.CanBeTreatedBy(treatment))
+                //TODO: this sucks.. maybe unfuck this? Or don't... I'm not your dad.
+                switch (treatment)
                 {
-                    UpdateDisplay(affliction, treatment);
-                    return;
+                    case PlantAfflictions.HorticulturalOilTreatment when plantController.GetEggsFrom(affliction) <= 0:
+                    case PlantAfflictions.InsecticideTreatment when plantController.GetInfectFrom(affliction) <= 0:
+                        UpdateDisplay(affliction, treatment, "0%", Color.red);
+                        return;
                 }
+
                 UpdateDisplay(affliction, treatment);
+                if (affliction.CanBeTreatedBy(treatment)) return;
             }
         }
 
@@ -119,7 +124,8 @@ namespace _project.Scripts.Handlers
             return _afflictions;
         }
 
-        private void UpdateDisplay(PlantAfflictions.IAffliction affliction, PlantAfflictions.ITreatment treatment)
+        private void UpdateDisplay(PlantAfflictions.IAffliction affliction, PlantAfflictions.ITreatment treatment,
+            string overrideText = null, Color overrideColor = default)
         {
             if (!efficacyText)
             {
@@ -140,8 +146,12 @@ namespace _project.Scripts.Handlers
             var efficacyColor = efficacy switch{ < 50 => Color.red, < 75 => Color.yellow, _ => Color.green };
             efficacyText.text = efficacy + "%";
             efficacyText.color = efficacyColor;
-        }
 
+            if (overrideText == null) return;
+            efficacyText.text = overrideText;
+            efficacyText.color = overrideColor;
+        }
+        
         public void Clear()
         {
             _afflictions.Clear();
