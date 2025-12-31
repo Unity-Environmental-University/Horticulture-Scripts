@@ -1,5 +1,4 @@
 using System.Collections.Generic;
-using System.Linq;
 using _project.Scripts.Card_Core;
 using _project.Scripts.Classes;
 using _project.Scripts.Core;
@@ -54,7 +53,15 @@ namespace _project.Scripts.Handlers
                 return;
             }
 
-            UpdateDisplay(afflictions.First(), treatment);
+            foreach (var affliction in afflictions)
+            {
+                if (affliction.CanBeTreatedBy(treatment))
+                {
+                    UpdateDisplay(affliction, treatment);
+                    return;
+                }
+                UpdateDisplay(affliction, treatment);
+            }
         }
 
         private PlantController FindPlantController()
