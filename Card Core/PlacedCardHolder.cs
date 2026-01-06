@@ -617,15 +617,19 @@ namespace _project.Scripts.Card_Core
 
             if (_deckManager.selectedACard is IFieldSpell)
             {
+                var slotPerPlant = new List<PlacedCardHolder>();
                 // TODO: Implement field spell logic - can now iterate card holders via plantHolder.CardHolders
                 foreach (var plantHolder in _deckManager.plantLocations)
                 {
-                    if (!plantHolder) continue;
-                    foreach (var holder in plantHolder.CardHolders)
-                    {
-                        // Field spell effect placeholder
-                    }
+                    var emptyHolder = plantHolder.CardHolders.FirstOrDefault(holder => !holder.HoldingCard);
+                    if (emptyHolder != null) slotPerPlant.Add(emptyHolder);
                 }
+
+                if (slotPerPlant.Count > 0)
+                    foreach (var slotHolder in slotPerPlant)
+                        slotHolder.placedCard = _deckManager.selectedACard;
+
+                _deckManager.selectedACard = null;
             }
 
             // Properly disable the original card's Click3D component to prevent duplicate clicks
