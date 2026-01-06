@@ -617,19 +617,8 @@ namespace _project.Scripts.Card_Core
 
             if (_deckManager.selectedACard is IFieldSpell)
             {
-                var slotPerPlant = new List<PlacedCardHolder>();
-                // TODO: Implement field spell logic - can now iterate card holders via plantHolder.CardHolders
-                foreach (var plantHolder in _deckManager.plantLocations)
-                {
-                    var emptyHolder = plantHolder.CardHolders.FirstOrDefault(holder => !holder.HoldingCard);
-                    if (emptyHolder != null) slotPerPlant.Add(emptyHolder);
-                }
-
-                if (slotPerPlant.Count > 0)
-                    foreach (var slotHolder in slotPerPlant)
-                        slotHolder.placedCard = _deckManager.selectedACard;
-
-                _deckManager.selectedACard = null;
+                PlaceFieldSpell();
+                return;
             }
 
             // Properly disable the original card's Click3D component to prevent duplicate clicks
@@ -724,6 +713,154 @@ namespace _project.Scripts.Card_Core
             NotifySpotDataHolder();
 
             RefreshEfficacyDisplay();
+        }
+
+        /// <summary>
+        /// Places a field spell card on all valid (alive) plants with empty card holders.
+        /// Creates a card clone for each target holder, applies proper transforms, configures interactions,
+        /// and tracks costs for all placements.
+        /// </summary>
+        private void PlaceFieldSpell()
+        {
+            if (_deckManager.selectedACard is not IFieldSpell fieldSpell) return;
+
+            var targetHolders = new List<PlacedCardHolder>();
+
+            // Collect valid target holders from plants
+            foreach (var plantHolder in _deckManager.plantLocations)
+            {
+                if (!plantHolder) continue;
+
+                // // Validate plant exists and is alive
+                // var plantController = plantHolder.Transform?.GetComponentInChildren<PlantController>();
+                // if (plantController == null || plantController.PlantCard == null || plantController.PlantCard.Value <= 0)
+                // {
+                //     Debug.Log($"[PlacedCardHolder] Skipping dead/missing plant at {plantHolder.Transform?.name}");
+                //     continue;
+                // }
+
+                // Find the first empty holder that can accept this card type
+                var emptyHolder = plantHolder.CardHolders?.FirstOrDefault(holder =>
+                    holder != null && !holder.HoldingCard && holder.CanAcceptCard(fieldSpell));
+
+                if (emptyHolder is not null) targetHolders.Add(emptyHolder);
+            }
+
+            // Validate we have at least one target
+            if (targetHolders.Count == 0) return;
+
+            Cgm.playerHandAudioSource.PlayOneShot(Cgm.soundSystem.placeCard);
+
+            // // Calculate total cost for all placements
+            // var totalCost = 0;
+            // if (fieldSpell.Value != null)
+            // {
+            //     var retained = FindFirstObjectByType<RetainedCardHolder>(FindObjectsInactive.Include);
+            //     var isFromRetained = retained && retained.HeldCard == fieldSpell;
+            //
+            //     if (!isFromRetained)
+            //     {
+            //         totalCost = fieldSpell.Value.Value * targetHolders.Count;
+            //     }
+            // }
+
+            var sourceCard = _deckManager.selectedACardClick3D;
+            foreach (var targetHolder in targetHolders)
+            {
+                if (targetHolder is null) continue;
+
+                // Calculate scale for this holder's parent space
+                var srcLocalScale = sourceCard.transform.localScale;
+                var srcLossyScale = sourceCard.transform.lossyScale;
+                var parentLossy = targetHolder.transform.lossyScale;
+                var calculatedLocalScale = new Vector3(
+                    !Mathf.Approximately(parentLossy.x, 0f) ? srcLossyScale.x / parentLossy.x : srcLocalScale.x,
+                    !Mathf.Approximately(parentLossy.y, 0f) ? srcLossyScale.y / parentLossy.y : srcLocalScale.y,
+                    !Mathf.Approximately(parentLossy.z, 0f) ? srcLossyScale.z / parentLossy.z : srcLocalScale.z
+                );
+
+                var calculatedRotation = Quaternion.Euler(-90f, 0f, 0f) *
+                                         Quaternion.Euler(targetHolder.placedCardRotationOffsetEuler);
+                var clone = Instantiate(sourceCard.gameObject, targetHolder.transform);
+
+                var viewClone = clone.GetComponent<CardView>();
+                if (viewClone)
+                    viewClone.Setup(fieldSpell);
+
+                // Configure transform
+                clone.transform.SetParent(targetHolder.transform, false);
+                clone.transform.localPosition = targetHolder.placedCardPositionOffsetLocal;
+                clone.transform.localRotation = calculatedRotation;
+                clone.transform.localScale =
+                    Vector3.Scale(calculatedLocalScale, targetHolder.placedCardScaleMultiplier);
+
+                // Setup holder state
+                targetHolder.placedCard = fieldSpell;
+                targetHolder.placedCardClick3D = clone.GetComponent<Click3D>();
+                targetHolder.placedCardView = viewClone;
+
+                // Configure Click3D component
+                if (targetHolder.placedCardClick3D is not null)
+                {
+                    targetHolder.placedCardClick3D.handItem = true;
+                    if (targetHolder.disableHoverOnPlacedCard)
+                    {
+                        targetHolder.placedCardClick3D.scaleUp = 1f;
+                        targetHolder.placedCardClick3D.popHeight = 0f;
+                    }
+
+                    targetHolder.placedCardClick3D.StopAllCoroutines();
+                    targetHolder.placedCardClick3D.UpdateOriginalTransform(
+                        clone.transform.localScale,
+                        clone.transform.localPosition);
+                    targetHolder.placedCardClick3D.RefreshState();
+                    targetHolder.placedCardClick3D.onClick3D.RemoveAllListeners();
+                    targetHolder.placedCardClick3D.onClick3D.AddListener(targetHolder.OnPlacedCardClicked);
+                    targetHolder.placedCardClick3D.enabled = false;
+                    targetHolder.StartCoroutine(targetHolder.ReenablePlacedCardClickWithInputActionFix());
+                }
+
+                // Track placement turn
+                var cgm = CardGameMaster.Instance;
+                if (cgm?.turnController != null)
+                {
+                    targetHolder.PlacementTurn = cgm.turnController.currentTurn;
+                }
+                else
+                {
+                    Debug.LogWarning(
+                        "[PlacedCardHolder] Cannot track placement turn: CardGameMaster or TurnController not initialized",
+                        targetHolder);
+                    targetHolder.PlacementTurn = -1;
+                }
+
+                // Prevent immediate re-click
+                targetHolder._lastPlacementFrame = Time.frameCount;
+                targetHolder._lastPlacementTime = Time.time;
+
+                // Disable card view component
+                if (targetHolder.placedCardView != null)
+                    targetHolder.placedCardView.enabled = false;
+
+                // Update UI displays
+                targetHolder.RefreshEfficacyDisplay();
+                targetHolder.NotifySpotDataHolder();
+            }
+
+            // Hide original card in hand
+            var originalRenderers = sourceCard.GetComponentsInChildren<Renderer>();
+            foreach (var rend in originalRenderers) rend.enabled = false;
+
+            // // Update costs if applicable
+            // if (totalCost > 0)
+            // {
+            //     _scoreManager.treatmentCost += totalCost;
+            // }
+            // _scoreManager.CalculateTreatmentCost();
+
+            // Clear selection
+            _deckManager.ClearSelectedCard();
+            ClearPreview();
         }
 
         // WORKAROUND: Uses reflection to dispose of internal InputAction and prevent Input System errors.
