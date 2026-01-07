@@ -165,7 +165,14 @@ namespace _project.Scripts.Card_Core
             yield return new WaitForEndOfFrame();
             if (readyToPlay != null)
                 yield return new WaitUntil(readyToPlay);
-            if (lostGameObjects.activeInHierarchy) lostGameObjects.SetActive(false);
+
+            if (!_deckManager || !_scoreManager)
+            {
+                Debug.LogWarning("[TurnController] BeginTurnSequence aborted: missing deck/score manager references.");
+                yield break;
+            }
+
+            if (lostGameObjects && lostGameObjects.activeInHierarchy) lostGameObjects.SetActive(false);
             canClickEnd = false;
             currentTurn = 1;
             if (totalTurns is 0) totalTurns = 1;
@@ -177,10 +184,14 @@ namespace _project.Scripts.Card_Core
             {
                 if (debugging)
                     Debug.Log("[TurnController] Tutorial complete! Transitioning to the regular game...");
-                CardGameMaster.Instance.popUpController.ActivatePopUpPanel(null,false,
-                    "Tutorial Complete! Press Continue to proceed to the regular game...");
+                var cgm = CardGameMaster.Instance;
+                if (cgm?.popUpController)
+                {
+                    cgm.popUpController.ActivatePopUpPanel(null, false,
+                        "Tutorial Complete! Press Continue to proceed to the regular game...");
+                }
                 yield return new WaitForSeconds(2f);
-                var cardHolders = CardGameMaster.Instance.cardHolders;
+                var cardHolders = CardGameMaster.Instance ? CardGameMaster.Instance.cardHolders : null;
                 if (cardHolders != null)
                     foreach (var h in cardHolders.Where(holder => holder))
                         h.ClearHolder();
@@ -236,13 +247,22 @@ namespace _project.Scripts.Card_Core
                 if (currentTutorialTurn == 0)
                 {
                     if (debugging) Debug.Log("[TurnController] Playing aphids cutscene...");
-                    CinematicDirector.PlayScene(CardGameMaster.Instance.cinematicDirector.aphidsTimeline);
-                    if (debugging) Debug.Log("[TurnController] Waiting for cutscene to complete...");
-                    yield return new WaitUntil(readyToPlay);
+                    var cgm = CardGameMaster.Instance;
+                    if (cgm?.cinematicDirector)
+                    {
+                        CinematicDirector.PlayScene(cgm.cinematicDirector.aphidsTimeline);
+                        if (debugging) Debug.Log("[TurnController] Waiting for cutscene to complete...");
+                        if (readyToPlay != null)
+                            yield return new WaitUntil(readyToPlay);
+                    }
+
                     if (debugging) Debug.Log("[TurnController] Cutscene complete. Showing card diagram popup...");
-                    CardGameMaster.Instance.popUpController.ActivatePopUpPanel(cardDiagram, true,
-                        "Here's a quick outline of how the cards work!");
-                    if (debugging) Debug.Log("[TurnController] Popup shown.");
+                    if (cgm?.popUpController)
+                    {
+                        cgm.popUpController.ActivatePopUpPanel(cardDiagram, true,
+                            "Here's a quick outline of how the cards work!");
+                        if (debugging) Debug.Log("[TurnController] Popup shown.");
+                    }
                 }
                 // Reveal UI, wait for pop-in to finish, then draw the hand
                 if (debugging) Debug.Log("[TurnController] Looking for RobotCardGameSequencer...");
@@ -837,19 +857,29 @@ namespace _project.Scripts.Card_Core
 
         public void ShowBetaScreen()
         {
+            if (!winScreen)
+            {
+                Debug.LogWarning("[TurnController] Cannot show beta screen: winScreen reference is not set.");
+                return;
+            }
+
             winScreen.gameObject.SetActive(true);
             canClickEnd = false;
             UIInputManager.RequestEnable("TurnController");
-            winScreen.gameObject.GetComponentInChildren<TextMeshProUGUI>().text =
-                "Good job! You beat the first 2 levels in " + currentRound + " rounds and " + totalTurns +
-                " turns. That's [excellent!  / pretty good / average / " +
-                "... well, it's something. Maybe play it again and see if you can do better!] " +
-                "This game is still in development, so check back in for new levels." +
-                " If you're interested in Integrated Pest Management as a subject," +
-                " or in helping us develop the game further," +
-                " sign up for Unity Environmental University's Integrated Pest Management course. " +
-                "We're inviting students to help make this game as part of their schoolwork." +
-                " Thank you for playing; we hope to see you again soon!";
+            var winText = winScreen.gameObject.GetComponentInChildren<TextMeshProUGUI>();
+            if (winText)
+            {
+                winText.text =
+                    "Good job! You beat the first 2 levels in " + currentRound + " rounds and " + totalTurns +
+                    " turns. That's [excellent!  / pretty good / average / " +
+                    "... well, it's something. Maybe play it again and see if you can do better!] " +
+                    "This game is still in development, so check back in for new levels." +
+                    " If you're interested in Integrated Pest Management as a subject," +
+                    " or in helping us develop the game further," +
+                    " sign up for Unity Environmental University's Integrated Pest Management course. " +
+                    "We're inviting students to help make this game as part of their schoolwork." +
+                    " Thank you for playing; we hope to see you again soon!";
+            }
         }
 
         public void ResetGame()
@@ -877,7 +907,13 @@ namespace _project.Scripts.Card_Core
             _scoreManager.ResetMoneys();
         }
 
-        private void GameLost() { lostGameObjects.SetActive(true); }
+        private void GameLost()
+        {
+            if (lostGameObjects)
+                lostGameObjects.SetActive(true);
+            else
+                Debug.LogWarning("[TurnController] GameLost triggered but lostGameObjects is not set.");
+        }
 
         /// <summary>
         /// Clean up coroutines and queues on component destruction to prevent memory leaks
