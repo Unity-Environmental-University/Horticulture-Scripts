@@ -368,7 +368,8 @@ namespace _project.Scripts.Card_Core
         /// </summary>
         private void OnPlacedCardClicked()
         {
-            if (placedCard is null or ILocationCard) return;
+            // Field spells are not interactable once placed (they apply broadly and should not be swappable/pickup-able).
+            if (placedCard is null or ILocationCard or IFieldSpell) return;
             if (CardGameMaster.Instance?.isInspecting == true) return;
             if (Time.time - _lastClickTime < 0.1f) return;
             _lastClickTime = Time.time;
@@ -394,7 +395,7 @@ namespace _project.Scripts.Card_Core
         {
             if (!HoldingCard) return;
             // Safety check: prevent picking up expired/null cards or Location Cards
-            if (placedCard is null or ILocationCard) return;
+            if (placedCard is null or ILocationCard or IFieldSpell) return;
 
             Cgm.playerHandAudioSource.PlayOneShot(Cgm.soundSystem.unplaceCard);
 
@@ -441,8 +442,8 @@ namespace _project.Scripts.Card_Core
         private void SwapWithSelectedCard()
         {
             if (!HoldingCard || _deckManager.selectedACard == null) return;
-            // Safety check: prevent swapping with expired/null cards
-            if (placedCard == null) return;
+            // Safety check: prevent swapping with expired/null/prohibited cards
+            if (placedCard is null or IFieldSpell or ILocationCard) return;
 
             if (!CanAcceptCard(_deckManager.selectedACard))
             {
@@ -586,8 +587,8 @@ namespace _project.Scripts.Card_Core
         {
             ClearPreview();
 
-            // Prevent interaction when holding a Location Card (same check as OnPlacedCardClicked)
-            if (HoldingCard && placedCard is ILocationCard) return;
+            // Prevent interaction when holding a Location or Field Spell Card (same check as OnPlacedCardClicked)
+            if (HoldingCard && placedCard is ILocationCard or IFieldSpell) return;
 
             if (HoldingCard) GiveBackCard();
 
@@ -743,6 +744,10 @@ namespace _project.Scripts.Card_Core
             Cgm.playerHandAudioSource.PlayOneShot(Cgm.soundSystem.placeCard);
 
             var sourceCard = _deckManager.selectedACardClick3D;
+            if (!sourceCard) return;
+            // Match normal placement behavior: once a card is placed, it should not remain interactable in-hand.
+            sourceCard.DisableClick3D();
+            sourceCard.enabled = false;
             foreach (var targetHolder in targetHolders)
             {
                 if (targetHolder is null) continue;
@@ -879,6 +884,7 @@ namespace _project.Scripts.Card_Core
         private void GiveBackCard()
         {
             if (!HoldingCard) return;
+            if (placedCard is IFieldSpell or ILocationCard) return;
 
             var returnedToHand = false;
             var returnedToRetained = false;

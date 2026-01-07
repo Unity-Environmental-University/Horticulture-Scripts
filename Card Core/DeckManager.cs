@@ -1073,6 +1073,7 @@ namespace _project.Scripts.Card_Core
                 "Hydration" => new PlantAfflictions.HydrationTreatmentBasic(),
                 "Sunlight" => new PlantAfflictions.SunlightTreatmentBasic(),
                 "Panacea" => new PlantAfflictions.Panacea(),
+                "LadyBugs" => new PlantAfflictions.LadyBugs(),
                 _ => null
             };
         }
