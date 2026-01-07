@@ -40,7 +40,8 @@ namespace _project.Scripts.Handlers
             var treatment = GetTreatment();
 
             if (!controller || treatment == null || controller.CurrentAfflictions == null ||
-                controller.CurrentAfflictions.Count == 0)
+                controller.CurrentAfflictions.Count == 0 ||
+                treatment is PlantAfflictions.LadyBugs) //TODO: This sucks- Manual check for Ladybugs treatment
             {
                 UpdateDisplay(null, null);
                 return;
