@@ -47,7 +47,7 @@ namespace _project.Scripts.PlayModeTest
             var cardClone = new GameObject("CardClone");
             cardClone.transform.SetParent(holder.transform);
             holder.placedCardClick3D = cardClone.AddComponent<SafeClick3D>();
-            var fieldSpell = new LadyBugs();
+            var fieldSpell = new LadyBugsCard();
             holder.placedCard = fieldSpell;
 
             holder.TakeSelectedCard();
@@ -69,7 +69,7 @@ namespace _project.Scripts.PlayModeTest
             var cardClone = new GameObject("CardClone");
             cardClone.transform.SetParent(holder.transform);
             holder.placedCardClick3D = cardClone.AddComponent<SafeClick3D>();
-            var fieldSpell = new LadyBugs();
+            var fieldSpell = new LadyBugsCard();
             holder.placedCard = fieldSpell;
 
             var deckManager = CardGameMaster.Instance.deckManager;

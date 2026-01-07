@@ -1055,7 +1055,7 @@ namespace _project.Scripts.Classes
 
     #region FieldSpells
 
-    public class LadyBugs : IFieldSpell
+    public class LadyBugsCard : IFieldSpell
     {
         [CanBeNull] public string Description => "Lady Bugs be lady bugs bro...";
         public PlantAfflictions.ITreatment Treatment => new PlantAfflictions.LadyBugs();
@@ -1081,7 +1081,7 @@ namespace _project.Scripts.Classes
         public void ModifyValue(int delta) => _value += delta;
         public ICard Clone()
         {
-            var clone = new LadyBugs { Value = Value };
+            var clone = new LadyBugsCard { Value = Value };
             foreach (var sticker in Stickers) clone.Stickers.Add(sticker.Clone());
             return clone;
         }

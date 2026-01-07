@@ -147,11 +147,11 @@ namespace _project.Scripts.Card_Core
             new InsecticideBasic(),
             new InsecticideBasic(),
             new Panacea(),
-            new LadyBugs(),
-            new LadyBugs(),
-            new LadyBugs(),
-            new LadyBugs(),
-            new LadyBugs()
+            new LadyBugsCard(),
+            new LadyBugsCard(),
+            new LadyBugsCard(),
+            new LadyBugsCard(),
+            new LadyBugsCard()
         };
 
         private readonly List<ICard> _tutorialActionDeck = new()
