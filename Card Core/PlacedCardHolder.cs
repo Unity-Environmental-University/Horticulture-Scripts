@@ -716,7 +716,7 @@ namespace _project.Scripts.Card_Core
         }
 
         /// <summary>
-        /// Places a field spell card on all valid (alive) plants with empty card holders.
+        /// Places a field spell card on all valid  plants with empty cardholders.
         /// Creates a card clone for each target holder, applies proper transforms, configures interactions,
         /// and tracks costs for all placements.
         /// </summary>
@@ -731,38 +731,16 @@ namespace _project.Scripts.Card_Core
             {
                 if (!plantHolder) continue;
 
-                // // Validate plant exists and is alive
-                // var plantController = plantHolder.Transform?.GetComponentInChildren<PlantController>();
-                // if (plantController == null || plantController.PlantCard == null || plantController.PlantCard.Value <= 0)
-                // {
-                //     Debug.Log($"[PlacedCardHolder] Skipping dead/missing plant at {plantHolder.Transform?.name}");
-                //     continue;
-                // }
-
                 // Find the first empty holder that can accept this card type
                 var emptyHolder = plantHolder.CardHolders?.FirstOrDefault(holder =>
-                    holder != null && !holder.HoldingCard && holder.CanAcceptCard(fieldSpell));
+                    holder is not null && !holder.HoldingCard && holder.CanAcceptCard(fieldSpell));
 
                 if (emptyHolder is not null) targetHolders.Add(emptyHolder);
             }
-
-            // Validate we have at least one target
-            if (targetHolders.Count == 0) return;
+            
+            if (targetHolders.Count is 0) return;
 
             Cgm.playerHandAudioSource.PlayOneShot(Cgm.soundSystem.placeCard);
-
-            // // Calculate total cost for all placements
-            // var totalCost = 0;
-            // if (fieldSpell.Value != null)
-            // {
-            //     var retained = FindFirstObjectByType<RetainedCardHolder>(FindObjectsInactive.Include);
-            //     var isFromRetained = retained && retained.HeldCard == fieldSpell;
-            //
-            //     if (!isFromRetained)
-            //     {
-            //         totalCost = fieldSpell.Value.Value * targetHolders.Count;
-            //     }
-            // }
 
             var sourceCard = _deckManager.selectedACardClick3D;
             foreach (var targetHolder in targetHolders)
@@ -822,24 +800,15 @@ namespace _project.Scripts.Card_Core
 
                 // Track placement turn
                 var cgm = CardGameMaster.Instance;
-                if (cgm?.turnController != null)
-                {
-                    targetHolder.PlacementTurn = cgm.turnController.currentTurn;
-                }
-                else
-                {
-                    Debug.LogWarning(
-                        "[PlacedCardHolder] Cannot track placement turn: CardGameMaster or TurnController not initialized",
-                        targetHolder);
-                    targetHolder.PlacementTurn = -1;
-                }
+                if (cgm?.turnController) targetHolder.PlacementTurn = cgm.turnController.currentTurn;
+                
 
                 // Prevent immediate re-click
                 targetHolder._lastPlacementFrame = Time.frameCount;
                 targetHolder._lastPlacementTime = Time.time;
 
-                // Disable card view component
-                if (targetHolder.placedCardView != null)
+                // Disable the card view component
+                if (targetHolder.placedCardView is not null)
                     targetHolder.placedCardView.enabled = false;
 
                 // Update UI displays
@@ -847,18 +816,10 @@ namespace _project.Scripts.Card_Core
                 targetHolder.NotifySpotDataHolder();
             }
 
-            // Hide original card in hand
+            // Hide the original card in the player's hand
             var originalRenderers = sourceCard.GetComponentsInChildren<Renderer>();
             foreach (var rend in originalRenderers) rend.enabled = false;
-
-            // // Update costs if applicable
-            // if (totalCost > 0)
-            // {
-            //     _scoreManager.treatmentCost += totalCost;
-            // }
-            // _scoreManager.CalculateTreatmentCost();
-
-            // Clear selection
+            
             _deckManager.ClearSelectedCard();
             ClearPreview();
         }

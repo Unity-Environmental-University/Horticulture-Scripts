@@ -34,7 +34,7 @@ namespace _project.Scripts.Card_Core
                 if (!CanAcceptCard(value))
                 {
                     Debug.LogWarning(
-                        $"RetainedCardHolder of type {acceptedCardType} rejected card assignment: {value?.Name ?? "Unknown"}.");
+                        $"RetainedCardHolder of type {acceptedCardType} rejected card assignment: {value.Name ?? "Unknown"}.");
                     return;
                 }
 
@@ -92,7 +92,7 @@ namespace _project.Scripts.Card_Core
             if (!CanAcceptCard(selectedCard))
             {
                 Debug.LogWarning(
-                    $"RetainedCardHolder of type {acceptedCardType} cannot accept card: {selectedCard?.Name ?? "Unknown"}.");
+                    $"RetainedCardHolder of type {acceptedCardType} cannot accept card: {selectedCard.Name ?? "Unknown"}.");
                 return;
             }
 
@@ -152,7 +152,7 @@ namespace _project.Scripts.Card_Core
             if (isCardLocked) return;
             if (CardGameMaster.Instance?.isInspecting == true) return;
             var click3D = cardGoClone.GetComponent<Click3D>();
-            if (click3D == null) return;
+            if (click3D is null) return;
 
             if (_deckManager.selectedACard == HeldCard)
             {
@@ -174,7 +174,7 @@ namespace _project.Scripts.Card_Core
                 click3D.RefreshState();
 
                 _deckManager.SetSelectedCard(click3D, HeldCard);
-                CardGameMaster.Instance.playerHandAudioSource.PlayOneShot(
+                CardGameMaster.Instance!.playerHandAudioSource.PlayOneShot(
                     CardGameMaster.Instance.soundSystem.selectCard);
 
                 StartCoroutine(AnimateCard());
@@ -219,7 +219,7 @@ namespace _project.Scripts.Card_Core
             if (!CanAcceptCard(returnedCard))
             {
                 Debug.LogWarning(
-                    $"RetainedCardHolder of type {acceptedCardType} cannot accept returned card: {returnedCard?.Name ?? "Unknown"}.");
+                    $"RetainedCardHolder of type {acceptedCardType} cannot accept returned card: {returnedCard.Name ?? "Unknown"}.");
                 Destroy(returnedCardGo);
                 ClearHeldCard();
                 return;
@@ -227,7 +227,7 @@ namespace _project.Scripts.Card_Core
 
             HeldCard = returnedCard;
 
-            if (cardPrefab == null)
+            if (cardPrefab is null)
             {
                 Debug.LogWarning("Held card has no valid prefab.");
                 return;
@@ -291,7 +291,7 @@ namespace _project.Scripts.Card_Core
                 cardGoClone = null;
             }
             
-            // Create visual representation similar to HoldSelectedCard()
+            // Create a visual representation similar to HoldSelectedCard()
             var cgm = CardGameMaster.Instance;
             cardGoClone = Instantiate(cgm.actionCardPrefab, transform);
             
