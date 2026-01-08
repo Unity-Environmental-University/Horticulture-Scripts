@@ -1072,8 +1072,8 @@ namespace _project.Scripts.Card_Core
                 "Imidacloprid" => new PlantAfflictions.ImidaclopridTreatment(),
                 "Hydration" => new PlantAfflictions.HydrationTreatmentBasic(),
                 "Sunlight" => new PlantAfflictions.SunlightTreatmentBasic(),
-                "Panacea" => new PlantAfflictions.Panacea(),
                 "LadyBugs" => new PlantAfflictions.LadyBugs(),
+                "Panacea" => new PlantAfflictions.Panacea(),
                 _ => null
             };
         }

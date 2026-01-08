@@ -92,8 +92,27 @@ namespace _project.Scripts.Classes
                     var success = item.TreatWith(this, plant);
                     AnalyticsFunctions.RecordTreatment(plant.name, item.Name, Name, success);
 
-                    if (CardGameMaster.Instance != null && CardGameMaster.Instance.debuggingCardClass)
+                    if (CardGameMaster.Instance is not null && CardGameMaster.Instance.debuggingCardClass)
                         Debug.Log($"Applied treatment to affliction: {item.Name}");
+                }
+                
+                if (this is InsecticideTreatment)
+                {
+                    var ladyBugsTreatment = plant.CurrentTreatments.FirstOrDefault(t => t is LadyBugs);
+                    if (ladyBugsTreatment != null)
+                    {
+                        plant.CurrentTreatments.Remove(ladyBugsTreatment);
+
+                        // Also remove the location card if present
+                        var spotDataHolder = plant.transform.parent?.GetComponent<SpotDataHolder>();
+                        if (spotDataHolder && spotDataHolder.cLocationCard is LadyBugsCard)
+                        {
+                            spotDataHolder.OnLocationCardRemoved();
+                        }
+
+                        if (CardGameMaster.Instance && CardGameMaster.Instance.debuggingCardClass)
+                            Debug.Log($"Insecticide killed beneficial Lady Bugs on {plant.name}");
+                    }
                 }
             }
         }

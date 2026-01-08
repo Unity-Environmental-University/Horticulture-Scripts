@@ -1,3 +1,4 @@
+using _project.Scripts.Classes;
 using _project.Scripts.Core;
 using UnityEngine;
 using UnityEngine.SceneManagement;
@@ -90,7 +91,15 @@ namespace _project.Scripts.Card_Core
 
                 // Use the data model stored on the holder, not the (possibly removed) CardView
                 var actionCard = cardHolder.placedCard;
-                if (actionCard?.Treatment is null) continue;
+                switch (actionCard)
+                {
+                    case null:
+                    // Location cards and field spells are persistent effects; they should not be consumed/cleared here.
+                    case ILocationCard or IFieldSpell:
+                        continue;
+                }
+
+                if (actionCard.Treatment is null) continue;
 
                 // Determine a safe search root for finding the plant controller
                 var searchRoot = cardHolder.transform.parent ? cardHolder.transform.parent : cardHolder.transform;

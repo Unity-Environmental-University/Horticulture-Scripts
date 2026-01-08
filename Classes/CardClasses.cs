@@ -1055,10 +1055,14 @@ namespace _project.Scripts.Classes
 
     #region FieldSpells
 
-    public class LadyBugsCard : IFieldSpell
+    public class LadyBugsCard : IFieldSpell, ILocationCard
     {
         [CanBeNull] public string Description => "Lady Bugs be lady bugs bro...";
         public PlantAfflictions.ITreatment Treatment => new PlantAfflictions.LadyBugs();
+        
+        public int EffectDuration => IsPermanent ? 999 : 3;
+        public bool IsPermanent => false;
+        public LocationEffectType EffectType => null;
         
         public bool AffectsAllPlants { get; set; } = true;
         public bool ShowsGhosts { get; set; } = true;
@@ -1084,6 +1088,30 @@ namespace _project.Scripts.Classes
             var clone = new LadyBugsCard { Value = Value };
             foreach (var sticker in Stickers) clone.Stickers.Add(sticker.Clone());
             return clone;
+        }
+
+        
+        public void ApplyLocationEffect(PlantController plant)
+        {
+            if (!plant) return;
+            if (plant.CurrentTreatments.Any(t => t is PlantAfflictions.LadyBugs)) return;
+            plant.CurrentTreatments.Add(new PlantAfflictions.LadyBugs());
+        }
+
+        public void RemoveLocationEffect(PlantController plant)
+        {
+            if (!plant) return;
+            plant.CurrentTreatments.RemoveAll(t => t is PlantAfflictions.LadyBugs);
+
+            if (CardGameMaster.Instance && CardGameMaster.Instance.debuggingCardClass)
+            {
+                Debug.Log($"Lady Bugs removed from {plant.name}");
+            }
+        }
+
+        public void ApplyTurnEffect(PlantController plant)
+        {
+            // No-op; LadyBugs effect is modeled as a persistent treatment in plant.CurrentTreatments.
         }
     }
 

@@ -12,11 +12,12 @@ namespace _project.Scripts.Card_Core
         [SerializeField] private List<PlacedCardHolder> associatedCardHolders = new();
         [SerializeField] private GameObject cardHolder;
         private PlantController _associatedPlant;
-        private ILocationCard cLocationCard;
         private bool _effectActive;
         private bool _pendingExpiry;
         private bool _plantCacheDirty = true;
         private int _remainingDuration;
+        
+        public ILocationCard cLocationCard;
         
         private void Start() => RefreshAssociatedPlant();
 
