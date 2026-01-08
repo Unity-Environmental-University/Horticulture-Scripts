@@ -264,6 +264,24 @@ namespace _project.Scripts.PlayModeTest
         }
 
         [UnityTest]
+        public IEnumerator LocationCard_WithTreatment_IsNotConsumedByApplyQueuedTreatments()
+        {
+            var plant = CreatePlant(new FakeAffliction());
+
+            var ladyBugs = new LadyBugsCard();
+            CreateCardHolder(ladyBugs);
+
+            var holder = CardGameMaster.Instance.cardHolders.Last();
+
+            plant.plantCardFunctions.ApplyQueuedTreatments();
+            yield return null;
+
+            Assert.IsTrue(holder.HoldingCard, "Location cards should not be consumed by ApplyQueuedTreatments.");
+            Assert.AreSame(ladyBugs, holder.placedCard, "Location card reference should remain on the holder.");
+            Assert.IsNotNull(holder.placedCardClick3D, "Location card clone should remain on the holder.");
+        }
+
+        [UnityTest]
         public IEnumerator TreatmentThatThrows_DoesNotBreakLoop()
         {
             var plant = CreatePlant(new FakeAffliction());
