@@ -55,11 +55,7 @@ namespace _project.Scripts.Card_Core
         {
             try
             {
-                if (locationCard == null)
-                {
-                    Debug.LogWarning("SpotDataHolder received a null location card during placement.");
-                    return;
-                }
+                if (locationCard == null) return;
 
                 // Clear previous effect before applying the new one
                 if (cLocationCard != null && _effectActive)
@@ -95,11 +91,20 @@ namespace _project.Scripts.Card_Core
             {
                 if (cLocationCard == null) return;
 
+                var cardToRemove = cLocationCard;
+
                 TryRemoveLocationEffect(cLocationCard);
 
                 _effectActive = false;
                 cLocationCard = null;
                 _pendingExpiry = false;
+
+                var holders = BuildHolderSearchList();
+                foreach (var holder in holders.Where(holder => holder && holder.placedCard == cardToRemove))
+                {
+                    holder.ClearLocationCardByExpiry();
+                    break;
+                }
             }
             catch (Exception e)
             {
