@@ -132,7 +132,7 @@ namespace _project.Scripts.Core
 
                 SpreaderRole.HorticulturalOil => (null, new PlantAfflictions.HorticulturalOilTreatment()),
                 SpreaderRole.Fungicide => (null, new PlantAfflictions.FungicideTreatment()),
-                SpreaderRole.Insecticide => (null, new PlantAfflictions.InsecticideTreatment()),
+                SpreaderRole.Insecticide => (null, new PlantAfflictions.PermethrinTreatment()),
                 SpreaderRole.SoapyWater => (null, new PlantAfflictions.SoapyWaterTreatment()),
 
                 _ => (null, null)

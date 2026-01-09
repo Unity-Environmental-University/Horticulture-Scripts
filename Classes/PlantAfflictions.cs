@@ -96,7 +96,7 @@ namespace _project.Scripts.Classes
                         Debug.Log($"Applied treatment to affliction: {item.Name}");
                 }
 
-                if (this is InsecticideTreatment)
+                if (this is PermethrinTreatment)
                 {
                     // Check for LadyBugsCard on SpotDataHolder directly (visual card)
                     // SpotDataHolder is a sibling of the plant (both are children of plantLocation)
@@ -125,7 +125,7 @@ namespace _project.Scripts.Classes
             private static readonly List<ITreatment> Treatments = new()
             {
                 new Panacea(),
-                new InsecticideTreatment(),
+                new PermethrinTreatment(),
                 new HorticulturalOilTreatment()
             };
 
@@ -150,7 +150,7 @@ namespace _project.Scripts.Classes
                     return false;
                 }
 
-                var affectsAdults = treatment is InsecticideTreatment or Panacea;
+                var affectsAdults = treatment is PermethrinTreatment or Panacea;
                 var affectsLarvae = treatment is HorticulturalOilTreatment or Panacea;
 
                 // Get actual current values from the plant (not internal flags)
@@ -211,7 +211,7 @@ namespace _project.Scripts.Classes
             private static readonly List<ITreatment> Treatments = new()
             {
                 new SoapyWaterTreatment(),
-                new InsecticideTreatment(),
+                new PermethrinTreatment(),
                 new ImidaclopridTreatment(),
                 new Panacea()
             };
@@ -308,7 +308,7 @@ namespace _project.Scripts.Classes
                 new HorticulturalOilTreatment(),
                 new ImidaclopridTreatment(),
                 new SpinosadTreatment(),
-                new InsecticideTreatment(),
+                new PermethrinTreatment(),
                 new Panacea()
             };
 
@@ -625,9 +625,9 @@ namespace _project.Scripts.Classes
             }
         }
 
-        public class InsecticideTreatment : ITreatment
+        public class PermethrinTreatment : ITreatment
         {
-            public string Name => "Insecticide";
+            public string Name => "Permethrin";
             public string Description => "Removes Insects";
             public int BeeValue => -4;
             private int _infectCureValue = 1;

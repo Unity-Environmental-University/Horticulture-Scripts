@@ -296,7 +296,7 @@ namespace _project.Scripts.ModLoading
             {
                 "horticulturaloil" => new PlantAfflictions.HorticulturalOilTreatment(),
                 "fungicide" => new PlantAfflictions.FungicideTreatment(),
-                "insecticide" => new PlantAfflictions.InsecticideTreatment(),
+                "permethrin" => new PlantAfflictions.PermethrinTreatment(),
                 "soapywater" => new PlantAfflictions.SoapyWaterTreatment(),
                 "spinosad" => new PlantAfflictions.SpinosadTreatment(),
                 "imidacloprid" => new PlantAfflictions.ImidaclopridTreatment(),

@@ -787,11 +787,11 @@ namespace _project.Scripts.Classes
         }
     }
 
-    public class InsecticideBasic : ICard
+    public class PermethrinBasic : ICard
     {
         [CanBeNull] private string _description;
-        public PlantAfflictions.ITreatment Treatment => new PlantAfflictions.InsecticideTreatment();
-        public string Name => "Synthetic Insecticide Basic";
+        public PlantAfflictions.ITreatment Treatment => new PlantAfflictions.PermethrinTreatment();
+        public string Name => "Basic Permethrin Insecticide";
         private int _value = -3;
         public int? Value
         {
@@ -808,13 +808,13 @@ namespace _project.Scripts.Classes
         }
 
         public GameObject Prefab => CardGameMaster.Instance.actionCardPrefab;
-        public Material Material => Resources.Load<Material>($"Materials/Cards/SyntheticInsecticide");
+        public Material Material => Resources.Load<Material>($"Materials/Cards/Permethrin");
 
         public void Selected() { if (CardGameMaster.Instance.debuggingCardClass) Debug.Log("Selected " + Name); }
         public void ModifyValue(int delta) => _value += delta;
         public ICard Clone()
         {
-            var clone = new InsecticideBasic { Value = Value };
+            var clone = new PermethrinBasic { Value = Value };
             foreach (var sticker in Stickers) clone.Stickers.Add(sticker.Clone());
             return clone;
         }

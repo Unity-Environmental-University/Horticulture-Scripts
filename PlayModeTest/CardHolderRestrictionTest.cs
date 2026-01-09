@@ -116,7 +116,7 @@ namespace _project.Scripts.PlayModeTest
             _placedCardHolder = _testGameObject.AddComponent<PlacedCardHolder>();
 
             // Simulate a non-Location Card (action/treatment card) being placed
-            var actionCard = new InsecticideBasic();
+            var actionCard = new PermethrinBasic();
             _placedCardHolder.placedCard = actionCard;
 
             // Verify the card is placed
@@ -151,7 +151,7 @@ namespace _project.Scripts.PlayModeTest
             _placedCardHolder = _testGameObject.AddComponent<PlacedCardHolder>();
 
             // Test InsecticideBasic (Action Card)
-            var actionCard = new InsecticideBasic();
+            var actionCard = new PermethrinBasic();
             _placedCardHolder.placedCard = actionCard;
             Assert.IsNotInstanceOf<ILocationCard>(_placedCardHolder.placedCard);
         }

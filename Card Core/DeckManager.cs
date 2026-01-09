@@ -144,8 +144,8 @@ namespace _project.Scripts.Card_Core
             new SunlightBasic(),
 
             // TODO cards w/o new materials
-            new InsecticideBasic(),
-            new InsecticideBasic(),
+            new PermethrinBasic(),
+            new PermethrinBasic(),
             new Panacea(),
             new LadyBugsCard(),
             new LadyBugsCard(),
@@ -158,13 +158,13 @@ namespace _project.Scripts.Card_Core
         {
             new HorticulturalOilBasic(),
             new FungicideBasic(),
-            new InsecticideBasic(),
+            new PermethrinBasic(),
             new SoapyWaterBasic(),
             new Panacea(),
 
             new HorticulturalOilBasic(),
             new FungicideBasic(),
-            new InsecticideBasic(),
+            new PermethrinBasic(),
             new SoapyWaterBasic(),
             new Panacea()
         };
@@ -1094,7 +1094,7 @@ namespace _project.Scripts.Card_Core
             {
                 "Horticultural Oil" => new PlantAfflictions.HorticulturalOilTreatment(),
                 "Fungicide" => new PlantAfflictions.FungicideTreatment(),
-                "Insecticide" => new PlantAfflictions.InsecticideTreatment(),
+                "Insecticide" => new PlantAfflictions.PermethrinTreatment(),
                 "SoapyWater" => new PlantAfflictions.SoapyWaterTreatment(),
                 "Spinosad" => new PlantAfflictions.SpinosadTreatment(),
                 "Imidacloprid" => new PlantAfflictions.ImidaclopridTreatment(),

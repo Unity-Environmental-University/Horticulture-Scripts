@@ -57,12 +57,12 @@ namespace _project.Scripts.UI
     {
         public GameObject neemOil;
         public GameObject fungicide;
-        public GameObject insecticide;
+        public GameObject permethrin;
         public GameObject soapyWater;
 
         public List<GameObject> GetToggles()
         {
-            return new List<GameObject> { neemOil, fungicide, insecticide, soapyWater };
+            return new List<GameObject> { neemOil, fungicide, permethrin, soapyWater };
         }
     }
 

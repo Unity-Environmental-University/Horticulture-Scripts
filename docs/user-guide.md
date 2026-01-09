@@ -109,7 +109,7 @@ Your tools for pest management:
 - **Horticultural Oil** (-$1) - Gentle, effective against soft-bodied insects
 - **Soapy Water** (-$1) - Cheap, environmentally friendly option
 - **Fungicide** (-$2) - Specific for fungal problems like mildew
-- **Synthetic Insecticide** (-$3) - Powerful but expensive
+- **Permethrin** (-$3) - Powerful but expensive
 - **Spinosad** (-$4) - Biological insecticide, selective action
 - **Imidacloprid** (-$2) - Systemic insecticide
 - **Panacea** (-$5) - Cures everything but very expensive
@@ -249,7 +249,7 @@ Your tools for pest management:
 **Best Options:**
 1. **Horticultural Oil** (-$1) - Cost-effective, environmentally friendly
 2. **Soapy Water** (-$1) - Cheapest option, good for light infestations
-3. **Synthetic Insecticide** (-$3) - Fast-acting for severe infestations
+3. **Permethrin** (-$3) - Fast-acting for severe infestations
 
 #### For Thrips (Most Dangerous)
 **Best Options:**

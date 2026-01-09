@@ -60,7 +60,7 @@ namespace _project.Scripts.Handlers
                 switch (treatment)
                 {
                     case PlantAfflictions.HorticulturalOilTreatment when plantController.GetEggsFrom(affliction) <= 0:
-                    case PlantAfflictions.InsecticideTreatment when plantController.GetInfectFrom(affliction) <= 0:
+                    case PlantAfflictions.PermethrinTreatment when plantController.GetInfectFrom(affliction) <= 0:
                         UpdateDisplay(affliction, treatment, "0%", Color.red);
                         return;
                 }

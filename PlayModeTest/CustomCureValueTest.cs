@@ -44,7 +44,7 @@ namespace _project.Scripts.PlayModeTest
         [Test]
         public void CustomTreatmentWrapper_OverridesBothValues()
         {
-            var baseTreatment = new PlantAfflictions.InsecticideTreatment();
+            var baseTreatment = new PlantAfflictions.PermethrinTreatment();
             const int customInfectCure = 4;
             const int customEggCure = 2;
 

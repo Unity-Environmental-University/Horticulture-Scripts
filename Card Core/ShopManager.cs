@@ -57,7 +57,7 @@ namespace _project.Scripts.Card_Core
                 new HorticulturalOilBasic(),
                 new SoapyWaterBasic(),
                 new FungicideBasic(),
-                new InsecticideBasic(),
+                new PermethrinBasic(),
                 new Panacea()
             };
 
