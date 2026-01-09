@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using _project.Scripts.Classes;
+using _project.Scripts.Core;
 using UnityEngine;
 using Random = UnityEngine.Random;
 
@@ -111,6 +112,16 @@ namespace _project.Scripts.Handlers
             rel.SetNames(affliction, treatment);
             relationalEfficacies.Add(rel);
             return rel.efficacy;
+        }
+        
+        public int GetAverageEfficacy(PlantAfflictions.ITreatment treatment, PlantController controller)
+        {
+            var afflictions = controller.CurrentAfflictions;
+            if (afflictions.Count == 0) return 0;
+
+            var relations = afflictions.Select(af => GetRelationalEfficacy(af, treatment)).ToList();
+
+            return (int)relations.Average();
         }
     }
 }
