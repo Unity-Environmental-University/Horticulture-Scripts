@@ -1094,7 +1094,7 @@ namespace _project.Scripts.Card_Core
             {
                 "Horticultural Oil" => new PlantAfflictions.HorticulturalOilTreatment(),
                 "Fungicide" => new PlantAfflictions.FungicideTreatment(),
-                "Insecticide" => new PlantAfflictions.PermethrinTreatment(),
+                "Permethrin" => new PlantAfflictions.PermethrinTreatment(),
                 "SoapyWater" => new PlantAfflictions.SoapyWaterTreatment(),
                 "Spinosad" => new PlantAfflictions.SpinosadTreatment(),
                 "Imidacloprid" => new PlantAfflictions.ImidaclopridTreatment(),
