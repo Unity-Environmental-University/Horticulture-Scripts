@@ -54,22 +54,53 @@ namespace _project.Scripts.Handlers
                 return;
             }
 
+            PlantAfflictions.IAffliction effectiveAffliction = null;
+            PlantAfflictions.IAffliction treatableFallbackAffliction = null;
+
             foreach (var affliction in afflictions)
             {
-                //TODO: this sucks.. maybe unfuck this? Or don't... I'm not your dad.
-                switch (treatment)
-                {
-                    case PlantAfflictions.HorticulturalOilTreatment when affliction is PlantAfflictions.ThripsAffliction
-                                                                         && plantController.GetEggsFrom(affliction) <=
-                                                                         0:
-                    case PlantAfflictions.PermethrinTreatment when affliction is PlantAfflictions.ThripsAffliction
-                                                                   && plantController.GetInfectFrom(affliction) <= 0:
-                        UpdateDisplay(affliction, treatment, "0%", Color.red);
-                        return;
-                }
+                if (treatableFallbackAffliction == null && affliction.CanBeTreatedBy(treatment))
+                    treatableFallbackAffliction = affliction;
 
-                UpdateDisplay(affliction, treatment);
-                if (affliction.CanBeTreatedBy(treatment)) return;
+                if (!WouldAffect(affliction)) continue;
+
+                effectiveAffliction = affliction;
+                break;
+            }
+
+            if (effectiveAffliction != null)
+            {
+                UpdateDisplay(effectiveAffliction, treatment);
+                return;
+            }
+
+            if (treatableFallbackAffliction != null)
+            {
+                UpdateDisplay(treatableFallbackAffliction, treatment, "0%", Color.red);
+                return;
+            }
+
+            UpdateDisplay(null, null);
+            return;
+
+            bool WouldAffect(PlantAfflictions.IAffliction affliction)
+            {
+                if (affliction == null) return false;
+                if (!affliction.CanBeTreatedBy(treatment)) return false;
+
+                var infect = controller.GetInfectFrom(affliction);
+                var eggs = controller.GetEggsFrom(affliction);
+
+                if (affliction is not PlantAfflictions.ThripsAffliction)
+                    return (infect > 0 && (treatment.InfectCureValue ?? 0) > 0) ||
+                           (eggs > 0 && (treatment.EggCureValue ?? 0) > 0);
+                var affectsAdults = treatment is PlantAfflictions.PermethrinTreatment or PlantAfflictions.Panacea;
+                var affectsLarvae =
+                    treatment is PlantAfflictions.HorticulturalOilTreatment or PlantAfflictions.Panacea;
+
+                var canReduceInfect = affectsAdults && infect > 0 && (treatment.InfectCureValue ?? 0) > 0;
+                var canReduceEggs = affectsLarvae && eggs > 0 && (treatment.EggCureValue ?? 0) > 0;
+                return canReduceInfect || canReduceEggs;
             }
         }
 
