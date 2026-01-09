@@ -281,7 +281,7 @@ namespace _project.Scripts.ModLoading
         
         private static PlantAfflictions.ITreatment CreateTreatment(CardJson def)
         {
-            // New affliction-specific effectiveness system takes priority
+            // A new affliction-specific effectiveness system takes priority
             if (def.effectiveness is not { Length: > 0 })
                 return CreateLegacyTreatment(def.treatment, def.infectCure, def.eggCure);
             var treatmentName = !string.IsNullOrEmpty(def.treatment) ? def.treatment : def.name;

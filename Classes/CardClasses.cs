@@ -1111,7 +1111,8 @@ namespace _project.Scripts.Classes
 
         public void ApplyTurnEffect(PlantController plant)
         {
-            // No-op; LadyBugs effect is modeled as a persistent treatment in plant.CurrentTreatments.
+            // re-apply Lady Bugs treatment each turn
+            plant.CurrentTreatments.Add(new PlantAfflictions.LadyBugs());
         }
     }
 

@@ -213,6 +213,7 @@ namespace _project.Scripts.Classes
                 new SoapyWaterTreatment(),
                 new PermethrinTreatment(),
                 new ImidaclopridTreatment(),
+                new LadyBugs(),
                 new Panacea()
             };
 
@@ -309,6 +310,7 @@ namespace _project.Scripts.Classes
                 new ImidaclopridTreatment(),
                 new SpinosadTreatment(),
                 new PermethrinTreatment(),
+                new LadyBugs(),
                 new Panacea()
             };
 
@@ -790,7 +792,10 @@ namespace _project.Scripts.Classes
         public class LadyBugs : ITreatment
         {
             public string Name => "LadyBugs";
-            public string Description => "Lady Bugs affect all plants and are a beneficial insect";
+
+            public string Description =>
+                "Voracious aphid predators. Very effective against soft-bodied pests like aphids and mealybugs. Less effective against mites and thrips.\"";
+
             public int BeeValue => 5;
 
             private int _efficacy = DefaultEfficacy;
@@ -800,14 +805,14 @@ namespace _project.Scripts.Classes
                 set => _efficacy = value ?? 0;
             }
 
-            private int _infectCureValue = MaxCureAmount;
+            private int _infectCureValue = 2;
             public int? InfectCureValue
             {
                 get => _infectCureValue;
                 set => _infectCureValue = value ?? 0;
             }
 
-            private int _eggCureValue = MaxCureAmount;
+            private int _eggCureValue = 1;
             public int? EggCureValue
             {
                 get => _eggCureValue;
