@@ -59,8 +59,11 @@ namespace _project.Scripts.Handlers
                 //TODO: this sucks.. maybe unfuck this? Or don't... I'm not your dad.
                 switch (treatment)
                 {
-                    case PlantAfflictions.HorticulturalOilTreatment when plantController.GetEggsFrom(affliction) <= 0:
-                    case PlantAfflictions.PermethrinTreatment when plantController.GetInfectFrom(affliction) <= 0:
+                    case PlantAfflictions.HorticulturalOilTreatment when affliction is PlantAfflictions.ThripsAffliction
+                                                                         && plantController.GetEggsFrom(affliction) <=
+                                                                         0:
+                    case PlantAfflictions.PermethrinTreatment when affliction is PlantAfflictions.ThripsAffliction
+                                                                   && plantController.GetInfectFrom(affliction) <= 0:
                         UpdateDisplay(affliction, treatment, "0%", Color.red);
                         return;
                 }
