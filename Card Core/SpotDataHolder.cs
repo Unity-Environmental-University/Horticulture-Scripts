@@ -202,7 +202,7 @@ namespace _project.Scripts.Card_Core
                     results.Add(holder);
             }
 
-            if (transform.parent == null) return results;
+            if (transform.parent is null) return results;
             {
                 var parentHolders = transform.parent.GetComponentsInChildren<PlacedCardHolder>(true);
                 foreach (var holder in parentHolders)

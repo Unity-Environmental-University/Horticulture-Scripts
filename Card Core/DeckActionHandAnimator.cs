@@ -15,10 +15,19 @@ namespace _project.Scripts.Card_Core
         private Sequence _currentHandSequence;
         private DeckManager _deckManager;
 
-        private void Awake()
+        private DeckManager DeckManager
         {
-            _deckManager = GetComponent<DeckManager>();
-            if (!_deckManager) Debug.LogError("[DeckActionHandAnimator] Missing DeckManager component.");
+            get
+            {
+                if (_deckManager) return _deckManager;
+                _deckManager = GetComponent<DeckManager>();
+                if (!_deckManager)
+                {
+                    Debug.LogError("[DeckActionHandAnimator] Missing DeckManager component. " +
+                                  "Ensure DeckManager has [RequireComponent(typeof(DeckActionHandAnimator))].", this);
+                }
+                return _deckManager;
+            }
         }
 
         private void OnDestroy()
@@ -29,21 +38,21 @@ namespace _project.Scripts.Card_Core
 
         private void AnimateHandReflow(float duration)
         {
-            if (!_deckManager || !_deckManager.actionCardParent) return;
+            if (!DeckManager || !DeckManager.actionCardParent) return;
 
             SafeKillSequence(ref _currentHandSequence);
 
-            _deckManager.SetUpdatingActionDisplay(true);
+            DeckManager.SetUpdatingActionDisplay(true);
 
             StartCoroutine(AnimationTimeoutWatchdog(duration + 2f));
 
             try
             {
-                var parent = _deckManager.actionCardParent;
+                var parent = DeckManager.actionCardParent;
                 var childCount = parent.childCount;
                 if (childCount == 0)
                 {
-                    _deckManager.SetUpdatingActionDisplay(false);
+                    DeckManager.SetUpdatingActionDisplay(false);
                     _currentHandSequence = null;
                     return;
                 }
@@ -111,7 +120,7 @@ namespace _project.Scripts.Card_Core
                     }
                     finally
                     {
-                        _deckManager.SetUpdatingActionDisplay(false);
+                        DeckManager.SetUpdatingActionDisplay(false);
                         _currentHandSequence = null;
                     }
                 });
@@ -122,22 +131,22 @@ namespace _project.Scripts.Card_Core
             {
                 Debug.LogError($"Error creating hand reflow animation: {ex.Message}");
                 SafeKillSequence(ref _currentHandSequence);
-                _deckManager.SetUpdatingActionDisplay(false);
+                DeckManager.SetUpdatingActionDisplay(false);
             }
         }
 
         public void AddCardVisualAndAnimate(ICard card, float animDuration, int totalCardsInHand)
         {
-            if (!_deckManager || !_deckManager.actionCardParent || card == null || !card.Prefab) return;
+            if (!DeckManager || !DeckManager.actionCardParent || card == null || !card.Prefab) return;
 
-            if (_deckManager.debug && totalCardsInHand > _deckManager.cardsDrawnPerTurn)
+            if (DeckManager.debug && totalCardsInHand > DeckManager.cardsDrawnPerTurn)
             {
                 var layoutMode = totalCardsInHand <= 6 ? "scaling" : "overlap";
                 Debug.Log(
-                    $"Hand overflow: {totalCardsInHand} cards (normal: {_deckManager.cardsDrawnPerTurn}). Using {layoutMode} layout.");
+                    $"Hand overflow: {totalCardsInHand} cards (normal: {DeckManager.cardsDrawnPerTurn}). Using {layoutMode} layout.");
             }
 
-            var newCardObj = Instantiate(card.Prefab, _deckManager.actionCardParent);
+            var newCardObj = Instantiate(card.Prefab, DeckManager.actionCardParent);
             var cardView = newCardObj.GetComponent<CardView>();
             if (cardView)
                 cardView.Setup(card);
@@ -159,11 +168,11 @@ namespace _project.Scripts.Card_Core
 
         public void DisplayActionCardsSequence(IReadOnlyList<ICard> cardsToDisplay)
         {
-            if (!_deckManager || !_deckManager.actionCardParent) return;
+            if (!DeckManager || !DeckManager.actionCardParent) return;
 
             SafeKillSequence(ref _currentDisplaySequence);
 
-            _deckManager.SetUpdatingActionDisplay(true);
+            DeckManager.SetUpdatingActionDisplay(true);
 
             StartCoroutine(AnimationTimeoutWatchdog(5f));
 
@@ -171,7 +180,7 @@ namespace _project.Scripts.Card_Core
             {
                 if (cardsToDisplay == null || cardsToDisplay.Count == 0)
                 {
-                    _deckManager.SetUpdatingActionDisplay(false);
+                    DeckManager.SetUpdatingActionDisplay(false);
                     return;
                 }
 
@@ -186,7 +195,7 @@ namespace _project.Scripts.Card_Core
                     var (targetPos, targetRot) =
                         CalculateCardTransform(i, totalCards, effectiveSpacing, useOverlapLayout);
 
-                    var cardObj = Instantiate(card.Prefab, _deckManager.actionCardParent);
+                    var cardObj = Instantiate(card.Prefab, DeckManager.actionCardParent);
                     var cardView = cardObj.GetComponent<CardView>();
                     if (cardView)
                         cardView.Setup(card);
@@ -243,7 +252,7 @@ namespace _project.Scripts.Card_Core
 
                 _currentDisplaySequence.OnComplete(() =>
                 {
-                    _deckManager.SetUpdatingActionDisplay(false);
+                    DeckManager.SetUpdatingActionDisplay(false);
                     _currentDisplaySequence = null;
                 });
 
@@ -253,7 +262,7 @@ namespace _project.Scripts.Card_Core
             {
                 Debug.LogError($"Error creating display card sequence: {ex.Message}");
                 SafeKillSequence(ref _currentDisplaySequence);
-                _deckManager.SetUpdatingActionDisplay(false);
+                DeckManager.SetUpdatingActionDisplay(false);
             }
         }
 
@@ -262,11 +271,11 @@ namespace _project.Scripts.Card_Core
             SafeKillSequence(ref _currentHandSequence);
             SafeKillSequence(ref _currentDisplaySequence);
 
-            _deckManager.ForceClearUpdatingActionDisplay();
+            DeckManager.ForceClearUpdatingActionDisplay();
 
-            if (!_deckManager.actionCardParent) return;
+            if (!DeckManager.actionCardParent) return;
 
-            var parent = _deckManager.actionCardParent;
+            var parent = DeckManager.actionCardParent;
             var childCount = parent.childCount;
             if (childCount == 0) return;
 
@@ -289,7 +298,7 @@ namespace _project.Scripts.Card_Core
             const float maxHandWidth = 8f;
             const int maxScalingCards = 6;
 
-            var effectiveSpacing = _deckManager.cardSpacing;
+            var effectiveSpacing = DeckManager.cardSpacing;
 
             var cgm = CardGameMaster.Instance;
             var prefabScale = cgm.actionCardPrefab ? cgm.actionCardPrefab.transform.localScale : Vector3.one;
@@ -298,9 +307,9 @@ namespace _project.Scripts.Card_Core
 
             if (totalCards <= maxScalingCards)
             {
-                if (totalCards <= _deckManager.cardsDrawnPerTurn) return (effectiveSpacing, cardScale, false);
-                var overflowFactor = (float)_deckManager.cardsDrawnPerTurn / totalCards;
-                effectiveSpacing = _deckManager.cardSpacing * overflowFactor;
+                if (totalCards <= DeckManager.cardsDrawnPerTurn) return (effectiveSpacing, cardScale, false);
+                var overflowFactor = (float)DeckManager.cardsDrawnPerTurn / totalCards;
+                effectiveSpacing = DeckManager.cardSpacing * overflowFactor;
 
                 var requiredWidth = totalCards > 1 ? (totalCards - 1) * effectiveSpacing * 2 : 0f;
                 if (!(requiredWidth > maxHandWidth)) return (effectiveSpacing, cardScale, false);
@@ -374,7 +383,7 @@ namespace _project.Scripts.Card_Core
         {
             yield return new WaitForSeconds(maxDuration);
 
-            if (!_deckManager.UpdatingActionDisplay) yield break;
+            if (!DeckManager.UpdatingActionDisplay) yield break;
             Debug.LogError("[DeckManager] Animation watchdog timeout detected! Force-clearing flag.");
             ForceResetAnimationFlag();
         }
