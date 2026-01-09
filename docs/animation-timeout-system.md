@@ -97,11 +97,9 @@ private IEnumerator AnimationTimeoutWatchdog(float maxDuration)
 {
     yield return new WaitForSeconds(maxDuration);
 
-    if (UpdatingActionDisplay)
-    {
-        Debug.LogError("[DeckManager] Animation watchdog timeout detected! Force-clearing flag.");
-        ForceResetAnimationFlag();
-    }
+    if (!_deckManager.UpdatingActionDisplay) yield break;
+    Debug.LogError("[DeckManager] Animation watchdog timeout detected! Force-clearing flag.");
+    ForceResetAnimationFlag();
 }
 ```
 
@@ -111,8 +109,8 @@ private IEnumerator AnimationTimeoutWatchdog(float maxDuration)
 - Safety margin: 2-3x expected duration
 
 **Started From:**
-- `AnimateHandReflow()` - Started immediately when animation sequence begins
-- `DisplayActionCardsSequence()` - Started before sequence creation
+- `DeckActionHandAnimator.AnimateHandReflow()` - Started immediately when animation sequence begins
+- `DeckActionHandAnimator.DisplayActionCardsSequence()` - Started before sequence creation
 
 ### Force Reset Implementation
 
@@ -120,23 +118,7 @@ private IEnumerator AnimationTimeoutWatchdog(float maxDuration)
 public void ForceResetAnimationFlag()
 {
     Debug.LogWarning("[DeckManager] ForceResetAnimationFlag called - clearing stuck animation state.");
-
-    // Kill all running sequences
-    SafeKillSequence(ref _currentHandSequence);
-    SafeKillSequence(ref _currentDisplaySequence);
-
-    // Force-clear the animation flag (bypass property setter to avoid logging)
-    _updatingActionDisplay = false;
-
-    // Re-enable all Click3D components that may have been disabled
-    if (actionCardParent)
-    {
-        foreach (Transform child in actionCardParent)
-        {
-            var click3D = child.GetComponent<Click3D>();
-            if (click3D) click3D.enabled = true;
-        }
-    }
+    ActionHandAnimator.ForceResetAnimationFlag();
 }
 ```
 
