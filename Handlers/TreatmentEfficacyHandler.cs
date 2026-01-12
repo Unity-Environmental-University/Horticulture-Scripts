@@ -113,15 +113,38 @@ namespace _project.Scripts.Handlers
             relationalEfficacies.Add(rel);
             return rel.efficacy;
         }
-        
+
+        /// <summary>
+        ///     Calculates the average treatment efficacy across all treatable afflictions on a plant.
+        /// </summary>
+        /// <param name="treatment">The treatment to evaluate</param>
+        /// <param name="controller">The plant controller with afflictions to check</param>
+        /// <returns>
+        ///     Average efficacy percentage (0-100) across treatable afflictions only.
+        ///     Returns 0 if no afflictions can be treated.
+        /// </returns>
+        /// <remarks>
+        ///     Incompatible afflictions are filtered out before averaging to prevent misleading low percentages.
+        ///     Uses preview mode (countInteraction: false) to avoid mutating resistance state during display.
+        /// </remarks>
         public int GetAverageEfficacy(PlantAfflictions.ITreatment treatment, PlantController controller)
         {
             var afflictions = controller.CurrentAfflictions;
-            if (afflictions.Count == 0) return 0;
+            if (afflictions == null || afflictions.Count == 0) return 0;
 
-            var relations = afflictions.Select(af => GetRelationalEfficacy(af, treatment)).ToList();
+            // Filter only treatable afflictions to avoid including 0% incompatible results
+            var treatableAfflictions = afflictions
+                .Where(af => af.CanBeTreatedBy(treatment))
+                .ToList();
 
-            return (int)relations.Average();
+            if (treatableAfflictions.Count == 0) return 0;
+
+            // Use countInteraction: false to avoid mutating resistance state during preview
+            var efficacies = treatableAfflictions
+                .Select(af => GetRelationalEfficacy(af, treatment, false))
+                .ToList();
+
+            return (int)efficacies.Average();
         }
     }
 }

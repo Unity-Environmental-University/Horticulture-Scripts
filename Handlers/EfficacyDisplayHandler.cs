@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 using _project.Scripts.Card_Core;
 using _project.Scripts.Classes;
 using _project.Scripts.Core;
@@ -54,6 +55,19 @@ namespace _project.Scripts.Handlers
                 return;
             }
 
+            // If multiple afflictions are actively being affected, show average
+            if (afflictions.Count > 1)
+            {
+                var activeCount = CountActivelyAffected(afflictions, treatment, controller);
+
+                if (activeCount > 1)
+                {
+                    DisplayAverageEfficacy(controller, treatment);
+                    return;
+                }
+                // Single active affliction - fall through to single-affliction logic
+            }
+
             PlantAfflictions.IAffliction effectiveAffliction = null;
             PlantAfflictions.IAffliction treatableFallbackAffliction = null;
 
@@ -62,7 +76,7 @@ namespace _project.Scripts.Handlers
                 if (treatableFallbackAffliction == null && affliction.CanBeTreatedBy(treatment))
                     treatableFallbackAffliction = affliction;
 
-                if (!WouldAffect(affliction)) continue;
+                if (!WouldAffect(affliction, treatment, controller)) continue;
 
                 effectiveAffliction = affliction;
                 break;
@@ -81,27 +95,62 @@ namespace _project.Scripts.Handlers
             }
 
             UpdateDisplay(null, null);
-            return;
+        }
 
-            bool WouldAffect(PlantAfflictions.IAffliction affliction)
+        private static bool WouldAffect(PlantAfflictions.IAffliction affliction, PlantAfflictions.ITreatment treatment,
+            PlantController controller)
+        {
+            if (affliction == null) return false;
+            if (!affliction.CanBeTreatedBy(treatment)) return false;
+
+            var infect = controller.GetInfectFrom(affliction);
+            var eggs = controller.GetEggsFrom(affliction);
+
+            if (affliction is not PlantAfflictions.ThripsAffliction)
+                return (infect > 0 && (treatment.InfectCureValue ?? 0) > 0) ||
+                       (eggs > 0 && (treatment.EggCureValue ?? 0) > 0);
+
+            // Thrips special case: different treatments target adults vs. larvae
+            var affectsAdults = treatment is PlantAfflictions.PermethrinTreatment or PlantAfflictions.Panacea;
+            var affectsLarvae = treatment is PlantAfflictions.HorticulturalOilTreatment or PlantAfflictions.Panacea;
+
+            var canReduceInfect = affectsAdults && infect > 0 && (treatment.InfectCureValue ?? 0) > 0;
+            var canReduceEggs = affectsLarvae && eggs > 0 && (treatment.EggCureValue ?? 0) > 0;
+            return canReduceInfect || canReduceEggs;
+        }
+
+        private static int CountActivelyAffected(List<PlantAfflictions.IAffliction> afflictions,
+            PlantAfflictions.ITreatment treatment, PlantController controller)
+        {
+            return afflictions.Count(af => WouldAffect(af, treatment, controller));
+        }
+
+        private void DisplayAverageEfficacy(PlantController controller, PlantAfflictions.ITreatment treatment)
+        {
+            if (!_efficacyHandler || controller?.CurrentAfflictions == null)
             {
-                if (affliction == null) return false;
-                if (!affliction.CanBeTreatedBy(treatment)) return false;
-
-                var infect = controller.GetInfectFrom(affliction);
-                var eggs = controller.GetEggsFrom(affliction);
-
-                if (affliction is not PlantAfflictions.ThripsAffliction)
-                    return (infect > 0 && (treatment.InfectCureValue ?? 0) > 0) ||
-                           (eggs > 0 && (treatment.EggCureValue ?? 0) > 0);
-                var affectsAdults = treatment is PlantAfflictions.PermethrinTreatment or PlantAfflictions.Panacea;
-                var affectsLarvae =
-                    treatment is PlantAfflictions.HorticulturalOilTreatment or PlantAfflictions.Panacea;
-
-                var canReduceInfect = affectsAdults && infect > 0 && (treatment.InfectCureValue ?? 0) > 0;
-                var canReduceEggs = affectsLarvae && eggs > 0 && (treatment.EggCureValue ?? 0) > 0;
-                return canReduceInfect || canReduceEggs;
+                efficacyText.text = string.Empty;
+                return;
             }
+
+            var averageEfficacy = _efficacyHandler.GetAverageEfficacy(treatment, controller);
+
+            if (averageEfficacy == 0)
+            {
+                UpdateDisplay(null, null);
+                return;
+            }
+
+            // Since we already verified activeCount > 1 in UpdateInfo, we can directly display
+            var efficacyColor = averageEfficacy switch
+            {
+                < 50 => Color.red,
+                < 75 => Color.yellow,
+                _ => Color.green
+            };
+
+            efficacyText.text = averageEfficacy + "%";
+            efficacyText.color = efficacyColor;
         }
 
         private PlantController FindPlantController()
