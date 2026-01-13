@@ -1060,7 +1060,7 @@ namespace _project.Scripts.Classes
         [CanBeNull] public string Description => "Lady Bugs be lady bugs bro...";
         public PlantAfflictions.ITreatment Treatment => new PlantAfflictions.LadyBugs();
         
-        public int EffectDuration => IsPermanent ? 999 : 3;
+        public int EffectDuration => IsPermanent ? 999 : 4;
         public bool IsPermanent => false;
         public LocationEffectType EffectType => null;
         
