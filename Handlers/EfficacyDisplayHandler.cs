@@ -41,8 +41,7 @@ namespace _project.Scripts.Handlers
             var treatment = GetTreatment();
 
             if (!controller || treatment == null || controller.CurrentAfflictions == null ||
-                controller.CurrentAfflictions.Count == 0 ||
-                treatment is PlantAfflictions.LadyBugs) //TODO: This sucks- Manual check for Ladybugs treatment
+                controller.CurrentAfflictions.Count == 0)
             {
                 UpdateDisplay(null, null);
                 return;
@@ -94,7 +93,9 @@ namespace _project.Scripts.Handlers
                 return;
             }
 
-            UpdateDisplay(null, null);
+            // Plant has afflictions, but this treatment cannot treat any of them.
+            UpdateOverrideOnly("0%", Color.red);
+
         }
 
         private static bool WouldAffect(PlantAfflictions.IAffliction affliction, PlantAfflictions.ITreatment treatment,
@@ -134,12 +135,6 @@ namespace _project.Scripts.Handlers
             }
 
             var averageEfficacy = _efficacyHandler.GetAverageEfficacy(treatment, controller);
-
-            if (averageEfficacy == 0)
-            {
-                UpdateDisplay(null, null);
-                return;
-            }
 
             // Since we already verified activeCount > 1 in UpdateInfo, we can directly display
             var efficacyColor = averageEfficacy switch
@@ -206,6 +201,18 @@ namespace _project.Scripts.Handlers
             if (!TryGetComponent(out PlantAfflictions.IAffliction affliction) || affliction == null) return null;
             _afflictions.Add(affliction);
             return _afflictions;
+        }
+
+        private void UpdateOverrideOnly(string text, Color color)
+        {
+            if (!efficacyText)
+            {
+                Debug.LogWarning("EfficacyDisplayHandler requires a TextMeshPro reference.", this);
+                return;
+            }
+
+            efficacyText.text = text;
+            efficacyText.color = color;
         }
 
         private void UpdateDisplay(PlantAfflictions.IAffliction affliction, PlantAfflictions.ITreatment treatment,
