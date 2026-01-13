@@ -179,6 +179,7 @@ namespace _project.Scripts.Card_Core
 
         private readonly List<ICard> _actionDeck = new();
         private readonly List<ICard> _actionDiscardPile = new();
+        private readonly List<ICard> _sideDeck = new();
         private readonly List<ISticker> _playerStickers = new();
         private static readonly List<ICard> PlantDeck = new();
         private static readonly List<ICard> AfflictionsDeck = new();
@@ -1394,6 +1395,18 @@ namespace _project.Scripts.Card_Core
             }
 
             _actionDiscardPile.Add(card);
+        }
+        
+        private void AddCardToSideDeck(List<ICard> sourceDeck, ICard card)
+        {
+            sourceDeck.Remove(card);
+            _sideDeck.Add(card);
+        }
+
+        private void AddCardToActionDeck(List<ICard> sourceDeck, ICard card)
+        {
+            sourceDeck.Remove(card);
+            _actionDeck.Add(card);
         }
 
         public void AddCardToHand(ICard card)
