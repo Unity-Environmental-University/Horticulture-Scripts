@@ -34,6 +34,17 @@ namespace _project.Scripts.Card_Core
                 _associatedPlant = transform.parent.GetComponentInChildren<PlantController>();
 
             _plantCacheDirty = false;
+
+            // Re-apply active location card effects to newly discovered plant
+            if (cLocationCard is not null && _effectActive && _associatedPlant is not null)
+            {
+                Debug.Log($"[SpotDataHolder] Re-applying location card {cLocationCard.Name} to plant {_associatedPlant.PlantCard?.Name}");
+                cLocationCard.ApplyLocationEffect(_associatedPlant);
+            }
+            else
+            {
+                Debug.Log($"[SpotDataHolder] NOT re-applying: cLocationCard={cLocationCard?.Name}, _effectActive={_effectActive}, _associatedPlant={(_associatedPlant != null ? _associatedPlant.PlantCard?.Name : "null")}");
+            }
         }
 
         public void InvalidatePlantCache() => _plantCacheDirty = true;
