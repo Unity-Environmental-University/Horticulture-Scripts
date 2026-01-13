@@ -1396,16 +1396,38 @@ namespace _project.Scripts.Card_Core
 
             _actionDiscardPile.Add(card);
         }
-        
+
+        /// <summary>
+        ///     Moves a card from the source deck to the sidedeck.
+        ///     Only adds the card if it exists in the source deck to prevent duplication.
+        /// </summary>
         private void AddCardToSideDeck(List<ICard> sourceDeck, ICard card)
         {
-            sourceDeck.Remove(card);
+            if (!sourceDeck.Remove(card))
+            {
+                if (debug)
+                    Debug.LogWarning(
+                        $"[DeckManager] Attempted to move card '{card?.Name}' to side-deck, but it was not found in source deck.");
+                return;
+            }
+
             _sideDeck.Add(card);
         }
 
+        /// <summary>
+        ///     Moves a card from the source deck (typically side-deck) to the action deck.
+        ///     Only adds the card if it exists in the source deck to prevent duplication.
+        /// </summary>
         private void AddCardToActionDeck(List<ICard> sourceDeck, ICard card)
         {
-            sourceDeck.Remove(card);
+            if (!sourceDeck.Remove(card))
+            {
+                if (debug)
+                    Debug.LogWarning(
+                        $"[DeckManager] Attempted to move card '{card?.Name}' to action deck, but it was not found in source deck.");
+                return;
+            }
+
             _actionDeck.Add(card);
         }
 
