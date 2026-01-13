@@ -245,7 +245,9 @@ namespace _project.Scripts.Classes
         {
             if (plant?.PlantCard?.Value == null) return;
             if (plant != _lastEffectedPlant) ApplyLocationEffect(plant);
-            if (plant.buffFX.isStopped) plant.buffFX.Play();
+
+            if (plant.buffFX && plant.buffFX.isStopped)
+                plant.buffFX.Play();
 
             foreach (var damage in plant.CurrentAfflictions.Select(affliction => affliction.GetCard()?.Value ?? 0))
                 plant.PlantCard.Value = Mathf.Max(0, plant.PlantCard.Value.Value + damage + 1);

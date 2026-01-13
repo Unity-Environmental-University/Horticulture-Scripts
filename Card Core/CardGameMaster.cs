@@ -91,7 +91,8 @@ namespace _project.Scripts.Card_Core
             if (!turnController) turnController = GetComponent<TurnController>();
             if (!cinematicDirector) cinematicDirector = GetComponent<CinematicDirector>();
             if (!soundSystem) soundSystem = GetComponent<SoundSystemMaster>();
-            saveManager ??= new SaveManager();
+            if (!saveManager) saveManager = GetComponent<SaveManager>();
+            if (!saveManager) saveManager = gameObject.AddComponent<SaveManager>();
 
             var missing = new List<string>();
             if (!scoreManager) missing.Add(nameof(scoreManager));

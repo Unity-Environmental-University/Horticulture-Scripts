@@ -11,8 +11,8 @@ namespace _project.Scripts.Card_Core
         private static ScoreManager Instance { get; set; }
         private const int StartingMoneys = 10;
         private static int Moneys { get; set; }
-        private static TextMeshPro TreatmentCostText => CardGameMaster.Instance.treatmentCostText;
-        private static TextMeshPro PotentialProfitText => CardGameMaster.Instance.potentialProfitText;
+        private static TextMeshPro TreatmentCostText => CardGameMaster.Instance?.treatmentCostText;
+        private static TextMeshPro PotentialProfitText => CardGameMaster.Instance?.potentialProfitText;
         private List<PlantController> cachedPlants = new();
 
         public int treatmentCost;
@@ -66,9 +66,17 @@ namespace _project.Scripts.Card_Core
             UpdateMoneysText();
         } 
 
-        private static void UpdateCostText(int totalCost) { TreatmentCostText.text = "Potential Loss: " + totalCost; }
+        private static void UpdateCostText(int totalCost)
+        {
+            var text = TreatmentCostText;
+            if (text) text.text = "Potential Loss: " + totalCost;
+        }
         
-        private static void UpdateProfitText(int potProfit) {PotentialProfitText.text = "Potential Profit: " + potProfit;}
+        private static void UpdateProfitText(int potProfit)
+        {
+            var text = PotentialProfitText;
+            if (text) text.text = "Potential Profit: " + potProfit;
+        }
 
         // ReSharper disable once MemberCanBeMadeStatic.Global
         public int CalculateScore()
