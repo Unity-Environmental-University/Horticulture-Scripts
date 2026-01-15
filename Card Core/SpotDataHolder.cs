@@ -21,6 +21,14 @@ namespace _project.Scripts.Card_Core
         
         private void Start() => RefreshAssociatedPlant();
 
+        public PlantController GetAssociatedPlant(bool refresh = false)
+        {
+            if (refresh)
+                RefreshAssociatedPlant();
+
+            return _associatedPlant;
+        }
+
         public void RefreshAssociatedPlant()
         {
             // Only refresh if the cache is dirty or the plant reference is invalid
@@ -44,6 +52,16 @@ namespace _project.Scripts.Card_Core
             else
             {
                 Debug.Log($"[SpotDataHolder] NOT re-applying: cLocationCard={cLocationCard?.Name}, _effectActive={_effectActive}, _associatedPlant={(_associatedPlant != null ? _associatedPlant.PlantCard?.Name : "null")}");
+            }
+
+            if (_associatedPlant != null && _associatedPlant.PlantCard != null)
+            {
+                var holders = BuildHolderSearchList();
+                foreach (var holder in holders)
+                {
+                    if (!holder) continue;
+                    holder.RefreshEfficacyDisplay();
+                }
             }
         }
 

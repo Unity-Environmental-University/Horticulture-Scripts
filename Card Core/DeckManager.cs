@@ -622,9 +622,15 @@ namespace _project.Scripts.Card_Core
             CardGameMaster.Instance.scoreManager.CalculatePotentialProfit();
         }
 
-        // ReSharper disable Unity.PerformanceAnalysis
+        /// <summary>
+        ///     Updates card holder visibility and refreshes efficacy displays for all placed cards.
+        ///     Called after plants spawn or when card placements change.
+        /// </summary>
+        // ReSharper disable Unity.PerformanceAnalysis - Coroutine called via StartCoroutine
         public IEnumerator UpdateCardHolderRenders()
         {
+            // Wait one frame to ensure newly spawned plants are fully initialized
+            // before querying their components in RefreshEfficacyDisplay
             yield return null;
 
             if (plantLocations == null)
@@ -638,11 +644,23 @@ namespace _project.Scripts.Card_Core
                 if (!plantTransform) continue;
 
                 var plantController = plantTransform.GetComponentInChildren<PlantController>(true);
-                var cardHolders = plantTransform.GetComponentsInChildren<PlacedCardHolder>(true);
+
+                // Use cached CardHolders instead of GetComponentsInChildren (performance optimization)
+                // Note: CardHolders cache is populated by InitializePlantHolders() in Start()
+                var cardHolders = location.CardHolders;
+                if (cardHolders == null || cardHolders.Count == 0) continue;
 
                 foreach (var cardHolder in cardHolders)
-                    if (cardHolder && !cardHolder.HoldingCard)
+                {
+                    if (!cardHolder) continue;
+
+                    // Toggle visibility for empty holders (existing behavior)
+                    if (!cardHolder.HoldingCard)
                         cardHolder.ToggleCardHolder(plantController != null);
+                    // Refresh efficacy displays for placed treatment cards (bug fix)
+                    else
+                        cardHolder.RefreshEfficacyDisplay();
+                }
             }
         }
 
@@ -1116,6 +1134,10 @@ namespace _project.Scripts.Card_Core
             if (debug)
                 Debug.Log("Afflictions Drawn: " + string.Join(", ", _afflictionHand.ConvertAll(card => card.Name)));
             ApplyAfflictionDeck();
+
+            // Refresh efficacy displays after afflictions are applied to new plants
+            StartCoroutine(UpdateCardHolderRenders());
+
             CardGameMaster.Instance.scoreManager.CalculateTreatmentCost();
         }
 
@@ -1181,6 +1203,10 @@ namespace _project.Scripts.Card_Core
             if (debug)
                 Debug.Log("Afflictions Drawn: " + string.Join(", ", _afflictionHand.ConvertAll(card => card.Name)));
             ApplyAfflictionDeck();
+
+            // Refresh efficacy displays after afflictions are applied to new plants
+            StartCoroutine(UpdateCardHolderRenders());
+
             CardGameMaster.Instance.scoreManager.CalculateTreatmentCost();
         }
 

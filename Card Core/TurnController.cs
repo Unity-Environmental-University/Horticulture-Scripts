@@ -492,6 +492,9 @@ namespace _project.Scripts.Card_Core
             SpreadAfflictions(plantControllers);
             FinalizeLocationCards();
 
+            // Refresh efficacy displays after afflictions may have spread to plants with placed treatments
+            StartCoroutine(_deckManager.UpdateCardHolderRenders());
+
             // Record turn end analytics before counter-advance
             try
             {

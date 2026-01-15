@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
@@ -315,9 +315,19 @@ namespace _project.Scripts.Card_Core
         {
             var root = transform.parent ? transform.parent : transform;
             var plant = root.GetComponentInChildren<PlantController>(true);
-            return plant ? plant : root.GetComponentInParent<PlantController>();
+            if (plant) return plant;
+
+            plant = root.GetComponentInParent<PlantController>();
+            if (plant) return plant;
+
+            if (!spotDataHolder) spotDataHolder = ResolveSpotDataHolder();
+            return spotDataHolder ? spotDataHolder.GetAssociatedPlant(true) : null;
         }
 
+        /// <summary>
+        ///     Refreshes the efficacy percentage display for the currently placed treatment card.
+        ///     Call this when plant afflictions change or after plants are spawned/replaced.
+        /// </summary>
         public void RefreshEfficacyDisplay()
         {
             var handler = GetEfficacyDisplay();
@@ -816,9 +826,9 @@ namespace _project.Scripts.Card_Core
                 if (targetHolder.placedCardView is not null)
                     targetHolder.placedCardView.enabled = false;
 
-                // Update UI displays
-                targetHolder.RefreshEfficacyDisplay();
+                // Update location card tracking before refreshing UI
                 targetHolder.NotifySpotDataHolder();
+                targetHolder.RefreshEfficacyDisplay();
             }
 
             // Hide the original card in the player's hand
@@ -986,9 +996,20 @@ namespace _project.Scripts.Card_Core
             }
 
             spotDataHolder = GetComponentInChildren<SpotDataHolder>();
-            if (!spotDataHolder) return EnsureSpotDataHolder();
-            spotDataHolder.RegisterCardHolder(this);
-            return spotDataHolder;
+            if (spotDataHolder)
+            {
+                spotDataHolder.RegisterCardHolder(this);
+                return spotDataHolder;
+            }
+
+            spotDataHolder = GetComponentInParent<SpotDataHolder>();
+            if (spotDataHolder)
+            {
+                spotDataHolder.RegisterCardHolder(this);
+                return spotDataHolder;
+            }
+
+            return EnsureSpotDataHolder();
 
         }
 
