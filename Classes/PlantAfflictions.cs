@@ -96,21 +96,19 @@ namespace _project.Scripts.Classes
                         Debug.Log($"Applied treatment to affliction: {item.Name}");
                 }
 
-                if (this is PermethrinTreatment)
-                {
-                    // Check for LadyBugsCard on SpotDataHolder directly (visual card)
-                    // SpotDataHolder is a sibling of the plant (both are children of plantLocation)
-                    var spotDataHolder = plant.transform.parent?.GetComponentInChildren<SpotDataHolder>();
+                if (this is not (PermethrinTreatment or ImidaclopridTreatment)) return;
+                // Check for LadyBugsCard on SpotDataHolder directly (visual card)
+                // SpotDataHolder is a sibling of the plant (both are children of plantLocation)
+                var spotDataHolder = plant.transform.parent?.GetComponentInChildren<SpotDataHolder>();
 
-                    if (!spotDataHolder || spotDataHolder.cLocationCard is not LadyBugsCard) return;
+                if (!spotDataHolder || spotDataHolder.cLocationCard is not LadyBugsCard) return;
 
-                    // Remove the visual card
-                    spotDataHolder.OnLocationCardRemoved();
+                // Remove the visual card
+                spotDataHolder.OnLocationCardRemoved();
 
-                    // Also remove the treatment if present
-                    var ladyBugsTreatment = plant.CurrentTreatments.FirstOrDefault(t => t is LadyBugs);
-                    if (ladyBugsTreatment != null) plant.CurrentTreatments.Remove(ladyBugsTreatment);
-                }
+                // Also remove the treatment if present
+                var ladyBugsTreatment = plant.CurrentTreatments.FirstOrDefault(t => t is LadyBugs);
+                if (ladyBugsTreatment != null) plant.CurrentTreatments.Remove(ladyBugsTreatment);
             }
         }
 
