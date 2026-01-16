@@ -142,16 +142,13 @@ namespace _project.Scripts.Card_Core
             new SpinosadTreatment(),
             new HydrationBasic(),
             new SunlightBasic(),
+            new PermethrinBasic(),
+            new PermethrinBasic(),
+            new LadyBugsCard(),
+            new LadyBugsCard(),
 
             // TODO cards w/o new materials
-            new PermethrinBasic(),
-            new PermethrinBasic(),
             new Panacea(),
-            new LadyBugsCard(),
-            new LadyBugsCard(),
-            new LadyBugsCard(),
-            new LadyBugsCard(),
-            new LadyBugsCard()
         };
 
         private readonly List<ICard> _tutorialActionDeck = new()
