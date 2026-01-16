@@ -623,7 +623,7 @@ namespace _project.Scripts.Card_Core
         }
 
         /// <summary>
-        ///     Updates card holder visibility and refreshes efficacy displays for all placed cards.
+        ///     Updates cardholder visibility and refreshes efficacy displays for all placed cards.
         ///     Called after plants spawn or when card placements change.
         /// </summary>
         // ReSharper disable Unity.PerformanceAnalysis - Coroutine called via StartCoroutine
@@ -647,7 +647,13 @@ namespace _project.Scripts.Card_Core
 
                 // Use cached CardHolders instead of GetComponentsInChildren (performance optimization)
                 // Note: CardHolders cache is populated by InitializePlantHolders() in Start()
+                // but dynamic locations may be added at runtime, so initialize on-demand.
                 var cardHolders = location.CardHolders;
+                if (cardHolders == null || cardHolders.Count == 0)
+                {
+                    location.InitializeCardHolders();
+                    cardHolders = location.CardHolders;
+                }
                 if (cardHolders == null || cardHolders.Count == 0) continue;
 
                 foreach (var cardHolder in cardHolders)
@@ -1424,7 +1430,7 @@ namespace _project.Scripts.Card_Core
         }
 
         /// <summary>
-        ///     Moves a card from the source deck to the sidedeck.
+        ///     Moves a card from the source deck to the side deck.
         ///     Only adds the card if it exists in the source deck to prevent duplication.
         /// </summary>
         private void AddCardToSideDeck(List<ICard> sourceDeck, ICard card)
