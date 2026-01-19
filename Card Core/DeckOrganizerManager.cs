@@ -34,7 +34,7 @@ namespace _project.Scripts.Card_Core
             UIInputManager.RequestEnable("DeckOrganizerManager");
         }
 
-        public void CloseShop()
+        public void CloseDeckOrganizer()
         {
             deckUIPanel.SetActive(false);
             Click3D.Click3DGloballyDisabled = false;
