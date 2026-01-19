@@ -511,6 +511,22 @@ namespace _project.Scripts.Card_Core
             ArrangeStickersInFan();
         }
 
+        // DO NOT CALL THIS. THIS KINDA SUCKS -- I will unfortunately be calling this
+        public void SetActionDeck(List<ICard> deck)
+        {
+            _actionDeck.Clear();
+            foreach (var card in deck)
+                _actionDeck.Add(card);
+        }
+
+        // AGAIN - DO. NOT. CALL. THIS. -- I will be calling this... :(
+        public void SetSideDeck(List<ICard> deck)
+        {
+            _sideDeck.Clear();
+            foreach (var card in deck)
+                _sideDeck.Add(card);
+        }
+
         #endregion
 
         #region Sticker Drag & Drop

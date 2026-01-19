@@ -24,6 +24,8 @@ namespace _project.Scripts.Card_Core
             _deckManager = CardGameMaster.Instance.deckManager;
         }
 
+        #region Open/Close
+
         public void OpenDeckOrganizer()
         {
             LoadActionDeck();
@@ -36,6 +38,9 @@ namespace _project.Scripts.Card_Core
 
         public void CloseDeckOrganizer()
         {
+            SaveActionDeck();
+            SaveSideDeck();
+            
             deckUIPanel.SetActive(false);
             Click3D.Click3DGloballyDisabled = false;
             UIInputManager.RequestDisable("DeckOrganizerManager");
@@ -52,6 +57,10 @@ namespace _project.Scripts.Card_Core
             tc.newRoundReady = false;
             StartCoroutine(tc.BeginTurnSequence());
         }
+
+        #endregion
+
+        #region Loading
 
         private void LoadActionDeck()
         {
@@ -87,6 +96,30 @@ namespace _project.Scripts.Card_Core
             }
         }
 
+        #endregion
+        
+        #region Saveing
+
+        public void SaveActionDeck()
+        {
+            var modifiedActionDeck = actionDeckItemsParent.GetComponentsInChildren<IShopItem>();
+            var newActionDeck = modifiedActionDeck.Select(shopItem => shopItem.Card).ToList();
+
+            _deckManager.SetActionDeck(newActionDeck);
+        }
+
+        public void SaveSideDeck()
+        {
+            var modifiedSideDeck = sideDeckItemsParent.GetComponentsInChildren<IShopItem>();
+            var newSideDeck = modifiedSideDeck.Select(shopItem => shopItem.Card).ToList();
+
+            _deckManager.SetSideDeck(newSideDeck);
+        }
+        
+        #endregion
+
+        #region Clean Up
+
         private void ClearOrganizer()
         {
             foreach (Transform child in actionDeckItemPrefab.transform)
@@ -104,5 +137,7 @@ namespace _project.Scripts.Card_Core
             displayedSideCards.Remove(deckUIObject.ShopItem);
             Destroy(deckUIItem);
         }
+
+        #endregion
     }
 }
