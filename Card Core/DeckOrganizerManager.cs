@@ -12,7 +12,7 @@ namespace _project.Scripts.Card_Core
         [SerializeField] private GameObject actionDeckItemPrefab;
         [SerializeField] private GameObject sideDeckItemsParent;
         [SerializeField] private GameObject sideDeckItemPrefab;
-        public GameObject deckUIPanel;
+        [SerializeField] private GameObject deckUIPanel;
 
         // ReSharper disable twice CollectionNeverQueried.Local
         private readonly List<IShopItem> displayedActionCards = new();
@@ -28,6 +28,8 @@ namespace _project.Scripts.Card_Core
 
         public void OpenDeckOrganizer()
         {
+            // Clear - then load
+            ClearOrganizer();
             LoadActionDeck();
             LoadSideDeck();
 
@@ -64,8 +66,6 @@ namespace _project.Scripts.Card_Core
 
         private void LoadActionDeck()
         {
-            ClearOrganizer();
-
             var availableActionCards = _deckManager.GetActionDeck().ToList();
 
             foreach (var card in availableActionCards)
@@ -81,8 +81,6 @@ namespace _project.Scripts.Card_Core
 
         private void LoadSideDeck()
         {
-            ClearOrganizer();
-
             var availableSideCards = _deckManager.GetSideDeck().ToList();
 
             foreach (var card in availableSideCards)
@@ -98,22 +96,36 @@ namespace _project.Scripts.Card_Core
 
         #endregion
         
-        #region Saveing
+        #region Saving
 
-        public void SaveActionDeck()
+        private void SaveActionDeck()
         {
             var modifiedActionDeck = actionDeckItemsParent.GetComponentsInChildren<IShopItem>();
             var newActionDeck = modifiedActionDeck.Select(shopItem => shopItem.Card).ToList();
 
-            _deckManager.SetActionDeck(newActionDeck);
+            if (newActionDeck.Count > 0)
+            {
+                _deckManager.SetActionDeck(newActionDeck);
+            }
+            else
+            {
+                Debug.LogError("ActionDeck is empty!");
+            }
         }
 
-        public void SaveSideDeck()
+        private void SaveSideDeck()
         {
             var modifiedSideDeck = sideDeckItemsParent.GetComponentsInChildren<IShopItem>();
             var newSideDeck = modifiedSideDeck.Select(shopItem => shopItem.Card).ToList();
 
-            _deckManager.SetSideDeck(newSideDeck);
+            if (newSideDeck.Count > 0)
+            {
+                _deckManager.SetSideDeck(newSideDeck);
+            }
+            else
+            {
+                Debug.LogError("SideDeck is empty!");
+            }
         }
         
         #endregion
@@ -122,9 +134,9 @@ namespace _project.Scripts.Card_Core
 
         private void ClearOrganizer()
         {
-            foreach (Transform child in actionDeckItemPrefab.transform)
+            foreach (Transform child in actionDeckItemsParent.transform)
                 RemoveOrganizerItem(child.gameObject);
-            foreach (Transform child in sideDeckItemPrefab.transform)
+            foreach (Transform child in sideDeckItemsParent.transform)
                 RemoveOrganizerItem(child.gameObject);
         }
 
