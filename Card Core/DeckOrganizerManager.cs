@@ -42,7 +42,7 @@ namespace _project.Scripts.Card_Core
         {
             SaveActionDeck();
             SaveSideDeck();
-            
+
             deckUIPanel.SetActive(false);
             Click3D.Click3DGloballyDisabled = false;
             UIInputManager.RequestDisable("DeckOrganizerManager");
@@ -95,7 +95,7 @@ namespace _project.Scripts.Card_Core
         }
 
         #endregion
-        
+
         #region Saving
 
         private void SaveActionDeck()
@@ -104,13 +104,9 @@ namespace _project.Scripts.Card_Core
             var newActionDeck = modifiedActionDeck.Select(shopItem => shopItem.Card).ToList();
 
             if (newActionDeck.Count > 0)
-            {
                 _deckManager.SetActionDeck(newActionDeck);
-            }
             else
-            {
                 Debug.LogError("ActionDeck is empty!");
-            }
         }
 
         private void SaveSideDeck()
@@ -119,34 +115,44 @@ namespace _project.Scripts.Card_Core
             var newSideDeck = modifiedSideDeck.Select(shopItem => shopItem.Card).ToList();
 
             if (newSideDeck.Count > 0)
-            {
                 _deckManager.SetSideDeck(newSideDeck);
-            }
             else
-            {
                 Debug.LogError("SideDeck is empty!");
-            }
         }
-        
+
         #endregion
 
         #region Clean Up
 
         private void ClearOrganizer()
         {
-            foreach (Transform child in actionDeckItemsParent.transform)
+            ClearOrganizerItems(actionDeckItemsParent);
+            ClearOrganizerItems(sideDeckItemsParent);
+        }
+
+        private void ClearOrganizerItems(GameObject itemsParent)
+        {
+            if (itemsParent is null) return;
+
+            for (var i = itemsParent.transform.childCount - 1; i >= 0; i--)
+            {
+                var child = itemsParent.transform.GetChild(i);
                 RemoveOrganizerItem(child.gameObject);
-            foreach (Transform child in sideDeckItemsParent.transform)
-                RemoveOrganizerItem(child.gameObject);
+            }
         }
 
         private void RemoveOrganizerItem(GameObject deckUIItem)
         {
-            var deckUIObject = deckUIItem.GetComponent<ShopObject>();
-            if (!deckUIObject) return;
+            if (deckUIItem is null) return;
 
-            displayedActionCards.Remove(deckUIObject.ShopItem);
-            displayedSideCards.Remove(deckUIObject.ShopItem);
+            var deckUIObject = deckUIItem.GetComponent<ShopObject>();
+            if (deckUIObject is not null)
+            {
+                displayedActionCards.Remove(deckUIObject.ShopItem);
+                displayedSideCards.Remove(deckUIObject.ShopItem);
+            }
+
+            deckUIItem.SetActive(false);
             Destroy(deckUIItem);
         }
 

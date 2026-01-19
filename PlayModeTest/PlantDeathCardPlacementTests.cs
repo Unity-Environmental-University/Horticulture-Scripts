@@ -233,7 +233,7 @@ namespace _project.Scripts.PlayModeTest
         private class SafeClick3D : Click3D
         {
             // Override Start to prevent self-destruction in non-CardGame scenes
-            private new void Start()
+            private void Start()
             {
                 // Initialize the base state without calling base.Start() which would destroy this component
                 isEnabled = true;
