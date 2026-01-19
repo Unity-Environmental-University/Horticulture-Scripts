@@ -207,12 +207,10 @@ namespace _project.Scripts.Card_Core
                     foreach (var kvp in state)
                     {
                         var currentCounts = (kvp.Value.infect, kvp.Value.eggs);
-                        if (!_lastAfflictionState.TryGetValue(kvp.Key, out var previousCounts) ||
-                            previousCounts != currentCounts)
-                        {
-                            mixChanged = true;
-                            break;
-                        }
+                        if (_lastAfflictionState.TryGetValue(kvp.Key, out var previousCounts) &&
+                            previousCounts == currentCounts) continue;
+                        mixChanged = true;
+                        break;
                     }
                 }
             }

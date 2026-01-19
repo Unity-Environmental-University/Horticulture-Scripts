@@ -34,7 +34,7 @@ namespace _project.Scripts.PlayModeTest
             _cgmGo.AddComponent<CardGameMaster>();
 
             _location = new GameObject("Location").transform;
-            _deckManager.plantLocations = new List<PlantHolder> { new PlantHolder(_location) };
+            _deckManager.plantLocations = new List<PlantHolder> { new(_location) };
 
             yield return null;
         }
@@ -53,13 +53,11 @@ namespace _project.Scripts.PlayModeTest
             holderGo.transform.SetParent(parent);
             var holder = holderGo.AddComponent<PlacedCardHolder>();
 
-            if (withButton)
-            {
-                var button = new GameObject("Button");
-                button.transform.SetParent(holderGo.transform);
-                button.AddComponent<MeshRenderer>();
-                button.AddComponent<SafeClick3D>();
-            }
+            if (!withButton) return holder;
+            var button = new GameObject("Button");
+            button.transform.SetParent(holderGo.transform);
+            button.AddComponent<MeshRenderer>();
+            button.AddComponent<SafeClick3D>();
 
             return holder;
         }
@@ -110,7 +108,6 @@ namespace _project.Scripts.PlayModeTest
             main.playOnAwake = false; // avoid auto-play
             ps.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
             main.duration = 0.01f; // minimize wait
-            plant.deathFX = ps;
 
             var holder = CreateHolder(_location);
             holder.ToggleCardHolder(true);

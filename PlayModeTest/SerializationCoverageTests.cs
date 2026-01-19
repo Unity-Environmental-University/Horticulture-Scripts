@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Reflection;
 using _project.Scripts.Card_Core;
 using _project.Scripts.Classes;
@@ -74,11 +75,9 @@ namespace _project.Scripts.PlayModeTest
                 var afflictionName = affliction.Name;
 
                 // Try to deserialize using GetAfflictionFromString
-                var deserializedAffliction =
-                    _getAfflictionFromStringMethod.Invoke(null, new object[] { afflictionName })
-                        as PlantAfflictions.IAffliction;
 
-                if (deserializedAffliction == null) missingAfflictions.Add(afflictionName);
+                if (_getAfflictionFromStringMethod.Invoke(null, new object[] { afflictionName }) is not
+                    PlantAfflictions.IAffliction deserializedAffliction) missingAfflictions.Add(afflictionName);
             }
 
             Assert.IsEmpty(missingAfflictions,
@@ -98,22 +97,18 @@ namespace _project.Scripts.PlayModeTest
             var missingTreatments = new List<string>();
             var checkedTreatments = new HashSet<string>(); // Avoid duplicates
 
-            foreach (var card in prototypeActionDeck)
-            {
-                if (card.Treatment == null) continue;
-
-                var treatment = card.Treatment;
-                var treatmentName = treatment.Name;
-
-                // Skip if we've already checked this treatment
-                if (!checkedTreatments.Add(treatmentName)) continue;
-
+            foreach (var treatmentName in from card in prototypeActionDeck
+                     where card.Treatment != null
+                     select card.Treatment
+                     into treatment
+                     select treatment.Name
+                     into treatmentName
+                     where checkedTreatments.Add(treatmentName)
+                     select treatmentName)
                 // Try to deserialize using GetTreatmentFromString
-                var deserializedTreatment = _getTreatmentFromStringMethod.Invoke(null, new object[] { treatmentName })
-                    as PlantAfflictions.ITreatment;
-
-                if (deserializedTreatment == null) missingTreatments.Add(treatmentName);
-            }
+                if (_getTreatmentFromStringMethod.Invoke(null, new object[] { treatmentName }) is not
+                    PlantAfflictions.ITreatment deserializedTreatment)
+                    missingTreatments.Add(treatmentName);
 
             Assert.IsEmpty(missingTreatments,
                 "The following treatments are missing from GetTreatmentFromString() in DeckManager:\n" +

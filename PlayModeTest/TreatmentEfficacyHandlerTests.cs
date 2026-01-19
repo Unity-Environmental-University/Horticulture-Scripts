@@ -77,7 +77,7 @@ namespace _project.Scripts.PlayModeTest
                 .GetField("relationalEfficacies", BindingFlags.Instance | BindingFlags.NonPublic);
             Assert.IsNotNull(storageField, "Expected to access relational efficacy cache via reflection for testing.");
 
-            var cache = (List<RelationalEfficacy>)storageField?.GetValue(handler);
+            var cache = (List<RelationalEfficacy>)storageField.GetValue(handler);
             Assert.IsNotNull(cache);
 
             var preview = handler.GetRelationalEfficacy(affliction, treatment, false);

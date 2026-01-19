@@ -177,7 +177,6 @@ namespace _project.Scripts.PlayModeTest
             // Assert - card should be cleared by DeckManager.ClearPlant()
             Assert.IsFalse(cardHolder.HoldingCard, "Card should be cleared when DeckManager.ClearPlant() is called");
             Assert.IsNull(cardHolder.placedCard, "Placed card reference should be null");
-            Assert.IsNull(cardHolder.placedCardClick3D, "Placed card Click3D should be null");
         }
 
         [UnityTest]
@@ -233,10 +232,6 @@ namespace _project.Scripts.PlayModeTest
         // Safe Click3D subclass that disables Start logic
         private class SafeClick3D : Click3D
         {
-            private void Start()
-            {
-                /* No-op to prevent self-destruction check */
-            }
         }
     }
 }

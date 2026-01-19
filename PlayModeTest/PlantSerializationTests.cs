@@ -228,8 +228,8 @@ namespace _project.Scripts.PlayModeTest
 
             // Restore isolation flags
             var legacySave = data1.uLocationCards == null;
-            plant2.canSpreadAfflictions = legacySave ? true : data1.canSpreadAfflictions;
-            plant2.canReceiveAfflictions = legacySave ? true : data1.canReceiveAfflictions;
+            plant2.canSpreadAfflictions = legacySave || data1.canSpreadAfflictions;
+            plant2.canReceiveAfflictions = legacySave || data1.canReceiveAfflictions;
 
             // Act: Second serialization
             var data2 = new PlantData
@@ -249,7 +249,7 @@ namespace _project.Scripts.PlayModeTest
 
             // Assert: Both produce identical data
             Assert.AreEqual(data1.uLocationCards.Count, data2.uLocationCards.Count, "Location card count should match");
-            Assert.AreEqual(data1.infectData.Count, data2.infectData.Count, "Infection data count should match");
+            Assert.AreEqual(data1.infectData!.Count, data2.infectData.Count, "Infection data count should match");
             Assert.AreEqual(data1.canSpreadAfflictions, data2.canSpreadAfflictions, "Isolation flags should match");
             Assert.AreEqual(data1.canReceiveAfflictions, data2.canReceiveAfflictions, "Isolation flags should match");
 
@@ -338,7 +338,7 @@ namespace _project.Scripts.PlayModeTest
             urea.ApplyLocationEffect(plant2);
 
             // Assert: 4th application should add 2 (25% of BaseValue=10)
-            Assert.AreEqual(30, restoredCard.Value, "4th application should add 2 (10*0.25), making 30");
+            Assert.AreEqual(30, restoredCard!.Value, "4th application should add 2 (10*0.25), making 30");
             Assert.AreEqual(4, plant2.uLocationCards.Count, "Should now have 4 applications tracked");
 
             Object.DestroyImmediate(gameObject);

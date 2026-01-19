@@ -223,9 +223,8 @@ namespace _project.Scripts.Card_Core
                 for (var i = 0; i < totalCards; i++)
                 {
                     var cardData = preInstantiatedCards[i];
-                    var cardIndex = i;
                     var (targetPos, _) =
-                        CalculateCardTransform(cardIndex, totalCards, effectiveSpacing, useOverlapLayout);
+                        CalculateCardTransform(i, totalCards, effectiveSpacing, useOverlapLayout);
 
                     _currentDisplaySequence.AppendCallback(() =>
                     {

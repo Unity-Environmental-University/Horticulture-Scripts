@@ -217,7 +217,7 @@ namespace _project.Scripts.PlayModeTest
             ScoreManager.UpdateMoneysText();
 
             // Check text format
-            var expectedText = "Moneys: $75/500";
+            const string expectedText = "Moneys: $75/500";
             if (_cardGameMaster.moneysText)
                 Assert.AreEqual(expectedText, _cardGameMaster.moneysText.text,
                     "UI should show 'Moneys: $X/Y' format in Tutorial mode");
@@ -236,7 +236,7 @@ namespace _project.Scripts.PlayModeTest
                     _cardGameMaster.roundText.text = $"Round: {_turnController.currentRoundInLevel}/5";
 
             // Check text format
-            var expectedText = "Round: 3/5";
+            const string expectedText = "Round: 3/5";
             if (_cardGameMaster.roundText)
                 Assert.AreEqual(expectedText, _cardGameMaster.roundText.text,
                     "Round display should show 'Round: X/5' in Campaign mode");

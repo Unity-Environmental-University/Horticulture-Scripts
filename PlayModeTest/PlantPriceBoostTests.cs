@@ -106,7 +106,7 @@ namespace _project.Scripts.PlayModeTest
             }
         }
 
-        private int CallCalculatePriceBoostModifier(int? level = null)
+        private static int CallCalculatePriceBoostModifier(int? level = null)
         {
             var method = typeof(DeckManager).GetMethod("CalculatePriceBoostModifier",
                 BindingFlags.NonPublic | BindingFlags.Static);
@@ -216,7 +216,7 @@ namespace _project.Scripts.PlayModeTest
                 var category = GetBoostedCategory();
                 Assert.IsNotNull(category, $"Iteration {i}: Category should not be null after GeneratePlantPrices");
                 Assert.IsTrue(
-                    category == PlantCardCategory.Fruiting || category == PlantCardCategory.Decorative,
+                    category is PlantCardCategory.Fruiting or PlantCardCategory.Decorative,
                     $"Iteration {i}: Category {category} should be Fruiting or Decorative, not Other"
                 );
             }

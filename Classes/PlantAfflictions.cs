@@ -460,7 +460,7 @@ namespace _project.Scripts.Classes
 
             public string Name => "Dehydrated";
             public string Description => "Plant lacks water. Does not spread to other plants.";
-            public Color Color => new Color(0.8f, 0.6f, 0.4f);
+            public Color Color => new(0.8f, 0.6f, 0.4f);
             public Shader Shader => null;
             public bool IsSpreadable => false;
             public string AnimationTriggerName => "Droop";
@@ -519,7 +519,7 @@ namespace _project.Scripts.Classes
 
             public string Name => "Needs Light";
             public string Description => "Plant lacks sunlight. Does not spread to other plants.";
-            public Color Color => new Color(0.9f, 0.9f, 0.6f);
+            public Color Color => new(0.9f, 0.9f, 0.6f);
             public Shader Shader => null;
             public bool IsSpreadable => false;
             public string AnimationTriggerName => "Droop";

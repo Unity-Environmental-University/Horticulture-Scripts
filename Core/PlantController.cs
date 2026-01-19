@@ -63,8 +63,7 @@ namespace _project.Scripts.Core
         [SerializeField] public List<string> uLocationCards = new();
         [SerializeField] public ParticleSystem debuffSystem;
         [SerializeField] public ParticleSystem buffFX;
-        [SerializeField] public ParticleSystem deathFX;
-        
+
         [DontSerialize] public PlantCardFunctions plantCardFunctions;
         public bool canSpreadAfflictions = true;
         public bool canReceiveAfflictions = true;

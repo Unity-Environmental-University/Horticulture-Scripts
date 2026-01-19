@@ -54,15 +54,9 @@ namespace _project.Scripts.Card_Core
                 Debug.Log($"[SpotDataHolder] NOT re-applying: cLocationCard={cLocationCard?.Name}, _effectActive={_effectActive}, _associatedPlant={(_associatedPlant != null ? _associatedPlant.PlantCard?.Name : "null")}");
             }
 
-            if (_associatedPlant != null && _associatedPlant.PlantCard != null)
-            {
-                var holders = BuildHolderSearchList();
-                foreach (var holder in holders)
-                {
-                    if (!holder) continue;
-                    holder.RefreshEfficacyDisplay();
-                }
-            }
+            if (_associatedPlant is null or _associatedPlant.PlantCard == null) return;
+            var holders = BuildHolderSearchList();
+            foreach (var holder in holders.Where(holder => holder)) holder.RefreshEfficacyDisplay();
         }
 
         public void InvalidatePlantCache() => _plantCacheDirty = true;

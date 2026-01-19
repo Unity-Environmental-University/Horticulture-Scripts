@@ -770,11 +770,9 @@ namespace _project.Scripts.Card_Core
                     var slotTransform = slot.Transform;
                     if (!slotTransform) continue;
 
-                    if (slotTransform.GetComponentsInChildren<PlantController>(true).Contains(plant))
-                    {
-                        location = slot;
-                        break;
-                    }
+                    if (!slotTransform.GetComponentsInChildren<PlantController>(true).Contains(plant)) continue;
+                    location = slot;
+                    break;
                 }
             }
 

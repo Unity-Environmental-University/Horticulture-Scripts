@@ -45,7 +45,7 @@ namespace _project.Scripts.Card_Core
         [Tooltip("Local-space rotation offset to apply after the default lay-flat rotation (-90,0,0)")]
         [SerializeField] private Vector3 placedCardRotationOffsetEuler = Vector3.zero;
         [Tooltip("Local-space offset applied to the placed clone to avoid clipping into the holder surface.")]
-        [SerializeField] private Vector3 placedCardPositionOffsetLocal = new Vector3(0f, 0.002f, 0f);
+        [SerializeField] private Vector3 placedCardPositionOffsetLocal = new(0f, 0.002f, 0f);
         [Header("Hover Behavior")]
         [Tooltip("Disable hover pop animation for cloned cards placed in this holder.")]
         [SerializeField] private bool disableHoverOnPlacedCard = true;
@@ -1003,14 +1003,9 @@ namespace _project.Scripts.Card_Core
             }
 
             spotDataHolder = GetComponentInParent<SpotDataHolder>();
-            if (spotDataHolder)
-            {
-                spotDataHolder.RegisterCardHolder(this);
-                return spotDataHolder;
-            }
-
-            return EnsureSpotDataHolder();
-
+            if (!spotDataHolder) return EnsureSpotDataHolder();
+            spotDataHolder.RegisterCardHolder(this);
+            return spotDataHolder;
         }
 
         private SpotDataHolder EnsureSpotDataHolder()
