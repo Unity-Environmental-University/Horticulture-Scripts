@@ -458,6 +458,7 @@ namespace _project.Scripts.Card_Core
         }
 
         public List<ICard> GetActionDeck() => new(_actionDeck);
+        public List<ICard> GetSideDeck() => new(_sideDeck);
         public List<ICard> GetDiscardPile() => new(_actionDiscardPile);
         public List<ICard> GetActionHand() => new(_actionHand);
         public List<ISticker> GetPlayerStickers() => new(_playerStickers);
