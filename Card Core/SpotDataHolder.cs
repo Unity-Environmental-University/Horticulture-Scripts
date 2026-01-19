@@ -43,18 +43,20 @@ namespace _project.Scripts.Card_Core
 
             _plantCacheDirty = false;
 
-            // Re-apply active location card effects to newly discovered plant
+            // Re-apply active location card effects to a newly discovered plant
             if (cLocationCard is not null && _effectActive && _associatedPlant is not null)
             {
-                Debug.Log($"[SpotDataHolder] Re-applying location card {cLocationCard.Name} to plant {_associatedPlant.PlantCard?.Name}");
+                Debug.Log(
+                    $"[SpotDataHolder] Re-applying location card {cLocationCard.Name} to plant {_associatedPlant.PlantCard?.Name}");
                 cLocationCard.ApplyLocationEffect(_associatedPlant);
             }
             else
             {
-                Debug.Log($"[SpotDataHolder] NOT re-applying: cLocationCard={cLocationCard?.Name}, _effectActive={_effectActive}, _associatedPlant={(_associatedPlant != null ? _associatedPlant.PlantCard?.Name : "null")}");
+                Debug.Log(
+                    $"[SpotDataHolder] NOT re-applying: cLocationCard={cLocationCard?.Name}, _effectActive={_effectActive}, _associatedPlant={(_associatedPlant != null ? _associatedPlant.PlantCard?.Name : "null")}");
             }
 
-            if (_associatedPlant is null or _associatedPlant.PlantCard == null) return;
+            if (_associatedPlant?.PlantCard == null) return;
             var holders = BuildHolderSearchList();
             foreach (var holder in holders.Where(holder => holder)) holder.RefreshEfficacyDisplay();
         }
