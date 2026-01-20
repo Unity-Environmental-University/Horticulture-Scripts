@@ -33,6 +33,7 @@ namespace _project.Scripts.Card_Core
         public ScoreManager scoreManager;
         public TurnController turnController;
         public ShopManager shopManager;
+        public DeckOrganizerManager deckOrganizerManager;
         public SoundSystemMaster soundSystem;
         public CinematicDirector cinematicDirector;
         public PopUpController popUpController;

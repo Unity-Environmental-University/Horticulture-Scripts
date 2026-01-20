@@ -35,17 +35,21 @@ namespace _project.Scripts.Card_Core
             Click3D.Click3DGloballyDisabled = false;
             UIInputManager.RequestDisable("ShopManager");
 
-            var tc = CardGameMaster.Instance.turnController;
-            if (tc.level == 2)
-            {
-                tc.ShowBetaScreen();
-                return;
-            }
+            //WIP - Changeover to opening the deck organizer
+            CardGameMaster.Instance.deckOrganizerManager.OpenDeckOrganizer();
 
-            // Proceed to the next level sequence immediately after closing the shop
-            tc.canClickEnd = false;
-            tc.newRoundReady = false;
-            StartCoroutine(tc.BeginTurnSequence());
+
+            // var tc = CardGameMaster.Instance.turnController;
+            // if (tc.level == 2)
+            // {
+            //     tc.ShowBetaScreen();
+            //     return;
+            // }
+            //
+            // // Proceed to the next level sequence immediately after closing the shop
+            // tc.canClickEnd = false;
+            // tc.newRoundReady = false; 
+            // StartCoroutine(tc.BeginTurnSequence());
         }
 
         private void GenerateShopInventory()

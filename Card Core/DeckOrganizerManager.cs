@@ -9,9 +9,8 @@ namespace _project.Scripts.Card_Core
     public class DeckOrganizerManager : MonoBehaviour
     {
         [SerializeField] private GameObject actionDeckItemsParent;
-        [SerializeField] private GameObject actionDeckItemPrefab;
+        [SerializeField] private GameObject cardDeckItemPrefab;
         [SerializeField] private GameObject sideDeckItemsParent;
-        [SerializeField] private GameObject sideDeckItemPrefab;
         [SerializeField] private GameObject deckUIPanel;
 
         // ReSharper disable twice CollectionNeverQueried.Local
@@ -66,30 +65,32 @@ namespace _project.Scripts.Card_Core
 
         private void LoadActionDeck()
         {
+            _deckManager ??= CardGameMaster.Instance.deckManager;
             var availableActionCards = _deckManager.GetActionDeck().ToList();
 
             foreach (var card in availableActionCards)
             {
-                var cardObj = Instantiate(actionDeckItemPrefab, actionDeckItemsParent.transform);
+                var cardObj = Instantiate(cardDeckItemPrefab, actionDeckItemsParent.transform);
                 var itemLogic = new CardShopItem(card, _deckManager, cardObj);
                 displayedActionCards.Add(itemLogic);
 
-                var ui = cardObj.GetComponent<ShopObject>();
+                var ui = cardObj.GetComponent<DeckCardObject>();
                 ui.Setup(itemLogic);
             }
         }
 
         private void LoadSideDeck()
         {
+            _deckManager ??= CardGameMaster.Instance.deckManager;
             var availableSideCards = _deckManager.GetSideDeck().ToList();
 
             foreach (var card in availableSideCards)
             {
-                var cardObj = Instantiate(sideDeckItemPrefab, sideDeckItemsParent.transform);
+                var cardObj = Instantiate(cardDeckItemPrefab, sideDeckItemsParent.transform);
                 var itemLogic = new CardShopItem(card, _deckManager, cardObj);
                 displayedSideCards.Add(itemLogic);
 
-                var ui = cardObj.GetComponent<ShopObject>();
+                var ui = cardObj.GetComponent<DeckCardObject>();
                 ui.Setup(itemLogic);
             }
         }
@@ -145,7 +146,7 @@ namespace _project.Scripts.Card_Core
         {
             if (deckUIItem is null) return;
 
-            var deckUIObject = deckUIItem.GetComponent<ShopObject>();
+            var deckUIObject = deckUIItem.GetComponent<DeckCardObject>();
             if (deckUIObject is not null)
             {
                 displayedActionCards.Remove(deckUIObject.ShopItem);
