@@ -51,6 +51,7 @@ namespace _project.Scripts.GameState
                 actionDeck = dm.GetActionDeck().Select(SerializeCard).ToList(),
                 discardPile = dm.GetDiscardPile().Select(SerializeCard).ToList(),
                 actionHand = dm.GetActionHand().Select(SerializeCard).ToList(),
+                sideDeck = dm.GetSideDeck().Select(SerializeCard).ToList(),
                 playerStickers = dm.GetPlayerStickers().Select(SerializeSticker).ToList()
             };
 
@@ -184,6 +185,8 @@ namespace _project.Scripts.GameState
                 dm.RestoreActionDeck(data.deckData.actionDeck);
                 dm.RestoreDiscardPile(data.deckData.discardPile);
                 dm.RestoreActionHand(data.deckData.actionHand);
+                if (data.deckData.sideDeck != null)
+                    dm.RestoreSideDeck(data.deckData.sideDeck);
                 dm.RefreshActionHandDisplay();
             }
             else

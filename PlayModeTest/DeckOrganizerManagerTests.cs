@@ -655,7 +655,7 @@ namespace _project.Scripts.PlayModeTest
             var newActionDeck = shopObjects.Select(so => so.ShopItem.Card).ToList();
             if (newActionDeck.Count > 0)
             {
-                _deckManager.SetActionDeck(newActionDeck);
+                _deckManager.ApplyActionDeckOverride(newActionDeck);
             }
 
             // Assert: Deck should be updated with new cards
@@ -763,7 +763,7 @@ namespace _project.Scripts.PlayModeTest
             var newSideDeck = shopObjects.Select(so => so.ShopItem.Card).ToList();
             if (newSideDeck.Count > 0)
             {
-                _deckManager.SetSideDeck(newSideDeck);
+                _deckManager.ApplySideDeckOverride(newSideDeck);
             }
 
             // Assert: Side deck updated

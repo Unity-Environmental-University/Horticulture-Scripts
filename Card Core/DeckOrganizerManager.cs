@@ -105,7 +105,7 @@ namespace _project.Scripts.Card_Core
             var newActionDeck = modifiedActionDeck.Select(dco => dco.ShopItem.Card).ToList();
 
             if (newActionDeck.Count > 0)
-                _deckManager.SetActionDeck(newActionDeck);
+                _deckManager.ApplyActionDeckOverride(newActionDeck);
             else
                 Debug.LogError("ActionDeck is empty!");
         }
@@ -116,7 +116,7 @@ namespace _project.Scripts.Card_Core
             var newSideDeck = modifiedSideDeck.Select(dco => dco.ShopItem.Card).ToList();
 
             if (newSideDeck.Count > 0)
-                _deckManager.SetSideDeck(newSideDeck);
+                _deckManager.ApplySideDeckOverride(newSideDeck);
             else
                 Debug.LogError("SideDeck is empty!");
         }

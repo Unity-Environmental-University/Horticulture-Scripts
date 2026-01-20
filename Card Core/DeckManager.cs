@@ -471,6 +471,13 @@ namespace _project.Scripts.Card_Core
                 _actionDeck.Add(GameStateManager.DeserializeCard(card));
         }
 
+        public void RestoreSideDeck(List<CardData> cards)
+        {
+            _sideDeck.Clear();
+            foreach (var card in cards)
+                _sideDeck.Add(GameStateManager.DeserializeCard(card));
+        }
+
         public void RestoreDiscardPile(List<CardData> cards)
         {
             _actionDiscardPile.Clear();
@@ -512,17 +519,31 @@ namespace _project.Scripts.Card_Core
         }
 
         // DO NOT CALL THIS. THIS KINDA SUCKS -- I will unfortunately be calling this
-        public void SetActionDeck(List<ICard> deck)
+        public void ApplyActionDeckOverride(List<ICard> deck)
         {
+            if (deck == null) return;
+
+            _usingTutorialActionDeck = false;
+            ClearSelectedCard();
+            _actionHand.Clear();
+
+            if (actionCardParent)
+                ClearActionCardVisuals();
+
+            _actionDiscardPile.Clear();
             _actionDeck.Clear();
+
             foreach (var card in deck)
                 _actionDeck.Add(card);
         }
 
         // AGAIN - DO. NOT. CALL. THIS. -- I will be calling this... :(
-        public void SetSideDeck(List<ICard> deck)
+        public void ApplySideDeckOverride(List<ICard> deck)
         {
+            if (deck == null) return;
+
             _sideDeck.Clear();
+
             foreach (var card in deck)
                 _sideDeck.Add(card);
         }

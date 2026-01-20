@@ -43,6 +43,7 @@ namespace _project.Scripts.GameState
         public List<CardData> actionDeck;
         public List<CardData> discardPile;
         public List<CardData> actionHand;
+        public List<CardData> sideDeck;
 
         public List<CardData> afflictionDeck;
         public List<CardData> afflictionHand;
