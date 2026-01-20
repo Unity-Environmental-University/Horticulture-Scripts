@@ -101,8 +101,8 @@ namespace _project.Scripts.Card_Core
 
         private void SaveActionDeck()
         {
-            var modifiedActionDeck = actionDeckItemsParent.GetComponentsInChildren<IShopItem>();
-            var newActionDeck = modifiedActionDeck.Select(shopItem => shopItem.Card).ToList();
+            var modifiedActionDeck = actionDeckItemsParent.GetComponentsInChildren<DeckCardObject>();
+            var newActionDeck = modifiedActionDeck.Select(dco => dco.ShopItem.Card).ToList();
 
             if (newActionDeck.Count > 0)
                 _deckManager.SetActionDeck(newActionDeck);
@@ -112,8 +112,8 @@ namespace _project.Scripts.Card_Core
 
         private void SaveSideDeck()
         {
-            var modifiedSideDeck = sideDeckItemsParent.GetComponentsInChildren<IShopItem>();
-            var newSideDeck = modifiedSideDeck.Select(shopItem => shopItem.Card).ToList();
+            var modifiedSideDeck = sideDeckItemsParent.GetComponentsInChildren<DeckCardObject>();
+            var newSideDeck = modifiedSideDeck.Select(dco => dco.ShopItem.Card).ToList();
 
             if (newSideDeck.Count > 0)
                 _deckManager.SetSideDeck(newSideDeck);

@@ -1,5 +1,4 @@
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
@@ -7,12 +6,12 @@ using _project.Scripts.Audio;
 using _project.Scripts.Card_Core;
 using _project.Scripts.Classes;
 using _project.Scripts.Stickers;
-using _project.Scripts.UI;
 using NUnit.Framework;
 using TMPro;
 using UnityEngine;
 using UnityEngine.TestTools;
 using UnityEngine.UI;
+using Object = UnityEngine.Object;
 
 // ReSharper disable PossibleNullReferenceException
 
@@ -34,6 +33,8 @@ namespace _project.Scripts.PlayModeTest
         private GameObject _deckUIPanel;
         private GameObject _actionDeckParent;
         private GameObject _sideDeckParent;
+        private GameObject _cardDeckItemPrefab;
+        // Legacy prefabs for ShopObject-based tests (backwards compatibility)
         private GameObject _actionPrefab;
         private GameObject _sidePrefab;
 
@@ -76,6 +77,7 @@ namespace _project.Scripts.PlayModeTest
             _sideDeckParent.transform.SetParent(_deckUIPanel.transform);
 
             // Create mock prefabs
+            _cardDeckItemPrefab = CreateMockDeckCardObjectPrefab("CardDeckItemPrefab");
             _actionPrefab = CreateMockShopObjectPrefab("ActionCardPrefab");
             _sidePrefab = CreateMockShopObjectPrefab("SideDeckCardPrefab");
 
@@ -92,13 +94,9 @@ namespace _project.Scripts.PlayModeTest
                 .GetField("sideDeckItemsParent", BindingFlags.NonPublic | BindingFlags.Instance);
             sideParentField?.SetValue(_deckOrganizerManager, _sideDeckParent);
 
-            var actionPrefabField = typeof(DeckOrganizerManager)
-                .GetField("actionDeckItemPrefab", BindingFlags.NonPublic | BindingFlags.Instance);
-            actionPrefabField?.SetValue(_deckOrganizerManager, _actionPrefab);
-
-            var sidePrefabField = typeof(DeckOrganizerManager)
-                .GetField("sideDeckItemPrefab", BindingFlags.NonPublic | BindingFlags.Instance);
-            sidePrefabField?.SetValue(_deckOrganizerManager, _sidePrefab);
+            var cardDeckItemPrefabField = typeof(DeckOrganizerManager)
+                .GetField("cardDeckItemPrefab", BindingFlags.NonPublic | BindingFlags.Instance);
+            cardDeckItemPrefabField?.SetValue(_deckOrganizerManager, _cardDeckItemPrefab);
 
             // Inject _deckManager reference (normally set in Start())
             var deckManagerField = typeof(DeckOrganizerManager)
@@ -144,14 +142,15 @@ namespace _project.Scripts.PlayModeTest
         public void TearDown()
         {
             // Destroy all test GameObjects
-            UnityEngine.Object.Destroy(_cardGameMasterGo);
-            UnityEngine.Object.Destroy(_deckUIPanel);
-            UnityEngine.Object.Destroy(_actionDeckParent);
-            UnityEngine.Object.Destroy(_sideDeckParent);
-            UnityEngine.Object.Destroy(_actionPrefab);
-            UnityEngine.Object.Destroy(_sidePrefab);
-            UnityEngine.Object.Destroy(_lostObjectsGo);
-            UnityEngine.Object.Destroy(_winScreenGo);
+            Object.Destroy(_cardGameMasterGo);
+            Object.Destroy(_deckUIPanel);
+            Object.Destroy(_actionDeckParent);
+            Object.Destroy(_sideDeckParent);
+            Object.Destroy(_cardDeckItemPrefab);
+            Object.Destroy(_actionPrefab);
+            Object.Destroy(_sidePrefab);
+            Object.Destroy(_lostObjectsGo);
+            Object.Destroy(_winScreenGo);
 
             // Clear singleton reference
             typeof(CardGameMaster)
@@ -165,6 +164,37 @@ namespace _project.Scripts.PlayModeTest
         #endregion
 
         #region Helper Methods
+
+        private GameObject CreateMockDeckCardObjectPrefab(string name)
+        {
+            var prefab = new GameObject(name);
+
+            // Add DeckCardObject component (CanvasGroup and DraggableCard are RequireComponent)
+            prefab.AddComponent<CanvasGroup>();
+            prefab.AddComponent<DraggableCard>();
+            var deckCardObject = prefab.AddComponent<DeckCardObject>();
+
+            // Add required UI components
+            var titleTextGo = new GameObject("TitleText");
+            titleTextGo.transform.SetParent(prefab.transform);
+            var titleText = titleTextGo.AddComponent<TextMeshProUGUI>();
+
+            // Wire DeckCardObject fields via reflection
+            var titleField = typeof(DeckCardObject)
+                .GetField("titleText", BindingFlags.NonPublic | BindingFlags.Instance);
+            titleField?.SetValue(deckCardObject, titleText);
+
+            return prefab;
+        }
+
+        private GameObject CreateMockDeckCardObject(ICard card, Transform parent, GameObject prefab)
+        {
+            var instance = Object.Instantiate(prefab, parent);
+            var deckCardObject = instance.GetComponent<DeckCardObject>();
+            var shopItem = new CardShopItem(card, _deckManager, instance);
+            deckCardObject.Setup(shopItem);
+            return instance;
+        }
 
         private GameObject CreateMockShopObjectPrefab(string name)
         {
@@ -204,7 +234,7 @@ namespace _project.Scripts.PlayModeTest
 
         private GameObject CreateMockShopObject(ICard card, Transform parent, GameObject prefab)
         {
-            var instance = UnityEngine.Object.Instantiate(prefab, parent);
+            var instance = Object.Instantiate(prefab, parent);
             var shopObject = instance.GetComponent<ShopObject>();
             var shopItem = new CardShopItem(card, _deckManager, instance);
             shopObject.Setup(shopItem);
@@ -261,6 +291,23 @@ namespace _project.Scripts.PlayModeTest
             method?.Invoke(_deckOrganizerManager, null);
         }
 
+        private void SeedDecks(int actionCount, int sideCount)
+        {
+            var actionDeck = GetActionDeck();
+            actionDeck.Clear();
+            for (var i = 0; i < actionCount; i++)
+            {
+                actionDeck.Add(CreateFakeCard($"SeedAction{i}"));
+            }
+
+            var sideDeck = GetSideDeck();
+            sideDeck.Clear();
+            for (var i = 0; i < sideCount; i++)
+            {
+                sideDeck.Add(CreateFakeCard($"SeedSide{i}"));
+            }
+        }
+
         #endregion
 
         #region Bug Verification Tests
@@ -308,7 +355,7 @@ namespace _project.Scripts.PlayModeTest
         #region Loading Tests
 
         [Test]
-        public void Test_LoadActionDeck_CreatesCorrectNumberOfShopObjects()
+        public void Test_LoadActionDeck_CreatesCorrectNumberOfDeckCardObjects()
         {
             // Arrange: Set up action deck with 5 cards
             var actionDeck = GetActionDeck();
@@ -321,9 +368,9 @@ namespace _project.Scripts.PlayModeTest
             // Act: Load action deck
             InvokeLoadActionDeck();
 
-            // Assert: Should create 5 ShopObject instances
-            var shopObjects = _actionDeckParent.GetComponentsInChildren<ShopObject>();
-            Assert.AreEqual(5, shopObjects.Length, "Should create 5 ShopObject instances");
+            // Assert: Should create 5 DeckCardObject instances
+            var deckCardObjects = _actionDeckParent.GetComponentsInChildren<DeckCardObject>(true);
+            Assert.AreEqual(5, deckCardObjects.Length, "Should create 5 DeckCardObject instances");
         }
 
         [Test]
@@ -341,16 +388,16 @@ namespace _project.Scripts.PlayModeTest
             InvokeLoadActionDeck();
 
             // Assert: All instances should be children of actionDeckParent
-            var shopObjects = _actionDeckParent.GetComponentsInChildren<ShopObject>();
-            foreach (var shopObject in shopObjects)
+            var deckCardObjects = _actionDeckParent.GetComponentsInChildren<DeckCardObject>(true);
+            foreach (var deckCardObject in deckCardObjects)
             {
-                Assert.AreEqual(_actionDeckParent.transform, shopObject.transform.parent,
-                    "ShopObject should be child of actionDeckParent");
+                Assert.AreEqual(_actionDeckParent.transform, deckCardObject.transform.parent,
+                    "DeckCardObject should be child of actionDeckParent");
             }
         }
 
         [Test]
-        public void Test_LoadActionDeck_CallsShopObjectSetup()
+        public void Test_LoadActionDeck_CallsDeckCardObjectSetup()
         {
             // Arrange: Set up action deck with 2 cards
             var actionDeck = GetActionDeck();
@@ -362,10 +409,10 @@ namespace _project.Scripts.PlayModeTest
             InvokeLoadActionDeck();
 
             // Assert: Verify Setup was called by checking ShopItem is populated
-            var shopObjects = _actionDeckParent.GetComponentsInChildren<ShopObject>();
-            Assert.IsNotNull(shopObjects[0].ShopItem, "ShopItem should be set (Setup was called)");
-            Assert.AreEqual("Card1", shopObjects[0].ShopItem.Card.Name, "ShopItem should have correct card");
-            Assert.AreEqual("Card2", shopObjects[1].ShopItem.Card.Name, "Second ShopItem should have correct card");
+            var deckCardObjects = _actionDeckParent.GetComponentsInChildren<DeckCardObject>(true);
+            Assert.IsNotNull(deckCardObjects[0].ShopItem, "ShopItem should be set (Setup was called)");
+            Assert.AreEqual("Card1", deckCardObjects[0].ShopItem.Card.Name, "ShopItem should have correct card");
+            Assert.AreEqual("Card2", deckCardObjects[1].ShopItem.Card.Name, "Second ShopItem should have correct card");
         }
 
         [Test]
@@ -383,11 +430,11 @@ namespace _project.Scripts.PlayModeTest
             InvokeLoadActionDeck();
 
             // Assert: Cards should appear in same order
-            var shopObjects = _actionDeckParent.GetComponentsInChildren<ShopObject>();
-            Assert.AreEqual("Alpha", shopObjects[0].ShopItem.Card.Name, "First card should be Alpha");
-            Assert.AreEqual("Beta", shopObjects[1].ShopItem.Card.Name, "Second card should be Beta");
-            Assert.AreEqual("Gamma", shopObjects[2].ShopItem.Card.Name, "Third card should be Gamma");
-            Assert.AreEqual("Delta", shopObjects[3].ShopItem.Card.Name, "Fourth card should be Delta");
+            var deckCardObjects = _actionDeckParent.GetComponentsInChildren<DeckCardObject>(true);
+            Assert.AreEqual("Alpha", deckCardObjects[0].ShopItem.Card.Name, "First card should be Alpha");
+            Assert.AreEqual("Beta", deckCardObjects[1].ShopItem.Card.Name, "Second card should be Beta");
+            Assert.AreEqual("Gamma", deckCardObjects[2].ShopItem.Card.Name, "Third card should be Gamma");
+            Assert.AreEqual("Delta", deckCardObjects[3].ShopItem.Card.Name, "Fourth card should be Delta");
         }
 
         [Test]
@@ -400,14 +447,14 @@ namespace _project.Scripts.PlayModeTest
             // Act: Load action deck
             InvokeLoadActionDeck();
 
-            // Assert: Should create no ShopObjects
-            var shopObjects = _actionDeckParent.GetComponentsInChildren<ShopObject>();
-            Assert.AreEqual(0, shopObjects.Length, "Should create no ShopObjects for empty deck");
+            // Assert: Should create no DeckCardObjects
+            var deckCardObjects = _actionDeckParent.GetComponentsInChildren<DeckCardObject>(true);
+            Assert.AreEqual(0, deckCardObjects.Length, "Should create no DeckCardObjects for empty deck");
             Assert.AreEqual(0, _actionDeckParent.transform.childCount, "Parent should have no children");
         }
 
         [Test]
-        public void Test_LoadSideDeck_CreatesCorrectNumberOfShopObjects()
+        public void Test_LoadSideDeck_CreatesCorrectNumberOfDeckCardObjects()
         {
             // Arrange: Set up side deck with 3 cards
             var sideDeck = GetSideDeck();
@@ -420,9 +467,9 @@ namespace _project.Scripts.PlayModeTest
             // Act: Load side deck
             InvokeLoadSideDeck();
 
-            // Assert: Should create 3 ShopObject instances
-            var shopObjects = _sideDeckParent.GetComponentsInChildren<ShopObject>();
-            Assert.AreEqual(3, shopObjects.Length, "Should create 3 ShopObject instances");
+            // Assert: Should create 3 DeckCardObject instances
+            var deckCardObjects = _sideDeckParent.GetComponentsInChildren<DeckCardObject>(true);
+            Assert.AreEqual(3, deckCardObjects.Length, "Should create 3 DeckCardObject instances");
         }
 
         [Test]
@@ -438,16 +485,16 @@ namespace _project.Scripts.PlayModeTest
             InvokeLoadSideDeck();
 
             // Assert: All instances should be children of sideDeckParent
-            var shopObjects = _sideDeckParent.GetComponentsInChildren<ShopObject>();
-            foreach (var shopObject in shopObjects)
+            var deckCardObjects = _sideDeckParent.GetComponentsInChildren<DeckCardObject>(true);
+            foreach (var deckCardObject in deckCardObjects)
             {
-                Assert.AreEqual(_sideDeckParent.transform, shopObject.transform.parent,
-                    "ShopObject should be child of sideDeckParent");
+                Assert.AreEqual(_sideDeckParent.transform, deckCardObject.transform.parent,
+                    "DeckCardObject should be child of sideDeckParent");
             }
         }
 
         [Test]
-        public void Test_LoadSideDeck_CallsShopObjectSetup()
+        public void Test_LoadSideDeck_CallsDeckCardObjectSetup()
         {
             // Arrange: Set up side deck with 2 cards
             var sideDeck = GetSideDeck();
@@ -459,9 +506,9 @@ namespace _project.Scripts.PlayModeTest
             InvokeLoadSideDeck();
 
             // Assert: Verify Setup was called
-            var shopObjects = _sideDeckParent.GetComponentsInChildren<ShopObject>();
-            Assert.IsNotNull(shopObjects[0].ShopItem, "ShopItem should be set");
-            Assert.AreEqual("SideCard1", shopObjects[0].ShopItem.Card.Name, "ShopItem should have correct card");
+            var deckCardObjects = _sideDeckParent.GetComponentsInChildren<DeckCardObject>(true);
+            Assert.IsNotNull(deckCardObjects[0].ShopItem, "ShopItem should be set");
+            Assert.AreEqual("SideCard1", deckCardObjects[0].ShopItem.Card.Name, "ShopItem should have correct card");
         }
 
         [Test]
@@ -478,10 +525,10 @@ namespace _project.Scripts.PlayModeTest
             InvokeLoadSideDeck();
 
             // Assert: Cards should appear in same order
-            var shopObjects = _sideDeckParent.GetComponentsInChildren<ShopObject>();
-            Assert.AreEqual("First", shopObjects[0].ShopItem.Card.Name, "First card should be First");
-            Assert.AreEqual("Second", shopObjects[1].ShopItem.Card.Name, "Second card should be Second");
-            Assert.AreEqual("Third", shopObjects[2].ShopItem.Card.Name, "Third card should be Third");
+            var deckCardObjects = _sideDeckParent.GetComponentsInChildren<DeckCardObject>(true);
+            Assert.AreEqual("First", deckCardObjects[0].ShopItem.Card.Name, "First card should be First");
+            Assert.AreEqual("Second", deckCardObjects[1].ShopItem.Card.Name, "Second card should be Second");
+            Assert.AreEqual("Third", deckCardObjects[2].ShopItem.Card.Name, "Third card should be Third");
         }
 
         [Test]
@@ -494,9 +541,9 @@ namespace _project.Scripts.PlayModeTest
             // Act: Load side deck
             InvokeLoadSideDeck();
 
-            // Assert: Should create no ShopObjects
-            var shopObjects = _sideDeckParent.GetComponentsInChildren<ShopObject>();
-            Assert.AreEqual(0, shopObjects.Length, "Should create no ShopObjects for empty side deck");
+            // Assert: Should create no DeckCardObjects
+            var deckCardObjects = _sideDeckParent.GetComponentsInChildren<DeckCardObject>(true);
+            Assert.AreEqual(0, deckCardObjects.Length, "Should create no DeckCardObjects for empty side deck");
             Assert.AreEqual(0, _sideDeckParent.transform.childCount, "Parent should have no children");
         }
 
@@ -528,7 +575,7 @@ namespace _project.Scripts.PlayModeTest
             // Arrange: Clear action deck parent (simulate empty UI)
             foreach (Transform child in _actionDeckParent.transform)
             {
-                UnityEngine.Object.Destroy(child.gameObject);
+                Object.Destroy(child.gameObject);
             }
 
 
@@ -597,7 +644,7 @@ namespace _project.Scripts.PlayModeTest
             // Use DestroyImmediate for synchronous destruction in tests
             while (_actionDeckParent.transform.childCount > 0)
             {
-                UnityEngine.Object.DestroyImmediate(_actionDeckParent.transform.GetChild(0).gameObject);
+                Object.DestroyImmediate(_actionDeckParent.transform.GetChild(0).gameObject);
             }
             CreateMockShopObject(CreateFakeCard("Modified1"), _actionDeckParent.transform, _actionPrefab);
             CreateMockShopObject(CreateFakeCard("Modified2"), _actionDeckParent.transform, _actionPrefab);
@@ -643,7 +690,7 @@ namespace _project.Scripts.PlayModeTest
             // Arrange: Clear side deck parent
             foreach (Transform child in _sideDeckParent.transform)
             {
-                UnityEngine.Object.Destroy(child.gameObject);
+                Object.Destroy(child.gameObject);
             }
 
 
@@ -706,7 +753,7 @@ namespace _project.Scripts.PlayModeTest
             // Use DestroyImmediate for synchronous destruction in tests
             while (_sideDeckParent.transform.childCount > 0)
             {
-                UnityEngine.Object.DestroyImmediate(_sideDeckParent.transform.GetChild(0).gameObject);
+                Object.DestroyImmediate(_sideDeckParent.transform.GetChild(0).gameObject);
             }
             CreateMockShopObject(CreateFakeCard("ModifiedSide1"), _sideDeckParent.transform, _sidePrefab);
             CreateMockShopObject(CreateFakeCard("ModifiedSide2"), _sideDeckParent.transform, _sidePrefab);
@@ -734,8 +781,8 @@ namespace _project.Scripts.PlayModeTest
         public void Test_OpenDeckOrganizer_ClearsExistingOrganizer()
         {
             // Arrange: Populate UI with existing items
-            CreateMockShopObject(CreateFakeCard("Old1"), _actionDeckParent.transform, _actionPrefab);
-            CreateMockShopObject(CreateFakeCard("Old2"), _sideDeckParent.transform, _sidePrefab);
+            CreateMockDeckCardObject(CreateFakeCard("Old1"), _actionDeckParent.transform, _cardDeckItemPrefab);
+            CreateMockDeckCardObject(CreateFakeCard("Old2"), _sideDeckParent.transform, _cardDeckItemPrefab);
             var initialActionCount = _actionDeckParent.transform.childCount;
             var initialSideCount = _sideDeckParent.transform.childCount;
 
@@ -751,11 +798,11 @@ namespace _project.Scripts.PlayModeTest
             // Note: ClearOrganizer uses Destroy (deferred), so we verify by checking loaded card data
             Assert.Greater(initialActionCount, 0, "Should have had initial items");
 
-            // Verify the new card ("New1") was loaded by checking ShopObjects
-            var shopObjects = _actionDeckParent.GetComponentsInChildren<ShopObject>();
-            var loadedCards = shopObjects
-                .Where(so => so != null && so.ShopItem != null && so.ShopItem.Card != null)
-                .Select(so => so.ShopItem.Card.Name)
+            // Verify the new card ("New1") was loaded by checking DeckCardObjects
+            var deckCardObjects = _actionDeckParent.GetComponentsInChildren<DeckCardObject>(false);
+            var loadedCards = deckCardObjects
+                .Where(dco => dco != null && dco.ShopItem != null && dco.ShopItem.Card != null)
+                .Select(dco => dco.ShopItem.Card.Name)
                 .ToList();
 
             Assert.Contains("New1", loadedCards, "New card 'New1' should be loaded");
@@ -775,9 +822,9 @@ namespace _project.Scripts.PlayModeTest
             _deckOrganizerManager.OpenDeckOrganizer();
 
             // Assert: Action deck should be loaded in UI
-            var shopObjects = _actionDeckParent.GetComponentsInChildren<ShopObject>();
-            Assert.AreEqual(2, shopObjects.Length, "Should load 2 action cards");
-            Assert.AreEqual("LoadTest1", shopObjects[0].ShopItem.Card.Name, "First card should be LoadTest1");
+            var deckCardObjects = _actionDeckParent.GetComponentsInChildren<DeckCardObject>(false);
+            Assert.AreEqual(2, deckCardObjects.Length, "Should load 2 action cards");
+            Assert.AreEqual("LoadTest1", deckCardObjects[0].ShopItem.Card.Name, "First card should be LoadTest1");
         }
 
         [Test]
@@ -792,9 +839,9 @@ namespace _project.Scripts.PlayModeTest
             _deckOrganizerManager.OpenDeckOrganizer();
 
             // Assert: Side deck should be loaded in UI
-            var shopObjects = _sideDeckParent.GetComponentsInChildren<ShopObject>();
-            Assert.AreEqual(1, shopObjects.Length, "Should load 1 side card");
-            Assert.AreEqual("SideLoadTest1", shopObjects[0].ShopItem.Card.Name, "Card should be SideLoadTest1");
+            var deckCardObjects = _sideDeckParent.GetComponentsInChildren<DeckCardObject>(false);
+            Assert.AreEqual(1, deckCardObjects.Length, "Should load 1 side card");
+            Assert.AreEqual("SideLoadTest1", deckCardObjects[0].ShopItem.Card.Name, "Card should be SideLoadTest1");
         }
 
         [Test]
@@ -838,13 +885,13 @@ namespace _project.Scripts.PlayModeTest
         [Test]
         public void Test_CloseDeckOrganizer_DeactivatesPanel()
         {
+            SeedDecks(1, 1);
+
             // Arrange: Open organizer first
             _deckOrganizerManager.OpenDeckOrganizer();
             Assert.IsTrue(_deckUIPanel.activeSelf, "Panel should be active after opening");
 
-            // Act: Close organizer (expects errors due to GetComponentsInChildren bug)
-            LogAssert.Expect(LogType.Error, "ActionDeck is empty!");
-            LogAssert.Expect(LogType.Error, "SideDeck is empty!");
+            // Act: Close organizer
             _deckOrganizerManager.CloseDeckOrganizer();
 
             // Assert: Panel should be deactivated
@@ -854,13 +901,13 @@ namespace _project.Scripts.PlayModeTest
         [Test]
         public void Test_CloseDeckOrganizer_EnablesClick3D()
         {
+            SeedDecks(1, 1);
+
             // Arrange: Open organizer (disables Click3D)
             _deckOrganizerManager.OpenDeckOrganizer();
             Assert.IsTrue(Click3D.Click3DGloballyDisabled, "Click3D should be disabled after opening");
 
-            // Act: Close organizer (expects errors due to bug)
-            LogAssert.Expect(LogType.Error, "ActionDeck is empty!");
-            LogAssert.Expect(LogType.Error, "SideDeck is empty!");
+            // Act: Close organizer
             _deckOrganizerManager.CloseDeckOrganizer();
 
             // Assert: Click3D should be enabled
@@ -870,12 +917,12 @@ namespace _project.Scripts.PlayModeTest
         [Test]
         public void Test_CloseDeckOrganizer_ReleasesUIInputOwnership()
         {
+            SeedDecks(1, 1);
+
             // Arrange: Open organizer first
             _deckOrganizerManager.OpenDeckOrganizer();
 
-            // Act & Assert: Should not throw exception when calling RequestDisable (expects errors due to bug)
-            LogAssert.Expect(LogType.Error, "ActionDeck is empty!");
-            LogAssert.Expect(LogType.Error, "SideDeck is empty!");
+            // Act & Assert: Should not throw exception when calling RequestDisable
             Assert.DoesNotThrow(() => _deckOrganizerManager.CloseDeckOrganizer(),
                 "CloseDeckOrganizer should call UIInputManager.RequestDisable without throwing");
         }
@@ -883,13 +930,13 @@ namespace _project.Scripts.PlayModeTest
         [Test]
         public void Test_CloseDeckOrganizer_Level2_CallsShowBetaScreen()
         {
+            SeedDecks(1, 1);
+
             // Arrange: Set turn controller level to 2
             _turnController.level = 2;
             _deckOrganizerManager.OpenDeckOrganizer();
 
-            // Act & Assert: Should not throw when calling ShowBetaScreen (expects errors due to bug)
-            LogAssert.Expect(LogType.Error, "ActionDeck is empty!");
-            LogAssert.Expect(LogType.Error, "SideDeck is empty!");
+            // Act & Assert: Should not throw when calling ShowBetaScreen
             Assert.DoesNotThrow(() => _deckOrganizerManager.CloseDeckOrganizer(),
                 "Should call ShowBetaScreen for level 2 without throwing");
         }
@@ -897,14 +944,14 @@ namespace _project.Scripts.PlayModeTest
         [Test]
         public void Test_CloseDeckOrganizer_NormalLevel_SetsCanClickEndFalse()
         {
+            SeedDecks(1, 1);
+
             // Arrange: Set normal level and initial state
             _turnController.level = 1;
             _turnController.canClickEnd = true;
             _deckOrganizerManager.OpenDeckOrganizer();
 
-            // Act: Close organizer (expects errors due to bug)
-            LogAssert.Expect(LogType.Error, "ActionDeck is empty!");
-            LogAssert.Expect(LogType.Error, "SideDeck is empty!");
+            // Act: Close organizer
             _deckOrganizerManager.CloseDeckOrganizer();
 
             // Assert: canClickEnd should be set to false
@@ -914,14 +961,14 @@ namespace _project.Scripts.PlayModeTest
         [Test]
         public void Test_CloseDeckOrganizer_NormalLevel_SetsNewRoundReadyFalse()
         {
+            SeedDecks(1, 1);
+
             // Arrange: Set normal level and initial state
             _turnController.level = 1;
             _turnController.newRoundReady = true;
             _deckOrganizerManager.OpenDeckOrganizer();
 
-            // Act: Close organizer (expects errors due to bug)
-            LogAssert.Expect(LogType.Error, "ActionDeck is empty!");
-            LogAssert.Expect(LogType.Error, "SideDeck is empty!");
+            // Act: Close organizer
             _deckOrganizerManager.CloseDeckOrganizer();
 
             // Assert: newRoundReady should be set to false
@@ -969,11 +1016,11 @@ namespace _project.Scripts.PlayModeTest
             // Arrange: Ensure no items in lists (use DestroyImmediate for synchronous destruction)
             while (_actionDeckParent.transform.childCount > 0)
             {
-                UnityEngine.Object.DestroyImmediate(_actionDeckParent.transform.GetChild(0).gameObject);
+                Object.DestroyImmediate(_actionDeckParent.transform.GetChild(0).gameObject);
             }
             while (_sideDeckParent.transform.childCount > 0)
             {
-                UnityEngine.Object.DestroyImmediate(_sideDeckParent.transform.GetChild(0).gameObject);
+                Object.DestroyImmediate(_sideDeckParent.transform.GetChild(0).gameObject);
             }
 
             // Act & Assert: Should not throw
@@ -1014,7 +1061,7 @@ namespace _project.Scripts.PlayModeTest
                 "RemoveOrganizerItem should handle missing ShopObject gracefully");
 
             // Cleanup
-            UnityEngine.Object.Destroy(invalidObj);
+            Object.Destroy(invalidObj);
         }
 
         [Test]
@@ -1031,7 +1078,7 @@ namespace _project.Scripts.PlayModeTest
                 removeMethod?.Invoke(_deckOrganizerManager, new object[] { null });
                 Assert.Pass("RemoveOrganizerItem handled null GameObject gracefully");
             }
-            catch (System.Reflection.TargetInvocationException ex)
+            catch (TargetInvocationException ex)
             {
                 // If inner exception is NullReferenceException, the method doesn't handle null properly
                 if (ex.InnerException is NullReferenceException)
@@ -1063,17 +1110,13 @@ namespace _project.Scripts.PlayModeTest
             _deckOrganizerManager.OpenDeckOrganizer();
 
             // Verify loading worked
-            var actionShopObjects = _actionDeckParent.GetComponentsInChildren<ShopObject>();
-            var sideShopObjects = _sideDeckParent.GetComponentsInChildren<ShopObject>();
-            Assert.AreEqual(2, actionShopObjects.Length, "Action deck should be loaded");
-            Assert.AreEqual(1, sideShopObjects.Length, "Side deck should be loaded");
+            var actionDeckCards = _actionDeckParent.GetComponentsInChildren<DeckCardObject>(false);
+            var sideDeckCards = _sideDeckParent.GetComponentsInChildren<DeckCardObject>(false);
+            Assert.AreEqual(2, actionDeckCards.Length, "Action deck should be loaded");
+            Assert.AreEqual(1, sideDeckCards.Length, "Side deck should be loaded");
 
             // Simulate user modification (add a new card to UI)
-            CreateMockShopObject(CreateFakeCard("AddedCard"), _actionDeckParent.transform, _actionPrefab);
-
-            // Note: Saving with current buggy code won't work, but we test the workflow doesn't crash (expects errors)
-            LogAssert.Expect(LogType.Error, "ActionDeck is empty!");
-            LogAssert.Expect(LogType.Error, "SideDeck is empty!");
+            CreateMockDeckCardObject(CreateFakeCard("AddedCard"), _actionDeckParent.transform, _cardDeckItemPrefab);
             Assert.DoesNotThrow(() => _deckOrganizerManager.CloseDeckOrganizer(),
                 "Full workflow should complete without throwing");
 
@@ -1085,17 +1128,12 @@ namespace _project.Scripts.PlayModeTest
         public void Test_MultipleOpenClose_NoMemoryLeaks()
         {
             // Arrange: Set up small deck
-            var actionDeck = GetActionDeck();
-            actionDeck.Clear();
-            actionDeck.Add(CreateFakeCard("Leak1"));
-            actionDeck.Add(CreateFakeCard("Leak2"));
+            SeedDecks(2, 1);
 
-            // Act: Run multiple open/close cycles (each close triggers buggy save, expects errors)
+            // Act: Run multiple open/close cycles
             for (var i = 0; i < 5; i++)
             {
                 _deckOrganizerManager.OpenDeckOrganizer();
-                LogAssert.Expect(LogType.Error, "ActionDeck is empty!");
-                LogAssert.Expect(LogType.Error, "SideDeck is empty!");
                 _deckOrganizerManager.CloseDeckOrganizer();
             }
 
@@ -1105,27 +1143,271 @@ namespace _project.Scripts.PlayModeTest
 
             // Verify no excessive children (should be cleared on each open)
             _deckOrganizerManager.OpenDeckOrganizer();
-            var finalCount = _actionDeckParent.GetComponentsInChildren<ShopObject>().Length;
+            var finalCount = _actionDeckParent.GetComponentsInChildren<DeckCardObject>(false).Length;
             Assert.AreEqual(2, finalCount, "Should maintain correct count after multiple cycles");
         }
 
         [Test]
         public void Test_UIInputOwnership_TransfersBetweenSystems()
         {
+            SeedDecks(1, 1);
+
             // This is a basic integration test - full UIInputManager testing is in UIInputManagerTests.cs
 
             // Act: Open and close organizer
             Assert.DoesNotThrow(() => _deckOrganizerManager.OpenDeckOrganizer(),
                 "Should request UIInput ownership without throwing");
 
-            // Close expects errors due to buggy save methods
-            LogAssert.Expect(LogType.Error, "ActionDeck is empty!");
-            LogAssert.Expect(LogType.Error, "SideDeck is empty!");
             Assert.DoesNotThrow(() => _deckOrganizerManager.CloseDeckOrganizer(),
                 "Should release UIInput ownership without throwing");
 
             // Assert: Basic workflow completed successfully
             Assert.IsFalse(_deckUIPanel.activeSelf, "Panel should be closed after workflow");
+        }
+
+        #endregion
+
+        #region Bug Fix Verification Tests (DeckCardObject)
+
+        [Test]
+        public void Test_GetComponentsInChildren_DeckCardObject_ReturnsCorrect()
+        {
+            // Arrange: Create UI hierarchy with DeckCardObject children
+            var card1 = CreateFakeCard("Card1");
+            var card2 = CreateFakeCard("Card2");
+            CreateMockDeckCardObject(card1, _actionDeckParent.transform, _cardDeckItemPrefab);
+            CreateMockDeckCardObject(card2, _actionDeckParent.transform, _cardDeckItemPrefab);
+
+            // Act: Retrieve DeckCardObject instances (the fixed approach)
+            var result = _actionDeckParent.GetComponentsInChildren<DeckCardObject>(true);
+
+            // Assert: Should return correct number of DeckCardObjects
+            Assert.AreEqual(2, result.Length, "GetComponentsInChildren<DeckCardObject>() should return correct count");
+
+            // Verify we can access card data through DeckCardObject.ShopItem.Card
+            Assert.IsNotNull(result[0].ShopItem, "ShopItem should be accessible");
+            Assert.IsNotNull(result[0].ShopItem.Card, "Card should be accessible through ShopItem");
+            Assert.AreEqual("Card1", result[0].ShopItem.Card.Name, "First card should be Card1");
+            Assert.AreEqual("Card2", result[1].ShopItem.Card.Name, "Second card should be Card2");
+        }
+
+        [Test]
+        public void Test_SaveActionDeck_WithDeckCardObjects_CorrectlySaves()
+        {
+            // Arrange: Create UI with DeckCardObjects using the fixed prefab
+            var card1 = CreateFakeCard("Fixed1");
+            var card2 = CreateFakeCard("Fixed2");
+            var card3 = CreateFakeCard("Fixed3");
+            CreateMockDeckCardObject(card1, _actionDeckParent.transform, _cardDeckItemPrefab);
+            CreateMockDeckCardObject(card2, _actionDeckParent.transform, _cardDeckItemPrefab);
+            CreateMockDeckCardObject(card3, _actionDeckParent.transform, _cardDeckItemPrefab);
+
+            // Clear the actual action deck to verify save updates it
+            var actionDeck = GetActionDeck();
+            actionDeck.Clear();
+
+            // Act: Use the fixed SaveActionDeck method
+            InvokeSaveActionDeck();
+
+            // Assert: Action deck should be updated with the 3 cards from UI
+            var updatedDeck = GetActionDeck();
+            Assert.AreEqual(3, updatedDeck.Count, "Action deck should have 3 cards after save");
+            Assert.AreEqual("Fixed1", updatedDeck[0].Name, "First card should be Fixed1");
+            Assert.AreEqual("Fixed2", updatedDeck[1].Name, "Second card should be Fixed2");
+            Assert.AreEqual("Fixed3", updatedDeck[2].Name, "Third card should be Fixed3");
+        }
+
+        [Test]
+        public void Test_SaveSideDeck_WithDeckCardObjects_CorrectlySaves()
+        {
+            // Arrange: Create UI with DeckCardObjects
+            var card1 = CreateFakeCard("SideFix1");
+            var card2 = CreateFakeCard("SideFix2");
+            CreateMockDeckCardObject(card1, _sideDeckParent.transform, _cardDeckItemPrefab);
+            CreateMockDeckCardObject(card2, _sideDeckParent.transform, _cardDeckItemPrefab);
+
+            // Clear the actual side deck to verify save updates it
+            var sideDeck = GetSideDeck();
+            sideDeck.Clear();
+
+            // Act: Use the fixed SaveSideDeck method
+            InvokeSaveSideDeck();
+
+            // Assert: Side deck should be updated
+            var updatedDeck = GetSideDeck();
+            Assert.AreEqual(2, updatedDeck.Count, "Side deck should have 2 cards after save");
+            Assert.AreEqual("SideFix1", updatedDeck[0].Name, "First card should be SideFix1");
+            Assert.AreEqual("SideFix2", updatedDeck[1].Name, "Second card should be SideFix2");
+        }
+
+        [Test]
+        public void Test_SaveActionDeck_WithDeckCardObjects_PreservesOrder()
+        {
+            // Arrange: Create cards in specific order
+            var card1 = CreateFakeCard("Zulu");
+            var card2 = CreateFakeCard("Yankee");
+            var card3 = CreateFakeCard("X-ray");
+            CreateMockDeckCardObject(card1, _actionDeckParent.transform, _cardDeckItemPrefab);
+            CreateMockDeckCardObject(card2, _actionDeckParent.transform, _cardDeckItemPrefab);
+            CreateMockDeckCardObject(card3, _actionDeckParent.transform, _cardDeckItemPrefab);
+
+            var actionDeck = GetActionDeck();
+            actionDeck.Clear();
+
+            // Act: Save
+            InvokeSaveActionDeck();
+
+            // Assert: Order should be preserved
+            var updatedDeck = GetActionDeck();
+            Assert.AreEqual("Zulu", updatedDeck[0].Name, "Order should be preserved - Zulu first");
+            Assert.AreEqual("Yankee", updatedDeck[1].Name, "Order should be preserved - Yankee second");
+            Assert.AreEqual("X-ray", updatedDeck[2].Name, "Order should be preserved - X-ray third");
+        }
+
+        #endregion
+
+        #region Drag and Drop Component Tests
+
+        [Test]
+        public void Test_DraggableCard_HasRequiredComponents()
+        {
+            // Arrange: Create a card with DraggableCard component
+            var cardGo = new GameObject("TestCard");
+            cardGo.AddComponent<RectTransform>();
+            cardGo.AddComponent<CanvasGroup>();
+            var draggable = cardGo.AddComponent<DraggableCard>();
+
+            // Assert: Should have CanvasGroup (required by DraggableCard)
+            Assert.IsNotNull(cardGo.GetComponent<CanvasGroup>(), "DraggableCard should have CanvasGroup");
+            Assert.IsNotNull(draggable, "DraggableCard component should be present");
+
+            // Cleanup
+            Object.Destroy(cardGo);
+        }
+
+        [Test]
+        public void Test_DraggableCard_SetNewOrigin_UpdatesState()
+        {
+            // Arrange: Create a card with DraggableCard
+            var cardGo = new GameObject("TestCard");
+            cardGo.AddComponent<RectTransform>();
+            cardGo.AddComponent<CanvasGroup>();
+            var draggable = cardGo.AddComponent<DraggableCard>();
+
+            var newParent = new GameObject("NewParent").transform;
+            for (var i = 0; i < 6; i++)
+            {
+                new GameObject($"Sibling{i}").transform.SetParent(newParent);
+            }
+
+            // Act: Set new origin
+            draggable.SetNewOrigin(newParent, 5);
+
+            // Assert: Should store the new origin (we can verify via RestoreToOriginalPosition)
+            // Since the card isn't currently being dragged, RestoreToOriginalPosition will use the stored values
+            draggable.RestoreToOriginalPosition();
+
+            Assert.AreEqual(newParent, cardGo.transform.parent, "Should restore to new parent");
+            Assert.AreEqual(5, cardGo.transform.GetSiblingIndex(), "Should restore to new sibling index");
+
+            // Cleanup
+            Object.Destroy(cardGo);
+            Object.Destroy(newParent.gameObject);
+        }
+
+        [Test]
+        public void Test_DeckDropZone_ComponentSetup()
+        {
+            // Arrange: Create a drop zone
+            var dropZoneGo = new GameObject("DropZone");
+            var dropZone = dropZoneGo.AddComponent<DeckDropZone>();
+
+            // Assert: Component should be present
+            Assert.IsNotNull(dropZone, "DeckDropZone component should be present");
+
+            // Cleanup
+            Object.Destroy(dropZoneGo);
+        }
+
+        [Test]
+        public void Test_DeckCardObject_HasRequiredComponents()
+        {
+            // Arrange: Use the mock prefab which has required components
+            var instance = Object.Instantiate(_cardDeckItemPrefab);
+
+            // Assert: Should have all required components
+            Assert.IsNotNull(instance.GetComponent<DeckCardObject>(), "Should have DeckCardObject");
+            Assert.IsNotNull(instance.GetComponent<CanvasGroup>(), "Should have CanvasGroup");
+            Assert.IsNotNull(instance.GetComponent<DraggableCard>(), "Should have DraggableCard");
+
+            // Cleanup
+            Object.Destroy(instance);
+        }
+
+        [Test]
+        public void Test_CardReordering_WithinSameParent()
+        {
+            // Arrange: Create multiple cards in the action deck parent
+            var card1 = CreateFakeCard("First");
+            var card2 = CreateFakeCard("Second");
+            var card3 = CreateFakeCard("Third");
+
+            var obj1 = CreateMockDeckCardObject(card1, _actionDeckParent.transform, _cardDeckItemPrefab);
+            var obj2 = CreateMockDeckCardObject(card2, _actionDeckParent.transform, _cardDeckItemPrefab);
+            var obj3 = CreateMockDeckCardObject(card3, _actionDeckParent.transform, _cardDeckItemPrefab);
+
+            // Act: Simulate reordering by changing sibling indices (simulates drop operation)
+            obj3.transform.SetSiblingIndex(0); // Move "Third" to first position
+
+            // Assert: Order should be changed
+            var deckCardObjects = _actionDeckParent.GetComponentsInChildren<DeckCardObject>(true);
+            Assert.AreEqual("Third", deckCardObjects[0].ShopItem.Card.Name, "Third should now be first");
+            Assert.AreEqual("First", deckCardObjects[1].ShopItem.Card.Name, "First should now be second");
+            Assert.AreEqual("Second", deckCardObjects[2].ShopItem.Card.Name, "Second should now be third");
+
+            // Verify save preserves new order
+            GetActionDeck().Clear();
+            InvokeSaveActionDeck();
+            var savedDeck = GetActionDeck();
+            Assert.AreEqual("Third", savedDeck[0].Name, "Saved deck should preserve new order - Third first");
+            Assert.AreEqual("First", savedDeck[1].Name, "Saved deck should preserve new order - First second");
+            Assert.AreEqual("Second", savedDeck[2].Name, "Saved deck should preserve new order - Second third");
+        }
+
+        [Test]
+        public void Test_CardMoveBetweenDecks()
+        {
+            // Arrange: Create cards in action deck and side deck
+            var actionCard1 = CreateFakeCard("Action1");
+            var actionCard2 = CreateFakeCard("Action2");
+            var sideCard1 = CreateFakeCard("Side1");
+
+            CreateMockDeckCardObject(actionCard1, _actionDeckParent.transform, _cardDeckItemPrefab);
+            var movingCard = CreateMockDeckCardObject(actionCard2, _actionDeckParent.transform, _cardDeckItemPrefab);
+            CreateMockDeckCardObject(sideCard1, _sideDeckParent.transform, _cardDeckItemPrefab);
+
+            // Act: Simulate moving actionCard2 from action deck to side deck
+            movingCard.transform.SetParent(_sideDeckParent.transform);
+
+            // Assert: Verify counts changed
+            var actionDeckObjects = _actionDeckParent.GetComponentsInChildren<DeckCardObject>(true);
+            var sideDeckObjects = _sideDeckParent.GetComponentsInChildren<DeckCardObject>(true);
+
+            Assert.AreEqual(1, actionDeckObjects.Length, "Action deck should have 1 card after move");
+            Assert.AreEqual(2, sideDeckObjects.Length, "Side deck should have 2 cards after move");
+
+            // Verify save reflects the move
+            GetActionDeck().Clear();
+            GetSideDeck().Clear();
+            InvokeSaveActionDeck();
+            InvokeSaveSideDeck();
+
+            var savedActionDeck = GetActionDeck();
+            var savedSideDeck = GetSideDeck();
+
+            Assert.AreEqual(1, savedActionDeck.Count, "Saved action deck should have 1 card");
+            Assert.AreEqual("Action1", savedActionDeck[0].Name, "Action1 should remain in action deck");
+            Assert.AreEqual(2, savedSideDeck.Count, "Saved side deck should have 2 cards");
         }
 
         #endregion

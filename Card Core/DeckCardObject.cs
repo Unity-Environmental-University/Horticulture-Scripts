@@ -4,6 +4,8 @@ using UnityEngine;
 
 namespace _project.Scripts.Card_Core
 {
+    [RequireComponent(typeof(CanvasGroup))]
+    [RequireComponent(typeof(DraggableCard))]
     public class DeckCardObject : MonoBehaviour
     {
         [SerializeField] private TextMeshProUGUI titleText;
