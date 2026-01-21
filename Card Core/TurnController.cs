@@ -26,6 +26,7 @@ namespace _project.Scripts.Card_Core
     {
         public GameObject lostGameObjects;
         public GameObject winScreen;
+        public TextMeshProUGUI winText;
         public Sprite cardDiagram;
         public int turnCount = 4;
         public int level;
@@ -869,7 +870,6 @@ namespace _project.Scripts.Card_Core
             winScreen.gameObject.SetActive(true);
             canClickEnd = false;
             UIInputManager.RequestEnable("TurnController");
-            var winText = winScreen.gameObject.GetComponentInChildren<TextMeshProUGUI>();
             if (winText)
             {
                 winText.text =
