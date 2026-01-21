@@ -1,10 +1,8 @@
 using System.Collections;
-using System.Collections.Generic;
-using System.Reflection;
 using _project.Scripts.Audio;
 using _project.Scripts.Card_Core;
-using _project.Scripts.Classes;
-using _project.Scripts.Stickers;
+using _project.Scripts.PlayModeTest.Utilities.Mocks;
+using _project.Scripts.PlayModeTest.Utilities.Reflection;
 using NUnit.Framework;
 using UnityEngine;
 using UnityEngine.TestTools;
@@ -54,9 +52,7 @@ namespace _project.Scripts.PlayModeTest
             cardGameMaster.playerHandAudioSource = audioSource;
 
             // Expose a singleton instance via reflection.
-            typeof(CardGameMaster)
-                .GetProperty("Instance", BindingFlags.Static | BindingFlags.NonPublic | BindingFlags.Public)
-                ?.SetValue(null, cardGameMaster);
+            CardGameMasterReflection.SetInstance(cardGameMaster);
 
             // Set up a fake parent for action cards.
             _actionParentGo = new GameObject("ActionCardParent");
@@ -88,21 +84,15 @@ namespace _project.Scripts.PlayModeTest
         public IEnumerator TestDrawActionHand()
         {
             // Set up the action deck with some cards.
-            var actionDeckField =
-                typeof(DeckManager).GetField("_actionDeck", BindingFlags.NonPublic | BindingFlags.Instance);
-            var actionDeck = actionDeckField.GetValue(deckManager) as List<ICard>;
+            var actionDeck = DeckManagerReflection.GetActionDeck(deckManager);
             actionDeck.Clear();
 
             const int numOfFakeCards = 5;
             for (var i = 0; i < numOfFakeCards; i++) actionDeck.Add(new FakeCard("Fake " + i));
 
             // Ensure _actionHand and _actionDiscardPile are empty.
-            var actionHandField =
-                typeof(DeckManager).GetField("_actionHand", BindingFlags.NonPublic | BindingFlags.Instance);
-            var actionDiscardField =
-                typeof(DeckManager).GetField("_actionDiscardPile", BindingFlags.NonPublic | BindingFlags.Instance);
-            var actionHand = actionHandField.GetValue(deckManager) as List<ICard>;
-            var actionDiscard = actionDiscardField.GetValue(deckManager) as List<ICard>;
+            var actionHand = DeckManagerReflection.GetActionHand(deckManager);
+            var actionDiscard = DeckManagerReflection.GetDiscardPile(deckManager);
             actionHand.Clear();
             actionDiscard.Clear();
 
@@ -119,28 +109,6 @@ namespace _project.Scripts.PlayModeTest
 
         #endregion
 
-        // Fake implementation of ICard for testing.
-        private class FakeCard : ICard
-        {
-            public FakeCard(string name)
-            {
-                Name = name;
-            }
-
-            public string Name { get; }
-            public GameObject Prefab => CardGameMaster.Instance?.actionCardPrefab;
-            public List<ISticker> Stickers { get; } = new();
-
-            public ICard Clone()
-            {
-                return new FakeCard(Name);
-            }
-        }
-
-        private class CardViewFake : MonoBehaviour
-        {
-        }
-
         #region Edge Case Tests
 
         [UnityTest]
@@ -150,15 +118,11 @@ namespace _project.Scripts.PlayModeTest
             var cardsToDraw = deckManager.cardsDrawnPerTurn;
 
             // Set up the action deck to be empty.
-            var actionDeckField =
-                typeof(DeckManager).GetField("_actionDeck", BindingFlags.NonPublic | BindingFlags.Instance);
-            var actionDeck = actionDeckField.GetValue(deckManager) as List<ICard>;
+            var actionDeck = DeckManagerReflection.GetActionDeck(deckManager);
             actionDeck.Clear();
 
             // Set up the discard pile with some cards.
-            var actionDiscardField =
-                typeof(DeckManager).GetField("_actionDiscardPile", BindingFlags.NonPublic | BindingFlags.Instance);
-            var actionDiscard = actionDiscardField.GetValue(deckManager) as List<ICard>;
+            var actionDiscard = DeckManagerReflection.GetDiscardPile(deckManager);
             actionDiscard.Clear();
 
             // Add cards to the discard pile (to simulate recycling).
@@ -171,9 +135,7 @@ namespace _project.Scripts.PlayModeTest
             yield return new WaitForSeconds(cardsToDraw * 0.5f + 0.1f); // Wait dynamically based on cardsToDraw.
 
             // Check the action hand after recycling.
-            var actionHandField =
-                typeof(DeckManager).GetField("_actionHand", BindingFlags.NonPublic | BindingFlags.Instance);
-            var actionHand = actionHandField.GetValue(deckManager) as List<ICard>;
+            var actionHand = DeckManagerReflection.GetActionHand(deckManager);
 
             // Ensure that the hand contains the expected number of cards (should match cardsToDraw).
             Assert.AreEqual(cardsToDraw, actionHand.Count,
@@ -185,13 +147,9 @@ namespace _project.Scripts.PlayModeTest
         public IEnumerator TestEmptyDiscardPile()
         {
             // Clear both action decks and discard the pile.
-            var actionDeckField =
-                typeof(DeckManager).GetField("_actionDeck", BindingFlags.NonPublic | BindingFlags.Instance);
-            var actionDeck = actionDeckField.GetValue(deckManager) as List<ICard>;
+            var actionDeck = DeckManagerReflection.GetActionDeck(deckManager);
             actionDeck.Clear();
-            var actionDiscardField =
-                typeof(DeckManager).GetField("_actionDiscardPile", BindingFlags.NonPublic | BindingFlags.Instance);
-            var actionDiscard = actionDiscardField.GetValue(deckManager) as List<ICard>;
+            var actionDiscard = DeckManagerReflection.GetDiscardPile(deckManager);
             actionDiscard.Clear();
 
             // Call DrawActionHand and check if it handles empty decks properly.
@@ -201,9 +159,7 @@ namespace _project.Scripts.PlayModeTest
             yield return new WaitForSeconds(deckManager.cardsDrawnPerTurn * 0.5f + 0.1f);
 
             // Assert that no cards are drawn when there is no discard pile.
-            var actionHandField =
-                typeof(DeckManager).GetField("_actionHand", BindingFlags.NonPublic | BindingFlags.Instance);
-            var actionHand = actionHandField.GetValue(deckManager) as List<ICard>;
+            var actionHand = DeckManagerReflection.GetActionHand(deckManager);
             Assert.AreEqual(0, actionHand.Count, "Action hand should be empty when both decks are empty.");
         }
 
@@ -214,15 +170,11 @@ namespace _project.Scripts.PlayModeTest
             var cardsToDraw = deckManager.cardsDrawnPerTurn;
 
             // Set up the action deck to be empty (simulate the deck being exhausted).
-            var actionDeckField =
-                typeof(DeckManager).GetField("_actionDeck", BindingFlags.NonPublic | BindingFlags.Instance);
-            var actionDeck = actionDeckField.GetValue(deckManager) as List<ICard>;
+            var actionDeck = DeckManagerReflection.GetActionDeck(deckManager);
             actionDeck.Clear();
 
             // Set up the discard pile
-            var actionDiscardField =
-                typeof(DeckManager).GetField("_actionDiscardPile", BindingFlags.NonPublic | BindingFlags.Instance);
-            var actionDiscard = actionDiscardField.GetValue(deckManager) as List<ICard>;
+            var actionDiscard = DeckManagerReflection.GetDiscardPile(deckManager);
             actionDiscard.Clear();
 
             // Add enough cards to the discard pile to meet the draw count.
@@ -235,9 +187,7 @@ namespace _project.Scripts.PlayModeTest
             yield return new WaitForSeconds(cardsToDraw * 0.5f + 0.1f); // Wait dynamically based on cardsToDraw.
 
             // Check the action hand after recycling.
-            var actionHandField =
-                typeof(DeckManager).GetField("_actionHand", BindingFlags.NonPublic | BindingFlags.Instance);
-            var actionHand = actionHandField.GetValue(deckManager) as List<ICard>;
+            var actionHand = DeckManagerReflection.GetActionHand(deckManager);
 
             // Ensure that the hand contains the expected number of cards (should match cardsToDraw).
             Assert.AreEqual(cardsToDraw, actionHand.Count,
@@ -249,19 +199,13 @@ namespace _project.Scripts.PlayModeTest
         public IEnumerator TestActionDeckExactlyMatchesDrawCount()
         {
             // Set up the action deck to exactly match the draw count.
-            var actionDeckField =
-                typeof(DeckManager).GetField("_actionDeck", BindingFlags.NonPublic | BindingFlags.Instance);
-            var actionDeck = actionDeckField.GetValue(deckManager) as List<ICard>;
+            var actionDeck = DeckManagerReflection.GetActionDeck(deckManager);
             actionDeck.Clear();
             // Draw as many cards as cardsDrawnPerTurn.
             for (var i = 0; i < deckManager.cardsDrawnPerTurn; i++) actionDeck.Add(new FakeCard($"Fake {i + 1}"));
             // Ensure _actionHand and _actionDiscardPile are empty.
-            var actionHandField =
-                typeof(DeckManager).GetField("_actionHand", BindingFlags.NonPublic | BindingFlags.Instance);
-            var actionDiscardField =
-                typeof(DeckManager).GetField("_actionDiscardPile", BindingFlags.NonPublic | BindingFlags.Instance);
-            var actionHand = actionHandField.GetValue(deckManager) as List<ICard>;
-            var actionDiscard = actionDiscardField.GetValue(deckManager) as List<ICard>;
+            var actionHand = DeckManagerReflection.GetActionHand(deckManager);
+            var actionDiscard = DeckManagerReflection.GetDiscardPile(deckManager);
             actionHand.Clear();
             actionDiscard.Clear();
 

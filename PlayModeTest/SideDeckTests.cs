@@ -1,9 +1,9 @@
 using System.Collections.Generic;
-using System.Reflection;
 using _project.Scripts.Audio;
 using _project.Scripts.Card_Core;
 using _project.Scripts.Classes;
-using _project.Scripts.Stickers;
+using _project.Scripts.PlayModeTest.Utilities.Mocks;
+using _project.Scripts.PlayModeTest.Utilities.Reflection;
 using NUnit.Framework;
 using UnityEngine;
 using UnityEngine.TestTools;
@@ -16,16 +16,12 @@ namespace _project.Scripts.PlayModeTest
     /// </summary>
     public class SideDeckTests
     {
-        // Reflection field references for private DeckManager fields
-        private FieldInfo _actionDeckField;
-        private FieldInfo _actionDiscardField;
         private GameObject _actionParentGo;
         private GameObject _cardGameMasterGo;
         private DeckManager _deckManager;
         private GameObject _fakePrefab;
         private GameObject _lostObjectsGo;
         private ScoreManager _scoreManager;
-        private FieldInfo _sideDeckField;
         private TurnController _turnController;
         private GameObject _winScreenGo;
 
@@ -58,9 +54,7 @@ namespace _project.Scripts.PlayModeTest
             cardGameMaster.playerHandAudioSource = audioSource;
 
             // Expose a singleton instance via reflection
-            typeof(CardGameMaster)
-                .GetProperty("Instance", BindingFlags.Static | BindingFlags.NonPublic | BindingFlags.Public)
-                ?.SetValue(null, cardGameMaster);
+            CardGameMasterReflection.SetInstance(cardGameMaster);
 
             // Set up a fake parent for action cards
             _actionParentGo = new GameObject("ActionCardParent");
@@ -70,13 +64,6 @@ namespace _project.Scripts.PlayModeTest
             _fakePrefab = new GameObject("FakeCardPrefab");
             _fakePrefab.AddComponent<CardViewFake>();
             CardGameMaster.Instance.actionCardPrefab = _fakePrefab;
-
-            // Cache reflection field references for better performance
-            _actionDeckField =
-                typeof(DeckManager).GetField("_actionDeck", BindingFlags.NonPublic | BindingFlags.Instance);
-            _actionDiscardField =
-                typeof(DeckManager).GetField("_actionDiscardPile", BindingFlags.NonPublic | BindingFlags.Instance);
-            _sideDeckField = typeof(DeckManager).GetField("_sideDeck", BindingFlags.NonPublic | BindingFlags.Instance);
 
             // Allow Unity to run initial setup code silently
             LogAssert.ignoreFailingMessages = true;
@@ -97,37 +84,33 @@ namespace _project.Scripts.PlayModeTest
 
         private List<ICard> GetActionDeck()
         {
-            var deck = _actionDeckField.GetValue(_deckManager) as List<ICard>;
+            var deck = DeckManagerReflection.GetActionDeck(_deckManager);
             Assert.IsNotNull(deck, "Failed to retrieve _actionDeck via reflection");
             return deck;
         }
 
         private List<ICard> GetDiscardPile()
         {
-            var pile = _actionDiscardField.GetValue(_deckManager) as List<ICard>;
+            var pile = DeckManagerReflection.GetDiscardPile(_deckManager);
             Assert.IsNotNull(pile, "Failed to retrieve _actionDiscardPile via reflection");
             return pile;
         }
 
         private List<ICard> GetSideDeck()
         {
-            var sideDeck = _sideDeckField.GetValue(_deckManager) as List<ICard>;
+            var sideDeck = DeckManagerReflection.GetSideDeck(_deckManager);
             Assert.IsNotNull(sideDeck, "Failed to retrieve _sideDeck via reflection");
             return sideDeck;
         }
 
         private void InvokeAddCardToSideDeck(List<ICard> sourceDeck, ICard card)
         {
-            var method =
-                typeof(DeckManager).GetMethod("AddCardToSideDeck", BindingFlags.NonPublic | BindingFlags.Instance);
-            method?.Invoke(_deckManager, new object[] { sourceDeck, card });
+            DeckManagerReflection.InvokeAddCardToSideDeck(_deckManager, sourceDeck, card);
         }
 
         private void InvokeAddCardToActionDeck(List<ICard> sourceDeck, ICard card)
         {
-            var method =
-                typeof(DeckManager).GetMethod("AddCardToActionDeck", BindingFlags.NonPublic | BindingFlags.Instance);
-            method?.Invoke(_deckManager, new object[] { sourceDeck, card });
+            DeckManagerReflection.InvokeAddCardToActionDeck(_deckManager, sourceDeck, card);
         }
 
         #endregion
@@ -505,35 +488,6 @@ namespace _project.Scripts.PlayModeTest
             Assert.AreEqual(initialDeckSize + 1, actionDeck.Count, "Action deck should have one more card");
             Assert.IsTrue(actionDeck.Contains(pulledCard), "Pulled card should be in action deck and drawable");
             Assert.AreEqual(0, sideDeck.Count, "Sidedeck should be empty after pull");
-        }
-
-        #endregion
-
-        #region Fake Card Implementation
-
-        private class FakeCard : ICard
-        {
-            public FakeCard(string name)
-            {
-                Name = name;
-            }
-
-            public string Name { get; }
-            public GameObject Prefab => CardGameMaster.Instance?.actionCardPrefab;
-            public List<ISticker> Stickers { get; } = new();
-
-            public ICard Clone()
-            {
-                return new FakeCard(Name);
-            }
-        }
-
-        /// <summary>
-        ///     Minimal MonoBehaviour for testing card instantiation.
-        ///     Intentionally empty - only needs to exist as a component for Unity GameObject hierarchy.
-        /// </summary>
-        private class CardViewFake : MonoBehaviour
-        {
         }
 
         #endregion

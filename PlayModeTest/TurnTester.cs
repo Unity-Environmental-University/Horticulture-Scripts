@@ -1,4 +1,3 @@
-using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
@@ -9,7 +8,8 @@ using _project.Scripts.Card_Core;
 using _project.Scripts.Cinematics;
 using _project.Scripts.Classes;
 using _project.Scripts.Core;
-using _project.Scripts.Stickers;
+using _project.Scripts.PlayModeTest.Utilities.Mocks;
+using _project.Scripts.PlayModeTest.Utilities.Reflection;
 using NUnit.Framework;
 using TMPro;
 using UnityEngine;
@@ -42,9 +42,7 @@ namespace _project.Scripts.PlayModeTest
             if (assignClick3D)
                 holder.placedCardClick3D = cardGo.AddComponent<SafeClick3D>();
 
-            typeof(CardView)
-                .GetField("_originalCard", BindingFlags.NonPublic | BindingFlags.Instance)
-                ?.SetValue(view, card);
+            CardViewReflection.SetOriginalCard(view, card);
 
             holder.placedCardView = view;
             holder.placedCard = card;
@@ -113,9 +111,7 @@ namespace _project.Scripts.PlayModeTest
             cardGameMaster.potentialProfitText = potentialProfitText;
 
             // Use reflection to set the private static Instance property.
-            typeof(CardGameMaster)
-                .GetProperty("Instance", BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic)
-                ?.SetValue(null, cardGameMaster);
+            CardGameMasterReflection.SetInstance(cardGameMaster);
 
             // Allow Unity to run initial setup code silently.
             LogAssert.ignoreFailingMessages = true;
@@ -162,7 +158,7 @@ namespace _project.Scripts.PlayModeTest
             cardGo.transform.SetParent(cardHolderGo.transform);
             var cardView = cardGo.AddComponent<CardView>();
 
-            // Add a FakeClick3D to bypass Click3D.Start logic.
+            // Add a SafeClick3D to bypass Click3D.Start logic.
             var fakeClick = cardGo.AddComponent<SafeClick3D>();
             typeof(PlacedCardHolder)
                 .GetField("placedCardClick3D", BindingFlags.Instance | BindingFlags.Public)
@@ -170,9 +166,7 @@ namespace _project.Scripts.PlayModeTest
 
             // Use a FakeCard carrying our FakeTreatment.
             var fakeCard = new FakeCard("Healing Card", new FakeTreatment());
-            typeof(CardView)
-                .GetField("_originalCard", BindingFlags.NonPublic | BindingFlags.Instance)
-                ?.SetValue(cardView, fakeCard);
+            CardViewReflection.SetOriginalCard(cardView, fakeCard);
 
             cardHolder.placedCardView = cardView;
             cardHolder.placedCard = fakeCard;
@@ -571,9 +565,7 @@ namespace _project.Scripts.PlayModeTest
 
             // Set up the card with treatment
             var treatmentCard = new FakeCard("Healing Card", new FakeTreatment());
-            typeof(CardView)
-                .GetField("_originalCard", BindingFlags.NonPublic | BindingFlags.Instance)
-                ?.SetValue(handCardView, treatmentCard);
+            CardViewReflection.SetOriginalCard(handCardView, treatmentCard);
 
             // Set this as the selected card in the deck manager (simulates player selecting a card)
             _deckManager.SetSelectedCard(handClick3D, treatmentCard, false);
@@ -606,145 +598,6 @@ namespace _project.Scripts.PlayModeTest
             Assert.AreEqual(0, plant.CurrentAfflictions.Count,
                 "Treatment should have been applied and affliction removed. " +
                 "If this fails, the CardView destruction bug has returned.");
-        }
-
-        // Fake implementation for treatment.
-        private class FakeTreatment : PlantAfflictions.ITreatment
-        {
-            public string Name => "Panacea";
-            public string Description => "Cures all afflictions";
-            public int? InfectCureValue { get; set; } = 999;
-            public int? EggCureValue { get; set; } = 0;
-            public int? Efficacy { get; set; } = 100;
-
-            public void ApplyTreatment(PlantController plant)
-            {
-                var afflictions = plant.CurrentAfflictions != null
-                    ? new List<PlantAfflictions.IAffliction>(plant.CurrentAfflictions)
-                    : new List<PlantAfflictions.IAffliction>();
-
-                // Apply cure values before removing afflictions
-                foreach (var affliction in afflictions)
-                {
-                    var infectCure = InfectCureValue ?? 0;
-                    var eggCure = EggCureValue ?? 0;
-                    if (infectCure > 0 || eggCure > 0) plant.ReduceAfflictionValues(affliction, infectCure, eggCure);
-                }
-
-                // Remove all afflictions
-                foreach (var affliction in afflictions) plant.RemoveAffliction(affliction);
-            }
-        }
-
-        // Fake affliction for testing.
-        private class FakeAffliction : PlantAfflictions.IAffliction
-        {
-            private static readonly List<PlantAfflictions.ITreatment> Treatments = new()
-            {
-                new FakeTreatment()
-            };
-
-            public string Name => "Test Affliction";
-            public string Description => "Just a test";
-            public Color Color => Color.gray;
-            public Shader Shader => null;
-            public List<PlantAfflictions.ITreatment> AcceptableTreatments => Treatments;
-
-            public PlantAfflictions.IAffliction Clone()
-            {
-                return new FakeAffliction();
-            }
-
-            public bool CanBeTreatedBy(PlantAfflictions.ITreatment treatment)
-            {
-                return Treatments.Any(t => t.GetType() == treatment.GetType());
-            }
-
-            public bool TreatWith(PlantAfflictions.ITreatment treatment, PlantController plant)
-            {
-                if (!CanBeTreatedBy(treatment)) return false;
-                plant.RemoveAffliction(this);
-                return true;
-            }
-
-            public void TickDay(PlantController plant)
-            {
-            }
-        }
-
-        // Fake card that carries a treatment.
-        private class FakeCard : ICard
-        {
-            public FakeCard(string name, PlantAfflictions.ITreatment treatment)
-            {
-                Name = name;
-                Treatment = treatment;
-                Stickers = new List<ISticker>();
-            }
-
-            // ReSharper disable once UnusedMember.Local
-            public int? Value => 1; // Return a fake value
-
-            public string Name { get; }
-            public PlantAfflictions.ITreatment Treatment { get; }
-            public string Description => "Test card";
-            public Material Material => null; // CardView.Setup handles null materials
-            public List<ISticker> Stickers { get; }
-
-            public ICard Clone()
-            {
-                return new FakeCard(Name, Treatment);
-            }
-        }
-
-        // Fake MonoBehaviour to bypass Click3D
-        // Safe subclass of Click3D that disables Start logic.
-        private class SafeClick3D : Click3D
-        {
-            // ReSharper disable once Unity.RedundantEventFunction
-            private void Start()
-            {
-                /* No-op to prevent self-destruction check from running */
-            }
-        }
-
-        private class ThrowingTreatment : PlantAfflictions.ITreatment
-        {
-            public string Name => "Explosive";
-            public string Description => "Throws on apply";
-            public int? InfectCureValue { get; set; } = 0;
-            public int? EggCureValue { get; set; } = 0;
-            public int? Efficacy { get; set; } = 100;
-
-            public void ApplyTreatment(PlantController plant)
-            {
-                Debug.LogException(new Exception("Intentional test exception"));
-            }
-        }
-
-        private class SelfClearingTreatment : PlantAfflictions.ITreatment
-        {
-            public string Name => "SafeClear";
-            public string Description => "Removes all afflictions";
-            public int? InfectCureValue { get; set; } = 999;
-            public int? EggCureValue { get; set; } = 999;
-            public int? Efficacy { get; set; } = 100;
-
-            public void ApplyTreatment(PlantController plant)
-            {
-                var afflictionsCopy = new List<PlantAfflictions.IAffliction>(plant.CurrentAfflictions);
-
-                // Apply cure values before removing afflictions
-                foreach (var affliction in afflictionsCopy)
-                {
-                    var infectCure = InfectCureValue ?? 0;
-                    var eggCure = EggCureValue ?? 0;
-                    if (infectCure > 0 || eggCure > 0) plant.ReduceAfflictionValues(affliction, infectCure, eggCure);
-                }
-
-                // Remove all afflictions
-                foreach (var affliction in afflictionsCopy) plant.RemoveAffliction(affliction);
-            }
         }
     }
 }
