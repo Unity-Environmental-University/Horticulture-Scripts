@@ -65,7 +65,13 @@ namespace _project.Scripts.Card_Core
 
         private void LoadActionDeck()
         {
-            _deckManager ??= CardGameMaster.Instance.deckManager;
+            if (_deckManager == null)
+            {
+                Debug.LogError("DeckManager is null!");
+                return;
+            }
+            
+            _deckManager.AddDiscardToActionDeck();
             var availableActionCards = _deckManager.GetActionDeck().ToList();
 
             foreach (var card in availableActionCards)
@@ -81,7 +87,11 @@ namespace _project.Scripts.Card_Core
 
         private void LoadSideDeck()
         {
-            _deckManager ??= CardGameMaster.Instance.deckManager;
+            if (_deckManager == null)
+            {
+                Debug.LogError("DeckManager is null!");
+                return;
+            }
             var availableSideCards = _deckManager.GetSideDeck().ToList();
 
             foreach (var card in availableSideCards)

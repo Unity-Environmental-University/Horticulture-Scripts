@@ -45,6 +45,7 @@ namespace _project.Scripts.PlayModeTest
         // Reflection field caches
         private FieldInfo _actionDeckField;
         private FieldInfo _sideDeckField;
+        private FieldInfo _actionDiscardField;
 
         #endregion
 
@@ -129,6 +130,8 @@ namespace _project.Scripts.PlayModeTest
                 .GetField("_actionDeck", BindingFlags.NonPublic | BindingFlags.Instance);
             _sideDeckField = typeof(DeckManager)
                 .GetField("_sideDeck", BindingFlags.NonPublic | BindingFlags.Instance);
+            _actionDiscardField = typeof(DeckManager)
+                .GetField("_actionDiscardPile", BindingFlags.NonPublic | BindingFlags.Instance);
 
             // Suppress expected initialization warnings
             LogAssert.ignoreFailingMessages = true;
@@ -254,6 +257,13 @@ namespace _project.Scripts.PlayModeTest
         private List<ICard> GetSideDeck()
         {
             return _sideDeckField.GetValue(_deckManager) as List<ICard>;
+        }
+
+        private List<ICard> GetDiscardPile()
+        {
+            var pile = _actionDiscardField.GetValue(_deckManager) as List<ICard>;
+            Assert.IsNotNull(pile, "Failed to retrieve _actionDiscardPile via reflection");
+            return pile;
         }
 
         private void InvokeLoadActionDeck()
@@ -413,6 +423,33 @@ namespace _project.Scripts.PlayModeTest
             Assert.IsNotNull(deckCardObjects[0].ShopItem, "ShopItem should be set (Setup was called)");
             Assert.AreEqual("Card1", deckCardObjects[0].ShopItem.Card.Name, "ShopItem should have correct card");
             Assert.AreEqual("Card2", deckCardObjects[1].ShopItem.Card.Name, "Second ShopItem should have correct card");
+        }
+
+        [Test]
+        public void Test_LoadActionDeck_RecyclesDiscardPileIntoDeck()
+        {
+            // Arrange: Seed action deck and discard pile
+            var actionDeck = GetActionDeck();
+            actionDeck.Clear();
+            actionDeck.Add(CreateFakeCard("Action1"));
+
+            var discardPile = GetDiscardPile();
+            discardPile.Clear();
+            discardPile.Add(CreateFakeCard("Discard1"));
+            discardPile.Add(CreateFakeCard("Discard2"));
+
+            // Act: Load action deck (should merge discard into deck)
+            InvokeLoadActionDeck();
+
+            // Assert: All cards appear and discard pile is emptied
+            var deckCardObjects = _actionDeckParent.GetComponentsInChildren<DeckCardObject>(true);
+            Assert.AreEqual(3, deckCardObjects.Length, "Should include action deck and discard cards");
+
+            var cardNames = deckCardObjects.Select(dco => dco.ShopItem.Card.Name).ToList();
+            CollectionAssert.AreEquivalent(new[] { "Action1", "Discard1", "Discard2" }, cardNames,
+                "Deck should include cards recycled from discard pile");
+
+            Assert.AreEqual(0, GetDiscardPile().Count, "Discard pile should be emptied after recycling");
         }
 
         [Test]

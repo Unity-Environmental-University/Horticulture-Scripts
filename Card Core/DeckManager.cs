@@ -548,6 +548,15 @@ namespace _project.Scripts.Card_Core
                 _sideDeck.Add(card);
         }
 
+        public void AddDiscardToActionDeck()
+        {
+            foreach (var card in _actionDiscardPile.ToList())
+            {
+                _actionDeck.Add(card);
+                _actionDiscardPile.Remove(card);
+            }
+        }
+
         #endregion
 
         #region Sticker Drag & Drop
