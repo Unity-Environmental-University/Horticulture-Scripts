@@ -86,6 +86,8 @@ namespace _project.Scripts.GameState
     public class CardData
     {
         public string cardTypeName;
+        public string cardTypeFullName;
+        public string cardName;
         public List<StickerData> stickers;
         public int? value;
         public int? baseValue;

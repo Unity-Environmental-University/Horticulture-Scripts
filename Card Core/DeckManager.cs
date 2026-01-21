@@ -466,28 +466,29 @@ namespace _project.Scripts.Card_Core
         public void RestoreActionDeck(List<CardData> cards)
         {
             _actionDeck.Clear();
-            foreach (var card in cards)
-                // Reconstruct each card from serialized data
-                _actionDeck.Add(GameStateManager.DeserializeCard(card));
+            foreach (var restored in cards.Select(GameStateManager.DeserializeCard)
+                         .Where(restored => restored != null)) _actionDeck.Add(restored);
         }
 
         public void RestoreSideDeck(List<CardData> cards)
         {
             _sideDeck.Clear();
-            foreach (var card in cards)
-                _sideDeck.Add(GameStateManager.DeserializeCard(card));
+            foreach (var restored in cards.Select(GameStateManager.DeserializeCard)
+                         .Where(restored => restored != null)) _sideDeck.Add(restored);
         }
 
         public void RestoreDiscardPile(List<CardData> cards)
         {
             _actionDiscardPile.Clear();
-            foreach (var card in cards) _actionDiscardPile.Add(GameStateManager.DeserializeCard(card));
+            foreach (var restored in cards.Select(GameStateManager.DeserializeCard)
+                         .Where(restored => restored != null)) _actionDiscardPile.Add(restored);
         }
 
         public void RestoreActionHand(List<CardData> cards)
         {
             _actionHand.Clear();
-            foreach (var card in cards) _actionHand.Add(GameStateManager.DeserializeCard(card));
+            foreach (var restored in cards.Select(GameStateManager.DeserializeCard)
+                         .Where(restored => restored != null)) _actionHand.Add(restored);
         }
 
         public void RestorePlayerStickers(List<StickerData> stickers)
@@ -1054,6 +1055,7 @@ namespace _project.Scripts.Card_Core
             {
                 // Reconstruct card and prefab
                 var cardProto = GameStateManager.DeserializeCard(pd.plantCard);
+                if (cardProto == null) continue;
                 var prefab = GetPrefabForCard(cardProto);
                 if (!prefab) continue;
 

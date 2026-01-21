@@ -127,8 +127,6 @@ namespace _project.Scripts.Card_Core
 
             if (newSideDeck.Count > 0)
                 _deckManager.ApplySideDeckOverride(newSideDeck);
-            else
-                Debug.LogError("SideDeck is empty!");
         }
 
         #endregion

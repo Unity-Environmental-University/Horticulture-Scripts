@@ -5,6 +5,7 @@ using System.Linq;
 using _project.Scripts.Card_Core;
 using _project.Scripts.Classes;
 using _project.Scripts.Core;
+using _project.Scripts.ModLoading;
 using _project.Scripts.Stickers;
 using UnityEngine;
 using Object = UnityEngine.Object;
@@ -209,12 +210,20 @@ namespace _project.Scripts.GameState
             {
                 // Restore the retained card
                 var restoredCard = DeserializeCard(data.retainedCard.card);
-                retained.HeldCard = restoredCard;
-                retained.hasPaidForCard = data.retainedCard.hasPaidForCard;
-                retained.isCardLocked = data.retainedCard.isCardLocked;
+                if (restoredCard != null)
+                {
+                    retained.HeldCard = restoredCard;
+                    retained.hasPaidForCard = data.retainedCard.hasPaidForCard;
+                    retained.isCardLocked = data.retainedCard.isCardLocked;
 
-                // Create the visual representation of the retained card
-                retained.RestoreCardVisual();
+                    // Create the visual representation of the retained card
+                    retained.RestoreCardVisual();
+                }
+                else
+                {
+                    Debug.LogWarning("Retained card could not be restored; clearing retained slot.");
+                    retained.ClearHeldCard();
+                }
             }
             else
             {
@@ -242,6 +251,8 @@ namespace _project.Scripts.GameState
             return new CardData
             {
                 cardTypeName = card.GetType().Name,
+                cardTypeFullName = card.GetType().FullName,
+                cardName = card.Name,
                 value = card.Value,
                 baseValue = card is IPlantCard plantCard ? plantCard.BaseValue : null,
                 stickers = card.Stickers?.Select(SerializeSticker).ToList() ?? new List<StickerData>()
@@ -318,14 +329,26 @@ namespace _project.Scripts.GameState
         {
             try
             {
-                var typeName = data.cardTypeName;
-                var cardType = AppDomain.CurrentDomain.GetAssemblies()
-                    .SelectMany(a => a.GetTypes())
-                    .FirstOrDefault(t => t.Name == typeName && typeof(ICard).IsAssignableFrom(t));
+                if (data == null)
+                {
+                    Debug.LogWarning("Could not deserialize card: null data");
+                    return null;
+                }
+
+                var cardType = ResolveCardType(data.cardTypeFullName, data.cardTypeName, data.cardName);
                 if (cardType == null)
-                    throw new Exception($"Unknown card type: {typeName}");
+                {
+                    Debug.LogWarning(
+                        $"Unknown card type '{data.cardTypeName ?? "<null>"}' (full: '{data.cardTypeFullName ?? "<null>"}', name: '{data.cardName ?? "<null>"}')");
+                    return null;
+                }
+
                 if (Activator.CreateInstance(cardType) is not ICard clone)
-                    throw new Exception($"Could not create card instance for type: {typeName}");
+                {
+                    Debug.LogWarning($"Could not create card instance for type: {cardType.FullName}");
+                    return null;
+                }
+
                 if (data.value.HasValue)
                     clone.Value = data.value.Value;
 
@@ -342,8 +365,32 @@ namespace _project.Scripts.GameState
             }
             catch (Exception e)
             {
-                throw new Exception($"Could not deserialize card type {data.cardTypeName}", e);
+                Debug.LogError($"Could not deserialize card '{data?.cardTypeName ?? "<null>"}': {e.Message}");
+                return null;
             }
+        }
+
+        private static Type ResolveCardType(string fullName, string shortName, string cardName)
+        {
+            var assemblies = AppDomain.CurrentDomain.GetAssemblies();
+
+            if (!string.IsNullOrWhiteSpace(fullName))
+                foreach (var assembly in assemblies)
+                {
+                    var type = assembly.GetType(fullName, false);
+                    if (type != null && typeof(ICard).IsAssignableFrom(type))
+                        return type;
+                }
+
+            if (!string.IsNullOrWhiteSpace(shortName))
+                foreach (var type in assemblies.SelectMany(a => a.GetTypes()))
+                    if (type.Name == shortName && typeof(ICard).IsAssignableFrom(type))
+                        return type;
+
+            if (string.IsNullOrWhiteSpace(cardName)) return null;
+            return !string.Equals(shortName, nameof(RuntimeCard), StringComparison.OrdinalIgnoreCase)
+                ? null
+                : typeof(RuntimeCard);
         }
 
         public static ISticker DeserializeSticker(StickerData data)
