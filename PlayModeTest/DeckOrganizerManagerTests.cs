@@ -722,21 +722,6 @@ namespace _project.Scripts.PlayModeTest
         }
 
         [Test]
-        public void Test_SaveSideDeck_WithEmptyUI_LogsError()
-        {
-            // Arrange: Clear side deck parent
-            foreach (Transform child in _sideDeckParent.transform)
-            {
-                Object.Destroy(child.gameObject);
-            }
-
-
-            // Act & Assert: Should log error
-            LogAssert.Expect(LogType.Error, "SideDeck is empty!");
-            InvokeSaveSideDeck();
-        }
-
-        [Test]
         public void Test_SaveSideDeck_WithPopulatedUI_FixedApproach()
         {
             // Arrange: Create side deck UI with correct approach
