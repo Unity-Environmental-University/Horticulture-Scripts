@@ -506,6 +506,9 @@ namespace _project.Scripts.Card_Core
         private void ClearAllSelections()
         {
             _deckManager.ClearSelectedCard();
+
+            if (placedCard is ILocationCard)
+                _deckManager.DiscardActionCard(placedCard, false);
             var handCards = _deckManager.actionCardParent.GetComponentsInChildren<CardView>(true);
             foreach (var cardView in handCards)
             {
@@ -562,6 +565,9 @@ namespace _project.Scripts.Card_Core
         public void ClearLocationCardByExpiry()
         {
             if (placedCard is not ILocationCard) return;
+
+            if (_deckManager != null)
+                _deckManager.DiscardActionCard(placedCard, true);
 
             if (placedCardClick3D)
             {
