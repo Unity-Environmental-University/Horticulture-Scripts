@@ -138,4 +138,15 @@ namespace _project.Scripts.Analytics
         public int CurrentTurn { set => SetParameter("currentTurn", value); }
         public int CurrentScore { set => SetParameter("currentScore", value); }
     }
+
+    public class EfficacyDiscoveredEvent : Event
+    {
+        public EfficacyDiscoveredEvent() : base("efficacy_discovered") { }
+
+        public string TreatmentName { set => SetParameter("treatmentName", value); }
+        public string AfflictionName { set => SetParameter("afflictionName", value); }
+        public int CurrentRound { set => SetParameter("currentRound", value); }
+        public int CurrentTurn { set => SetParameter("currentTurn", value); }
+        public int Efficacy { set => SetParameter("efficacy", value); }
+    }
 }

@@ -117,5 +117,30 @@ namespace _project.Scripts.Analytics
 
             AnalyticsService.Instance.RecordEvent(ev);
         }
+
+        public static void RecordEfficacyDiscovery(string treatmentName, string afflictionName, int efficacy)
+        {
+            try
+            {
+                if (AnalyticsService.Instance == null) return;
+
+                var tc = Card_Core.CardGameMaster.Instance?.turnController;
+                var ev = new EfficacyDiscoveredEvent
+                {
+                    TreatmentName = treatmentName,
+                    AfflictionName = afflictionName,
+                    CurrentRound = tc?.currentRound ?? 0,
+                    CurrentTurn = tc?.currentTurn ?? 0,
+                    Efficacy = efficacy
+                };
+
+                AnalyticsService.Instance.RecordEvent(ev);
+            }
+            catch (System.Exception)
+            {
+                // Analytics service not initialized - silently fail in test environments
+                // This is expected behavior when Unity Services aren't initialized
+            }
+        }
     }
 }

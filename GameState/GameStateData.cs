@@ -11,6 +11,8 @@ namespace _project.Scripts.GameState
         public DeckData deckData;
         public List<PlantData> plants;
         public RetainedCardData retainedCard;
+        public List<string> discoveredEfficacies;
+        public bool discoveryModeEnabled;
     }
 
     [Serializable]

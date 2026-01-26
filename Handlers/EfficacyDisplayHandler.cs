@@ -134,9 +134,23 @@ namespace _project.Scripts.Handlers
                 return;
             }
 
-            var averageEfficacy = _efficacyHandler.GetAverageEfficacy(treatment, controller);
+            // Check if ANY affliction is undiscovered
+            var treatableAfflictions = controller.CurrentAfflictions
+                .Where(af => af.CanBeTreatedBy(treatment))
+                .ToList();
 
-            // Since we already verified activeCount > 1 in UpdateInfo, we can directly display
+            var anyUndiscovered = treatableAfflictions.Any(af =>
+                !_efficacyHandler.IsDiscovered(treatment.Name, af.Name));
+
+            if (anyUndiscovered)
+            {
+                efficacyText.text = "?";
+                efficacyText.color = Color.yellow;
+                return;
+            }
+
+            // All discovered - show average
+            var averageEfficacy = _efficacyHandler.GetAverageEfficacy(treatment, controller);
             var efficacyColor = averageEfficacy switch
             {
                 < 50 => Color.red,
@@ -234,13 +248,32 @@ namespace _project.Scripts.Handlers
             }
 
             var efficacy = handler.GetRelationalEfficacy(affliction, treatment, false);
-            var efficacyColor = efficacy switch{ < 50 => Color.red, < 75 => Color.yellow, _ => Color.green };
-            efficacyText.text = efficacy + "%";
-            efficacyText.color = efficacyColor;
 
-            if (overrideText == null) return;
-            efficacyText.text = overrideText;
-            efficacyText.color = overrideColor;
+            // Check discovery status - show "?" for undiscovered combinations
+            if (efficacy > 0 && !handler.IsDiscovered(treatment.Name, affliction.Name))
+            {
+                efficacyText.text = "?";
+                efficacyText.color = Color.yellow;
+            }
+            else
+            {
+                // Show actual percentage for discovered combinations
+                var efficacyColor = efficacy switch
+                {
+                    < 50 => Color.red,
+                    < 75 => Color.yellow,
+                    _ => Color.green
+                };
+                efficacyText.text = efficacy + "%";
+                efficacyText.color = efficacyColor;
+            }
+
+            // Apply override if provided (single location)
+            if (overrideText != null)
+            {
+                efficacyText.text = overrideText;
+                efficacyText.color = overrideColor;
+            }
         }
         
         public void Clear()

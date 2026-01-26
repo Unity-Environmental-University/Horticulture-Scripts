@@ -231,6 +231,68 @@ GROUP BY currentRound
 ORDER BY currentRound;
 ```
 
+### 5. Discovery Events
+
+#### EfficacyDiscoveredEvent
+Fired when a player discovers a treatment-affliction efficacy combination for the first time.
+
+**Parameters:**
+- `treatmentName`: Name of the treatment applied
+- `afflictionName`: Name of the affliction being treated
+- `currentRound`: Round number when discovery occurred
+- `currentTurn`: Turn number when discovery occurred
+- `efficacy`: The actual efficacy percentage revealed (0-100)
+
+**Usage:**
+```csharp
+AnalyticsFunctions.RecordEfficacyDiscovery(
+    treatmentName: "Permethrin Spray",
+    afflictionName: "Spider Mites",
+    efficacy: 85
+);
+```
+
+**Data Analysis Use Cases:**
+
+**Learning Progression:**
+- Track which combinations players discover first (reveals learning paths)
+- Measure discovery rate by round (engagement indicator)
+- Identify tutorial effectiveness by early-round discovery patterns
+
+**Difficulty Identification:**
+- Low discovery rate for specific afflictions indicates difficulty
+- Compare discovery order vs optimal treatment order
+- Track time-to-discovery for each combination
+
+**Player Engagement:**
+- High discovery rates indicate active experimentation
+- Discovery clustering suggests focused learning vs random trial
+- Correlate discoveries with round success rates
+
+**Example Queries:**
+
+```sql
+-- Most commonly discovered combinations (easy to learn)
+SELECT treatmentName, afflictionName, COUNT(*) as discovery_count
+FROM efficacy_discovered_events
+GROUP BY treatmentName, afflictionName
+ORDER BY discovery_count DESC
+LIMIT 10;
+
+-- Average round when combinations are discovered (difficulty curve)
+SELECT treatmentName, afflictionName, AVG(currentRound) as avg_discovery_round
+FROM efficacy_discovered_events
+GROUP BY treatmentName, afflictionName
+ORDER BY avg_discovery_round;
+
+-- Players who discover many combinations quickly (engaged learners)
+SELECT player_id, COUNT(DISTINCT CONCAT(treatmentName, '|', afflictionName)) as unique_discoveries
+FROM efficacy_discovered_events
+WHERE currentRound <= 3
+GROUP BY player_id
+HAVING unique_discoveries > 5;
+```
+
 ## Implementation Guidelines
 
 ### Adding Analytics Calls

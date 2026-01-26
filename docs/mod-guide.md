@@ -50,6 +50,24 @@ Create `.card.json` files to add custom cards to the game.
 - `prefabResource` - Unity Resources path for card prefab
 - `materialResource` - Unity Resources path for card material
 
+### Field Naming Constraints
+
+**Important**: Treatment and affliction names have special constraints for compatibility with the discovery system:
+
+⚠️ **Pipe Character (`|`)**: Do NOT use pipe characters in treatment or affliction names
+- The discovery system uses `|` as an internal delimiter
+- Using pipes will break discovery tracking
+- Examples:
+  - ❌ `"Spray|Treatment"` - Invalid
+  - ❌ `"Rust|Fungus"` - Invalid
+  - ✅ `"Spray Treatment"` - Valid
+  - ✅ `"Rust Fungus"` - Valid
+
+**Case Sensitivity**: Discovery tracking is case-sensitive
+- `"name"` field in JSON must exactly match runtime `Name` property
+- `"Soapy Water"` ≠ `"soapy water"` ≠ `"SOAPY WATER"`
+- Use consistent capitalization across all mod files
+
 ### Advanced: Bundle Assets
 For mods with custom 3D models/materials:
 - `bundleKey` - Name of AssetBundle (without .bundle extension)

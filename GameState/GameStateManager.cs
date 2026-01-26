@@ -59,6 +59,11 @@ namespace _project.Scripts.GameState
             // Plant Data
             data.plants = SerializePlants(dm);
 
+            // Discovery Data
+            var efficacyHandler = CardGameMaster.Instance.treatmentEfficacyHandler;
+            data.discoveredEfficacies = efficacyHandler?.GetDiscoveredCombinationsForSave();
+            data.discoveryModeEnabled = efficacyHandler?.DiscoveryModeEnabled ?? true;
+
             // Retained Card
             var retained = Object.FindFirstObjectByType<RetainedCardHolder>();
             if (retained && retained.HeldCard != null)
@@ -198,6 +203,20 @@ namespace _project.Scripts.GameState
             // Restore Sticker Inventory
             if (data.deckData!.playerStickers != null)
                 dm.RestorePlayerStickers(data.deckData.playerStickers);
+
+            // Restore Discovery Data
+            var efficacyHandler = CardGameMaster.Instance.treatmentEfficacyHandler;
+            if (efficacyHandler != null)
+            {
+                // Restore discovery mode toggle (defaults to true for old saves)
+                efficacyHandler.DiscoveryModeEnabled = data.discoveryModeEnabled;
+
+                // Restore discovered combinations
+                if (data.discoveredEfficacies != null)
+                    efficacyHandler.RestoreDiscoveredCombinations(data.discoveredEfficacies);
+                else
+                    Debug.Log("No discovered efficacies in save file (backward compatibility)");
+            }
 
             // Suppress any plant effects during restore and clear the queue when done
             SuppressQueuedEffects = true;

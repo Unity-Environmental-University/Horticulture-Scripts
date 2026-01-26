@@ -64,6 +64,9 @@ namespace _project.Scripts.Handlers
     {
         private const int DefaultEfficacy = 100;
         [SerializeField] private List<RelationalEfficacy> relationalEfficacies = new();
+        private HashSet<string> discoveredCombinations = new();
+
+        [SerializeField] private bool discoveryModeEnabled = true;
 
         public int GetRelationalEfficacy(
             PlantAfflictions.IAffliction affliction,
@@ -90,6 +93,7 @@ namespace _project.Scripts.Handlers
                 existing.treatment = treatment;
                 existing.SetNames(affliction, treatment);
                 if (!countInteraction) return Mathf.Clamp(existing.efficacy, 0, 100);
+                MarkAsDiscovered(treatmentName, afflictionName, existing.efficacy);
                 existing.interactionCount++;
                 existing.TouchEfficacy();
                 return Mathf.Clamp(existing.efficacy, 0, 100);
@@ -110,6 +114,7 @@ namespace _project.Scripts.Handlers
             };
 
             rel.SetNames(affliction, treatment);
+            MarkAsDiscovered(treatmentName, afflictionName, baseEfficacy);
             relationalEfficacies.Add(rel);
             return rel.efficacy;
         }
@@ -146,5 +151,71 @@ namespace _project.Scripts.Handlers
 
             return (int)efficacies.Average();
         }
+
+        /// <summary>
+        /// Creates a unique discovery key for a treatment-affliction combination.
+        /// Uses pipe delimiter (|) which should not appear in treatment or affliction names.
+        /// </summary>
+        /// <remarks>
+        /// Format: "TreatmentName|AfflictionName"
+        /// Example: "Permethrin Spray|Spider Mites"
+        /// </remarks>
+        private string MakeDiscoveryKey(string treatmentName, string afflictionName)
+            => $"{treatmentName}|{afflictionName}";
+
+        public bool IsDiscovered(string treatmentName, string afflictionName)
+        {
+            // If discovery mode is disabled, all combinations are considered "discovered"
+            if (!discoveryModeEnabled) return true;
+
+            var key = MakeDiscoveryKey(treatmentName, afflictionName);
+            return discoveredCombinations.Contains(key);
+        }
+
+        private void MarkAsDiscovered(string treatmentName, string afflictionName, int efficacy)
+        {
+            var key = MakeDiscoveryKey(treatmentName, afflictionName);
+            if (discoveredCombinations.Add(key))
+            {
+                // Fire analytics event only on first discovery
+                Analytics.AnalyticsFunctions.RecordEfficacyDiscovery(treatmentName, afflictionName, efficacy);
+            }
+        }
+
+        public List<string> GetDiscoveredCombinationsForSave()
+            => discoveredCombinations.ToList();
+
+        public void RestoreDiscoveredCombinations(List<string> saved)
+        {
+            discoveredCombinations.Clear();
+            if (saved != null)
+                foreach (var key in saved)
+                    discoveredCombinations.Add(key);
+        }
+
+        /// <summary>
+        /// Gets or sets whether discovery mode is enabled.
+        /// When disabled, all treatment efficacy percentages are visible immediately.
+        /// </summary>
+        public bool DiscoveryModeEnabled
+        {
+            get => discoveryModeEnabled;
+            set => discoveryModeEnabled = value;
+        }
+
+        /// <summary>
+        /// Clears all discovered treatment-affliction combinations.
+        /// Useful for players who want to restart their learning progress.
+        /// </summary>
+        public void ClearAllDiscoveries()
+        {
+            discoveredCombinations.Clear();
+            Debug.Log("[TreatmentEfficacyHandler] All discoveries cleared. Player will need to rediscover all combinations.");
+        }
+
+        /// <summary>
+        /// Returns the total number of unique treatment-affliction combinations discovered.
+        /// </summary>
+        public int GetDiscoveryCount() => discoveredCombinations.Count;
     }
 }
