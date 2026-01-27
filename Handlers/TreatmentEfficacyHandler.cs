@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using _project.Scripts.Classes;
 using _project.Scripts.Core;
+using _project.Scripts.Data;
 using UnityEngine;
 using Random = UnityEngine.Random;
 
@@ -63,8 +64,16 @@ namespace _project.Scripts.Handlers
     public class TreatmentEfficacyHandler : MonoBehaviour
     {
         private const int DefaultEfficacy = 100;
+        private readonly HashSet<string> discoveredCombinations = new();
         [SerializeField] private List<RelationalEfficacy> relationalEfficacies = new();
+        [SerializeField] private bool discoveryModeEnabled = true;
 
+        private void Awake()
+        {
+            discoveryModeEnabled =
+                PlayerPrefs.GetInt(UserQualitySettings.DiscoveryModePrefKey, discoveryModeEnabled ? 1 : 0) == 1;
+        }
+        
         public int GetRelationalEfficacy(
             PlantAfflictions.IAffliction affliction,
             PlantAfflictions.ITreatment treatment,
@@ -90,6 +99,7 @@ namespace _project.Scripts.Handlers
                 existing.treatment = treatment;
                 existing.SetNames(affliction, treatment);
                 if (!countInteraction) return Mathf.Clamp(existing.efficacy, 0, 100);
+                MarkAsDiscovered(treatmentName, afflictionName, existing.efficacy);
                 existing.interactionCount++;
                 existing.TouchEfficacy();
                 return Mathf.Clamp(existing.efficacy, 0, 100);
@@ -110,6 +120,7 @@ namespace _project.Scripts.Handlers
             };
 
             rel.SetNames(affliction, treatment);
+            MarkAsDiscovered(treatmentName, afflictionName, baseEfficacy);
             relationalEfficacies.Add(rel);
             return rel.efficacy;
         }
@@ -145,6 +156,48 @@ namespace _project.Scripts.Handlers
                 .ToList();
 
             return (int)efficacies.Average();
+        }
+        
+        private static string MakeDiscoveryKey(string treatmentName, string afflictionName)
+        {
+            return $"{treatmentName}|{afflictionName}";
+        }
+        
+        private void MarkAsDiscovered(string treatmentName, string afflictionName, int existingEfficacy)
+        {
+            var key = MakeDiscoveryKey(treatmentName, afflictionName);
+            if (discoveredCombinations.Add(key))
+            {
+                // Record Treatment Discovery event
+                //Analytics.AnalyticsFunctions.RecordEfficacyDiscovery(treatmentName, afflictionName, efficacy);
+            }
+        }
+
+        public bool IsDiscovered(string treatmentName, string afflictionName)
+        {
+            if (!discoveryModeEnabled) return true;
+            
+            var key = MakeDiscoveryKey(treatmentName, afflictionName);
+            return discoveredCombinations.Contains(key);
+        }
+
+        /// <summary>
+        ///     Gets or Sets whether Discovery Mode is enabled
+        /// </summary>
+        public bool DiscoveryModeEnabled
+        {
+            get => discoveryModeEnabled;
+            set => discoveryModeEnabled = value;
+        }
+
+        /// <summary>
+        ///     Clears all discovered combinations, resetting the player's progress in discovery mode.
+        /// </summary>
+        public void ClearDiscoveredCombinations()
+        {
+            discoveredCombinations.Clear();
+            Debug.Log(
+                "[TreatmentEfficacyHandler] All discoveries cleared. Player will need to rediscover all combinations.");
         }
     }
 }
