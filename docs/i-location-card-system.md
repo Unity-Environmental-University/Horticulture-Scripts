@@ -18,7 +18,7 @@
 The ILocationCard system provides persistent location-based effects for plant spots in the Horticulture game. Unlike regular action cards, location cards remain active across multiple turns, automatically applying their effects to plants placed at specific locations. The system features robust error handling, performance optimization through caching, and seamless integration with the existing card game architecture.
 
 **Key Features:**
-- Pure turn-based effect processing
+- Immediate placement effects plus turn-based processing
 - Automatic effect expiration and cleanup
 - Plant cache optimization with dirty flags  
 - Comprehensive error handling and recovery
@@ -51,7 +51,7 @@ The ILocationCard system consists of three main components working together:
 2. **Effect Activation**: `SpotDataHolder.OnLocationCardPlaced()` called
 3. **Turn Processing**: `TurnController` calls `SpotDataHolder.ProcessTurn()`
 4. **Effect Application**: Location card effects applied to associated plant
-5. **Expiry Handling**: Automatic cleanup when effect duration expires
+5. **Expiry Handling**: `ProcessTurn()` marks expiry, `FinalizeLocationCardTurn()` performs cleanup
 
 ## Core Components
 
@@ -153,7 +153,10 @@ The `PlacedCardHolder` class has been enhanced to support location cards with sp
 
 **Location Card Restrictions:**
 - Location cards cannot be manually clicked/removed (line 69: `if (placedCard is ILocationCard) return;`)
-- Only expire through automatic cleanup via `ClearLocationCardByExpiry()`
+- Expire via `ProcessTurn()` + `FinalizeLocationCardTurn()` and clear through `ClearLocationCardByExpiry()`
+- Early removal can occur through `SpotDataHolder.OnLocationCardRemoved()` (e.g., specific treatments)
+- Placed location cards are removed from the player's hand immediately and only return to the discard pile after expiry
+- Field spells that also implement `ILocationCard` follow the same lifecycle and expiry rules
 - Integration with card holder type restrictions
 
 **Key Integration Points:**
@@ -180,62 +183,9 @@ private void NotifySpotDataHolderRemoval()
 
 ## API Reference
 
-### FertilizerBasic Example Implementation
+### UreaBasic Example Implementation
 
-```csharp
-/// <summary>
-/// Example location card that increases plant value by 1 each turn for 3 turns.
-/// Demonstrates the basic structure for implementing ILocationCard.
-/// </summary>
-public class FertilizerBasic : ILocationCard
-{
-    public string Name => "FertilizerBasic";
-    public string Description => "Does FertilizerBasic Things";
-    
-    private int _value = -1;
-    public int? Value
-    {
-        get => _value;
-        set => _value = value ?? 0;
-    }
-
-    // Location Card Properties
-    public int EffectDuration => IsPermanent ? 999 : 3;
-    public bool IsPermanent => false;
-    public GameObject Prefab => CardGameMaster.Instance.locationCardPrefab;
-    public Material Material => Resources.Load<Material>("Materials/Cards/NeemOil");
-    public LocationEffectType EffectType => null;
-
-    // Card Implementation
-    public List<ISticker> Stickers { get; } = new();
-    public ICard Clone()
-    {
-        var clone = new FertilizerBasic { Value = this.Value };
-        foreach (var sticker in Stickers) clone.Stickers.Add(sticker.Clone());
-        return clone;
-    }
-
-    // Location Card Effects
-    public void ApplyLocationEffect(PlantController plant) 
-    { 
-        // One-time setup when card is placed
-    }
-
-    public void RemoveLocationEffect(PlantController plant) 
-    { 
-        // Cleanup when card is removed
-    }
-
-    public void ApplyTurnEffect(PlantController plant)
-    {
-        // Main effect - called each turn
-        if (plant?.PlantCard?.Value == null) return;
-        
-        plant.PlantCard.Value += 1;
-        plant.UpdatePriceFlag(plant.PlantCard.Value ?? 0);
-    }
-}
-```
+For the production implementation, see `UreaBasic` in `Assets/_project/Scripts/Classes/CardClasses.cs`. It demonstrates a non-trivial location card with diminishing returns, duration tracking, and save/load-safe application counts.
 
 ### CardHolderType Enumeration
 
@@ -274,7 +224,7 @@ public class MyLocationCard : ILocationCard
     }
     
     public List<ISticker> Stickers { get; } = new();
-    public GameObject Prefab => CardGameMaster.Instance.locationCardPrefab;
+    public GameObject Prefab => CardGameMaster.Instance.actionCardPrefab;
     public Material Material => Resources.Load<Material>("Materials/Cards/MyCard");
     
     // Location Card specific properties
@@ -343,23 +293,11 @@ cardHolder.SetCardHolderType(CardHolderType.Any); // Both types allowed
 
 #### Turn Controller Integration
 
-The system automatically integrates with `TurnController`. Location effects are processed during turn advancement:
-
-```csharp
-// TurnController calls this automatically
-public void ProcessLocationEffects()
-{
-    var spotDataHolders = FindObjectsOfType<SpotDataHolder>();
-    foreach (var holder in spotDataHolders)
-    {
-        holder.ProcessTurn();
-    }
-}
-```
+`TurnController.EndTurn()` iterates all `SpotDataHolder` instances and calls `ProcessTurn()` to apply location effects during turn advancement.
 
 #### Save/Load System Integration
 
-Location card state is preserved automatically through the game's existing save system. The `SpotDataHolder` maintains all necessary state information.
+Location effects that rely on `PlantController.uLocationCards` persist across save/load (e.g., Urea application counts). Placed location cards themselves are not serialized yet.
 
 ## Performance Considerations
 

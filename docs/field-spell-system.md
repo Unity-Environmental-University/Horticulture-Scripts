@@ -1,7 +1,7 @@
 # Field Spell System Documentation
 
-**Status**: Interface Defined, Implementation In Progress
-**Last Updated**: 2024-12-18
+**Status**: Placement Implemented (hand removal + multi-plant placement)
+**Last Updated**: 2026-01-28
 **Related Systems**: Card Core, PlantHolder, Treatment System
 
 ---
@@ -12,8 +12,8 @@ The Field Spell system introduces a new card type that can affect multiple plant
 
 **Key Features**:
 - Multi-plant treatment application
-- Ghost preview system for affected targets
-- Persistent effects that remain until conditions are met
+- Ghost preview system for affected targets (planned)
+- Persistent effects that remain until conditions are met (via ILocationCard)
 - Integration with PlantHolder for efficient plant iteration
 
 ---
@@ -41,6 +41,8 @@ public interface IFieldSpell : ICard
 - `true`: Single card placement triggers treatment application on all plants
 - `false`: Card must be placed on each plant location individually
 
+**Current Status**: This flag is not used in runtime logic yet. Field spells always multi-place to all valid plant locations.
+
 **Use Cases**:
 - Beneficial insects that spread naturally (e.g., Lady Bugs)
 - Environmental effects affecting entire greenhouse
@@ -59,6 +61,8 @@ public interface IFieldSpell : ICard
 - Visual indication of which plants will be affected
 - Tutorial/educational purposes
 
+**Current Status**: Ghost previews are not implemented for field spells yet.
+
 #### TillDeath
 **Type**: `bool`
 **Purpose**: Determines whether the field spell persists on the board until specific conditions are met.
@@ -72,14 +76,16 @@ public interface IFieldSpell : ICard
 - Persistent environmental buffs
 - Long-term integrated pest management strategies
 
+**Current Status**: Persistence is controlled by `ILocationCard.EffectDuration`/`IsPermanent`. `TillDeath` is not used in runtime logic yet.
+
 ---
 
-## Example Implementation: LadyBugs
+## Example Implementation: LadyBugsCard
 
 **Location**: `Assets/_project/Scripts/Classes/CardClasses.cs` (lines 1058-1088)
 
 ```csharp
-public class LadyBugs : IFieldSpell
+public class LadyBugsCard : IFieldSpell, ILocationCard
 {
     public string Description => "Lady Bugs be lady bugs bro...";
     public PlantAfflictions.ITreatment Treatment => new PlantAfflictions.LadyBugs();
@@ -89,24 +95,28 @@ public class LadyBugs : IFieldSpell
     public bool ShowsGhosts { get; set; } = true;
     public bool TillDeath { get; set; } = true;
 
+    // Location Card Properties (expiry handled via ILocationCard)
+    public int EffectDuration => IsPermanent ? 999 : 4;
+    public bool IsPermanent => false;
+    public LocationEffectType EffectType => null;
+
     public string Name => "Lady Bugs";
     private int _value = -15;
 
-    public int Value
+    public int? Value
     {
         get => _value;
-        set => _value = value;
+        set => _value = value ?? 0;
     }
 
-    public ICard Clone() => new LadyBugs { Value = _value };
-    public string Selected() => "Selected Lady Bugs";
+    public ICard Clone() => new LadyBugsCard { Value = _value };
     public void ModifyValue(int amount) => _value += amount;
 }
 ```
 
 ### LadyBugs Treatment
 
-**Location**: `Assets/_project/Scripts/Classes/PlantAfflictions.cs` (lines 774-800)
+**Location**: `Assets/_project/Scripts/Classes/PlantAfflictions.cs` (LadyBugs treatment)
 
 ```csharp
 public class LadyBugs : ITreatment
@@ -114,10 +124,9 @@ public class LadyBugs : ITreatment
     public string Name => "LadyBugs";
     public string Description => "Lady Bugs affect all plants and are a beneficial insect";
 
-    // High cure values (999 = MaxCureAmount)
-    public int InfectCureValue => 999;  // Cures all pest infections
-    public int EggCureValue => 999;     // Cures all eggs
-    public int Efficacy => 100;         // Always succeeds
+    public int InfectCureValue => 2;
+    public int EggCureValue => 1;
+    public int Efficacy => DefaultEfficacy;
     public int BeeValue => 5;           // Beneficial pollinator
 
     // ... other treatment properties
@@ -128,8 +137,11 @@ public class LadyBugs : ITreatment
 - Lady bugs are beneficial insects that control pest populations
 - Affect all plants simultaneously (natural spread behavior)
 - High cure values eliminate pest problems completely
-- Persistent effect (remains until job is done)
+- Persistent effect uses `ILocationCard.EffectDuration` (expires after 4 turns by default)
 - Shows ghost previews for educational feedback
+
+**Early Removal Behavior**:
+- Applying Permethrin or Imidacloprid removes the LadyBugs location card and treatment early.
 
 ---
 
@@ -139,19 +151,24 @@ public class LadyBugs : ITreatment
 
 The Field Spell system leverages the PlantHolder architecture for efficient iteration over all plant locations and their associated card holders.
 
-**Location**: `Assets/_project/Scripts/Card Core/PlacedCardHolder.cs` (lines 618-629)
+**Location**: `Assets/_project/Scripts/Card Core/PlacedCardHolder.cs` (PlaceFieldSpell)
 
 ```csharp
-if (selectedCard is IFieldSpell)
+if (selectedCard is IFieldSpell fieldSpell)
 {
-    // TODO: Implement field spell logic - can now iterate card holders via plantHolder.CardHolders
+    // Find first empty, compatible holder per plant location
     foreach (var plantHolder in _deckManager.plantLocations)
     {
-        if (!plantHolder) continue;
-        foreach (var holder in plantHolder.CardHolders)
-        {
-            // Field spell effect placeholder
-        }
+        var emptyHolder = plantHolder.CardHolders
+            ?.FirstOrDefault(holder => holder is not null && !holder.HoldingCard && holder.CanAcceptCard(fieldSpell));
+        if (emptyHolder != null)
+            targetHolders.Add(emptyHolder);
+    }
+
+    // Clone the selected card into each target holder
+    foreach (var targetHolder in targetHolders)
+    {
+        // Instantiate clone, configure transforms, and assign placedCard
     }
 }
 ```
@@ -189,11 +206,11 @@ ITreatment treatment = fieldSpell.Treatment;
 - [x] Example card implementation (LadyBugs)
 - [x] Treatment integration (PlantAfflictions.LadyBugs)
 - [x] PlantHolder system support for efficient iteration
+- [x] Placement logic in `PlacedCardHolder.PlaceFieldSpell()`
 
 ### ⚠️ In Progress
-- [ ] Placement logic in `PlacedCardHolder.TakeSelectedCard()` (line 618-629)
-- [ ] Ghost preview system integration
-- [ ] Multi-plant treatment application logic
+- [ ] Ghost preview system integration for field spells
+- [ ] Multi-plant treatment application logic beyond placement
 
 ### 🔮 Future Development
 - [ ] Persistent effect tracking in TurnController
@@ -225,15 +242,15 @@ public class MyFieldSpell : IFieldSpell
     public bool TillDeath { get; set; } = false;         // One-time application
 
     private int _value = -10;
-    public int Value
+    public int? Value
     {
         get => _value;
-        set => _value = value;
+        set => _value = value ?? 0;
     }
 
     // Required ICard methods
     public ICard Clone() => new MyFieldSpell { Value = _value };
-    public string Selected() => $"Selected {Name}";
+    public void Selected() { }
     public void ModifyValue(int amount) => _value += amount;
 }
 ```
@@ -310,6 +327,7 @@ Field spells address gameplay needs that traditional single-target cards cannot:
 - Persistent field spells need tracking in game state
 - Save/load system requires field spell serialization
 - Ghost previews should be destroyed when no longer needed
+- Field spell placements reuse a single card instance across holders; implementations should avoid per-location mutable state
 
 ### Platform Compatibility
 - Ghost previews should respect hover system platform limitations
@@ -327,8 +345,8 @@ Field spells address gameplay needs that traditional single-target cards cannot:
 
 ### DeckManager
 - `plantLocations` provides iteration structure
-- No special handling needed for field spell cards in deck
-- Existing card placement flow needs extension for field spell logic
+- Field spells are removed from the hand on placement
+- Cards return to discard only when they also implement `ILocationCard`
 
 ### TurnController
 - May need to track persistent field spells

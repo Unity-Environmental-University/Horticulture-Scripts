@@ -193,6 +193,11 @@ Manages card placement locations on plants, including card acceptance logic and 
 - Treatment efficacy display integration
 - Plant death handling
 
+**Location/Field Spell Behavior**:
+- Location cards leave the action hand on placement and are not manually retrievable
+- Field spells follow the same placement restrictions as location cards
+- Field spells only expire/return to discard when they also implement `ILocationCard`
+
 **Key Properties**:
 ```csharp
 public bool HoldingCard { get; }        // Whether holder has a card
@@ -204,6 +209,7 @@ public int PlacementTurn { get; }       // Turn when card was placed
 - **enableHoverPreview**: Toggle ghost preview on/off (default: true)
 - **previewAlpha**: Transparency of preview (default: 0.35, range 0-1)
 - Automatically shows preview when:
+  - Holder is hovered (mouse enter)
   - Holder is empty
   - Player has a card selected
   - Card is compatible with holder type
@@ -482,11 +488,7 @@ public void OnCardHolderClicked()
     {
         cardHolder.TakeSelectedCard();
     }
-    // Pick up card if holder has one
-    else if (cardHolder.HoldingCard)
-    {
-        cardHolder.OnPlacedCardClicked();
-    }
+    // Picking up placed cards is handled by the holder's internal click flow
 }
 ```
 
@@ -690,7 +692,7 @@ public class CardGameMaster : MonoBehaviour
 
 **Required Transforms**:
 - `actionCardParent`: Parent transform for action cards in hand
-- `plantLocations`: List of transforms where plants can be placed
+- `plantLocations`: List of `PlantHolder` instances where plants can be placed
 - `stickerPackParent`: Parent for sticker visuals
 
 **Configuration Values**:

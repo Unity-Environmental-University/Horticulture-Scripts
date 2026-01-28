@@ -237,6 +237,7 @@ namespace _project.Scripts.Card_Core
         private readonly CardHand _afflictionHand = new("Afflictions Hand", AfflictionsDeck, PrototypeAfflictionsDeck);
         private readonly CardHand _plantHand = new("Plants Hand", PlantDeck, PrototypePlantsDeck);
         private readonly List<ICard> _actionHand = new();
+        private readonly Dictionary<ICard, int> _activeLocationCardPlacements = new();
         private bool _usingTutorialActionDeck;
 
         public List<PlantHolder> plantLocations = new();
@@ -1470,6 +1471,13 @@ namespace _project.Scripts.Card_Core
                 return;
             }
 
+            if (_actionDiscardPile.Contains(card))
+            {
+                if (debug)
+                    Debug.LogWarning($"[DeckManager] Attempted to discard card '{card?.Name}', but it is already in the discard pile.");
+                return;
+            }
+
             _actionDiscardPile.Add(card);
         }
 
@@ -1510,6 +1518,37 @@ namespace _project.Scripts.Card_Core
         public void AddCardToHand(ICard card)
         {
             _actionHand.Add(card);
+        }
+
+        internal void RemoveCardFromHandOnly(ICard card)
+        {
+            if (card == null) return;
+            _actionHand.Remove(card);
+        }
+
+        internal void RegisterLocationCardPlacement(ICard card)
+        {
+            if (card == null) return;
+            if (_activeLocationCardPlacements.TryGetValue(card, out var count))
+                _activeLocationCardPlacements[card] = count + 1;
+            else
+                _activeLocationCardPlacements[card] = 1;
+        }
+
+        internal void UnregisterLocationCardPlacement(ICard card)
+        {
+            if (card == null) return;
+            if (!_activeLocationCardPlacements.TryGetValue(card, out var count)) return;
+
+            count--;
+            if (count > 0)
+            {
+                _activeLocationCardPlacements[card] = count;
+                return;
+            }
+
+            _activeLocationCardPlacements.Remove(card);
+            DiscardActionCard(card, true);
         }
 
         /// <summary>
