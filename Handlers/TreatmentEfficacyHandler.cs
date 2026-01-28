@@ -106,7 +106,12 @@ namespace _project.Scripts.Handlers
             }
 
             // Return Early if incompatible
-            if (!affliction.CanBeTreatedBy(treatment)) return 0;
+            if (!affliction.CanBeTreatedBy(treatment))
+            {
+                if (countInteraction)
+                    MarkAsDiscovered(treatmentName, afflictionName, 0);
+                return 0;
+            }
 
             var baseEfficacy = Mathf.Clamp(treatment.Efficacy ?? DefaultEfficacy, 0, 100);
             if (!countInteraction) return baseEfficacy;

@@ -89,6 +89,11 @@ namespace _project.Scripts.Classes
 
                 foreach (var item in afflictions)
                 {
+                    // For incompatible treatments, TreatWith exits before reaching
+                    // GetRelationalEfficacy. Record the attempt for Discovery Mode.
+                    if (!item.CanBeTreatedBy(this))
+                        CardGameMaster.Instance?.treatmentEfficacyHandler?.GetRelationalEfficacy(item, this);
+
                     var success = item.TreatWith(this, plant);
                     AnalyticsFunctions.RecordTreatment(plant.name, item.Name, Name, success);
 

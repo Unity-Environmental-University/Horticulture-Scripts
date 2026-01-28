@@ -4,7 +4,7 @@ using UnityEngine;
 namespace _project.Scripts.UI
 {
     /// <summary>
-    ///     Reason codes for forcing UIInput state, bypassing ownership model
+    ///     Reason codes for forcing UIInput state, bypassing the ownership model
     /// </summary>
     public enum ForcedStateReason
     {
@@ -83,7 +83,7 @@ namespace _project.Scripts.UI
         }
 
         /// <summary>
-        ///     Request to disable UIInput. Only succeeds if caller is the current owner or no owner is set.
+        ///     Request to disable UIInput. Only succeeds if the caller is the current owner or no owner is set.
         /// </summary>
         /// <param name="owner">The requesting system identifier</param>
         public static void RequestDisable(string owner)
@@ -97,7 +97,7 @@ namespace _project.Scripts.UI
                     return;
                 }
 
-                // Only allow to disable if this system is the current owner or if no owner is set
+                // Only allow disabling if this system is the current owner or if no owner is set
                 if (_currentOwner == owner || string.IsNullOrEmpty(_currentOwner))
                 {
                     CardGameMaster.Instance.uiInputModule.enabled = false;
