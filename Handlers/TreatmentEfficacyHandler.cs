@@ -247,16 +247,23 @@ namespace _project.Scripts.Handlers
             set => discoveryModeEnabled = value;
         }
 
-        /// <summary>
-        ///     Clears all discovered combinations, resetting the player's progress in discovery mode.
-        /// </summary>
         public void ClearDiscoveredCombinations()
         {
             discoveredCombinations.Clear();
-            // rm discoveryDataFile
-            if (DiscoveryDataExists()) File.Delete($"{Application.persistentDataPath}/discoveryData.json");
-            Debug.Log(
-                "[TreatmentEfficacyHandler] All discoveries cleared. Player will need to rediscover all combinations.");
+            ClearDiscoveryFile();
+        }
+
+        public static void ClearDiscoveryFile()
+        {
+            if (DiscoveryDataExists())
+            {
+                File.Delete($"{Application.persistentDataPath}/discoveryData.json");
+                Debug.Log("[TreatmentEfficacyHandler] Discovery file deleted. All discoveries cleared.");
+            }
+            else
+            {
+                Debug.Log("[TreatmentEfficacyHandler] No discovery file to clear.");
+            }
         }
     }
 }

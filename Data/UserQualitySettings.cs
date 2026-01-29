@@ -44,11 +44,11 @@ namespace _project.Scripts.Data
             _mediumQualityRadioButton = _qualityRadioButtonGroup.Q<RadioButton>("MediumQualityRadioButton");
             _highQualityRadioButton = _qualityRadioButtonGroup.Q<RadioButton>("HighQualityRadioButton");
             _doneButton = _rootElement.Q<Button>("DoneButton");
+            _clearDiscoveriesButton = _rootElement.Q<Button>("ClearDiscoveriesButton");
             _volumeSlider = _rootElement.Q<Slider>("VolumeSlider");
             _resolutionDropdown = _rootElement.Q<DropdownField>("ResolutionDropDown");
             _displayModeDropdown = _rootElement.Q<DropdownField>("DisplayModeDropDown");
             _discoveryModeDropdown = _rootElement.Q<DropdownField>("DiscoveryModeDropDown");
-            _clearDiscoveriesButton = _rootElement.Q<Button>("ClearDiscoveriesButton");
 
             // Register a callback for the done button to set the quality and hide the settings document
             _doneButton.clicked += OnDoneButtonClicked;
@@ -57,6 +57,7 @@ namespace _project.Scripts.Data
             // Check to see if it's all there
             if (_qualityRadioButtonGroup == null) Debug.LogError("No RadioButtonGroup found");
             if (_doneButton == null) Debug.LogError("No DoneButton found");
+            if (_clearDiscoveriesButton == null) Debug.LogError("No clearDiscoveriesButton found");
             if (_volumeSlider == null) Debug.LogError("No VolumeSlider found");
             if (_resolutionDropdown == null) Debug.LogError("No ResolutionDropdown found");
             if (_displayModeDropdown == null) Debug.LogError("No DisplayModeDropdown found");
@@ -165,6 +166,7 @@ namespace _project.Scripts.Data
         private void OnDisable()
         {
             _doneButton.clicked -= OnDoneButtonClicked;
+            _clearDiscoveriesButton.clicked -= OnClearDiscoveriesButtonClicked;
             _displayModeDropdown?.UnregisterValueChangedCallback(OnDisplayModeChanged);
             _resolutionDropdown?.UnregisterValueChangedCallback(OnResolutionChanged);
             _qualityRadioButtonGroup?.UnregisterValueChangedCallback(OnQualityChanged);
@@ -239,7 +241,8 @@ namespace _project.Scripts.Data
 
         private static void OnClearDiscoveriesButtonClicked()
         {
-            CardGameMaster.Instance.treatmentEfficacyHandler.ClearDiscoveredCombinations();
+            // Use a static method so this works from any scene (menu, gameplay, etc.)
+            TreatmentEfficacyHandler.ClearDiscoveryFile();
         }
 
         private static void OnDisplayModeChanged(ChangeEvent<string> evt)

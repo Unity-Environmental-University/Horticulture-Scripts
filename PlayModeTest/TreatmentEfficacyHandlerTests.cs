@@ -788,6 +788,31 @@ namespace _project.Scripts.PlayModeTest
         }
 
         [Test]
+        public void ClearDiscoveryFile_Static_DeletesFileWithoutInstance()
+        {
+            // Arrange
+            CreateValidDiscoveryFile("Treatment1|Affliction1", "Treatment2|Affliction2");
+            Assert.IsTrue(File.Exists(GetTestFilePath()), "File should exist before clearing");
+
+            // Act - Call static method without needing a handler instance
+            TreatmentEfficacyHandler.ClearDiscoveryFile();
+
+            // Assert
+            Assert.IsFalse(File.Exists(GetTestFilePath()), "File should be deleted after static clear");
+        }
+
+        [Test]
+        public void ClearDiscoveryFile_Static_NoErrorWhenFileDoesNotExist()
+        {
+            // Arrange - Ensure no file exists
+            if (File.Exists(GetTestFilePath())) File.Delete(GetTestFilePath());
+
+            // Act & Assert - Should not throw exception
+            Assert.DoesNotThrow(() => TreatmentEfficacyHandler.ClearDiscoveryFile(),
+                "Should handle missing file gracefully");
+        }
+
+        [Test]
         public void GetRelationalEfficacy_DiscoveryIntegration_SavesOnFirstUse()
         {
             // Arrange
