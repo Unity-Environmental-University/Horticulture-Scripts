@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using _project.Scripts.Classes;
 using _project.Scripts.Core;
@@ -9,6 +10,13 @@ using Random = UnityEngine.Random;
 
 namespace _project.Scripts.Handlers
 {
+    [Serializable]
+    public class DiscoveryData
+    {
+        // Unity's JsonUtility apparently doesn't save HashSets, so we save a list of strings -> then convert later
+        public List<string> discoveredComboHash = new();
+    }
+    
     [Serializable]
     public class RelationalEfficacy
     {
@@ -64,7 +72,7 @@ namespace _project.Scripts.Handlers
     public class TreatmentEfficacyHandler : MonoBehaviour
     {
         private const int DefaultEfficacy = 100;
-        private readonly HashSet<string> discoveredCombinations = new();
+        private HashSet<string> discoveredCombinations = new();
         [SerializeField] private List<RelationalEfficacy> relationalEfficacies = new();
         [SerializeField] private bool discoveryModeEnabled = true;
 
@@ -72,6 +80,9 @@ namespace _project.Scripts.Handlers
         {
             discoveryModeEnabled =
                 PlayerPrefs.GetInt(UserQualitySettings.DiscoveryModePrefKey, discoveryModeEnabled ? 1 : 0) == 1;
+            var loadedData = LoadDiscoveryData().discoveredComboHash;
+            foreach (var str in loadedData)
+                discoveredCombinations.Add(str);
         }
         
         public int GetRelationalEfficacy(
@@ -173,10 +184,34 @@ namespace _project.Scripts.Handlers
             var key = MakeDiscoveryKey(treatmentName, afflictionName);
             if (discoveredCombinations.Add(key))
             {
+                SaveDiscoveryState(discoveredCombinations);
+                
                 // Record Treatment Discovery event
                 //Analytics.AnalyticsFunctions.RecordEfficacyDiscovery(treatmentName, afflictionName, efficacy);
             }
         }
+
+        private static void SaveDiscoveryState(HashSet<string> hashSet)
+        {
+            var discoveryData = new DiscoveryData
+            {
+                discoveredComboHash = hashSet.ToList()
+            };
+            var json = JsonUtility.ToJson(discoveryData);
+            File.WriteAllText($"{Application.persistentDataPath}/discoveryData.json", json);
+        }
+
+        private static DiscoveryData LoadDiscoveryData()
+        {
+            if (!DiscoveryDataExists()) return new DiscoveryData();
+            var loadedData = File.ReadAllText($"{Application.persistentDataPath}/discoveryData.json");
+            return string.IsNullOrEmpty(loadedData)
+                ? new DiscoveryData()
+                : JsonUtility.FromJson<DiscoveryData>(loadedData);
+        }
+
+        private static bool DiscoveryDataExists() => File.Exists($"{Application.persistentDataPath}/discoveryData.json");
+        
 
         public bool IsDiscovered(string treatmentName, string afflictionName)
         {
@@ -201,6 +236,8 @@ namespace _project.Scripts.Handlers
         public void ClearDiscoveredCombinations()
         {
             discoveredCombinations.Clear();
+            // rm discoveryDataFile
+            if (DiscoveryDataExists()) File.Delete($"{Application.persistentDataPath}/discoveryData.json");
             Debug.Log(
                 "[TreatmentEfficacyHandler] All discoveries cleared. Player will need to rediscover all combinations.");
         }
