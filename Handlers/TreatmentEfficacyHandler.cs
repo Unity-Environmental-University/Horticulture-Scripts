@@ -193,21 +193,38 @@ namespace _project.Scripts.Handlers
 
         private static void SaveDiscoveryState(HashSet<string> hashSet)
         {
-            var discoveryData = new DiscoveryData
+            try
             {
-                discoveredComboHash = hashSet.ToList()
-            };
-            var json = JsonUtility.ToJson(discoveryData);
-            File.WriteAllText($"{Application.persistentDataPath}/discoveryData.json", json);
+                var discoveryData = new DiscoveryData
+                {
+                    discoveredComboHash = hashSet.ToList()
+                };
+                var json = JsonUtility.ToJson(discoveryData);
+                File.WriteAllText($"{Application.persistentDataPath}/discoveryData.json", json);
+            }
+            catch (IOException ex)
+            {
+                Debug.LogError($"[TreatmentEfficacyHandler] Failed to save discovery state: {ex.Message}");
+            }
         }
 
         private static DiscoveryData LoadDiscoveryData()
         {
             if (!DiscoveryDataExists()) return new DiscoveryData();
-            var loadedData = File.ReadAllText($"{Application.persistentDataPath}/discoveryData.json");
-            return string.IsNullOrEmpty(loadedData)
-                ? new DiscoveryData()
-                : JsonUtility.FromJson<DiscoveryData>(loadedData);
+
+            try
+            {
+                var loadedData = File.ReadAllText($"{Application.persistentDataPath}/discoveryData.json");
+                return string.IsNullOrEmpty(loadedData)
+                    ? new DiscoveryData()
+                    : JsonUtility.FromJson<DiscoveryData>(loadedData);
+            }
+            catch (Exception ex)
+            {
+                Debug.LogWarning(
+                    $"[TreatmentEfficacyHandler] Failed to load discovery data (file may be corrupted): {ex.Message}. Returning empty data.");
+                return new DiscoveryData();
+            }
         }
 
         private static bool DiscoveryDataExists() => File.Exists($"{Application.persistentDataPath}/discoveryData.json");
