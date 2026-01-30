@@ -2,7 +2,16 @@
 
 ## Executive Summary
 
+**Note**: This document reflects an early design proposal and does not match the current implementation. For up-to-date behavior, see `Assets/_project/Scripts/docs/i-location-card-system.md` and `Assets/_project/Scripts/docs/card-core-system.md`.
+
 This document outlines the implementation plan for persistent plant location card slots in the Horticulture game. Each plant location will have a dedicated card slot that accepts special "Location Cards" providing ongoing effects to whatever plant occupies that location. These effects persist between rounds and are saved with the game state.
+
+## Current Implementation Notes
+
+- Location cards use `ILocationCard` with `EffectDuration`, `IsPermanent`, and turn-based effect methods.
+- Placement uses `PlacedCardHolder` + `SpotDataHolder`, not a `LocationCardSlot` component.
+- Location cards live in the action deck; there is no separate location deck or shop flow.
+- Placed location cards are not serialized; only per-plant tracking (e.g., `uLocationCards`) persists.
 
 ## Feature Requirements
 
@@ -18,7 +27,7 @@ This document outlines the implementation plan for persistent plant location car
 - Visual card slots at each plant location
 - Drag-and-drop interaction to place Location Cards
 - Clear visual indication of which location cards are active
-- Location Cards can be removed/replaced by players
+- Location Cards can be replaced by placing a new Location Card; manual removal is not supported
 - Tooltips showing active location effects
 
 ## Current Architecture Analysis

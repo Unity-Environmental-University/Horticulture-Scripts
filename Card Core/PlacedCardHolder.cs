@@ -355,8 +355,8 @@ namespace _project.Scripts.Card_Core
             
             return acceptedCardType switch
             {
-                CardHolderType.ActionOnly => card is not ILocationCard,
-                CardHolderType.LocationOnly => card is ILocationCard,
+                CardHolderType.ActionOnly => card is not ILocationCard && card is not IFieldSpell,
+                CardHolderType.LocationOnly => card is ILocationCard || card is IFieldSpell,
                 _ => true
             };
         }
@@ -567,7 +567,7 @@ namespace _project.Scripts.Card_Core
             if (placedCard is not ILocationCard) return;
 
             if (_deckManager != null)
-                _deckManager.DiscardActionCard(placedCard, true);
+                _deckManager.UnregisterLocationCardPlacement(placedCard);
 
             if (placedCardClick3D)
             {
@@ -671,6 +671,12 @@ namespace _project.Scripts.Card_Core
             placedCardClick3D = cardClone.GetComponent<Click3D>();
             placedCardView = cardClone.GetComponent<CardView>();
 
+            if (placedCard is ILocationCard)
+            {
+                _deckManager.RegisterLocationCardPlacement(placedCard);
+                _deckManager.RemoveCardFromHandOnly(placedCard);
+            }
+
             if (placedCardClick3D != null)
             {
                 placedCardClick3D.handItem = true;
@@ -752,15 +758,22 @@ namespace _project.Scripts.Card_Core
                 var emptyHolder = plantHolder.CardHolders?.FirstOrDefault(holder =>
                     holder is not null && !holder.HoldingCard && holder.CanAcceptCard(fieldSpell));
 
-                if (emptyHolder is not null) targetHolders.Add(emptyHolder);
+                if (emptyHolder is null) continue;
+
+                var plant = emptyHolder.ResolvePlantForDisplay();
+                if (plant == null || plant.PlantCard == null || plant.PlantCard.Value <= 0) continue;
+
+                targetHolders.Add(emptyHolder);
             }
             
             if (targetHolders.Count is 0) return;
 
-            Cgm.playerHandAudioSource.PlayOneShot(Cgm.soundSystem.placeCard);
-
             var sourceCard = _deckManager.selectedACardClick3D;
             if (!sourceCard) return;
+
+            _deckManager.RemoveCardFromHandOnly(fieldSpell);
+
+            Cgm.playerHandAudioSource.PlayOneShot(Cgm.soundSystem.placeCard);
             // Match normal placement behavior: once a card is placed, it should not remain interactable in-hand.
             sourceCard.DisableClick3D();
             sourceCard.enabled = false;
@@ -797,6 +810,9 @@ namespace _project.Scripts.Card_Core
                 targetHolder.placedCard = fieldSpell;
                 targetHolder.placedCardClick3D = clone.GetComponent<Click3D>();
                 targetHolder.placedCardView = viewClone;
+
+                if (fieldSpell is ILocationCard)
+                    _deckManager.RegisterLocationCardPlacement(fieldSpell);
 
                 // Configure Click3D component
                 if (targetHolder.placedCardClick3D is not null)
@@ -836,6 +852,17 @@ namespace _project.Scripts.Card_Core
                 targetHolder.NotifySpotDataHolder();
                 targetHolder.RefreshEfficacyDisplay();
             }
+
+            if (fieldSpell.Value != null)
+            {
+                var retainedSlot = FindFirstObjectByType<RetainedCardHolder>(FindObjectsInactive.Include);
+                var isFromRetained = retainedSlot && retainedSlot.HeldCard == fieldSpell;
+
+                if (!isFromRetained)
+                    _scoreManager.treatmentCost += fieldSpell.Value.Value;
+            }
+
+            _scoreManager.CalculateTreatmentCost();
 
             // Hide the original card in the player's hand
             var originalRenderers = sourceCard.GetComponentsInChildren<Renderer>();

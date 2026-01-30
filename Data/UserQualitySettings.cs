@@ -1,4 +1,6 @@
 using System;
+using _project.Scripts.Card_Core;
+using _project.Scripts.Handlers;
 using _project.Scripts.UI;
 using UnityEngine;
 using UnityEngine.UIElements;
@@ -8,20 +10,26 @@ namespace _project.Scripts.Data
     public class UserQualitySettings : MonoBehaviour
     {
         private const string QualityLevelPrefKey = "QualityLevel";
+        public const string DiscoveryModePrefKey = "DiscoveryModeEnabled";
         public UIDocument uiDocument;
 
         [SerializeField] private MenuManager menuManager;
-        private DropdownField _displayModeDropdown;
-
-        private Button _doneButton;
-        private RadioButton _highQualityRadioButton;
-        private RadioButton _lowQualityRadioButton;
-        private RadioButton _mediumQualityRadioButton;
-        private RadioButton _mobileQualityRadioButton;
-        private RadioButtonGroup _qualityRadioButtonGroup;
-        private DropdownField _resolutionDropdown;
         private VisualElement _rootElement;
         private UIDocument _settingsUIDocument;
+        private DropdownField _displayModeDropdown;
+        
+        private Button _doneButton;
+        private Button _clearDiscoveriesButton;
+        
+        private RadioButtonGroup _qualityRadioButtonGroup;
+        private RadioButton _highQualityRadioButton;
+        private RadioButton _mediumQualityRadioButton;
+        private RadioButton _lowQualityRadioButton;
+        private RadioButton _mobileQualityRadioButton;
+        
+        private DropdownField _resolutionDropdown;
+        private DropdownField _discoveryModeDropdown;
+        
         private Slider _volumeSlider;
 
         private void OnEnable()
@@ -36,19 +44,24 @@ namespace _project.Scripts.Data
             _mediumQualityRadioButton = _qualityRadioButtonGroup.Q<RadioButton>("MediumQualityRadioButton");
             _highQualityRadioButton = _qualityRadioButtonGroup.Q<RadioButton>("HighQualityRadioButton");
             _doneButton = _rootElement.Q<Button>("DoneButton");
+            _clearDiscoveriesButton = _rootElement.Q<Button>("ClearDiscoveriesButton");
             _volumeSlider = _rootElement.Q<Slider>("VolumeSlider");
             _resolutionDropdown = _rootElement.Q<DropdownField>("ResolutionDropDown");
             _displayModeDropdown = _rootElement.Q<DropdownField>("DisplayModeDropDown");
+            _discoveryModeDropdown = _rootElement.Q<DropdownField>("DiscoveryModeDropDown");
 
             // Register a callback for the done button to set the quality and hide the settings document
             _doneButton.clicked += OnDoneButtonClicked;
+            _clearDiscoveriesButton.clicked += OnClearDiscoveriesButtonClicked;
 
             // Check to see if it's all there
             if (_qualityRadioButtonGroup == null) Debug.LogError("No RadioButtonGroup found");
             if (_doneButton == null) Debug.LogError("No DoneButton found");
+            if (_clearDiscoveriesButton == null) Debug.LogError("No clearDiscoveriesButton found");
             if (_volumeSlider == null) Debug.LogError("No VolumeSlider found");
             if (_resolutionDropdown == null) Debug.LogError("No ResolutionDropdown found");
             if (_displayModeDropdown == null) Debug.LogError("No DisplayModeDropdown found");
+            if (_discoveryModeDropdown == null) Debug.LogError("No DiscoveryModeDropdown found");
 
             var radioButtons = new (string Name, object Value)[]
             {
@@ -134,15 +147,31 @@ namespace _project.Scripts.Data
 
                 _volumeSlider.RegisterValueChangedCallback(OnVolumeChanged);
             }
+            
+            // GameMode Settings
+
+            // Initialize discoveryMode dropdown to the current discovery mode and register callback
+            if (_discoveryModeDropdown != null)
+            {
+                _discoveryModeDropdown.RegisterValueChangedCallback(OnDiscoveryModeChanged);
+                SyncDiscoveryModeDropdown();
+            }
+        }
+
+        private void Start()
+        {
+            SyncDiscoveryModeDropdown();
         }
 
         private void OnDisable()
         {
             _doneButton.clicked -= OnDoneButtonClicked;
+            _clearDiscoveriesButton.clicked -= OnClearDiscoveriesButtonClicked;
             _displayModeDropdown?.UnregisterValueChangedCallback(OnDisplayModeChanged);
             _resolutionDropdown?.UnregisterValueChangedCallback(OnResolutionChanged);
             _qualityRadioButtonGroup?.UnregisterValueChangedCallback(OnQualityChanged);
             _volumeSlider?.UnregisterValueChangedCallback(OnVolumeChanged);
+            _discoveryModeDropdown?.UnregisterValueChangedCallback(OnDiscoveryModeChanged);
         }
 
         private static void SetVolume(float newVolume)
@@ -210,6 +239,12 @@ namespace _project.Scripts.Data
             menuManager.CloseSettingsMenu();
         }
 
+        private static void OnClearDiscoveriesButtonClicked()
+        {
+            // Use a static method so this works from any scene (menu, gameplay, etc.)
+            TreatmentEfficacyHandler.ClearDiscoveryFile();
+        }
+
         private static void OnDisplayModeChanged(ChangeEvent<string> evt)
         {
             SetDisplayMode(evt.newValue);
@@ -228,6 +263,38 @@ namespace _project.Scripts.Data
         private static void OnVolumeChanged(ChangeEvent<float> evt)
         {
             SetVolume(evt.newValue);
+        }
+
+        private void OnDiscoveryModeChanged(ChangeEvent<string> evt)
+        {
+            if (_discoveryModeDropdown == null || _discoveryModeDropdown.choices.Count == 0) return;
+
+            var discoveryModeEnabled = evt.newValue == _discoveryModeDropdown.choices[0];
+            PlayerPrefs.SetInt(DiscoveryModePrefKey, discoveryModeEnabled ? 1 : 0);
+            PlayerPrefs.Save();
+
+            var handler = ResolveTreatmentEfficacyHandler();
+            if (handler != null) handler.DiscoveryModeEnabled = discoveryModeEnabled;
+        }
+
+        private void SyncDiscoveryModeDropdown()
+        {
+            if (_discoveryModeDropdown == null || _discoveryModeDropdown.choices.Count == 0) return;
+
+            var handler = ResolveTreatmentEfficacyHandler();
+            var discoveryModeEnabled = handler != null
+                ? handler.DiscoveryModeEnabled
+                : PlayerPrefs.GetInt(DiscoveryModePrefKey, 1) == 1;
+
+            var index = discoveryModeEnabled ? 0 : Mathf.Min(1, _discoveryModeDropdown.choices.Count - 1);
+            _discoveryModeDropdown.SetValueWithoutNotify(_discoveryModeDropdown.choices[index]);
+        }
+
+        private static TreatmentEfficacyHandler ResolveTreatmentEfficacyHandler()
+        {
+            return CardGameMaster.Instance?.treatmentEfficacyHandler != null
+                ? CardGameMaster.Instance.treatmentEfficacyHandler
+                : FindFirstObjectByType<TreatmentEfficacyHandler>();
         }
     }
 }

@@ -1,13 +1,22 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using _project.Scripts.Classes;
 using _project.Scripts.Core;
+using _project.Scripts.Data;
 using UnityEngine;
 using Random = UnityEngine.Random;
 
 namespace _project.Scripts.Handlers
 {
+    [Serializable]
+    public class DiscoveryData
+    {
+        // Unity's JsonUtility apparently doesn't save HashSets, so we save a list of strings -> then convert later
+        public List<string> discoveredComboHash = new();
+    }
+    
     [Serializable]
     public class RelationalEfficacy
     {
@@ -63,8 +72,19 @@ namespace _project.Scripts.Handlers
     public class TreatmentEfficacyHandler : MonoBehaviour
     {
         private const int DefaultEfficacy = 100;
+        private HashSet<string> discoveredCombinations = new();
         [SerializeField] private List<RelationalEfficacy> relationalEfficacies = new();
+        [SerializeField] private bool discoveryModeEnabled = true;
 
+        private void Awake()
+        {
+            discoveryModeEnabled =
+                PlayerPrefs.GetInt(UserQualitySettings.DiscoveryModePrefKey, discoveryModeEnabled ? 1 : 0) == 1;
+            var loadedData = LoadDiscoveryData().discoveredComboHash;
+            foreach (var str in loadedData)
+                discoveredCombinations.Add(str);
+        }
+        
         public int GetRelationalEfficacy(
             PlantAfflictions.IAffliction affliction,
             PlantAfflictions.ITreatment treatment,
@@ -90,13 +110,19 @@ namespace _project.Scripts.Handlers
                 existing.treatment = treatment;
                 existing.SetNames(affliction, treatment);
                 if (!countInteraction) return Mathf.Clamp(existing.efficacy, 0, 100);
+                MarkAsDiscovered(treatmentName, afflictionName, existing.efficacy);
                 existing.interactionCount++;
                 existing.TouchEfficacy();
                 return Mathf.Clamp(existing.efficacy, 0, 100);
             }
 
             // Return Early if incompatible
-            if (!affliction.CanBeTreatedBy(treatment)) return 0;
+            if (!affliction.CanBeTreatedBy(treatment))
+            {
+                if (countInteraction)
+                    MarkAsDiscovered(treatmentName, afflictionName, 0);
+                return 0;
+            }
 
             var baseEfficacy = Mathf.Clamp(treatment.Efficacy ?? DefaultEfficacy, 0, 100);
             if (!countInteraction) return baseEfficacy;
@@ -110,6 +136,7 @@ namespace _project.Scripts.Handlers
             };
 
             rel.SetNames(affliction, treatment);
+            MarkAsDiscovered(treatmentName, afflictionName, baseEfficacy);
             relationalEfficacies.Add(rel);
             return rel.efficacy;
         }
@@ -145,6 +172,98 @@ namespace _project.Scripts.Handlers
                 .ToList();
 
             return (int)efficacies.Average();
+        }
+        
+        private static string MakeDiscoveryKey(string treatmentName, string afflictionName)
+        {
+            return $"{treatmentName}|{afflictionName}";
+        }
+        
+        private void MarkAsDiscovered(string treatmentName, string afflictionName, int existingEfficacy)
+        {
+            var key = MakeDiscoveryKey(treatmentName, afflictionName);
+            if (discoveredCombinations.Add(key))
+            {
+                SaveDiscoveryState(discoveredCombinations);
+                
+                // Record Treatment Discovery event
+                //Analytics.AnalyticsFunctions.RecordEfficacyDiscovery(treatmentName, afflictionName, efficacy);
+            }
+        }
+
+        private static void SaveDiscoveryState(HashSet<string> hashSet)
+        {
+            try
+            {
+                var discoveryData = new DiscoveryData
+                {
+                    discoveredComboHash = hashSet.ToList()
+                };
+                var json = JsonUtility.ToJson(discoveryData);
+                File.WriteAllText($"{Application.persistentDataPath}/discoveryData.json", json);
+            }
+            catch (IOException ex)
+            {
+                Debug.LogError($"[TreatmentEfficacyHandler] Failed to save discovery state: {ex.Message}");
+            }
+        }
+
+        private static DiscoveryData LoadDiscoveryData()
+        {
+            if (!DiscoveryDataExists()) return new DiscoveryData();
+
+            try
+            {
+                var loadedData = File.ReadAllText($"{Application.persistentDataPath}/discoveryData.json");
+                return string.IsNullOrEmpty(loadedData)
+                    ? new DiscoveryData()
+                    : JsonUtility.FromJson<DiscoveryData>(loadedData);
+            }
+            catch (Exception ex)
+            {
+                Debug.LogWarning(
+                    $"[TreatmentEfficacyHandler] Failed to load discovery data (file may be corrupted): {ex.Message}. Returning empty data.");
+                return new DiscoveryData();
+            }
+        }
+
+        private static bool DiscoveryDataExists() => File.Exists($"{Application.persistentDataPath}/discoveryData.json");
+        
+
+        public bool IsDiscovered(string treatmentName, string afflictionName)
+        {
+            if (!discoveryModeEnabled) return true;
+            
+            var key = MakeDiscoveryKey(treatmentName, afflictionName);
+            return discoveredCombinations.Contains(key);
+        }
+
+        /// <summary>
+        ///     Gets or Sets whether Discovery Mode is enabled
+        /// </summary>
+        public bool DiscoveryModeEnabled
+        {
+            get => discoveryModeEnabled;
+            set => discoveryModeEnabled = value;
+        }
+
+        public void ClearDiscoveredCombinations()
+        {
+            discoveredCombinations.Clear();
+            ClearDiscoveryFile();
+        }
+
+        public static void ClearDiscoveryFile()
+        {
+            if (DiscoveryDataExists())
+            {
+                File.Delete($"{Application.persistentDataPath}/discoveryData.json");
+                Debug.Log("[TreatmentEfficacyHandler] Discovery file deleted. All discoveries cleared.");
+            }
+            else
+            {
+                Debug.Log("[TreatmentEfficacyHandler] No discovery file to clear.");
+            }
         }
     }
 }

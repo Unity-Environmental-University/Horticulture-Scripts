@@ -54,7 +54,7 @@ namespace _project.Scripts.Handlers
                 return;
             }
 
-            // If multiple afflictions are actively being affected, show average
+            // If multiple afflictions are actively being affected, show the average
             if (afflictions.Count > 1)
             {
                 var activeCount = CountActivelyAffected(afflictions, treatment, controller);
@@ -89,11 +89,26 @@ namespace _project.Scripts.Handlers
 
             if (treatableFallbackAffliction != null)
             {
+                if (_efficacyHandler && !_efficacyHandler.IsDiscovered(treatment.Name, treatableFallbackAffliction.Name))
+                {
+                    UpdateOverrideOnly("?", Color.yellow);
+                    return;
+                }
                 UpdateDisplay(treatableFallbackAffliction, treatment, "0%", Color.red);
                 return;
             }
 
             // Plant has afflictions, but this treatment cannot treat any of them.
+            // In discovery mode, show "?" for undiscovered incompatible pairs
+            if (_efficacyHandler)
+            {
+                var anyUndiscovered = afflictions.Any(af => !_efficacyHandler.IsDiscovered(treatment.Name, af.Name));
+                if (anyUndiscovered)
+                {
+                    UpdateOverrideOnly("?", Color.yellow);
+                    return;
+                }
+            }
             UpdateOverrideOnly("0%", Color.red);
 
         }
@@ -134,9 +149,21 @@ namespace _project.Scripts.Handlers
                 return;
             }
 
-            var averageEfficacy = _efficacyHandler.GetAverageEfficacy(treatment, controller);
+            var treatableAfflictions = 
+                controller.CurrentAfflictions.Where(af => af.CanBeTreatedBy(treatment)).ToList();
 
-            // Since we already verified activeCount > 1 in UpdateInfo, we can directly display
+            var anyUndiscovered =
+                treatableAfflictions.Any(af => !_efficacyHandler.IsDiscovered(treatment.Name, af.Name));
+
+            if (anyUndiscovered)
+            {
+                efficacyText.text = "?";
+                efficacyText.color = Color.yellow;
+                return;
+            }
+
+            // All discovered -> show the average
+            var averageEfficacy = _efficacyHandler.GetAverageEfficacy(treatment, controller);
             var efficacyColor = averageEfficacy switch
             {
                 < 50 => Color.red,
@@ -234,13 +261,30 @@ namespace _project.Scripts.Handlers
             }
 
             var efficacy = handler.GetRelationalEfficacy(affliction, treatment, false);
-            var efficacyColor = efficacy switch{ < 50 => Color.red, < 75 => Color.yellow, _ => Color.green };
+
+            // Check if efficacy is undiscovered -> show '?' 
+            if (!handler.IsDiscovered(treatment.Name, affliction.Name))
+            {
+                efficacyText.text = "?";
+                efficacyText.color = Color.yellow;
+                return;
+            }
+
+            if (overrideText != null)
+            {
+                efficacyText.text = overrideText;
+                efficacyText.color = overrideColor;
+                return;
+            }
+
+            var efficacyColor = efficacy switch
+            {
+                < 50 => Color.red,
+                < 75 => Color.yellow,
+                _ => Color.green
+            };
             efficacyText.text = efficacy + "%";
             efficacyText.color = efficacyColor;
-
-            if (overrideText == null) return;
-            efficacyText.text = overrideText;
-            efficacyText.color = overrideColor;
         }
         
         public void Clear()
