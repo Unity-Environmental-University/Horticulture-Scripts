@@ -6,6 +6,12 @@ using UnityEngine;
 
 namespace _project.Scripts.Card_Core
 {
+    public class IBonus
+    {
+        public string Name { get; set; }
+        public int BonusValue { get; set; }
+    }
+
     public class ScoreManager : MonoBehaviour
     {
         private static ScoreManager Instance { get; set; }
@@ -15,6 +21,7 @@ namespace _project.Scripts.Card_Core
         private static TextMeshPro PotentialProfitText => CardGameMaster.Instance?.potentialProfitText;
         private List<PlantController> cachedPlants = new();
 
+        public List<IBonus> bonuses = new();
         public int treatmentCost;
         public bool debugging;
 
@@ -93,6 +100,8 @@ namespace _project.Scripts.Card_Core
                     afflictionDamage += plant.CurrentAfflictions.Select(affliction => affliction.GetCard()!.Value)
                         .Where(damage => damage != null).Sum(damage => damage.Value);
             }
+            
+            var bonusValue = CalculateBonuses();
 
             if (debugging)
             {
@@ -100,13 +109,15 @@ namespace _project.Scripts.Card_Core
                 Debug.Log("Affliction Damage: " + afflictionDamage);
                 Debug.Log("Treatment Cost: " + treatmentCost);
                 Debug.Log("Current Moneys: " + Moneys);
+                foreach (var bonus in bonuses){ Debug.Log(bonus.Name + ": " + bonus.BonusValue);}
             }
 
-            Moneys += plantValue + afflictionDamage + treatmentCost;
+            Moneys += plantValue + afflictionDamage + treatmentCost + bonusValue;
 
             UpdateMoneysText();
             UpdateCostText(0);
             UpdateProfitText(0);
+            bonuses.Clear();
             return Moneys;
         }
         
@@ -169,6 +180,12 @@ namespace _project.Scripts.Card_Core
             }
 
             return plants;
+        }
+
+        private int CalculateBonuses()
+        {
+            var totalBonus = bonuses.Sum(b => b.BonusValue);
+            return totalBonus;
         }
     }
 }

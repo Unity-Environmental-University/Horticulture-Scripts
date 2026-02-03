@@ -686,6 +686,21 @@ namespace _project.Scripts.Card_Core
 
             yield return new WaitForSeconds(delayTime);
 
+            var validLocations = _deckManager.plantLocations?
+                .Where(loc => loc)
+                .ToArray() ?? Array.Empty<PlantHolder>();
+
+            var plantControllers = validLocations
+                .Select(loc => loc.Transform.GetComponentInChildren<PlantController>(true))
+                .Where(p => p is not null)
+                .ToArray();
+
+            var plantsHealthy = plantControllers.Count(p => p.CurrentAfflictions.Count == 0);
+            var plantsDead = validLocations.Length - plantControllers.Length;
+
+            // Add Bonus'
+            if (plantsDead <= 0) _scoreManager.bonuses.Add(new IBonus { Name = "AllPlantsSurvived", BonusValue = 10 });
+
             var scoreBeforeRound = ScoreManager.GetMoneys();
             var score = _scoreManager.CalculateScore();
             if (_scoreManager) _scoreManager.treatmentCost = 0;
@@ -693,21 +708,9 @@ namespace _project.Scripts.Card_Core
             var roundVictory = !IsActiveTutorialStep && ScoreManager.GetMoneys() >= moneyGoal;
 
             // Count plant health status and record round end analytics
-	            try
-	            {
-	                var validLocations = _deckManager.plantLocations?
-	                    .Where(loc => loc)
-	                    .ToArray() ?? Array.Empty<PlantHolder>();
-
-	                var plantControllers = validLocations
-	                    .Select(loc => loc.Transform.GetComponentInChildren<PlantController>(true))
-	                    .Where(p => p != null)
-	                    .ToArray();
-
-	                var plantsHealthy = plantControllers.Count(p => p.CurrentAfflictions.Count == 0);
-	                var plantsDead = validLocations.Length - plantControllers.Length;
-	                
-	                AnalyticsFunctions.RecordRoundEnd(
+            try
+            {
+                AnalyticsFunctions.RecordRoundEnd(
                     currentRound,
                     roundTurnCount,
                     score,
