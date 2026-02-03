@@ -109,7 +109,7 @@ namespace _project.Scripts.Card_Core
                 Debug.Log("Affliction Damage: " + afflictionDamage);
                 Debug.Log("Treatment Cost: " + treatmentCost);
                 Debug.Log("Current Moneys: " + Moneys);
-                foreach (var bonus in bonuses){ Debug.Log(bonus.Name + ": " + bonus.BonusValue);}
+                foreach (var bonus in bonuses) Debug.Log("Bonus Applied: " + bonus.Name + ": " + bonus.BonusValue);
             }
 
             Moneys += plantValue + afflictionDamage + treatmentCost + bonusValue;

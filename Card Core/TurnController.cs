@@ -696,10 +696,21 @@ namespace _project.Scripts.Card_Core
                 .ToArray();
 
             var plantsHealthy = plantControllers.Count(p => p.CurrentAfflictions.Count == 0);
-            var plantsDead = validLocations.Length - plantControllers.Length;
+            var plantsDead = validLocations.Length - plantControllers.Length; // For analytics only
 
-            // Add Bonus'
-            if (plantsDead <= 0) _scoreManager.bonuses.Add(new IBonus { Name = "AllPlantsSurvived", BonusValue = 10 });
+            // Add Bonus for keeping all plants alive
+            var allSpawnedPlantsAlive = plantControllers.Length > 0 && plantsHealthy == plantControllers.Length;
+            if (allSpawnedPlantsAlive)
+            {
+                _scoreManager.bonuses.Add(new IBonus { Name = "AllPlantsSurvived", BonusValue = 10 });
+                if (debugging)
+                    Debug.Log(
+                        $"[TurnController] Added AllPlantsSurvived bonus: $10 ({plantControllers.Length} plants all healthy)");
+            }
+            else if (debugging)
+            {
+                Debug.Log($"[TurnController] No bonus: {plantsHealthy}/{plantControllers.Length} plants healthy");
+            }
 
             var scoreBeforeRound = ScoreManager.GetMoneys();
             var score = _scoreManager.CalculateScore();
