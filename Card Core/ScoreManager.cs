@@ -21,7 +21,7 @@ namespace _project.Scripts.Card_Core
         private static TextMeshPro PotentialProfitText => CardGameMaster.Instance?.potentialProfitText;
         private List<PlantController> cachedPlants = new();
 
-        public List<IBonus> bonuses = new();
+        public readonly List<IBonus> bonuses = new();
         public int treatmentCost;
         public bool debugging;
 
