@@ -13,6 +13,7 @@ namespace _project.Scripts.PlayModeTest.Utilities.Mocks
     {
         public string Name { get; set; } = "Panacea";
         public string Description { get; set; } = "Cures all afflictions";
+        public bool IsSynthetic { get; set; } = true;
         public int? InfectCureValue { get; set; } = 999;
         public int? EggCureValue { get; set; } = 0;
         public int? Efficacy { get; set; } = 100;
@@ -43,6 +44,7 @@ namespace _project.Scripts.PlayModeTest.Utilities.Mocks
     {
         public string Name => "Explosive";
         public string Description => "Throws on apply";
+        public bool IsSynthetic { get; }
         public int? InfectCureValue { get; set; } = 0;
         public int? EggCureValue { get; set; } = 0;
         public int? Efficacy { get; set; } = 100;
@@ -60,6 +62,7 @@ namespace _project.Scripts.PlayModeTest.Utilities.Mocks
     {
         public string Name => "SafeClear";
         public string Description => "Removes all afflictions";
+        public bool IsSynthetic { get; }
         public int? InfectCureValue { get; set; } = 999;
         public int? EggCureValue { get; set; } = 999;
         public int? Efficacy { get; set; } = 100;

@@ -20,7 +20,7 @@ namespace _project.Scripts.PlayModeTest
                 new ModLoader.AfflictionEffectiveness { affliction = "SpiderMites", infectCure = 2, eggCure = 1 }
             };
 
-            var treatment = new ModLoader.ModTreatment("Test Treatment", "A test treatment", effectiveness);
+            var treatment = new ModLoader.ModTreatment("Test Treatment", "A test treatment", effectiveness, true);
 
             // Test known affliction
             var (infectCure, eggCure) = treatment.GetEffectivenessFor("Aphids");
@@ -41,7 +41,7 @@ namespace _project.Scripts.PlayModeTest
         [Test]
         public void ModTreatment_WithNullEffectiveness_HandlesGracefully()
         {
-            var treatment = new ModLoader.ModTreatment("Test", "Test", null);
+            var treatment = new ModLoader.ModTreatment("Test", "Test", null, true);
 
             var (infectCure, eggCure) = treatment.GetEffectivenessFor("AnyPest");
             Assert.AreEqual(0, infectCure);
@@ -52,7 +52,7 @@ namespace _project.Scripts.PlayModeTest
         public void ModTreatment_WithEmptyEffectiveness_HandlesGracefully()
         {
             var effectiveness = Array.Empty<ModLoader.AfflictionEffectiveness>();
-            var treatment = new ModLoader.ModTreatment("Test", "Test", effectiveness);
+            var treatment = new ModLoader.ModTreatment("Test", "Test", effectiveness, true);
 
             var (infectCure, eggCure) = treatment.GetEffectivenessFor("AnyPest");
             Assert.AreEqual(0, infectCure);
@@ -67,7 +67,7 @@ namespace _project.Scripts.PlayModeTest
                 new ModLoader.AfflictionEffectiveness { affliction = "Test", infectCure = 1, eggCure = 1 }
             };
 
-            var treatment = new ModLoader.ModTreatment("My Treatment", "My Description", effectiveness);
+            var treatment = new ModLoader.ModTreatment("My Treatment", "My Description", effectiveness, true);
 
             Assert.AreEqual("My Treatment", treatment.Name);
             Assert.AreEqual("My Description", treatment.Description);

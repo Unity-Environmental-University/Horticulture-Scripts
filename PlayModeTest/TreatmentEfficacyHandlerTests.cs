@@ -77,6 +77,7 @@ namespace _project.Scripts.PlayModeTest
 
             public string Name { get; }
             public string Description => string.Empty;
+            public bool IsSynthetic { get; set; }
             public int? InfectCureValue { get; set; }
             public int? EggCureValue { get; set; }
             public int? Efficacy { get; set; }
@@ -94,7 +95,7 @@ namespace _project.Scripts.PlayModeTest
             if (File.Exists(testPath)) File.Delete(testPath);
 
             // Clean up any lingering GameObjects from failed tests
-            var handlers = Object.FindObjectsOfType<TreatmentEfficacyHandler>();
+            var handlers = Object.FindObjectsByType<TreatmentEfficacyHandler>(FindObjectsSortMode.None);
             foreach (var handler in handlers) Object.DestroyImmediate(handler.gameObject);
         }
 

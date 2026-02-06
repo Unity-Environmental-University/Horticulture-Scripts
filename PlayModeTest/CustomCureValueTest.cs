@@ -115,7 +115,7 @@ namespace _project.Scripts.PlayModeTest
         private static ModLoader.ModTreatment CreateModTreatment(string name, string description,
             ModLoader.AfflictionEffectiveness[] effectiveness)
         {
-            return new ModLoader.ModTreatment(name, description, effectiveness);
+            return new ModLoader.ModTreatment(name, description, effectiveness, true);
         }
 
         /// <summary>
@@ -150,6 +150,7 @@ namespace _project.Scripts.PlayModeTest
 
             public string Name => _baseTreatment.Name;
             public string Description => _baseTreatment.Description;
+            public bool IsSynthetic => _baseTreatment.IsSynthetic;
             public int? InfectCureValue { get; set; }
             public int? EggCureValue { get; set; }
             public int? Efficacy { get; set; }

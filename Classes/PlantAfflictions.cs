@@ -69,6 +69,7 @@ namespace _project.Scripts.Classes
         {
             string Name { get; }
             string Description { get; }
+            bool IsSynthetic { get; }
             int? InfectCureValue { get; set; }
             int? EggCureValue { get; set; }
             int? Efficacy { get; set; }
@@ -582,6 +583,7 @@ namespace _project.Scripts.Classes
         {
             public string Name => "Horticultural Oil";
             public string Description => "Removes Aphids & Thrips";
+            public bool IsSynthetic => true;
             public int BeeValue => -1;
             private int _infectCureValue = StandardCureAmount;
             private int _eggCureValue = StandardCureAmount;
@@ -608,6 +610,7 @@ namespace _project.Scripts.Classes
         {
             public string Name => "Fungicide";
             public string Description => "Removes Mildew";
+            public bool IsSynthetic => true;
             public int BeeValue => -3;
             private int _infectCureValue = StandardCureAmount;
             private int _eggCureValue = StandardCureAmount;
@@ -634,6 +637,7 @@ namespace _project.Scripts.Classes
         {
             public string Name => "Permethrin";
             public string Description => "Removes Insects";
+            public bool IsSynthetic => true;
             public int BeeValue => -4;
             private int _infectCureValue = 1;
             private int _eggCureValue;
@@ -660,6 +664,7 @@ namespace _project.Scripts.Classes
         {
             public string Name => "SoapyWater";
             public string Description => "Removes MealyBugs";
+            public bool IsSynthetic => false;
             public int BeeValue => 0;
             private int _infectCureValue = StandardCureAmount;
             private int _eggCureValue = StandardCureAmount;
@@ -686,6 +691,7 @@ namespace _project.Scripts.Classes
         {
             public string Name => "Spinosad";
             public string Description => "Effective against: Thrips, Mites, Gnats";
+            public bool IsSynthetic => true;
             public int BeeValue => -2; //TODO Get Bee Value
             private int _infectCureValue = StandardCureAmount;
             private int _eggCureValue = StandardCureAmount;
@@ -713,6 +719,7 @@ namespace _project.Scripts.Classes
         {
             public string Name => "Imidacloprid";
             public string Description => "Insecticide, systemic, neonicotinoid, effective, broad-spectrum.";
+            public bool IsSynthetic => true;
             public int BeeValue => -5; //TODO Get Bee Value
             private int _infectCureValue = StandardCureAmount;
             private int _eggCureValue = StandardCureAmount;
@@ -739,6 +746,7 @@ namespace _project.Scripts.Classes
         {
             public string Name => "Hydration";
             public string Description => "Treats Dehydrated Plants";
+            public bool IsSynthetic => false;
             public int BeeValue => 0;
 
             /// <remarks>
@@ -769,6 +777,7 @@ namespace _project.Scripts.Classes
         {
             public string Name => "Sunlight";
             public string Description => "Treats Plants Needing Light";
+            public bool IsSynthetic => false;
             public int BeeValue => 0;
 
             private int _infectCureValue = MaxCureAmount;
@@ -799,6 +808,7 @@ namespace _project.Scripts.Classes
             public string Description =>
                 "Voracious aphid predators. Very effective against soft-bodied pests like aphids and mealybugs. Less effective against mites and thrips.\"";
 
+            public bool IsSynthetic => false;
             public int BeeValue => 5;
 
             private int _efficacy = DefaultEfficacy;
@@ -827,6 +837,7 @@ namespace _project.Scripts.Classes
         {
             public string Name => "Panacea";
             public string Description => "Cures All Afflictions";
+            public bool IsSynthetic => true;
             public int BeeValue => 0;
             private int _infectCureValue = MaxCureAmount;
             private int _eggCureValue = MaxCureAmount;

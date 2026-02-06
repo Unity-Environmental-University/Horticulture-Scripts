@@ -47,6 +47,7 @@ Create `.card.json` files to add custom cards to the game.
 - `eggCure` - Custom effectiveness against egg/larval stages (overrides default treatment values)
 - `weight` - How often card appears (1-10, higher = more common) - default: 1
 - `rarity` - Alternative to weight: `common` (5), `uncommon` (3), `rare` (2), `epic` (1)
+- `isSynthetic` - Whether the treatment is a synthetic chemical (`true`, default) or organic/natural (`false`)
 - `prefabResource` - Unity Resources path for card prefab
 - `materialResource` - Unity Resources path for card material
 
