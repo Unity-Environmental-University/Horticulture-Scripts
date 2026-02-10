@@ -17,6 +17,7 @@ namespace _project.Scripts.Card_Core
         // ReSharper disable once CollectionNeverQueried.Local
         private readonly List<IShopItem> currentShopItems = new();
         private List<ICard> availableCards;
+        private List<IEnvironmentUpgrade> availableUtilities;
         private DeckManager _deckManager;
 
         private void Start() { _deckManager = CardGameMaster.Instance.deckManager; }
@@ -63,6 +64,10 @@ namespace _project.Scripts.Card_Core
                 new FungicideBasic(),
                 new PermethrinBasic(),
                 new Panacea()
+            };
+            availableUtilities = new List<IEnvironmentUpgrade>
+            {
+                new BeeBox(),
             };
 
             for (var i = 0; i < numberOfCards; i++)
