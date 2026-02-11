@@ -34,6 +34,7 @@ namespace _project.Scripts.Card_Core
         public TurnController turnController;
         public ShopManager shopManager;
         public DeckOrganizerManager deckOrganizerManager;
+        public EnvironmentUpgradeManager environmentUpgradeManager;
         public SoundSystemMaster soundSystem;
         public CinematicDirector cinematicDirector;
         public PopUpController popUpController;

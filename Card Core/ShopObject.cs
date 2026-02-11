@@ -24,7 +24,7 @@ namespace _project.Scripts.Card_Core
             var image = objectImage ? objectImage : GetComponent<Image>();
             if (image is null) return;
 
-            var cardMaterial = ShopItem?.Card?.Material;
+            var cardMaterial = ShopItem?.DisplayMaterial;
             if (cardMaterial is null)
             {
                 image.material = null;

@@ -11,6 +11,7 @@ namespace _project.Scripts.GameState
         public DeckData deckData;
         public List<PlantData> plants;
         public RetainedCardData retainedCard;
+        public EnvironmentUpgradeData environmentUpgrades;
     }
 
     [Serializable]
@@ -107,5 +108,11 @@ namespace _project.Scripts.GameState
         public CardData card;
         public bool hasPaidForCard;
         public bool isCardLocked;
+    }
+
+    [Serializable]
+    public class EnvironmentUpgradeData
+    {
+        public List<string> activeUpgradeTypeNames;
     }
 }
