@@ -14,30 +14,45 @@ namespace _project.Scripts.Card_Core
         private readonly Dictionary<IEnvironmentUpgrade, GameObject> _spawnedPrefabs = new();
         private int _nextSpawnPointIndex;
 
+        public GameObject beeBoxPrefab;
         public IReadOnlyList<IEnvironmentUpgrade> ActiveUpgrades => _activeUpgrades;
 
+
         /// <summary>
-        ///     Purchases an upgrade, adds it to active upgrades, and spawns its prefab.
+        ///     Checks if an upgrade can be purchased.
         /// </summary>
-        public void PurchaseUpgrade(IEnvironmentUpgrade upgrade)
+        public bool CanPurchaseUpgrade(IEnvironmentUpgrade upgrade)
         {
             if (upgrade == null)
             {
                 Debug.LogError("[EnvironmentUpgradeManager] Cannot purchase null upgrade");
-                return;
+                return false;
             }
 
-            // Check if already purchased and active
             if (_activeUpgrades.Any(u => u.GetType() == upgrade.GetType()))
             {
                 Debug.LogWarning($"[EnvironmentUpgradeManager] {upgrade.DisplayName} already purchased");
-                return;
+                return false;
             }
+
+            if (upgradeSpawnPoints.Count <= 0 || _nextSpawnPointIndex < upgradeSpawnPoints.Count) return true;
+            Debug.LogWarning("[EnvironmentUpgradeManager] Cannot purchase upgrade: all spawn points are occupied");
+            return false;
+        }
+
+        /// <summary>
+        ///     Purchases an upgrade, adds it to active upgrades, and spawns its prefab.
+        /// </summary>
+        public bool PurchaseUpgrade(IEnvironmentUpgrade upgrade)
+        {
+            if (!CanPurchaseUpgrade(upgrade))
+                return false;
 
             _activeUpgrades.Add(upgrade);
             SpawnUpgradePrefab(upgrade);
 
             Debug.Log($"[EnvironmentUpgradeManager] Purchased: {upgrade.DisplayName}");
+            return true;
         }
 
         /// <summary>

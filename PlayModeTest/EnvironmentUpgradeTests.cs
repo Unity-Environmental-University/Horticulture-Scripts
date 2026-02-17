@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using System.Reflection;
 using _project.Scripts.Card_Core;
 using _project.Scripts.Classes;
 using _project.Scripts.GameState;
@@ -11,9 +12,62 @@ namespace _project.Scripts.PlayModeTest
 {
     public class EnvironmentUpgradeTests
     {
+        private class TestUpgradeA : IEnvironmentUpgrade
+        {
+            public TestUpgradeA(GameObject prefab)
+            {
+                Prefab = prefab;
+            }
+
+            public ICard Card => null;
+            public Material DisplayMaterial => null;
+            public GameObject Prefab { get; }
+            public Material IconMaterial => null;
+            public UpgradeDuration Duration => UpgradeDuration.OneRound;
+            public string DisplayName => "Test Upgrade A";
+            public int Cost => 0;
+
+            public IBonus CalculateRoundBonus(int healthyPlantCount, int totalPlantCount)
+            {
+                return null;
+            }
+
+            public void Purchase() { }
+        }
+
+        private class TestUpgradeB : IEnvironmentUpgrade
+        {
+            public TestUpgradeB(GameObject prefab)
+            {
+                Prefab = prefab;
+            }
+
+            public ICard Card => null;
+            public Material DisplayMaterial => null;
+            public GameObject Prefab { get; }
+            public Material IconMaterial => null;
+            public UpgradeDuration Duration => UpgradeDuration.OneRound;
+            public string DisplayName => "Test Upgrade B";
+            public int Cost => 0;
+
+            public IBonus CalculateRoundBonus(int healthyPlantCount, int totalPlantCount)
+            {
+                return null;
+            }
+
+            public void Purchase() { }
+        }
+
         private GameObject _testGameObject;
         private EnvironmentUpgradeManager _manager;
         private ScoreManager _scoreManager;
+
+        private static void SetUpgradeSpawnPoints(EnvironmentUpgradeManager manager, List<Transform> spawnPoints)
+        {
+            var field = typeof(EnvironmentUpgradeManager)
+                .GetField("upgradeSpawnPoints", BindingFlags.Instance | BindingFlags.NonPublic);
+            field?.SetValue(manager, spawnPoints);
+        }
 
         [SetUp]
         public void Setup()
@@ -99,6 +153,32 @@ namespace _project.Scripts.PlayModeTest
 
             // Assert
             Assert.AreEqual(1, _manager.ActiveUpgrades.Count, "Should not add duplicate upgrade type");
+        }
+
+        [Test]
+        public void PurchaseUpgrade_RejectsWhenSpawnSlotsAreFull()
+        {
+            // Arrange
+            var spawnPoint = new GameObject("UpgradeSpawnPoint");
+            SetUpgradeSpawnPoints(_manager, new List<Transform> { spawnPoint.transform });
+
+            var prefabA = new GameObject("UpgradePrefabA");
+            var prefabB = new GameObject("UpgradePrefabB");
+            var upgradeA = new TestUpgradeA(prefabA);
+            var upgradeB = new TestUpgradeB(prefabB);
+
+            // Act
+            var firstPurchase = _manager.PurchaseUpgrade(upgradeA);
+            var secondPurchase = _manager.PurchaseUpgrade(upgradeB);
+
+            // Assert
+            Assert.IsTrue(firstPurchase, "First purchase should succeed when a slot is available");
+            Assert.IsFalse(secondPurchase, "Second purchase should fail when all slots are occupied");
+            Assert.AreEqual(1, _manager.ActiveUpgrades.Count, "Only one upgrade should be active");
+
+            Object.DestroyImmediate(prefabA);
+            Object.DestroyImmediate(prefabB);
+            Object.DestroyImmediate(spawnPoint);
         }
 
         [Test]

@@ -57,6 +57,22 @@ namespace _project.Scripts.Classes
 
         public void Purchase()
         {
+            if (!CardGameMaster.Instance)
+            {
+                Debug.LogError("[EnvironmentUpgradeShopItem] Purchase failed: CardGameMaster not initialized!");
+                return;
+            }
+
+            var manager = CardGameMaster.Instance.environmentUpgradeManager;
+            if (!manager)
+            {
+                Debug.LogError("[EnvironmentUpgradeShopItem] Purchase failed: EnvironmentUpgradeManager not found!");
+                return;
+            }
+
+            if (!manager.CanPurchaseUpgrade(_upgrade))
+                return;
+
             _upgrade.Purchase();
             CardGameMaster.Instance.shopManager.RemoveShopItem(_gameObject);
         }
@@ -91,7 +107,7 @@ namespace _project.Scripts.Classes
     {
         public ICard Card => null;
         public Material DisplayMaterial => IconMaterial;
-        public GameObject Prefab => Resources.Load<GameObject>($"Prefabs/Upgrades/BeeBox");
+        public GameObject Prefab => CardGameMaster.Instance.environmentUpgradeManager.beeBoxPrefab;
         public Material IconMaterial => Resources.Load<Material>($"Materials/Upgrades/BeeBoxIcon");
 
         public string DisplayName => "Bee Box";
@@ -121,7 +137,9 @@ namespace _project.Scripts.Classes
                 return;
             }
 
-            manager.PurchaseUpgrade(this);
+            if (!manager.PurchaseUpgrade(this))
+                return;
+
             ScoreManager.SubtractMoneys(Cost);
         }
     }
