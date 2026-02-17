@@ -4,6 +4,7 @@ using _project.Scripts.Core;
 using _project.Scripts.ModLoading;
 using TMPro;
 using UnityEngine;
+using UnityEngine.Rendering;
 
 namespace _project.Scripts.Card_Core
 {
@@ -47,6 +48,42 @@ namespace _project.Scripts.Card_Core
             _originalCard = card;
 
             RestoreStickerVisuals();
+            SetFoilOverlay(card.IsFoil);
+        }
+
+        private void SetFoilOverlay(bool isFoil)
+        {
+            var existing = transform.Find("FoilOverlay");
+            if (!isFoil)
+            {
+                if (existing) existing.gameObject.SetActive(false);
+                return;
+            }
+
+            if (existing)
+            {
+                existing.gameObject.SetActive(true);
+                return;
+            }
+
+            var material = DefaultMaterials.FoilOverlay;
+            if (!material)
+            {
+                Debug.LogWarning("CardView: FoilOverlay material could not be loaded or created.");
+                return;
+            }
+
+            var overlay = GameObject.CreatePrimitive(PrimitiveType.Quad);
+            overlay.name = "FoilOverlay";
+            overlay.transform.SetParent(transform, false);
+            overlay.transform.localPosition = new Vector3(0f, 0f, 0.501f);
+            overlay.transform.localRotation = Quaternion.identity;
+            overlay.transform.localScale = Vector3.one;
+            DestroyImmediate(overlay.GetComponent<Collider>());
+            var r = overlay.GetComponent<Renderer>();
+            r.material = material;
+            r.shadowCastingMode = ShadowCastingMode.Off;
+            r.receiveShadows = false;
         }
 
         private void RestoreStickerVisuals()

@@ -118,7 +118,7 @@ namespace _project.Scripts.Card_Core
         }
 
         /// <summary>
-        ///     Serializes active upgrades for save system.
+        ///     Serializes active upgrades for the save system.
         /// </summary>
         public List<string> SerializeUpgrades()
         {
@@ -126,7 +126,7 @@ namespace _project.Scripts.Card_Core
         }
 
         /// <summary>
-        ///     Restores upgrades from serialized type names (for load system).
+        ///     Restores upgrades from serialized type names (for the load system).
         /// </summary>
         public void RestoreUpgrades(List<string> typeNames)
         {

@@ -92,6 +92,7 @@ namespace _project.Scripts.GameState
         public List<StickerData> stickers;
         public int? value;
         public int? baseValue;
+        public bool isFoil;
     }
 
     [Serializable]

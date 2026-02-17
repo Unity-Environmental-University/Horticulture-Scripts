@@ -265,14 +265,17 @@ namespace _project.Scripts.GameState
 
         public static CardData SerializeCard(ICard card)
         {
+            // Unwrap FoilCard so we save the inner card's type; isFoil flag preserves the foil state
+            var inner = card is FoilCard foilCard ? foilCard.Inner : card;
             return new CardData
             {
-                cardTypeName = card.GetType().Name,
-                cardTypeFullName = card.GetType().FullName,
-                cardName = card.Name,
-                value = card.Value,
-                baseValue = card is IPlantCard plantCard ? plantCard.BaseValue : null,
-                stickers = card.Stickers?.Select(SerializeSticker).ToList() ?? new List<StickerData>()
+                cardTypeName = inner.GetType().Name,
+                cardTypeFullName = inner.GetType().FullName,
+                cardName = inner.Name,
+                value = inner.Value,
+                baseValue = inner is IPlantCard plantCard ? plantCard.BaseValue : null,
+                stickers = inner.Stickers?.Select(SerializeSticker).ToList() ?? new List<StickerData>(),
+                isFoil = card.IsFoil
             };
         }
 
@@ -374,9 +377,16 @@ namespace _project.Scripts.GameState
                     plantCard.BaseValue = data.baseValue.Value;
 
                 // Restore stickers
-                if (data.stickers == null) return clone;
-                foreach (var sticker in data.stickers.Select(DeserializeSticker).Where(sticker => sticker != null))
-                    clone.ApplySticker(sticker);
+                if (data.stickers != null)
+                    foreach (var sticker in data.stickers.Select(DeserializeSticker).Where(sticker => sticker != null))
+                        clone.ApplySticker(sticker);
+
+                // Wrap in FoilCard if the saved card was a foil variant but isn't natively foil.
+                // Guard: sub-interface cards cannot be foiled (FoilCard doesn't forward those interfaces).
+                // Cards that override IsFoil directly (e.g. Panacea) don't need the decorator.
+                if (data.isFoil && !clone.IsFoil
+                    && clone is not (IPlantCard or ILocationCard or IAfflictionCard or IFieldSpell))
+                    return new FoilCard(clone);
 
                 return clone;
             }

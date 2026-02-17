@@ -35,6 +35,62 @@ namespace _project.Scripts.Classes
 
         void ApplySticker(ISticker sticker) { Stickers.Add(sticker); }
         void ModifyValue(int delta) { }
+
+        /// <summary>
+        ///     Whether this card has earned the holographic foil treatment.
+        ///     Foil cards render a view-dependent rainbow shimmer overlay in the 3D world.
+        /// </summary>
+        bool IsFoil => false;
+    }
+
+    /// <summary>
+    ///     Decorator that marks any card as a foil variant, adding a holographic shimmer overlay
+    ///     when rendered via <c>CardView</c>. All card logic delegates to the wrapped inner card.
+    /// </summary>
+    public class FoilCard : ICard
+    {
+        public ICard Inner { get; }
+
+        public FoilCard(ICard inner)
+        {
+            Inner = inner;
+        }
+
+        public bool IsFoil => true;
+        public string Name => Inner.Name;
+        public string Description => Inner.Description;
+
+        public int? Value
+        {
+            get => Inner.Value;
+            set => Inner.Value = value;
+        }
+
+        public PlantAfflictions.IAffliction Affliction => Inner.Affliction;
+        public PlantAfflictions.ITreatment Treatment => Inner.Treatment;
+        public GameObject Prefab => Inner.Prefab;
+        public Material Material => Inner.Material;
+        public List<ISticker> Stickers => Inner.Stickers;
+
+        public ICard Clone()
+        {
+            return new FoilCard(Inner.Clone());
+        }
+
+        public void Selected()
+        {
+            Inner.Selected();
+        }
+
+        public void ApplySticker(ISticker sticker)
+        {
+            Inner.ApplySticker(sticker);
+        }
+
+        public void ModifyValue(int delta)
+        {
+            Inner.ModifyValue(delta);
+        }
     }
 
     public enum PlantCardCategory
@@ -1025,6 +1081,7 @@ namespace _project.Scripts.Classes
         [CanBeNull] private string _description;
         public PlantAfflictions.ITreatment Treatment => new PlantAfflictions.Panacea();
         public string Name => "Panacea";
+        public bool IsFoil => true;
         private int _value = -5;
         public int? Value
         {

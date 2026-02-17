@@ -464,6 +464,48 @@ namespace _project.Scripts.Card_Core
         public List<ICard> GetActionHand() => new(_actionHand);
         public List<ISticker> GetPlayerStickers() => new(_playerStickers);
 
+        /// <summary>
+        ///     Wraps <paramref name="target" /> in a <see cref="FoilCard" /> across all action decks and the hand.
+        ///     The visual update is applied automatically the next time <c>CardView.Setup</c> is called on that card.
+        /// </summary>
+        /// <remarks>
+        ///     Only plain action cards can be foiled. Plant cards, location cards, affliction cards,
+        ///     and field spells implement sub-interfaces that <c>FoilCard</c> does not forward, so
+        ///     foiling them would silently break type-dispatch throughout the game.
+        /// </remarks>
+        public void ApplyFoilToCard(ICard target)
+        {
+            if (target == null || target.IsFoil) return;
+
+            if (target is IPlantCard or ILocationCard or IAfflictionCard or IFieldSpell)
+            {
+                Debug.LogWarning(
+                    $"[DeckManager] ApplyFoilToCard: cannot foil '{target.Name}' — only plain action cards support foil.");
+                return;
+            }
+
+            var replaced = false;
+            replaced |= ReplaceInList(_actionDeck, target);
+            replaced |= ReplaceInList(_actionDiscardPile, target);
+            replaced |= ReplaceInList(_actionHand, target);
+            replaced |= ReplaceInList(_sideDeck, target);
+
+            if (!replaced && debug)
+                Debug.LogWarning($"[DeckManager] ApplyFoilToCard: '{target.Name}' was not found in any action list.");
+        }
+
+        private static bool ReplaceInList(List<ICard> list, ICard target)
+        {
+            var replaced = false;
+            for (var i = 0; i < list.Count; i++)
+            {
+                if (!ReferenceEquals(list[i], target)) continue;
+                list[i] = new FoilCard(target);
+                replaced = true;
+            }
+            return replaced;
+        }
+
         public void RestoreActionDeck(List<CardData> cards)
         {
             _actionDeck.Clear();

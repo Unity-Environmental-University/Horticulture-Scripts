@@ -22,6 +22,7 @@ Location: `Assets/_project/Scripts/Classes/`
 ```
 CardClasses
 ├── ICard (base contract)
+├── FoilCard (decorator — adds holographic shimmer to any ICard)
 ├── IPlantCard (plant-specific contract)
 ├── IAfflictionCard (affliction-specific contract)
 ├── ILocationCard (location-specific contract)
@@ -45,7 +46,8 @@ PlantEffectClasses
 ## Core Components
 
 ### ICard and Card Types (CardClasses.cs)
-- ICard: Base contract with `Name`, optional `Description`, nullable `Value`, optional `Affliction`/`Treatment`, `Prefab`, `Material`, `List<ISticker> Stickers`; `Clone()`, `Selected()`, `ApplySticker()`, `ModifyValue(int)`.
+- ICard: Base contract with `Name`, optional `Description`, nullable `Value`, optional `Affliction`/`Treatment`, `Prefab`, `Material`, `List<ISticker> Stickers`, `bool IsFoil`; `Clone()`, `Selected()`, `ApplySticker()`, `ModifyValue(int)`. All members except `Name`, `Stickers`, and `Clone()` have default interface implementations, so implementing types only need to override what they use.
+- FoilCard: Decorator that wraps any `ICard` and returns `true` for `IsFoil`. All other members delegate to the inner card. Use `DeckManager.ApplyFoilToCard(target)` to wrap an existing card in-place across all decks rather than constructing `FoilCard` directly.
 - IPlantCard: Extends ICard for plant-specific cards with `InfectLevel`, `EggLevel`, and a `PlantCardCategory` so cards can report if they are Fruiting, Decorative, or another class.
 - IAfflictionCard: Extends ICard for affliction cards with `BaseInfectLevel` and `BaseEggLevel` properties.
 - ILocationCard: Extends ICard for location effects with `EffectDuration`, `IsPermanent`, `EffectType`, and location effect methods.
@@ -85,12 +87,28 @@ ICard GetCard()
 void ApplyTreatment(PlantController plant) // default implementation
 ```
 
+### ICard.IsFoil
+`bool IsFoil` defaults to `false` on the interface. `FoilCard` returns `true`. `CardView.Setup` reads this property to create or toggle the holographic overlay quad; no additional wiring is needed when cards are displayed through the normal pipeline.
+
+### FoilCard
+```csharp
+// Wrap an existing card to make it foil
+var foil = new FoilCard(existingCard);
+
+// Apply foil across all decks via DeckManager (preferred)
+deckManager.ApplyFoilToCard(target);
+
+// Unwrap to access the underlying card
+ICard inner = ((FoilCard)foilCard).Inner;
+```
+
 ## Integration Patterns
 
 - Card Core: action cards expose `Treatment` that `TurnController` can apply to the selected plant via `ApplyTreatment`.
 - Core: afflictions call `plant.UpdatePriceFlag(newValue)` after `TickDay` to keep UI/state in sync.
 - Resources: action cards bind `Material` via `Resources.Load<Material>("Materials/Cards/<Name>")` for card rendering.
 - Shop: `CardShopItem.Purchase()` updates deck (`DeckManager.AddActionCard`), currency (`ScoreManager.SubtractMoneys`), and UI (`ShopManager.RemoveShopItem`).
+- Foil rendering: `CardView.SetFoilOverlay` creates a child quad using the material at `Resources/Materials/Cards/FoilOverlay` (using the `Custom/FoilCard` URP shader). The quad is cached as a child named `FoilOverlay` and toggled on subsequent calls.
 
 ## Usage Examples
 
@@ -108,6 +126,9 @@ treatment.ApplyTreatment(plantController);
 // Purchase a shop item
 var item = new CardShopItem(new FungicideBasic(), deckManager, shopEntryGO);
 item.Purchase();
+
+// Make a card foil (preferred: use DeckManager so all deck lists stay consistent)
+deckManager.ApplyFoilToCard(selectedCard);
 ```
 
 ## Dependencies
@@ -131,9 +152,10 @@ f.SetValue(card, 7);
 - Action card seems ineffective: ensure `Treatment.Name` matches `TreatWith` switch/conditions and plant actually has matching afflictions.
 - Afflictions not reducing value: confirm `TickDay` is invoked and `PlantController.PlantCard.Value` is nullable-int with a value.
 - Resources material missing: verify `Materials/Cards/<Name>` exists and is included in build.
+- Foil overlay not appearing: ensure `Resources/Materials/Cards/FoilOverlay` exists and uses the `Custom/FoilCard` shader. `CardView` logs a warning if the material is missing.
 
 ---
 
-Version: 1.1
-Last Updated: October 2025
+Version: 1.2
+Last Updated: 2026-02-17
 Namespaces: `_project.Scripts.Classes`

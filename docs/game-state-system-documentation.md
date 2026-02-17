@@ -9,7 +9,7 @@
 - `GameStateData` aggregates `TurnData`, `ScoreData`, `DeckData`, list of `PlantData`, and optional `RetainedCardData`.
 - `DeckData` captures **only action deck/hand/discard** plus player sticker inventory; affliction/plant decks remain for future extension.
 - `PlantData` stores the serialised card (`CardData`), its socket index, string-backed affliction/treatment history, and current `moldIntensity`.
-- `CardData` serialises by runtime type name, stickers, and nullable value override. `StickerData` keeps the sticker type, display name, and optional value payload.
+- `CardData` serialises by runtime type name, stickers, nullable value override, and `isFoil`. `StickerData` keeps the sticker type, display name, and optional value payload.
 
 ## Save Flow (`SaveGame`)
 1. Fetch singletons: `CardGameMaster.Instance`, its `TurnController`, `ScoreManager`, and `DeckManager`.
@@ -35,6 +35,7 @@
 
 ## Serialization Helpers
 - `SerializeCard(ICard)` and `SerializeSticker(ISticker)` produce DTOs using runtime type names; value overrides only populate when nullable `Value` has data.
+- **Foil cards**: `SerializeCard` unwraps `FoilCard` before recording the type name so the inner card's concrete type is saved, then stores `isFoil = true` as a separate flag. `DeserializeCard` reconstructs the inner card normally and wraps it in a new `FoilCard` when `isFoil` is true. This means `FoilCard` itself is never stored by type name and does not need to be resolvable by the type-lookup mechanism.
 - `DeserializeCard(CardData)` resolves the type by name across all loaded assemblies, instantiates it, reapplies value overrides, and replays stickers using `DeserializeSticker`.
 - `DeserializeSticker(StickerData)` handles both ScriptableObject-based and POCO stickers, defaulting to cloning existing definitions when available.
 - All helper methods throw or log descriptive errors when resolution fails so corrupted saves do not crash the game loop unexpectedly.
@@ -61,7 +62,7 @@
 ## Testing & Validation
 - Play Mode tests: `PlayModeTest/CardSerializationTest.cs` covers card round-trip serialisation for both mutable and read-only cards, value overrides, and sticker application edge cases.
 - Manual workflow: capture a save mid-run, alter the deck/plant composition, and ensure load faithfully reconstructs state without leaking references or duplicating afflictions.
-- Regression check: verify loading older saves after DTO changes; missing fields should default gracefully (e.g., the recently removed `PlantData.plantType`).
+- Regression check: verify loading older saves after DTO changes; missing fields should default gracefully (e.g., `isFoil` defaults to `false` in saves predating the foil feature).
 
 ---
-Last Updated: September 2025
+Last Updated: 2026-02-17
