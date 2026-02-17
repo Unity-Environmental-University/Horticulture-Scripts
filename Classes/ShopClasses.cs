@@ -107,8 +107,12 @@ namespace _project.Scripts.Classes
     {
         public ICard Card => null;
         public Material DisplayMaterial => IconMaterial;
-        public GameObject Prefab => CardGameMaster.Instance.environmentUpgradeManager.beeBoxPrefab;
-        public Material IconMaterial => Resources.Load<Material>($"Materials/Upgrades/BeeBoxIcon");
+
+        public GameObject Prefab => CardGameMaster.Instance
+            ? CardGameMaster.Instance.environmentUpgradeManager.beeBoxPrefab
+            : null;
+
+        public Material IconMaterial => Resources.Load<Material>("Materials/Upgrades/BeeBoxIcon");
 
         public string DisplayName => "Bee Box";
         public string Description => "Pollination boost: +$2 per healthy plant this round";
