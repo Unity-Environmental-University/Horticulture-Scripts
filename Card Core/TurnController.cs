@@ -712,6 +712,11 @@ namespace _project.Scripts.Card_Core
                 Debug.Log($"[TurnController] No bonus: {plantsHealthy}/{plantControllers.Length} plants healthy");
             }
 
+            // Inject environment upgrade bonuses
+            var upgradeManager = CardGameMaster.Instance.environmentUpgradeManager;
+            if (upgradeManager && _scoreManager)
+                upgradeManager.InjectBonuses(_scoreManager, plantsHealthy, plantControllers.Length);
+
             var scoreBeforeRound = ScoreManager.GetMoneys();
             var score = _scoreManager.CalculateScore();
             if (_scoreManager) _scoreManager.treatmentCost = 0;
@@ -736,6 +741,9 @@ namespace _project.Scripts.Card_Core
             {
                 Debug.LogWarning($"[Analytics] RecordRoundEnd error: {ex.Message}");
             }
+
+            // Clear per-round upgrades after bonuses have been applied and score calculated
+            if (upgradeManager) upgradeManager.ClearRoundUpgrades();
 
             // Handle different game modes
             if (currentGameMode == GameMode.Campaign && !IsActiveTutorialStep)
@@ -793,6 +801,11 @@ namespace _project.Scripts.Card_Core
             UpdateMoneyGoal();
             _deckManager.ResetRedrawCount();
             DeckManager.GeneratePlantPrices();
+
+            // Clear environment upgrades at end of level
+            var upgradeManager = CardGameMaster.Instance.environmentUpgradeManager;
+            if (upgradeManager) upgradeManager.ClearUpgrades();
+
             if (!shopQueued) return;
             CardGameMaster.Instance.shopManager.OpenShop();
             shopQueued = false;

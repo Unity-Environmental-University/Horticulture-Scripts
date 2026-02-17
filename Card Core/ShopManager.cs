@@ -70,6 +70,7 @@ namespace _project.Scripts.Card_Core
                 new BeeBox(),
             };
 
+            // Add card shop items
             for (var i = 0; i < numberOfCards; i++)
             {
                 var randCard = availableCards[Random.Range(0, availableCards.Count)].Clone();
@@ -79,6 +80,21 @@ namespace _project.Scripts.Card_Core
 
                 var ui = cardObj.GetComponent<ShopObject>();
                 ui.Setup(itemLogic);
+            }
+
+            // Add environment upgrade shop items
+            var upgradeManager = CardGameMaster.Instance.environmentUpgradeManager;
+            if (!upgradeManager) return;
+            {
+                foreach (var upgrade in availableUtilities)
+                {
+                    var upgradeObj = Instantiate(shopItemPrefab, shopItemsParent.transform);
+                    var upgradeItemLogic = new EnvironmentUpgradeShopItem(upgrade, upgradeObj);
+                    currentShopItems.Add(upgradeItemLogic);
+
+                    var ui = upgradeObj.GetComponent<ShopObject>();
+                    ui.Setup(upgradeItemLogic);
+                }
             }
         }
 

@@ -71,6 +71,16 @@ namespace _project.Scripts.GameState
             else
                 data.retainedCard = null; // No retained card to save
 
+            // Environment Upgrades
+            var upgradeManager = CardGameMaster.Instance?.environmentUpgradeManager;
+            if (upgradeManager != null)
+            {
+                data.environmentUpgrades = new EnvironmentUpgradeData
+                {
+                    activeUpgradeTypeNames = upgradeManager.SerializeUpgrades()
+                };
+            }
+
             // Save to PlayerPrefs
             var json = JsonUtility.ToJson(data);
             PlayerPrefs.SetString("GameState", json);
@@ -229,6 +239,13 @@ namespace _project.Scripts.GameState
             {
                 // No retained card in save data, ensure the slot is clear
                 retained.ClearHeldCard();
+            }
+
+            // Restore Environment Upgrades
+            var upgradeManager = CardGameMaster.Instance?.environmentUpgradeManager;
+            if (upgradeManager != null && data.environmentUpgrades?.activeUpgradeTypeNames != null)
+            {
+                upgradeManager.RestoreUpgrades(data.environmentUpgrades.activeUpgradeTypeNames);
             }
         }
 
