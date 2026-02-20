@@ -721,6 +721,11 @@ namespace _project.Scripts.Card_Core
             var score = _scoreManager.CalculateScore();
             if (_scoreManager) _scoreManager.treatmentCost = 0;
             var scoreDelta = score - scoreBeforeRound;
+
+            // Animate the money text change (count-up/down with color flash + scale punch)
+            if (_scoreManager)
+                yield return StartCoroutine(_scoreManager.AnimateScoreChange(scoreBeforeRound, score));
+
             var roundVictory = !IsActiveTutorialStep && ScoreManager.GetMoneys() >= moneyGoal;
 
             // Count plant health status and record round end analytics

@@ -1,6 +1,8 @@
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using _project.Scripts.Core;
+using DG.Tweening;
 using TMPro;
 using UnityEngine;
 
@@ -44,27 +46,26 @@ namespace _project.Scripts.Card_Core
 
         public static void UpdateMoneysText(int modifier = 0)
         {
-            if (CardGameMaster.Instance.moneysText)
-            {
-                var turnController = CardGameMaster.Instance.turnController;
-                var displayMoney = Moneys + modifier;
+            var displayMoney = Moneys + modifier;
+            var turnController = CardGameMaster.Instance ? CardGameMaster.Instance.turnController : null;
 
-                // Display different format based on game mode
-                if (turnController.currentGameMode == GameMode.Campaign)
-                {
-                    CardGameMaster.Instance.moneysText!.text =
-                        $"Money: ${displayMoney} Rent Due: ${turnController.moneyGoal}";
-                }
-                else
-                {
-                    // Tutorial or Endless mode - original format
-                    CardGameMaster.Instance.moneysText!.text =
-                        "Moneys: " + "$" + displayMoney + "/" + turnController.moneyGoal;
-                }
-            }
+            if (CardGameMaster.Instance.moneysText && turnController)
+                CardGameMaster.Instance.moneysText!.text = FormatMainMoneyText(displayMoney, turnController);
 
             if (CardGameMaster.Instance.shopMoneyText)
-                CardGameMaster.Instance.shopMoneyText!.text = "Moneys: " + "$" + (Moneys + modifier);
+                CardGameMaster.Instance.shopMoneyText!.text = FormatShopMoneyText(displayMoney);
+        }
+
+        private static string FormatMainMoneyText(int value, TurnController tc)
+        {
+            return tc.currentGameMode == GameMode.Campaign
+                ? $"Money: ${value} Rent Due: ${tc.moneyGoal}"
+                : $"Moneys: ${value}/{tc.moneyGoal}";
+        }
+
+        private static string FormatShopMoneyText(int value)
+        {
+            return $"Moneys: ${value}";
         }
 
         public static void SetScore(int newScore)
@@ -187,5 +188,115 @@ namespace _project.Scripts.Card_Core
             var totalBonus = bonuses.Sum(b => b.BonusValue);
             return totalBonus;
         }
+
+        #region Score Animation
+
+        private static readonly Color GainColor = new(0.2f, 0.9f, 0.3f);
+        private static readonly Color LossColor = new(0.95f, 0.25f, 0.2f);
+        private const float CountDuration = 1.0f;
+        private const float PunchScale = 0.35f;
+        private const float PunchDuration = 1.5f;
+
+        private Sequence _moneyAnimSequence;
+
+        private void SafeKillSequence()
+        {
+            if (_moneyAnimSequence != null && _moneyAnimSequence.IsActive())
+                _moneyAnimSequence.Kill();
+            _moneyAnimSequence = null;
+        }
+
+        private void OnDestroy() => SafeKillSequence();
+
+        /// <summary>
+        ///     Animates the money display from <paramref name="previousScore" /> to <paramref name="finalScore" />
+        ///     with a counting tween, color flash, and scale punch.
+        ///     Call after <see cref="CalculateScore" /> which sets the canonical value.
+        /// </summary>
+        public IEnumerator AnimateScoreChange(int previousScore, int finalScore)
+        {
+            var delta = finalScore - previousScore;
+            if (delta == 0) yield break;
+
+            SafeKillSequence();
+
+            var moneysText = CardGameMaster.Instance ? CardGameMaster.Instance.moneysText : null;
+            var shopText = CardGameMaster.Instance ? CardGameMaster.Instance.shopMoneyText : null;
+
+            if (!moneysText && !shopText) yield break;
+
+            var flashColor = delta > 0 ? GainColor : LossColor;
+            var displayValue = previousScore;
+
+            // Reset display to old value — CalculateScore already set the final value
+            SetMoneyTextRaw(previousScore);
+
+            var seq = DOTween.Sequence();
+            var origMainColor = moneysText ? moneysText.color : Color.white;
+            var origShopColor = shopText ? shopText.color : Color.white;
+
+            // Set flash color immediately
+            if (moneysText) moneysText.color = flashColor;
+            if (shopText) shopText.color = flashColor;
+
+            // Count tween: animate displayValue from previous to final
+            seq.Append(
+                DOTween.To(() => displayValue, x =>
+                    {
+                        displayValue = x;
+                        SetMoneyTextRaw(x);
+                    }, finalScore, CountDuration)
+                    .SetEase(Ease.OutQuart)
+            );
+
+            // Scale punch runs in parallel with count
+            if (moneysText)
+                seq.Join(moneysText.transform.DOPunchScale(Vector3.one * PunchScale, PunchDuration, 6, 0.7f));
+            if (shopText)
+                seq.Join(shopText.transform.DOPunchScale(Vector3.one * PunchScale, PunchDuration, 6, 0.7f));
+
+            // Color fades back to the original over the count duration
+            if (moneysText)
+                seq.Join(
+                    DOTween.To(() => moneysText.color, c => moneysText.color = c, origMainColor, CountDuration)
+                        .SetEase(Ease.InQuad)
+                );
+            if (shopText)
+                seq.Join(
+                    DOTween.To(() => shopText.color, c => shopText.color = c, origShopColor, CountDuration)
+                        .SetEase(Ease.InQuad)
+                );
+
+            // Ensure canonical final state
+            var complete = false;
+            seq.OnComplete(() =>
+            {
+                if (moneysText) moneysText.color = origMainColor;
+                if (shopText) shopText.color = origShopColor;
+                UpdateMoneysText();
+                complete = true;
+            });
+
+            seq.SetLink(gameObject, LinkBehaviour.KillOnDisable);
+            _moneyAnimSequence = seq;
+
+            // Wait for the sequence to actually finish (robust against timing changes)
+            yield return new WaitUntil(() => complete || _moneyAnimSequence == null);
+        }
+
+        private static void SetMoneyTextRaw(int displayValue)
+        {
+            var moneysText = CardGameMaster.Instance ? CardGameMaster.Instance.moneysText : null;
+            var shopText = CardGameMaster.Instance ? CardGameMaster.Instance.shopMoneyText : null;
+            var turnController = CardGameMaster.Instance ? CardGameMaster.Instance.turnController : null;
+
+            if (moneysText && turnController)
+                moneysText.text = FormatMainMoneyText(displayValue, turnController);
+
+            if (shopText)
+                shopText.text = FormatShopMoneyText(displayValue);
+        }
+
+        #endregion
     }
 }
