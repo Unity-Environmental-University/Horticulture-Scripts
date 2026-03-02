@@ -353,5 +353,138 @@ namespace _project.Scripts.PlayModeTest
             Assert.AreEqual(1, _scoreManager.bonuses.Count);
             Assert.AreEqual(6, _scoreManager.bonuses[0].BonusValue);
         }
+
+        [UnityTest]
+        public IEnumerator ShopPurchase_BeeBox_FullFlow()
+        {
+            // Arrange - Setup scene with CardGameMaster
+            var cardGameMasterObj = new GameObject("CardGameMaster");
+            var mockCGM = cardGameMasterObj.AddComponent<CardGameMaster>();
+
+            // Setup EnvironmentUpgradeManager with spawn point
+            var managerObj = new GameObject("EnvironmentUpgradeManager");
+            var upgradeManager = managerObj.AddComponent<EnvironmentUpgradeManager>();
+            var spawnPointObj = new GameObject("SpawnPoint");
+            SetUpgradeSpawnPoints(upgradeManager, new List<Transform> { spawnPointObj.transform });
+
+            // Create a simple prefab for the bee box
+            var beeBoxPrefab = new GameObject("BeeBoxPrefab");
+
+            // Setup ScoreManager
+            var scoreManagerObj = new GameObject("ScoreManager");
+            var scoreManager = scoreManagerObj.AddComponent<ScoreManager>();
+
+            // Setup ShopManager
+            var shopManagerObj = new GameObject("ShopManager");
+            var shopManager = shopManagerObj.AddComponent<ShopManager>();
+
+            try
+            {
+                // Inject references into CardGameMaster (via reflection)
+                var cgmType = typeof(CardGameMaster);
+                var instanceField = cgmType.GetField("_instance", BindingFlags.Static | BindingFlags.NonPublic);
+                instanceField?.SetValue(null, mockCGM);
+
+                var envUpgradeField = cgmType.GetField("environmentUpgradeManager", BindingFlags.Instance | BindingFlags.Public);
+                envUpgradeField?.SetValue(mockCGM, upgradeManager);
+
+                var scoreManagerField = cgmType.GetField("scoreManager", BindingFlags.Instance | BindingFlags.Public);
+                scoreManagerField?.SetValue(mockCGM, scoreManager);
+
+                var shopManagerField = cgmType.GetField("shopManager", BindingFlags.Instance | BindingFlags.Public);
+                shopManagerField?.SetValue(mockCGM, shopManager);
+
+                upgradeManager.beeBoxPrefab = beeBoxPrefab;
+
+                // Act - Create the shop item and purchase
+                var beeBox = new BeeBox();
+                var shopItemObj = new GameObject("BeeBoxShopItem");
+                var shopItem = new EnvironmentUpgradeShopItem(beeBox, shopItemObj);
+
+                // Get initial state (before purchase)
+                var initialUpgradesCount = upgradeManager.ActiveUpgrades.Count;
+
+                // Purchase
+                shopItem.Purchase();
+                yield return null;
+
+                // Assert - Verify the purchase succeeded
+                Assert.AreEqual(initialUpgradesCount + 1, upgradeManager.ActiveUpgrades.Count,
+                    "Should have added one upgrade to active list");
+                Assert.IsInstanceOf<BeeBox>(upgradeManager.ActiveUpgrades[0],
+                    "Active upgrade should be BeeBox");
+
+                // Verify the prefab was spawned
+                var spawnedChildren = spawnPointObj.transform.childCount;
+                Assert.Greater(spawnedChildren, 0, "BeeBox prefab should be spawned as child of spawn point");
+            }
+            finally
+            {
+                // Cleanup
+                Object.DestroyImmediate(cardGameMasterObj);
+                Object.DestroyImmediate(managerObj);
+                Object.DestroyImmediate(scoreManagerObj);
+                Object.DestroyImmediate(spawnPointObj);
+                Object.DestroyImmediate(beeBoxPrefab);
+                Object.DestroyImmediate(shopManagerObj);
+            }
+        }
+
+        [UnityTest]
+        public IEnumerator ShopPurchase_BeeBox_CompleteFlow()
+        {
+            // Arrange - Full setup for integration test
+            var cardGameMasterObj = new GameObject("CardGameMaster");
+            var mockCGM = cardGameMasterObj.AddComponent<CardGameMaster>();
+            var upgradeManagerObj = new GameObject("EnvironmentUpgradeManager");
+            var upgradeManager = upgradeManagerObj.AddComponent<EnvironmentUpgradeManager>();
+            var scoreManagerObj = new GameObject("ScoreManager");
+            var scoreManager = scoreManagerObj.AddComponent<ScoreManager>();
+            var shopManagerObj = new GameObject("ShopManager");
+            var shopManager = shopManagerObj.AddComponent<ShopManager>();
+            var spawnPointObj = new GameObject("SpawnPoint");
+
+            try
+            {
+                // Setup
+                SetUpgradeSpawnPoints(upgradeManager, new List<Transform> { spawnPointObj.transform });
+                var beeBoxPrefab = new GameObject("BeeBoxPrefab");
+                upgradeManager.beeBoxPrefab = beeBoxPrefab;
+
+                var cgmType = typeof(CardGameMaster);
+                var instanceField = cgmType.GetField("_instance", BindingFlags.Static | BindingFlags.NonPublic);
+                instanceField?.SetValue(null, mockCGM);
+                var envUpgradeField = cgmType.GetField("environmentUpgradeManager", BindingFlags.Instance | BindingFlags.Public);
+                envUpgradeField?.SetValue(mockCGM, upgradeManager);
+                var scoreManagerField = cgmType.GetField("scoreManager", BindingFlags.Instance | BindingFlags.Public);
+                scoreManagerField?.SetValue(mockCGM, scoreManager);
+                var shopManagerField = cgmType.GetField("shopManager", BindingFlags.Instance | BindingFlags.Public);
+                shopManagerField?.SetValue(mockCGM, shopManager);
+
+                var beeBox = new BeeBox();
+                var shopItemObj = new GameObject("BeeBoxShopItem");
+                var shopItem = new EnvironmentUpgradeShopItem(beeBox, shopItemObj);
+
+                // Act - Purchase via shop
+                shopItem.Purchase();
+                yield return null;
+
+                // Assert - Verify complete purchase flow
+                Assert.AreEqual(1, upgradeManager.ActiveUpgrades.Count,
+                    "BeeBox should be in active upgrades after purchase");
+                Assert.IsInstanceOf<BeeBox>(upgradeManager.ActiveUpgrades[0],
+                    "Active upgrade should be BeeBox instance");
+                Assert.Greater(spawnPointObj.transform.childCount, 0,
+                    "BeeBox prefab should be spawned at spawn point");
+            }
+            finally
+            {
+                Object.DestroyImmediate(cardGameMasterObj);
+                Object.DestroyImmediate(upgradeManagerObj);
+                Object.DestroyImmediate(scoreManagerObj);
+                Object.DestroyImmediate(spawnPointObj);
+                Object.DestroyImmediate(shopManagerObj);
+            }
+        }
     }
 }

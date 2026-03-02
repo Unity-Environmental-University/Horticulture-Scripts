@@ -21,6 +21,9 @@ namespace _project.Scripts.Card_Core
             titleText.text = ShopItem.DisplayName;
             costText.text = "-$" + ShopItem.Cost;
 
+            buyButton.onClick.RemoveAllListeners();
+            buyButton.onClick.AddListener(() => ShopItem.Purchase());
+
             var image = objectImage ? objectImage : GetComponent<Image>();
             if (image is null) return;
 
@@ -45,9 +48,6 @@ namespace _project.Scripts.Card_Core
                 cardTexture,
                 new Rect(0f, 0f, cardTexture.width, cardTexture.height),
                 new Vector2(0.5f, 0.5f));
-
-            buyButton.onClick.RemoveAllListeners();
-            buyButton.onClick.AddListener(() => ShopItem.Purchase());
         }
     }
 }

@@ -74,7 +74,10 @@ namespace _project.Scripts.Classes
                 return;
 
             _upgrade.Purchase();
-            CardGameMaster.Instance.shopManager.RemoveShopItem(_gameObject);
+
+            var shopManager = CardGameMaster.Instance.shopManager;
+            if (shopManager)
+                shopManager.RemoveShopItem(_gameObject);
         }
     }
     
