@@ -536,10 +536,11 @@ namespace _project.Scripts.Card_Core
 
         public void RestorePlayerStickers(List<StickerData> stickers)
         {
-            // Clear existing sticker visuals
+            // Clear existing sticker visuals immediately, so GetComponentsInChildren
+            // in ArrangeStickersInFan won't find the old (deferred-destroy) objects
             if (stickerPackParent != null)
-                foreach (Transform child in stickerPackParent)
-                    Destroy(child.gameObject);
+                for (var i = stickerPackParent.childCount - 1; i >= 0; i--)
+                    DestroyImmediate(stickerPackParent.GetChild(i).gameObject);
 
             _playerStickers.Clear();
             foreach (var sticker in stickers.Select(GameStateManager.DeserializeSticker)
