@@ -188,7 +188,7 @@ namespace _project.Scripts.Card_Core
                 var cgm = CardGameMaster.Instance;
                 if (cgm?.popUpController)
                 {
-                    cgm.popUpController.ActivatePopUpPanel(null, false,
+                    cgm!.popUpController.ActivatePopUpPanel(null, false,
                         "Tutorial Complete! Press Continue to proceed to the regular game...");
                 }
                 yield return new WaitForSeconds(2f);
@@ -807,7 +807,7 @@ namespace _project.Scripts.Card_Core
             _deckManager.ResetRedrawCount();
             DeckManager.GeneratePlantPrices();
 
-            // Clear environment upgrades at end of level
+            // Clear environment upgrades at the end of the level
             var upgradeManager = CardGameMaster.Instance.environmentUpgradeManager;
             if (upgradeManager) upgradeManager.ClearUpgrades();
 
@@ -860,10 +860,13 @@ namespace _project.Scripts.Card_Core
 
                     if (request.sound && request.plant.audioSource)
                     {
-                        request.plant.audioSource.pitch = 1f;
-                        request.plant.audioSource.volume = 1f;
-                        request.plant.audioSource.spatialBlend = 0f;
-                        request.plant.audioSource.PlayOneShot(request.sound);
+                        if (request.plant.audioSource is not null)
+                        {
+                            request.plant.audioSource.pitch = 1f;
+                            request.plant.audioSource.volume = 1f;
+                            request.plant.audioSource.spatialBlend = 0f;
+                            request.plant.audioSource.PlayOneShot(request.sound);
+                        }
                     }
                 }
 
