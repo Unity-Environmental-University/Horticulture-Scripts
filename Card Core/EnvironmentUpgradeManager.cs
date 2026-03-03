@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using _project.Scripts.Classes;
+using TMPro;
 using UnityEngine;
 
 namespace _project.Scripts.Card_Core
@@ -186,10 +187,23 @@ namespace _project.Scripts.Card_Core
             var spawnPoint = upgradeSpawnPoints[_nextSpawnPointIndex];
             var instance = Instantiate(upgrade.Prefab, spawnPoint.position, spawnPoint.rotation, spawnPoint);
             _spawnedPrefabs[upgrade] = instance;
+            ConfigureUpgradeText(instance, upgrade);
             _nextSpawnPointIndex++;
 
             Debug.Log(
                 $"[EnvironmentUpgradeManager] Spawned {upgrade.DisplayName} at spawn point {_nextSpawnPointIndex - 1}");
+        }
+
+        private static void ConfigureUpgradeText(GameObject instance, IEnvironmentUpgrade upgrade)
+        {
+            if (upgrade is not BeeBox)
+                return;
+
+            var text = instance.GetComponentsInChildren<TMP_Text>(true).FirstOrDefault();
+            if (!text)
+                return;
+
+            text.text = $"+{BeeBox.BonusPerPlant} to healthy plants";
         }
     }
 }
