@@ -95,7 +95,7 @@ namespace _project.Scripts.PlayModeTest
             if (File.Exists(testPath)) File.Delete(testPath);
 
             // Clean up any lingering GameObjects from failed tests
-            var handlers = Object.FindObjectsByType<TreatmentEfficacyHandler>(FindObjectsSortMode.None);
+            TreatmentEfficacyHandler[] handlers = Object.FindObjectsByType<TreatmentEfficacyHandler>(FindObjectsInactive.Include);
             foreach (var handler in handlers) Object.DestroyImmediate(handler.gameObject);
         }
 

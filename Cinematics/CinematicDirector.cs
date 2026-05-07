@@ -14,7 +14,7 @@ namespace _project.Scripts.Cinematics
         private void Awake()
         {
             if (Director == null)
-                Director = FindFirstObjectByType<PlayableDirector>();
+                Director = FindAnyObjectByType<PlayableDirector>();
             var gm = CardGameMaster.Instance;
             if (gm?.turnController != null)
                 gm.turnController.readyToPlay = () =>

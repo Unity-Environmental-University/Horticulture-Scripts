@@ -66,7 +66,7 @@ namespace _project.Scripts.Core
             // Auto-assign menuManager if not set
             if (menuManager == null)
             {
-                menuManager = FindFirstObjectByType<MenuManager>();
+                menuManager = FindAnyObjectByType<MenuManager>();
                 if (menuManager == null)
                     Debug.LogWarning("MenuManager not found, some functionality may not work");
             }

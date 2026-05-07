@@ -107,7 +107,7 @@ namespace _project.Scripts.Card_Core
             {
                 TryGetComponent(out master);
                 if (!master)
-                    master = FindFirstObjectByType<CardGameMaster>(FindObjectsInactive.Include);
+                    master = FindAnyObjectByType<CardGameMaster>(FindObjectsInactive.Include);
             }
 
             if (master)
@@ -267,7 +267,7 @@ namespace _project.Scripts.Card_Core
                 }
                 // Reveal UI, wait for pop-in to finish, then draw the hand
                 if (debugging) Debug.Log("[TurnController] Looking for RobotCardGameSequencer...");
-                var sequencer = FindFirstObjectByType<RobotCardGameSequencer>(FindObjectsInactive.Exclude);
+                var sequencer = FindAnyObjectByType<RobotCardGameSequencer>(FindObjectsInactive.Exclude);
                 if (sequencer)
                 {
                     if (debugging) Debug.Log("[TurnController] Sequencer found. Waiting for UI pop-in...");
@@ -314,7 +314,7 @@ namespace _project.Scripts.Card_Core
                 _deckManager.DrawAfflictions();
                 TryPlayQueuedEffects();
                 // Reveal UI, wait for pop-in to finish, then draw the hand
-                var sequencer = FindFirstObjectByType<RobotCardGameSequencer>(FindObjectsInactive.Exclude);
+                var sequencer = FindAnyObjectByType<RobotCardGameSequencer>(FindObjectsInactive.Exclude);
                 if (sequencer) yield return StartCoroutine(sequencer.ResumeUIPopInAndWait());
 
                 // Record turn starts analytics before drawing action hand
@@ -414,7 +414,7 @@ namespace _project.Scripts.Card_Core
 	                .SelectMany(location => location.Transform.GetComponentsInChildren<PlantController>(false))
 	                .ToArray() ?? Array.Empty<PlantController>();
 
-            var spotDataHolders = FindObjectsByType<SpotDataHolder>(FindObjectsSortMode.None);
+            var spotDataHolders = FindObjectsByType<SpotDataHolder>();
 
             var cardHolders = CardGameMaster.Instance?.cardHolders;
             if (cardHolders != null)
@@ -439,7 +439,7 @@ namespace _project.Scripts.Card_Core
                 }
 
                 TryPlayQueuedEffects();
-                var retainedCardHolder = FindFirstObjectByType<RetainedCardHolder>();
+                var retainedCardHolder = FindAnyObjectByType<RetainedCardHolder>();
                 if (retainedCardHolder) retainedCardHolder.isCardLocked = false;
             }
 

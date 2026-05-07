@@ -60,7 +60,7 @@ namespace _project.Scripts.GameState
             data.plants = SerializePlants(dm);
 
             // Retained Card
-            var retained = Object.FindFirstObjectByType<RetainedCardHolder>();
+            var retained = Object.FindAnyObjectByType<RetainedCardHolder>();
             if (retained && retained.HeldCard != null)
                 data.retainedCard = new RetainedCardData
                 {
@@ -214,7 +214,7 @@ namespace _project.Scripts.GameState
             CardGameMaster.Instance.StartCoroutine(RestorePlantsAndClearEffects(data.plants, tc));
 
             // Restore Retained Card
-            var retained = Object.FindFirstObjectByType<RetainedCardHolder>();
+            var retained = Object.FindAnyObjectByType<RetainedCardHolder>();
             if (retained == null) return;
             if (data.retainedCard is { card: not null })
             {
@@ -256,7 +256,7 @@ namespace _project.Scripts.GameState
             SuppressQueuedEffects = false;
 
             // Update plant shaders after restoration to show current afflictions/treatments visually
-            var plantControllers = Object.FindObjectsByType<PlantController>(FindObjectsSortMode.None);
+            var plantControllers = Object.FindObjectsByType<PlantController>();
             foreach (var plantController in plantControllers) plantController.FlagShadersUpdate();
 
             // Wait one frame to ensure shader updates are processed
@@ -383,7 +383,7 @@ namespace _project.Scripts.GameState
 
                 // Wrap in FoilCard if the saved card was a foil variant but isn't natively foil.
                 // Guard: sub-interface cards cannot be foiled (FoilCard doesn't forward those interfaces).
-                // Cards that override IsFoil directly (e.g. Panacea) don't need the decorator.
+                // Cards that override IsFoil directly (e.g., Panacea) don't need the decorator.
                 if (data.isFoil && !clone.IsFoil
                     && clone is not (IPlantCard or ILocationCard or IAfflictionCard or IFieldSpell))
                     return new FoilCard(clone);

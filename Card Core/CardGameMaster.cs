@@ -109,7 +109,7 @@ namespace _project.Scripts.Card_Core
             try
             {
                 var foundHolders =
-                    FindObjectsByType<PlacedCardHolder>(FindObjectsInactive.Exclude, FindObjectsSortMode.None);
+                    FindObjectsByType<PlacedCardHolder>(FindObjectsInactive.Exclude);
                 cardHolders = foundHolders != null
                     ? new List<PlacedCardHolder>(foundHolders)
                     : new List<PlacedCardHolder>();

@@ -294,7 +294,7 @@ namespace _project.Scripts.Data
         {
             return CardGameMaster.Instance?.treatmentEfficacyHandler != null
                 ? CardGameMaster.Instance.treatmentEfficacyHandler
-                : FindFirstObjectByType<TreatmentEfficacyHandler>();
+                : FindAnyObjectByType<TreatmentEfficacyHandler>();
         }
     }
 }

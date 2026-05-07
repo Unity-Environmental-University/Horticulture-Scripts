@@ -413,7 +413,7 @@ namespace _project.Scripts.Card_Core
 
             if (placedCard?.Value != null)
             {
-                var retained = FindFirstObjectByType<RetainedCardHolder>(FindObjectsInactive.Include);
+                var retained = FindAnyObjectByType<RetainedCardHolder>(FindObjectsInactive.Include);
                 var isFromRetained = retained && retained.HeldCard == placedCard;
 
                 if (!isFromRetained)
@@ -468,7 +468,7 @@ namespace _project.Scripts.Card_Core
 
             if (currentPlacedCard?.Value != null)
             {
-                var retained = FindFirstObjectByType<RetainedCardHolder>(FindObjectsInactive.Include);
+                var retained = FindAnyObjectByType<RetainedCardHolder>(FindObjectsInactive.Include);
                 var isFromRetained = retained && retained.HeldCard == currentPlacedCard;
                 if (!isFromRetained)
                     _scoreManager.treatmentCost -= currentPlacedCard.Value.Value;
@@ -724,7 +724,7 @@ namespace _project.Scripts.Card_Core
 
             if (placedCard?.Value != null)
             {
-                var retained = FindFirstObjectByType<RetainedCardHolder>(FindObjectsInactive.Include);
+                var retained = FindAnyObjectByType<RetainedCardHolder>(FindObjectsInactive.Include);
                 var isFromRetained = retained && retained.HeldCard == placedCard;
 
                 if (!isFromRetained)
@@ -855,7 +855,7 @@ namespace _project.Scripts.Card_Core
 
             if (fieldSpell.Value != null)
             {
-                var retainedSlot = FindFirstObjectByType<RetainedCardHolder>(FindObjectsInactive.Include);
+                var retainedSlot = FindAnyObjectByType<RetainedCardHolder>(FindObjectsInactive.Include);
                 var isFromRetained = retainedSlot && retainedSlot.HeldCard == fieldSpell;
 
                 if (!isFromRetained)
@@ -956,7 +956,7 @@ namespace _project.Scripts.Card_Core
             }
 
             // Check for returning to RetainedCardHolder
-            var retainedSlot = FindFirstObjectByType<RetainedCardHolder>(FindObjectsInactive.Include);
+            var retainedSlot = FindAnyObjectByType<RetainedCardHolder>(FindObjectsInactive.Include);
             if (retainedSlot != null)
                 if (retainedSlot.HeldCard == placedCard)
                 {
@@ -979,7 +979,7 @@ namespace _project.Scripts.Card_Core
             // Update cost
             if (placedCard?.Value != null)
             {
-                var retainedSlot1 = FindFirstObjectByType<RetainedCardHolder>(FindObjectsInactive.Include);
+                var retainedSlot1 = FindAnyObjectByType<RetainedCardHolder>(FindObjectsInactive.Include);
                 if (!(retainedSlot1 != null && retainedSlot1.HeldCard == placedCard))
                     _scoreManager.treatmentCost -= placedCard.Value.Value;
             }

@@ -34,7 +34,7 @@ namespace _project.Scripts.Core
         public float inspectDistanceDefault = 2f; // Sets the Default distance
         public float rotateSpeed = 2.0f; // Speed of the object rotation
         public float highlightIntensity = 1; // Intensity of Highlight
-        public float scrollSensitivity = 0.1f; // Sensitivity for scroll wheel zoom
+        public float scrollSensitivity = 0.1f; // Sensitivity for scroll-wheel zoom
         public bool debugging;
 
         private readonly Dictionary<Renderer, Color> _originalColors = new();
@@ -299,7 +299,7 @@ namespace _project.Scripts.Core
             if (plantController) ShowInfectImages(plantType, plantAfflictions);
 
             // Find all objects except the inspected object and its children
-            foreach (var obj in FindObjectsByType<GameObject>(FindObjectsInactive.Include, FindObjectsSortMode.None))
+            foreach (var obj in FindObjectsByType<GameObject>(FindObjectsInactive.Include))
             {
                 if (obj == _inspectableObject) continue; // Skip the inspected object itself
 

@@ -67,7 +67,7 @@ namespace _project.Scripts.Card_Core
 
             // Cache the RetainedCardHolder reference to avoid repeated scene searches
             if (_cachedRetainedHolder == null)
-                _cachedRetainedHolder = FindFirstObjectByType<RetainedCardHolder>(FindObjectsInactive.Include);
+                _cachedRetainedHolder = FindAnyObjectByType<RetainedCardHolder>(FindObjectsInactive.Include);
 
             if (_cachedRetainedHolder == null) return;
             var outline = FindOutlineController(_cachedRetainedHolder);
@@ -180,7 +180,7 @@ namespace _project.Scripts.Card_Core
         }
 
         /// <summary>
-        ///     Ensures the outline cache is up-to-date by removing stale entries and adding new holders.
+        ///     Ensures the outline cache is up to date by removing stale entries and adding new holders.
         /// </summary>
         private void EnsureCardHolderOutlines()
         {
@@ -223,7 +223,7 @@ namespace _project.Scripts.Card_Core
 
             // Use cached reference to avoid repeated scene searches
             if (!_cachedRetainedHolder)
-                _cachedRetainedHolder = FindFirstObjectByType<RetainedCardHolder>(FindObjectsInactive.Include);
+                _cachedRetainedHolder = FindAnyObjectByType<RetainedCardHolder>(FindObjectsInactive.Include);
 
             if (!_cachedRetainedHolder) return;
             var outline = FindOutlineController(_cachedRetainedHolder);

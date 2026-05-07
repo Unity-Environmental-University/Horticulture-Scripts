@@ -110,7 +110,7 @@ namespace _project.Scripts.Rendering
             if (searchEntireScene)
             {
                 var inactiveMode = includeInactive ? FindObjectsInactive.Include : FindObjectsInactive.Exclude;
-                var renderers = FindObjectsByType<Renderer>(inactiveMode, FindObjectsSortMode.None);
+                var renderers = FindObjectsByType<Renderer>(inactiveMode);
                 foreach (var renderer1 in renderers) AddRenderer(renderer1);
             }
             else if (_rendererContexts.Count == 0)

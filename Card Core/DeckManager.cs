@@ -346,7 +346,7 @@ namespace _project.Scripts.Card_Core
             if (plantLocations is { Count: > 0 }) return;
 
             // Avoid noisy logs in tests/minimal setups where no board exists yet.
-            if (FindObjectsByType<SpotDataHolder>(FindObjectsInactive.Include, FindObjectsSortMode.None).Length ==
+            if (FindObjectsByType<SpotDataHolder>(FindObjectsInactive.Include).Length ==
                 0) return;
 
             Debug.LogError(

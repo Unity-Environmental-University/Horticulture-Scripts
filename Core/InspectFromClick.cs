@@ -117,7 +117,7 @@ namespace _project.Scripts.Core
             }
 
             // Find all objects except the inspected object and its children
-            foreach (var obj in FindObjectsByType<GameObject>(FindObjectsInactive.Include, FindObjectsSortMode.None))
+            foreach (var obj in FindObjectsByType<GameObject>(FindObjectsInactive.Include))
             {
                 if (obj == _inspectableObject) continue; // Skip the inspected object itself
 

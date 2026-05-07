@@ -106,7 +106,7 @@ namespace _project.Scripts.Card_Core
                 var targetPlant = searchRoot.GetComponentInChildren<PlantController>(true);
                 if (!targetPlant)
                     // Fallback: try to find any PlantController in the scene (tests may use minimal hierarchy)
-                    targetPlant = FindFirstObjectByType<PlantController>(FindObjectsInactive.Include);
+                    targetPlant = FindAnyObjectByType<PlantController>(FindObjectsInactive.Include);
 
                 if (!targetPlant)
                 {
@@ -124,7 +124,7 @@ namespace _project.Scripts.Card_Core
                 // If the card came from the retained slot, clear it now
                 if (cardHolder.placedCardClick3D && cardHolder.placedCardClick3D.isRetainedItem)
                 {
-                    var retainedSlot = FindFirstObjectByType<RetainedCardHolder>(FindObjectsInactive.Include);
+                    var retainedSlot = FindAnyObjectByType<RetainedCardHolder>(FindObjectsInactive.Include);
                     if (retainedSlot) retainedSlot.ClearHeldCard();
                 }
 
