@@ -48,7 +48,7 @@ namespace _project.Scripts.Card_Core
         private static readonly object PlantEffectQueueLock = new();
         private DeckManager _deckManager;
         private ScoreManager _scoreManager;
-        private Coroutine plantEffectCoroutine;
+        private Coroutine _plantEffectCoroutine;
 
         private const int TutorialTurnCount = 5;
         private const int TutorialMoneyGoal = 500;
@@ -832,8 +832,8 @@ namespace _project.Scripts.Card_Core
         {
             lock (PlantEffectQueueLock)
             {
-                if (plantEffectCoroutine == null && PlantEffectQueue.Count > 0)
-                    plantEffectCoroutine = StartCoroutine(PlayQueuedPlantEffects());
+                if (_plantEffectCoroutine == null && PlantEffectQueue.Count > 0)
+                    _plantEffectCoroutine = StartCoroutine(PlayQueuedPlantEffects());
             }
         }
 
@@ -875,7 +875,7 @@ namespace _project.Scripts.Card_Core
 
             lock (PlantEffectQueueLock)
             {
-                plantEffectCoroutine = null;
+                _plantEffectCoroutine = null;
             }
         }
 
@@ -891,7 +891,7 @@ namespace _project.Scripts.Card_Core
                 }
             }
 
-            plantEffectCoroutine = null;
+            _plantEffectCoroutine = null;
         }
 
         public void ShowBetaScreen()
@@ -963,8 +963,8 @@ namespace _project.Scripts.Card_Core
             Coroutine coroutineToStop;
             lock (PlantEffectQueueLock)
             {
-                coroutineToStop = plantEffectCoroutine;
-                plantEffectCoroutine = null;
+                coroutineToStop = _plantEffectCoroutine;
+                _plantEffectCoroutine = null;
                 PlantEffectQueue.Clear();
             }
 
