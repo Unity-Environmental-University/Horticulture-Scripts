@@ -99,7 +99,21 @@ namespace _project.Scripts.Data
             }
 #endif
 
+#if UNITY_WEBGL
+            if (_highQualityRadioButton != null) _highQualityRadioButton.style.display = DisplayStyle.None;
+            if (_mobileQualityRadioButton != null) _mobileQualityRadioButton.style.display = DisplayStyle.Flex;
+            if (_resolutionDropdown != null) _resolutionDropdown.style.display = DisplayStyle.None;
+            if (_displayModeDropdown != null) _displayModeDropdown.style.display = DisplayStyle.None;
+
+            if (savedQuality < 0)
+            {
+                var lowQualityRadioIndex = _qualityRadioButtonGroup!.IndexOf(_lowQualityRadioButton);
+                if (lowQualityRadioIndex >= 0) SetQuality(lowQualityRadioIndex);
+            }
+#endif
+
             // Initialize display mode dropdown to current fullscreen mode and register callback
+#if !UNITY_WEBGL
             if (_displayModeDropdown != null)
             {
                 var currentMode = Screen.fullScreenMode switch
@@ -114,8 +128,10 @@ namespace _project.Scripts.Data
                     _displayModeDropdown.value = _displayModeDropdown.choices[0];
                 _displayModeDropdown.RegisterValueChangedCallback(OnDisplayModeChanged);
             }
+#endif
 
             // Initialize resolution dropdown to current screen size and register callback
+#if !UNITY_WEBGL
             if (_resolutionDropdown != null)
             {
                 var currentRes = $"{Screen.width}x{Screen.height}";
@@ -125,6 +141,7 @@ namespace _project.Scripts.Data
                     _resolutionDropdown.value = _resolutionDropdown.choices[0];
                 _resolutionDropdown.RegisterValueChangedCallback(OnResolutionChanged);
             }
+#endif
 
             // Set the initially checked RadioButton based on the current quality level
             if (_qualityRadioButtonGroup == null) return;
@@ -227,6 +244,23 @@ namespace _project.Scripts.Data
                 PlayerPrefs.SetInt(QualityLevelPrefKey, qualityIndex);
                 PlayerPrefs.Save();
                 Debug.Log($"Quality level set to {qualityIndex} {QualitySettings.names[qualityIndex]}");
+            }
+            else if (selectedName is "HighQualityRadioButton"
+                                  or "MediumQualityRadioButton"
+                                  or "LowQualityRadioButton"
+                                  or "MobileQualityRadioButton")
+            {
+                // The requested level is excluded for this build target
+                // (e.g. only "Low" is available on WebGL). Fall back silently to
+                // the first available quality level.
+                if (QualitySettings.names.Length > 0)
+                {
+                    var fallback = 0;
+                    QualitySettings.SetQualityLevel(fallback);
+                    PlayerPrefs.SetInt(QualityLevelPrefKey, fallback);
+                    PlayerPrefs.Save();
+                    Debug.Log($"Quality button {selectedName} not available on this platform; using {QualitySettings.names[fallback]}.");
+                }
             }
             else
             {
