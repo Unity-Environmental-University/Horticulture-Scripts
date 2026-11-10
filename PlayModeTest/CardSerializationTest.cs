@@ -145,7 +145,9 @@ namespace _project.Scripts.PlayModeTest
             // Create a fresh instance to verify basic properties are preserved in CardData
             var freshCard = TryCreateCard(cardType);
             Assert.IsNotNull(freshCard, $"Failed to create fresh instance of read-only card {cardType.Name}");
-            Assert.AreEqual(freshCard.Value, cardData.value,
+            Assert.AreEqual(freshCard.Value.HasValue, cardData.hasValue,
+                $"CardData hasValue doesn't match card value presence for {cardType.Name}");
+            Assert.AreEqual(freshCard.Value ?? 0, cardData.value,
                 $"CardData value doesn't match card value for {cardType.Name}");
         }
 
@@ -276,20 +278,105 @@ namespace _project.Scripts.PlayModeTest
             }
         }
 
-        // Convert an ICard to CardData
+        [Test]
+        public void CardData_JsonUtilityRoundTrip_PreservesValueAndBaseValue()
+        {
+            // A damaged/boosted plant: Value and BaseValue both differ from the constructor defaults
+            var card = new ColeusCard { Value = 3, BaseValue = 12 };
+
+            var json = JsonUtility.ToJson(GameStateManager.SerializeCard(card));
+            var cardData = JsonUtility.FromJson<CardData>(json);
+
+            Assert.IsTrue(cardData.hasValue, $"hasValue lost in JSON: {json}");
+            Assert.AreEqual(3, cardData.value, $"value lost in JSON: {json}");
+            Assert.IsTrue(cardData.hasBaseValue, $"hasBaseValue lost in JSON: {json}");
+            Assert.AreEqual(12, cardData.baseValue, $"baseValue lost in JSON: {json}");
+
+            var restored = GameStateManager.DeserializeCard(cardData) as ColeusCard;
+            Assert.IsNotNull(restored, "Failed to deserialize ColeusCard after JSON round trip");
+            Assert.AreEqual(3, restored.Value, "Value not restored after JSON round trip");
+            Assert.AreEqual(12, restored.BaseValue, "BaseValue not restored after JSON round trip");
+        }
+
+        [Test]
+        public void CardData_JsonUtilityRoundTrip_NonPlantCardHasNoBaseValue()
+        {
+            var json = JsonUtility.ToJson(GameStateManager.SerializeCard(new HorticulturalOilBasic()));
+            var cardData = JsonUtility.FromJson<CardData>(json);
+
+            Assert.IsTrue(cardData.hasValue, "Action card value should be marked present");
+            Assert.AreEqual(new HorticulturalOilBasic().Value, cardData.value, "Action card value lost in JSON");
+            Assert.IsFalse(cardData.hasBaseValue, "Non-plant cards should not record a BaseValue");
+        }
+
+        [Test]
+        public void StickerData_JsonUtilityRoundTrip_PreservesValueWithoutReapplyingEffect()
+        {
+            ICard card = new ColeusCard();
+            var sticker = ScriptableObject.CreateInstance<ValueReducerSticker>();
+            // Unique name so DeserializeSticker resolves this definition and not one left over by another test
+            sticker.stickerName = $"{nameof(CardSerializationTest)}_{Guid.NewGuid():N}";
+            sticker.value = 7;
+            // Apply as gameplay does: the sticker records itself and lowers the card's value
+            sticker.Apply(card);
+            var stickeredValue = card.Value;
+            Assert.AreEqual(new ColeusCard().Value - sticker.reductionAmount, stickeredValue,
+                "Sticker effect should have lowered the card's value");
+
+            var json = JsonUtility.ToJson(GameStateManager.SerializeCard(card));
+            var cardData = JsonUtility.FromJson<CardData>(json);
+
+            Assert.AreEqual(1, cardData.stickers.Count, "Sticker lost in JSON");
+            Assert.IsTrue(cardData.stickers[0].hasValue, $"Sticker hasValue lost in JSON: {json}");
+            Assert.AreEqual(7, cardData.stickers[0].value, $"Sticker value lost in JSON: {json}");
+
+            // The saved value already includes the sticker effect, so loading must not apply it again
+            var restored = GameStateManager.DeserializeCard(cardData);
+            Assert.IsNotNull(restored, "Failed to deserialize stickered card after JSON round trip");
+            Assert.AreEqual(stickeredValue, restored.Value, "Sticker effect was applied again on load");
+            Assert.AreEqual(1, restored.Stickers.Count, "Sticker should be re-attached exactly once on load");
+
+            UnityEngine.Object.DestroyImmediate(sticker);
+        }
+
+        [Test]
+        public void CardData_FromLegacySaveWithoutValueFlags_KeepsConstructorDefaults()
+        {
+            // Saves written while value/baseValue were int? contain no value fields at all
+            const string legacyJson =
+                "{\"cardTypeName\":\"ColeusCard\",\"cardTypeFullName\":\"\",\"cardName\":\"Coleus\"," +
+                "\"stickers\":[],\"isFoil\":false}";
+            var cardData = JsonUtility.FromJson<CardData>(legacyJson);
+
+            Assert.IsFalse(cardData.hasValue, "Legacy save should not report a stored value");
+            Assert.IsFalse(cardData.hasBaseValue, "Legacy save should not report a stored base value");
+
+            var restored = GameStateManager.DeserializeCard(cardData) as ColeusCard;
+            var fresh = new ColeusCard();
+            Assert.IsNotNull(restored, "Legacy card data should still deserialize");
+            Assert.AreEqual(fresh.Value, restored.Value, "Legacy load should keep the constructor Value");
+            Assert.AreEqual(fresh.BaseValue, restored.BaseValue, "Legacy load should keep the constructor BaseValue");
+        }
+
+        // Convert an ICard to CardData, passed through JsonUtility like a real save so that
+        // fields JsonUtility cannot serialize are caught by these tests
         private static CardData ConvertCardToCardData(ICard card)
         {
-            return new CardData
+            var value = card.Value;
+            var cardData = new CardData
             {
                 cardTypeName = card.GetType().Name,
-                value = card.Value,
+                value = value ?? 0,
+                hasValue = value.HasValue,
                 stickers = card.Stickers?.Select(s => new StickerData
                 {
                     stickerTypeName = s.GetType().Name,
                     name = s.Name,
-                    value = s.Value
+                    value = s.Value ?? 0,
+                    hasValue = s.Value.HasValue
                 }).ToList() ?? new List<StickerData>()
             };
+            return JsonUtility.FromJson<CardData>(JsonUtility.ToJson(cardData));
         }
 
         // Deserialize CardData back to an ICard using the production method

@@ -287,8 +287,10 @@ namespace _project.Scripts.PlayModeTest
             var cardData = new CardData
             {
                 cardTypeName = plantCard.GetType().Name,
-                value = plantCard.Value,
-                baseValue = plantCard.BaseValue
+                value = plantCard.Value ?? 0,
+                hasValue = plantCard.Value.HasValue,
+                baseValue = plantCard.BaseValue,
+                hasBaseValue = true
             };
 
             // Act - Deserialize the card (simulating load)

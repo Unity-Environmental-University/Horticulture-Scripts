@@ -6,10 +6,11 @@
 - Key entry points: `GameStateManager.SaveGame()` and `GameStateManager.LoadGame()`.
 
 ## Data Model (`GameStateData.cs`)
-- `GameStateData` aggregates `TurnData`, `ScoreData`, `DeckData`, list of `PlantData`, and optional `RetainedCardData`.
+- `GameStateData` aggregates `TurnData`, `ScoreData`, `DeckData`, list of `PlantData`, and optional `RetainedCardData`, plus a `saveVersion` (see `GameStateManager.CurrentSaveVersion`; saves without it read as `0`).
 - `DeckData` captures **only action deck/hand/discard** plus player sticker inventory; affliction/plant decks remain for future extension.
 - `PlantData` stores the serialised card (`CardData`), its socket index, string-backed affliction/treatment history, and current `moldIntensity`.
-- `CardData` serialises by runtime type name, stickers, nullable value override, and `isFoil`. `StickerData` keeps the sticker type, display name, and optional value payload.
+- `CardData` serialises by runtime type name, stickers, value and base-value overrides, and `isFoil`. `StickerData` keeps the sticker type, display name, and optional value payload.
+- `JsonUtility` cannot serialise `Nullable<T>` (an `int?` field is silently dropped), so optional ints are stored as a plain `int` plus a presence flag: `value`/`hasValue` and `baseValue`/`hasBaseValue` on `CardData`, `value`/`hasValue` on `StickerData`. The int is only used when its flag is `true`. Do not add `int?` fields to these DTOs.
 
 ## Save Flow (`SaveGame`)
 1. Fetch singletons: `CardGameMaster.Instance`, its `TurnController`, `ScoreManager`, and `DeckManager`.
@@ -34,9 +35,9 @@
 5. After plant reconstruction the coroutine clears the effect queue, re-enables shader updates, and forces a one-frame delay so visuals settle.
 
 ## Serialization Helpers
-- `SerializeCard(ICard)` and `SerializeSticker(ISticker)` produce DTOs using runtime type names; value overrides only populate when nullable `Value` has data.
+- `SerializeCard(ICard)` and `SerializeSticker(ISticker)` produce DTOs using runtime type names; the `has*` flags are set only when the nullable `Value` (or a plant's `BaseValue`) has data.
 - **Foil cards**: `SerializeCard` unwraps `FoilCard` before recording the type name so the inner card's concrete type is saved, then stores `isFoil = true` as a separate flag. `DeserializeCard` reconstructs the inner card normally and wraps it in a new `FoilCard` when `isFoil` is true. This means `FoilCard` itself is never stored by type name and does not need to be resolvable by the type-lookup mechanism.
-- `DeserializeCard(CardData)` resolves the type by name across all loaded assemblies, instantiates it, reapplies value overrides, and replays stickers using `DeserializeSticker`.
+- `DeserializeCard(CardData)` resolves the type by name across all loaded assemblies, instantiates it, reapplies value overrides whose `has*` flag is set (the `Value` setter is skipped when the saved value equals the default, so fixed-value cards still load), and replays stickers using `DeserializeSticker`. Stickers are re-attached with `ApplySticker`, not `ISticker.Apply`, so their value change is not applied a second time.
 - `DeserializeSticker(StickerData)` handles both ScriptableObject-based and POCO stickers, defaulting to cloning existing definitions when available.
 - All helper methods throw or log descriptive errors when resolution fails so corrupted saves do not crash the game loop unexpectedly.
 
@@ -62,7 +63,7 @@
 ## Testing & Validation
 - Play Mode tests: `PlayModeTest/CardSerializationTest.cs` covers card round-trip serialisation for both mutable and read-only cards, value overrides, and sticker application edge cases.
 - Manual workflow: capture a save mid-run, alter the deck/plant composition, and ensure load faithfully reconstructs state without leaking references or duplicating afflictions.
-- Regression check: verify loading older saves after DTO changes; missing fields should default gracefully (e.g., `isFoil` defaults to `false` in saves predating the foil feature).
+- Regression check: verify loading older saves after DTO changes; missing fields should default gracefully (e.g., `isFoil` defaults to `false` in saves predating the foil feature). Saves with `saveVersion` `0` never stored card, plant or sticker values; they load with constructor defaults and `LoadGame` logs a warning.
 
 ---
-Last Updated: 2026-02-17
+Last Updated: 2026-11-09

@@ -14,11 +14,18 @@ namespace _project.Scripts.GameState
 {
     public static class GameStateManager
     {
+        /// <summary>
+        ///     Save-format version written by <see cref="SaveGame" />.
+        ///     0 (field absent): card, plant and sticker values were not stored.
+        ///     1: values are stored as int + presence flag so they survive JsonUtility.
+        /// </summary>
+        public const int CurrentSaveVersion = 1;
+
         public static bool SuppressQueuedEffects { get; private set; }
 
         public static void SaveGame()
         {
-            var data = new GameStateData();
+            var data = new GameStateData { saveVersion = CurrentSaveVersion };
 
             // Turn Data
             var tc = CardGameMaster.Instance.turnController;
@@ -126,6 +133,11 @@ namespace _project.Scripts.GameState
                 Debug.LogError($"Failed to deserialize game state: {e.Message}");
                 return;
             }
+
+            if (data.saveVersion < CurrentSaveVersion)
+                Debug.LogWarning(
+                    $"Loading save format version {data.saveVersion} (current {CurrentSaveVersion}). " +
+                    "Card, plant and sticker values were not stored in this save and will load as defaults.");
 
             // Validate CardGameMaster instance and components exist
             if (CardGameMaster.Instance == null)
@@ -267,13 +279,17 @@ namespace _project.Scripts.GameState
         {
             // Unwrap FoilCard so we save the inner card's type; isFoil flag preserves the foil state
             var inner = card is FoilCard foilCard ? foilCard.Inner : card;
+            var value = inner.Value;
+            int? baseValue = inner is IPlantCard plantCard ? plantCard.BaseValue : null;
             return new CardData
             {
                 cardTypeName = inner.GetType().Name,
                 cardTypeFullName = inner.GetType().FullName,
                 cardName = inner.Name,
-                value = inner.Value,
-                baseValue = inner is IPlantCard plantCard ? plantCard.BaseValue : null,
+                value = value ?? 0,
+                hasValue = value.HasValue,
+                baseValue = baseValue ?? 0,
+                hasBaseValue = baseValue.HasValue,
                 stickers = inner.Stickers?.Select(SerializeSticker).ToList() ?? new List<StickerData>(),
                 isFoil = card.IsFoil
             };
@@ -281,11 +297,13 @@ namespace _project.Scripts.GameState
 
         private static StickerData SerializeSticker(ISticker sticker)
         {
+            var value = sticker.Value;
             return new StickerData
             {
                 stickerTypeName = sticker.GetType().Name,
                 name = sticker.Name,
-                value = sticker.Value
+                value = value ?? 0,
+                hasValue = value.HasValue
             };
         }
 
@@ -369,12 +387,14 @@ namespace _project.Scripts.GameState
                     return null;
                 }
 
-                if (data.value.HasValue)
-                    clone.Value = data.value.Value;
+                // Only assign when the saved value differs: cards with a fixed Value (e.g. affliction
+                // cards) have no setter, and the default ICard setter throws.
+                if (data.hasValue && clone.Value != data.value)
+                    clone.Value = data.value;
 
                 // Restore BaseValue for plant cards
-                if (clone is IPlantCard plantCard && data.baseValue.HasValue)
-                    plantCard.BaseValue = data.baseValue.Value;
+                if (clone is IPlantCard plantCard && data.hasBaseValue)
+                    plantCard.BaseValue = data.baseValue;
 
                 // Restore stickers
                 if (data.stickers != null)
@@ -466,8 +486,8 @@ namespace _project.Scripts.GameState
                     }
                 }
 
-                if (data.value.HasValue)
-                    sticker.Value = data.value.Value;
+                if (data.hasValue)
+                    sticker.Value = data.value;
 
                 return sticker;
             }
