@@ -19,5 +19,7 @@ Scripts.asmdef
 # IDE Files
 .vscode
 
-# Obsidian plugin settings (may hold API keys and private keys)
-docs/.obsidian/plugins/*/data.json
+# Obsidian: plugins (their settings can hold API keys and private keys) and per-user state
+docs/.obsidian/plugins/
+docs/.obsidian/workspace*.json
+docs/.obsidian/community-plugins.json
