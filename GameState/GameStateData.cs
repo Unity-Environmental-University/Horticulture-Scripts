@@ -6,6 +6,9 @@ namespace _project.Scripts.GameState
     [Serializable]
     public class GameStateData
     {
+        // Save-format version. Saves written before versioning was added deserialize as 0.
+        // See GameStateManager.CurrentSaveVersion.
+        public int saveVersion;
         public TurnData turnData;
         public ScoreData scoreData;
         public DeckData deckData;
@@ -90,8 +93,15 @@ namespace _project.Scripts.GameState
         public string cardTypeFullName;
         public string cardName;
         public List<StickerData> stickers;
-        public int? value;
-        public int? baseValue;
+
+        // JsonUtility cannot serialize Nullable<T> (int? fields are silently dropped), so each
+        // optional int is stored as a plain int plus an explicit presence flag. The int is only
+        // meaningful when its flag is true. Saves written before these flags existed load with
+        // the flags false, which keeps the card's constructor defaults.
+        public int value;
+        public bool hasValue;
+        public int baseValue;
+        public bool hasBaseValue;
         public bool isFoil;
     }
 
@@ -100,7 +110,10 @@ namespace _project.Scripts.GameState
     {
         public string stickerTypeName;
         public string name;
-        public int? value;
+
+        // See CardData: the value is only meaningful when hasValue is true.
+        public int value;
+        public bool hasValue;
     }
 
     [Serializable]

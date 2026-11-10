@@ -146,7 +146,8 @@ namespace _project.Scripts.PlayModeTest
             // Arrange: Old save format (missing new fields)
             var oldPlantData = new PlantData
             {
-                plantCard = new CardData { cardTypeName = "ColeusCard", value = 10 },
+                // Old saves never stored the card value (see CardSerializationTest legacy-save test)
+                plantCard = new CardData { cardTypeName = "ColeusCard" },
                 locationIndex = 0,
                 currentAfflictions = new List<string>(),
                 priorAfflictions = new List<string>(),
@@ -324,7 +325,9 @@ namespace _project.Scripts.PlayModeTest
 
             // Assert: Verify serialization preserves application count
             Assert.AreEqual(3, plantData.uLocationCards.Count, "Serialization should preserve 3 applications");
+            Assert.IsTrue(plantData.plantCard.hasBaseValue, "BaseValue should be marked present");
             Assert.AreEqual(10, plantData.plantCard.baseValue, "BaseValue should be preserved");
+            Assert.IsTrue(plantData.plantCard.hasValue, "Current value should be marked present");
             Assert.AreEqual(28, plantData.plantCard.value, "Current value should be preserved");
 
             // Simulate restore and apply 4th Urea
