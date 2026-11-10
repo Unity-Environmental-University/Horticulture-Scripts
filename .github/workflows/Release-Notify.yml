@@ -49,7 +49,7 @@ jobs:
           PY
 
       - name: Post to Teams
-        uses: jdcargile/ms-teams-notification@v1.4
+        uses: jdcargile/ms-teams-notification@28e5ca976c053d54e2b852f3f38da312f35a24fc # v1.4
         with:
           github-token: ${{ github.token }}
           ms-teams-webhook-uri: ${{ secrets.MS_TEAMS_WEBHOOK_URI }}
